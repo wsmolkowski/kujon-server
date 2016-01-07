@@ -1,8 +1,6 @@
 import json
-from datetime import datetime
-import tornado.web
 
-import settings
+import tornado.web
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -20,27 +18,11 @@ class SchoolHandler(tornado.web.RequestHandler):
 
         self.write(school)
 
-'''
+
 class Contacts(json.JSONEncoder):
     contacts = {}
     name = ""
 
-    def __init__(self, name):
-        self.name = name
-
-    def to_json(self):  # New special method.
-        return "{u'name': %r}" % self.name.decode('utf-8')
-
-    def default(self, o):
-        try:
-            iterable = iter(o)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        # Let the base class default method raise the TypeError
-        return JSONEncoder.default(self, o)
-'''
 
 class UserHandler(tornado.web.RequestHandler):
     user_id = 0
@@ -50,7 +32,7 @@ class UserHandler(tornado.web.RequestHandler):
     name = "imie i nazwisko"
 
     # school = School()
-    # contacts = Contacts("Dupek aaa")
+    contacts = Contacts("Dupek aaa")
     # contactsLocked = ContactsLocked()
 
     # dane do outh do podlaczenia do usosa
@@ -80,11 +62,10 @@ class UserHandler(tornado.web.RequestHandler):
         print args
 
 
-class ScheduleHandler(tornado.web.RequestHandler):
-    def get(self, user_id, start_date, schedule_period=settings.DEFAULT_SCHEDULE_PERIOD):
+class Schedule(tornado.web.RequestHandler):
+    def get(self, user_id,startDate):
 
-        start_date = datetime.strptime(start_date, settings.DATE_FORMAT)
-        end_date = start_date + datetime.timedelta(days=schedule_period)
+        endDate=startDate+'7 days';
 
         schedule = {
             '2016-01-04': {
@@ -92,28 +73,30 @@ class ScheduleHandler(tornado.web.RequestHandler):
                     'start_time': '07:00',
                     'end_time': '09:00',
                     'type': 'egzamin',
-                    'place': '5959'
+                    'room': '5959',
                 },
                 '1238': {
-                    'start_time': '07:00',
-                    'end_time': '09:00',
-                    'type': 'egzamin',
-                    'place': '8173'
+                    'start_time': '09:00',
+                    'end_time': '11:00',
+                    'type': 'wyklad',
+                    'room': '8173',
                 }
 
             },
             '2016-01-05': {
-                'group_id': 1231,
-                'start_time': '09:00',
-                'end_time': '10:00',
-                'type': 'lab'
+                '1238': {
+                    'start_time': '07:00',
+                    'end_time': '09:00',
+                    'type': 'lab',
+                    'room': '5959',
+                }
             }
         }
         self.write(schedule)
 
 class ClassGroup(tornado.web.RequestHandler):
 
-    def get(self, user_id,classgroupid):
+    def get(self, classgroupid):
         classGroup = {
                 'classGroupId': classgroupid,
                 'start_time': '07:00',
@@ -121,7 +104,39 @@ class ClassGroup(tornado.web.RequestHandler):
                 'type': 'egzamin',
                 'place': '5959',
                 'teacher': 'Jan Kiepura',
-                'ocures': 'co tydzien'
+                'occurs': 'co tydzien'
          }
         self.write(classGroup)
+
+class Terms(tornado.web.RequestHandler):
+
+    def get(self):
+        terms = {
+                '112': {
+                        'name': 'Trymestr letni 2004/05',
+                        'start_date': '',
+                        'end_date': ''
+                }
+        }
+        self.write(terms)
+
+class Courses(tornado.web.RequestHandler):
+       def get(self):
+        courses = {
+                    'courses': {
+                             '1000-612BDB': 'Bazy danych w bankowosci i zarzadzaniu',
+                             '1000-612BSK': 'Bezpieczenstwo sieci komputerowych'
+                    }
+        }
+
+class CourseEditions(tornado.web.RequestHandler):
+
+    def get(self):
+        course = {
+                'id': '1000-612BDB',
+                'edition': '123123123',
+                'name': 'Bazy danych w bankowosci i zarzadzaniu',
+                'desciption': '1. Tekstowe bazy danych. Dokumenty el.....'
+        }
+        self.write(course)
 
