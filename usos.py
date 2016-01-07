@@ -1,7 +1,8 @@
 import json
 import pprint
-from datetime import datetime
 from timeit import default_timer as timer
+
+from pymongo import MongoClient
 
 import oauth2 as oauth
 import settings
@@ -52,23 +53,27 @@ def main():
     updater = USOSUpdater(3, access_token_key, access_token_secret)
 
 
-    print "plan dnia dzisieszego"
-    url="services/tt/student?start=" + str(datetime.now().date()) + "&days=1"
-    pp.pprint(updater.request(url))
+    #print "plan dnia dzisieszego"
+    #url="services/tt/student?start=" + str(datetime.now().date()) + "&days=1"
+    #pp.pprint(updater.request(url))
 
-    print "proba wyciagniacia info o userze"
-    url = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
-    pp.pprint(updater.request(url))
+    #print "proba wyciagniacia info o userze"
+    #url = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
+    #pp.pprint(updater.request(url))
 
-    print "get courses_editions"
-    url = "services/courses/user"
-    pp.pprint(updater.request(url))
+    #print "get courses_editions"
+    #url = "services/courses/user"
+    #pp.pprint(updater.request(url))
 
     print "get grades for given courses_editions"
     url = "services/grades/course_edition?course_id=E-2IZ2-1004-s3&term_id=2014/15-1"
-    pp.pprint(updater.request(url))
+    data=updater.request(url)
+    pp.pprint(data)
 
-
+    #monogo tests
+    client = MongoClient(settings.MONGODB_URI)
+    db = client['usos-test2']
+    result = db.grades.insert_one(data)
 
 if __name__ == "__main__":
     main()
