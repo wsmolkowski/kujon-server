@@ -3,6 +3,7 @@ import tornado.web
 from tornado.ioloop import IOLoop
 
 import settings
+from handlers import ClassGroup
 from handlers import MainHandler
 from handlers import Schedule
 from handlers import SchoolHandler
@@ -16,6 +17,8 @@ class Application(tornado.web.Application):
             (r"/api/school/([0-9])+", SchoolHandler),
             (r"/user/id/([0-9])+", UserHandler),
             (r"/schedule/user_id/([0-9])+/startdate/([0-9])+", Schedule),
+            (r"/classgroup/([0-9])+", ClassGroup),
+
         ]
         tornado.web.Application.__init__(self, handlers)
 
