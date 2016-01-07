@@ -20,7 +20,7 @@ class Application(tornado.web.Application):
     def db(self):
         if not self._db_connection:
             self._db_connection = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db_connection
+        return self._db_connection[settings.MONGODB_NAME]
 
     def __init__(self):
 

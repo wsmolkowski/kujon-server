@@ -1,7 +1,7 @@
-import json
 from datetime import datetime
 
 import tornado.web
+import motor
 
 import settings
 import usos
@@ -22,14 +22,26 @@ class SchoolHandler(BaseHandler):
 
     @tornado.web.asynchronous
     def get(self, school_id):
+        '''
+        if school in db return school
+        else
+            1. fetch school data from usus server
+            2. return data to client
+            3. save data in db
+        :param school_id:
+        :return: dictonary representing school
+        '''
+
         school = {
             'school_id': school_id,
             'type': 0,
             'version': 1
         }
+        print dir(self.db.school)
+        print type(self.db.school)
+        doc = yield motor.Op(self.db.school.insert, school)
 
-        self.write(school)
-
+        self.write(doc)
 
 # class Contacts(json.JSONEncoder):
 #     contacts = {}
