@@ -7,12 +7,22 @@ import settings
 import usos
 
 
-class MainHandler(tornado.web.RequestHandler):
+class BaseHandler(tornado.web.RequestHandler):
+    @property
+    def db(self):
+        return self.application.db
+
+
+class MainHandler(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self):
         self.write("Hello, world")
 
 
-class SchoolHandler(tornado.web.RequestHandler):
+class SchoolHandler(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self, school_id):
         school = {
             'school_id': school_id,
@@ -23,45 +33,47 @@ class SchoolHandler(tornado.web.RequestHandler):
         self.write(school)
 
 
-class Contacts(json.JSONEncoder):
-    contacts = {}
-    name = ""
+# class Contacts(json.JSONEncoder):
+#     contacts = {}
+#     name = ""
+#
+#
+# class User:
+#     def __init__(self,user_id,access_token_key, access_token_secret):
+#
+#         if not self.ifexists(user_id):
+#             self.register(user_id,access_token_key,access_token_secret)
+#
+#
+#     def ifexists(self):
+#         #sprawdzenie czy user istnieje
+#         return True
+#
+#     def register(self):
+#         return True
+#
+#     def updateuserdata(self):
+#         return True
 
 
-class User:
-    def __init__(self,user_id,access_token_key,access_token_secret):
+class UserHandler(BaseHandler):
 
-        if not self.ifexists(user_id):
-            self.register(user_id,access_token_key,access_token_secret)
-
-
-    def ifexists(self):
-        #sprawdzenie czy user istnieje
-        return True
-
-    def register(self):
-        return True
-
-    def updateuserdata(self):
-        return True
-
-class UserHandler(tornado.web.RequestHandler):
-
-
+    @tornado.web.asynchronous
     def get(self, user_id):
-        print "proba wyciagniacia info o userze: " + user_id
+
         url = "services/users/user?user_id="+user_id+"&fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
-        print url
+
         access_token_key = 'uXLyCGpp5zfHPH4z4brg'
         access_token_secret = 'VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy'
 
         updater = usos.USOSUpdater(user_id, access_token_key, access_token_secret)
-        result=updater.request(url);
+        result = updater.request(url)
         self.write(result)
 
 
+class ScheduleHandler(BaseHandler):
 
-class ScheduleHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
     def get(self, user_id, start_date):
         start_date = datetime.strptime(start_date, settings.DATE_FORMAT)
         end_date = start_date + datetime.timedelta(days=settings.DEFAULT_SCHEDULE_PERIOD)
@@ -94,7 +106,9 @@ class ScheduleHandler(tornado.web.RequestHandler):
         self.write(schedule)
 
 
-class ClassGroup(tornado.web.RequestHandler):
+class ClassGroupHandler(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self, classgroupid):
         classGroup = {
             'classGroupId': classgroupid,
@@ -108,7 +122,9 @@ class ClassGroup(tornado.web.RequestHandler):
         self.write(classGroup)
 
 
-class Terms(tornado.web.RequestHandler):
+class TermsHandler(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self):
         terms = {
             '112': {
@@ -120,7 +136,9 @@ class Terms(tornado.web.RequestHandler):
         self.write(terms)
 
 
-class Courses(tornado.web.RequestHandler):
+class CoursesHandlers(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self):
         courses = {
             'courses': {
@@ -129,8 +147,12 @@ class Courses(tornado.web.RequestHandler):
             }
         }
 
+        self.write(courses)
 
-class CourseEditions(tornado.web.RequestHandler):
+
+class CourseEditionsHandlers(BaseHandler):
+
+    @tornado.web.asynchronous
     def get(self):
         course = {
             'id': '1000-612BDB',

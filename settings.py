@@ -4,7 +4,7 @@ PORT = 8888
 DATE_FORMAT = "%d-%m-%y"
 DEFAULT_SCHEDULE_PERIOD = 7
 
-MONGODB_URI="mongodb://dbuser1:dbpass1@ds035995.mongolab.com:35995/usos-test2"
+MONGODB_URI = "mongodb://dbuser1:dbpass1@ds035995.mongolab.com:35995/usos-test2"
 
 
 user = "Luk" # lub "Luk" lub "Woj"
