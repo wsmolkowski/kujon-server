@@ -4,16 +4,18 @@ from tornado.ioloop import IOLoop
 
 import settings
 from handlers import MainHandler
-from handlers import ConfigHandler
+from handlers import Schedule
 from handlers import SchoolHandler
+from handlers import UserHandler
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/?", MainHandler),
-            (r"/config", ConfigHandler),
-            (r"/api/school/([0-9])+", SchoolHandler)
+            (r"/api/school/([0-9])+", SchoolHandler),
+            (r"/user/id/([0-9])+", UserHandler),
+            (r"/schedule/user_id/([0-9])+/startdate/([0-9])+", Schedule),
         ]
         tornado.web.Application.__init__(self, handlers)
 

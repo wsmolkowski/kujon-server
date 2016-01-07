@@ -1,22 +1,11 @@
-import tornado.web
-from datetime import date
-import settings
 import json
+
+import tornado.web
 
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Hello, world")
-
-
-class ConfigHandler(tornado.web.RequestHandler):
-    def get(self):
-        config = {
-            'version': settings.VERSION,
-            'last_build': date.today().isoformat()
-        }
-
-        self.write(config)
 
 
 class SchoolHandler(tornado.web.RequestHandler):
@@ -30,11 +19,25 @@ class SchoolHandler(tornado.web.RequestHandler):
         self.write(school)
 
 
-
-
-class Contacts():
+class Contacts(json.JSONEncoder):
     contacts = {}
+    name = ""
 
+    def __init__(self, name):
+        self.name = name
+
+    def to_json(self):  # New special method.
+        return "{u'name': %r}" % self.name.decode('utf-8')
+
+    def default(self, o):
+        try:
+            iterable = iter(o)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        # Let the base class default method raise the TypeError
+        return JSONEncoder.default(self, o)
 
 
 class UserHandler(tornado.web.RequestHandler):
@@ -45,7 +48,7 @@ class UserHandler(tornado.web.RequestHandler):
     name = "imie i nazwisko"
 
     # school = School()
-    contacts = Contacts()
+    contacts = Contacts("Dupek aaa")
     # contactsLocked = ContactsLocked()
 
     # dane do outh do podlaczenia do usosa
@@ -73,3 +76,49 @@ class UserHandler(tornado.web.RequestHandler):
 
     def post(self, *args, **kwargs):
         print args
+
+
+class Schedule(tornado.web.RequestHandler):
+    def get(self, user_id,startDate):
+
+        endDate=startDate+'7 days';
+
+        schedule = {
+            '2016-01-04': {
+                '1238': {
+                    'start_time': '07:00',
+                    'end_time': '09:00',
+                    'type': 'egzamin',
+                    'place': '5959'
+                },
+                '1238': {
+                    'start_time': '07:00',
+                    'end_time': '09:00',
+                    'type': 'egzamin',
+                    'place': '8173'
+                }
+
+            },
+            '2016-01-05': {
+                'group_id': 1231,
+                'start_time': '09:00',
+                'end_time': '10:00',
+                'type': 'lab'
+            }
+        }
+        self.write(schedule)
+
+class ClassGroup(tornado.web.RequestHandler):
+
+    def get(self, user_id,classgroupid):
+        classGroup = {
+                'classGroupId': classgroupid,
+                'start_time': '07:00',
+                'end_time': '09:00',
+                'type': 'egzamin',
+                'place': '5959',
+                'teacher': 'Jan Kiepura',
+                'ocures': 'co tydzien'
+         }
+        self.write(classGroup)
+
