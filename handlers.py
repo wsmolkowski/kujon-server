@@ -1,7 +1,7 @@
 import json
+from datetime import datetime
 
 import tornado.web
-from datetime import datetime
 
 import settings
 
@@ -27,6 +27,23 @@ class Contacts(json.JSONEncoder):
     name = ""
 
 
+class User:
+    def __init__(self,user_id,access_token_key,access_token_secret):
+
+        if not self.ifexists(user_id):
+            self.register(user_id,access_token_key,access_token_secret)
+
+
+    def ifexists(self):
+        #sprawdzenie czy user istnieje
+        return True
+
+    def register(self):
+        return True
+
+    def updateuserdata(self):
+        return True
+
 class UserHandler(tornado.web.RequestHandler):
     user_id = 0
     phone = "022000000"
@@ -35,20 +52,18 @@ class UserHandler(tornado.web.RequestHandler):
     name = "imie i nazwisko"
 
     # school = School()
-    contacts = Contacts("Dupek aaa")
+    #contacts = Contacts("Dupek aaa")
     # contactsLocked = ContactsLocked()
 
     # dane do outh do podlaczenia do usosa
     # do przemyslenia czy tutaj.
-    # Consumer Key to use.
-    consumer_key = 'KBt6uWPWUekUzFtNTyY9';
-    consumer_secret = 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG';
 
     # Access Token to use. If left blank, then user authorization process will follow.
     access_token_key = '3ShYQv8LyvgeXthKJzmJ'
     access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
     def get(self, user_id):
+
         user = {
             'school_id': user_id,
             'phone': self.phone,
