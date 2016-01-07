@@ -1,6 +1,9 @@
 import json
 
 import tornado.web
+from datetime import datetime
+
+import settings
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -62,10 +65,10 @@ class UserHandler(tornado.web.RequestHandler):
         print args
 
 
-class Schedule(tornado.web.RequestHandler):
-    def get(self, user_id,startDate):
-
-        endDate=startDate+'7 days';
+class ScheduleHandler(tornado.web.RequestHandler):
+    def get(self, user_id, start_date):
+        start_date = datetime.strptime(start_date, settings.DATE_FORMAT)
+        end_date = start_date + datetime.timedelta(days=settings.DEFAULT_SCHEDULE_PERIOD)
 
         schedule = {
             '2016-01-04': {
@@ -94,49 +97,49 @@ class Schedule(tornado.web.RequestHandler):
         }
         self.write(schedule)
 
-class ClassGroup(tornado.web.RequestHandler):
 
+class ClassGroup(tornado.web.RequestHandler):
     def get(self, classgroupid):
         classGroup = {
-                'classGroupId': classgroupid,
-                'start_time': '07:00',
-                'end_time': '09:00',
-                'type': 'egzamin',
-                'place': '5959',
-                'teacher': 'Jan Kiepura',
-                'occurs': 'co tydzien'
-         }
+            'classGroupId': classgroupid,
+            'start_time': '07:00',
+            'end_time': '09:00',
+            'type': 'egzamin',
+            'place': '5959',
+            'teacher': 'Jan Kiepura',
+            'occurs': 'co tydzien'
+        }
         self.write(classGroup)
 
-class Terms(tornado.web.RequestHandler):
 
+class Terms(tornado.web.RequestHandler):
     def get(self):
         terms = {
-                '112': {
-                        'name': 'Trymestr letni 2004/05',
-                        'start_date': '',
-                        'end_date': ''
-                }
+            '112': {
+                'name': 'Trymestr letni 2004/05',
+                'start_date': '',
+                'end_date': ''
+            }
         }
         self.write(terms)
 
+
 class Courses(tornado.web.RequestHandler):
-       def get(self):
+    def get(self):
         courses = {
-                    'courses': {
-                             '1000-612BDB': 'Bazy danych w bankowosci i zarzadzaniu',
-                             '1000-612BSK': 'Bezpieczenstwo sieci komputerowych'
-                    }
+            'courses': {
+                '1000-612BDB': 'Bazy danych w bankowosci i zarzadzaniu',
+                '1000-612BSK': 'Bezpieczenstwo sieci komputerowych'
+            }
         }
+
 
 class CourseEditions(tornado.web.RequestHandler):
-
     def get(self):
         course = {
-                'id': '1000-612BDB',
-                'edition': '123123123',
-                'name': 'Bazy danych w bankowosci i zarzadzaniu',
-                'desciption': '1. Tekstowe bazy danych. Dokumenty el.....'
+            'id': '1000-612BDB',
+            'edition': '123123123',
+            'name': 'Bazy danych w bankowosci i zarzadzaniu',
+            'desciption': '1. Tekstowe bazy danych. Dokumenty el.....'
         }
         self.write(course)
-
