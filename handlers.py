@@ -121,7 +121,7 @@ class ClassGroup(tornado.web.RequestHandler):
             'end_time': '09:00',
             'type': 'egzamin',
             'place': '5959',
-            'teacher': 'Jan Kiepura',
+            'teacher': 'Jan Kiepuraa',
             'occurs': 'co tydzien'
         }
         self.write(classGroup)
