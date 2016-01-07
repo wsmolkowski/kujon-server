@@ -138,5 +138,5 @@ class CourseEditions(tornado.web.RequestHandler):
                 'name': 'Bazy danych w bankowosci i zarzadzaniu',
                 'desciption': '1. Tekstowe bazy danych. Dokumenty el.....'
         }
-        self.write(cykle)
+        self.write(course)
 
