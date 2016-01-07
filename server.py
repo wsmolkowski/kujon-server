@@ -15,7 +15,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/?", MainHandler),
             (r"/api/school/([0-9])+", SchoolHandler),
-            (r"/api/user/id/([0-9])+", UserHandler),
+            (r"/api/user/id/([0-9]+)", UserHandler),
             (r"/api/schedule/user_id/([0-9])+/startdate/([0-9])+", ScheduleHandler),
             (r"/api/classgroup/([0-9])+", ClassGroup),
 

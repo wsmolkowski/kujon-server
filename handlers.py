@@ -4,6 +4,7 @@ from datetime import datetime
 import tornado.web
 
 import settings
+import usos
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -45,39 +46,19 @@ class User:
         return True
 
 class UserHandler(tornado.web.RequestHandler):
-    user_id = 0
-    phone = "022000000"
-    email = "email"
-    avatar = "zdjecie"
-    name = "imie i nazwisko"
 
-    # school = School()
-    #contacts = Contacts("Dupek aaa")
-    # contactsLocked = ContactsLocked()
-
-    # dane do outh do podlaczenia do usosa
-    # do przemyslenia czy tutaj.
-
-    # Access Token to use. If left blank, then user authorization process will follow.
-    access_token_key = '3ShYQv8LyvgeXthKJzmJ'
-    access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
     def get(self, user_id):
+        print "proba wyciagniacia info o userze: " + user_id
+        url = "services/users/user?user_id="+user_id+"&fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
+        print url
+        access_token_key = 'uXLyCGpp5zfHPH4z4brg'
+        access_token_secret = 'VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy'
 
-        user = {
-            'school_id': user_id,
-            'phone': self.phone,
-            'email': self.email,
-            'avatar': self.avatar,
-            'name': self.name,
-            'contacts': self.contacts,
-            # 'school': self.school,
-            # 'contactsLocked': self.contactsLocked
-        }
-        self.write(user)
+        updater = usos.USOSUpdater(user_id, access_token_key, access_token_secret)
+        result=updater.request(url);
+        self.write(result)
 
-    def post(self, *args, **kwargs):
-        print args
 
 
 class ScheduleHandler(tornado.web.RequestHandler):
