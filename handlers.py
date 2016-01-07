@@ -14,10 +14,8 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class MainHandler(BaseHandler):
-
-    @tornado.web.asynchronous
     def get(self):
-        self.write("Hello, world")
+        self.write("Hello, world from {0}".format(self.db.get_default_database()))
 
 
 class SchoolHandler(BaseHandler):
