@@ -1,6 +1,8 @@
 import json
-
+from datetime import datetime
 import tornado.web
+
+import settings
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -18,7 +20,7 @@ class SchoolHandler(tornado.web.RequestHandler):
 
         self.write(school)
 
-
+'''
 class Contacts(json.JSONEncoder):
     contacts = {}
     name = ""
@@ -38,7 +40,7 @@ class Contacts(json.JSONEncoder):
             return list(iterable)
         # Let the base class default method raise the TypeError
         return JSONEncoder.default(self, o)
-
+'''
 
 class UserHandler(tornado.web.RequestHandler):
     user_id = 0
@@ -48,7 +50,7 @@ class UserHandler(tornado.web.RequestHandler):
     name = "imie i nazwisko"
 
     # school = School()
-    contacts = Contacts("Dupek aaa")
+    # contacts = Contacts("Dupek aaa")
     # contactsLocked = ContactsLocked()
 
     # dane do outh do podlaczenia do usosa
@@ -78,10 +80,11 @@ class UserHandler(tornado.web.RequestHandler):
         print args
 
 
-class Schedule(tornado.web.RequestHandler):
-    def get(self, user_id,startDate):
+class ScheduleHandler(tornado.web.RequestHandler):
+    def get(self, user_id, start_date, schedule_period=settings.DEFAULT_SCHEDULE_PERIOD):
 
-        endDate=startDate+'7 days';
+        start_date = datetime.strptime(start_date, settings.DATE_FORMAT)
+        end_date = start_date + datetime.timedelta(days=schedule_period)
 
         schedule = {
             '2016-01-04': {
