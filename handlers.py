@@ -1,7 +1,7 @@
 from datetime import datetime
 
-import tornado.web
 import motor
+import tornado.web
 
 import settings
 import usos
@@ -25,7 +25,7 @@ class SchoolHandler(BaseHandler):
         '''
         if school in db return school
         else
-            1. fetch school data from usus server
+            1. fetch school data from usos server
             2. return data to client
             3. save data in db
         :param school_id:
@@ -73,8 +73,8 @@ class UserHandler(BaseHandler):
 
         url = "services/users/user?user_id="+user_id+"&fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
 
-        access_token_key = 'uXLyCGpp5zfHPH4z4brg'
-        access_token_secret = 'VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy'
+        access_token_key = '3ShYQv8LyvgeXthKJzmJ'
+        access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
         updater = usos.USOSUpdater(user_id, access_token_key, access_token_secret)
         result = updater.request(url)
