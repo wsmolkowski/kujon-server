@@ -19,7 +19,7 @@ class UsosupdaterTest(unittest.TestCase):
 
         url = "services/grades/course_edition?course_id=E-2IZ2-1004-s3&term_id=2014/15-1"
         data = updater.request(url)
-
+        print data
         self.assertIsNotNone(data)
 
     def testShouldGetGrades(self):
