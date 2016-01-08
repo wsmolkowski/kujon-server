@@ -8,7 +8,7 @@ class USOSUpdater:
     client = None
     usosapi_base_url = None;
 
-    def __init__(self, user_id, usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
+    def __init__(self, usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
         if not (usosapi_base_url and consumer_key and consumer_secret):
             raise Exception("Fill the settings first.")
         self.usosapi_base_url = usosapi_base_url
