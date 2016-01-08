@@ -1,10 +1,15 @@
 from tornado.testing import AsyncHTTPTestCase
 
 import server
+TEST_PORT = 9999
+
 
 class TestHelloApp(AsyncHTTPTestCase):
     def get_app(self):
-        return server.Application
+        app = server.Application()
+        app.listen(TEST_PORT)
+        return app
+
 
     def test_homepage(self):
         response = self.fetch('/')
