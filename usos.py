@@ -4,10 +4,6 @@ from timeit import default_timer as timer
 import oauth2 as oauth
 
 
-#access_token_key = '3ShYQv8LyvgeXthKJzmJ'
-#access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
-
-
 class USOSUpdater:
     client = None
     usosapi_base_url = None;
