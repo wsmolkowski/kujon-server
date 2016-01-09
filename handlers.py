@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 import settings
 import usosupdater
 from helpers import log_execution_time
-
+from usosupdater import USOSUpdater
 
 class BaseHandler(tornado.web.RequestHandler):
     @property
@@ -36,14 +36,15 @@ class SchoolHandler(BaseHandler):
         '''
 
 
-        doc = yield self.db.school.find_one({'school_id': school_id})
+        doc = yield self.db.schools.find_one({'school_id': school_id})
 
         if not doc:
             school = {'school_id': school_id, 'type': 0, 'version': 1}
-            doc_id = yield motor.Op(self.db.school.insert, school)
+
+            doc_id = yield motor.Op(self.db.schools.insert, school)
             print 'new school created with id:', doc_id
 
-            doc = yield self.db.school.find_one({'school_id': school_id})
+            doc = yield self.db.schools.find_one({'school_id': school_id})
 
         self.write(json_util.dumps(doc))
 
@@ -52,16 +53,23 @@ class SchoolHandler(BaseHandler):
 class UserHandler(BaseHandler):
 
     @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, user_id):
 
-        url = "services/users/user?user_id="+user_id+"&fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
+        doc = yield self.db.users.find_one({'user_id': user_id})
 
-        access_token_key = '3ShYQv8LyvgeXthKJzmJ'
-        access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
+        if not doc:
+            access_token_key = '3ShYQv8LyvgeXthKJzmJ'
+            access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
-        updater = usosupdater.USOSUpdater(user_id, access_token_key, access_token_secret)
-        result = updater.request(url)
-        self.write(result)
+            updater = USOSUpdater('https://usosapps.uw.edu.pl/', 'KBt6uWPWUekUzFtNTyY9', 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG', access_token_key, access_token_secret)
+            result = updater.requestUserInfo()
+
+            doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
+
+            doc = yield self.db.users.find_one({'user_id': user_id})
+
+        self.write(json_util.dumps(doc))
 
 
 class ScheduleHandler(BaseHandler):
