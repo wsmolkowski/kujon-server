@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from model_tests import UsersForTests
+from user import UsersForTests
 from usosinstance import UsosInstances
 from usosupdater import USOSUpdater
 

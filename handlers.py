@@ -2,10 +2,12 @@ from datetime import datetime
 
 import motor
 import tornado.web
-
+from bson import json_util
+from bson.objectid import ObjectId
 import settings
 import usosupdater
-
+from helpers import log_execution_time
+from usosupdater import USOSUpdater
 
 class BaseHandler(tornado.web.RequestHandler):
     @property
@@ -21,6 +23,7 @@ class MainHandler(BaseHandler):
 class SchoolHandler(BaseHandler):
 
     @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, school_id):
         '''
         if school in db return school
@@ -32,53 +35,41 @@ class SchoolHandler(BaseHandler):
         :return: dictonary representing school
         '''
 
-        school = {
-            'school_id': school_id,
-            'type': 0,
-            'version': 1
-        }
-        print dir(self.db.school)
-        print type(self.db.school)
-        doc = yield motor.Op(self.db.school.insert, school)
 
-        self.write(doc)
+        doc = yield self.db.schools.find_one({'school_id': school_id})
 
-# class Contacts(json.JSONEncoder):
-#     contacts = {}
-#     name = ""
-#
-#
-# class User:
-#     def __init__(self,user_id,access_token_key, access_token_secret):
-#
-#         if not self.ifexists(user_id):
-#             self.register(user_id,access_token_key,access_token_secret)
-#
-#
-#     def ifexists(self):
-#         #sprawdzenie czy user istnieje
-#         return True
-#
-#     def register(self):
-#         return True
-#
-#     def updateuserdata(self):
-#         return True
+        if not doc:
+            school = {'school_id': school_id, 'type': 0, 'version': 1}
+
+            doc_id = yield motor.Op(self.db.schools.insert, school)
+            print 'new school created with id:', doc_id
+
+            doc = yield self.db.schools.find_one({'school_id': school_id})
+
+        self.write(json_util.dumps(doc))
+
 
 
 class UserHandler(BaseHandler):
 
     @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, user_id):
 
-        url = "services/users/user?user_id="+user_id+"&fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
+        doc = yield self.db.users.find_one({'user_id': user_id})
 
-        access_token_key = '3ShYQv8LyvgeXthKJzmJ'
-        access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
+        if not doc:
+            access_token_key = '3ShYQv8LyvgeXthKJzmJ'
+            access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
-        updater = usosupdater.USOSUpdater(user_id, access_token_key, access_token_secret)
-        result = updater.request(url)
-        self.write(result)
+            updater = USOSUpdater('https://usosapps.uw.edu.pl/', 'KBt6uWPWUekUzFtNTyY9', 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG', access_token_key, access_token_secret)
+            result = updater.requestUserInfo()
+
+            doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
+
+            doc = yield self.db.users.find_one({'user_id': user_id})
+
+        self.write(json_util.dumps(doc))
 
 
 class ScheduleHandler(BaseHandler):
