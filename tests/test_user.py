@@ -1,4 +1,4 @@
-from user import User
+from model import User
 
 USOSTESTUSERS = {
     '1264': {

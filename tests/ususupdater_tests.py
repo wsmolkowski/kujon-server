@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from user import UsersForTests
+from test_user import UsersForTests
 from usosinstance import UsosInstances
 from usosupdater import USOSUpdater
 
@@ -46,13 +46,16 @@ class UsosupdaterTest(unittest.TestCase):
         usoses = UsosInstances()
         usos = usoses.getbyid("UW")
 
-        testusers=UsersForTests();
+        testusers=UsersForTests()
         user = testusers.getrandombyusosid("UW")
 
         updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, user.access_token_key, user.access_token_secret)
 
-        url="services/tt/student?start=" + str(datetime.now().date()) + "&days=1"
+        url = "services/tt/student?start=" + str(datetime.now().date()) + "&days=1"
         data = updater.request(url)
         print url
         print data
         self.assertIsNotNone(data)
+
+
+
