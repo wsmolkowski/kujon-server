@@ -27,51 +27,53 @@ user = {  u'first_name': u'Woj',
           u'email': u'ws@com.pl'}
 
 
-# /services/courses/course_edition?course_id=1000-612ARR&fields=course_id|course_name|grades
-oceny = {"course_id": "1000-612ARR",
-         "grades": {
-            "course_units_grades": {},
-            "course_grades": {
-                "1": {"value_symbol": "3,5",
-                      "exam_session_number": 1,
-                      "exam_id": 19050,
-                      "value_description": {"en": "3,5 - satisfactory", "pl": "dostateczny plus"}}}
-         },
-       "course_name": {"en": "Distributed and Parallel Algorithms",
-                       "pl": "Algorytmy rozproszone i r\u00f3wnoleg\u0142e"}}
+# /services/courses/course_edition?course_id=1000-612ARR&fields=course_id|course_name|term_id|grades
+grades = {
+  "course_id": "1000-612ARR",
+  "term_id": "2004/TZ",
+  "grades": {
+    "course_units_grades": {},
+    "course_grades": {
+      "1": {
+        "value_symbol": "3,5",
+        "exam_session_number": 1,
+        "exam_id": 19050,
+        "value_description": {
+          "en": "3,5 - satisfactory",
+          "pl": "dostateczny plus"
+        }
+      }
+    }
+  },
+  "course_name": {
+    "en": "Distributed and Parallel Algorithms",
+    "pl": "Algorytmy rozproszone i równoległe"
+  }
+}
 
 # services/courses/user?active_terms_only=false&fields=course_editions
 
-result = {u'course_editions': {
+courses = {u'course_editions': {
             u'2004/TZ': [
                 {u'course_id': u'1000-612ARR', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Distributed and Parallel Algorithms',
-                    u'pl': u'Algorytmy rozproszone i r\xf3wnoleg\u0142e'}},
+                    u'course_name': {u'en': u'Distributed and Parallel Algorithms',u'pl': u'Algorytmy rozproszone i r\xf3wnoleg\u0142e'}},
                 {u'course_id': u'1000-612FSP', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Formal Specifications',
-                    u'pl': u'Formalne specyfikacje'}},
+                    u'course_name': {u'en': u'Formal Specifications',u'pl': u'Formalne specyfikacje'}},
                 {u'course_id': u'1000-612MDB', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Advanced Database Access Methods',
-                    u'pl': u'Zaawansowane metody dost\u0119pu do baz danych'}},
+                    u'course_name': {u'en': u'Advanced Database Access Methods',u'pl': u'Zaawansowane metody dost\u0119pu do baz danych'}},
                 {u'course_id': u'1000-612SIZ', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Enterprise Resource Planning',
-                    u'pl': u'Systemy informatyczne zarz\u0105dzania'}},
+                    u'course_name': {u'en': u'Enterprise Resource Planning',u'pl': u'Systemy informatyczne zarz\u0105dzania'}},
                 {u'course_id': u'1000-612SK2', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Computer Networks II',
-                    u'pl': u'Sieci komputerowe II'}},
+                    u'course_name': {u'en': u'Computer Networks II',u'pl': u'Sieci komputerowe II'}},
                 {u'course_id': u'1000-621PSC', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Network Programming',
-                    u'pl': u'Programowanie sieciowe'}},
+                    u'course_name': {u'en': u'Network Programming',u'pl': u'Programowanie sieciowe'}},
                 {u'course_id': u'1000-622SK2', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Computer Networks II - laboratory',
-                    u'pl': u'Sieci komputerowe II - laboratorium'}},
+                    u'course_name': {u'en': u'Computer Networks II - laboratory',u'pl': u'Sieci komputerowe II - laboratorium'}},
                 {u'course_id': u'1000-6M04NH', u'term_id': u'2004/TZ',
-                    u'course_name': {u'en': u'Moderm Heuristic Methods',
-                    u'pl': u'Nowoczesne metody heurystyczne'}}],
+                    u'course_name': {u'en': u'Moderm Heuristic Methods',u'pl': u'Nowoczesne metody heurystyczne'}}],
             u'2003/TJ': [
                 {u'course_id': u'1000-611ASK', u'term_id': u'2003/TJ',
-                    u'course_name': {u'en': u'Architecture of Modern Computer Systems',
-                    u'pl': u'Architektura wsp\xf3\u0142czesnych system\xf3w komputerowych'}},
+                    u'course_name': {u'en': u'Architecture of Modern Computer Systems',u'pl': u'Architektura wsp\xf3\u0142czesnych system\xf3w komputerowych'}},
                 {u'course_id': u'1000-611MAD', u'term_id': u'2003/TJ',
                     u'course_name': {u'en': u'Discrete Mathematics', u'pl': u'Matematyka dyskretna'}},
                 {u'course_id': u'1000-611PIM', u'term_id': u'2003/TJ',
@@ -125,7 +127,7 @@ result = {u'course_editions': {
                 {u'course_id': u'1000-611BAD', u'term_id': u'2003/TL',
                     u'course_name': {u'en': u'Databases', u'pl': u'Bazy danych'}},
                 {u'course_id': u'1000-611LOG', u'term_id': u'2003/TL',
-                     u'course_name': {u'en': u'Logic', u'pl': u'Logika'}},
+                    u'course_name': {u'en': u'Logic', u'pl': u'Logika'}},
                 {u'course_id': u'1000-611PFL', u'term_id': u'2003/TL',
                     u'course_name': {u'en': u'Declarative Programming: Functional and in Logic',u'pl': u'Programowanie deklaratywne: funkcyjne i w logice'}},
                 {u'course_id': u'1000-621MRB', u'term_id': u'2003/TL',
@@ -217,4 +219,6 @@ result = {u'course_editions': {
                     u'course_name': {u'en': u'Master Seminar', u'pl': u'Seminarium magisterskie'}}],
             u'2001': [
                 {u'course_id': u'1000-4S00IO', u'term_id': u'2001',
-                 u'course_name': {u'en': u'Software Engineering - seminar',u'pl': u'In\u017cynieria oprogramowania - seminarium'}}]}}
+                 u'course_name': {u'en': u'Software Engineering - seminar',u'pl': u'In\u017cynieria oprogramowania - seminarium'}}]
+            }
+}
