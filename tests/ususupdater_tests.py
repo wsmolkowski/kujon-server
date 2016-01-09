@@ -14,7 +14,7 @@ class UsosupdaterTest(unittest.TestCase):
         usoses = UsosInstances()
         usos = usoses.getbyid("UW")
 
-        testusers=UsersForTests();
+        testusers=UsersForTests()
         user = testusers.getrandombyusosid("UW")
 
         updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, user.access_token_key, user.access_token_secret)
