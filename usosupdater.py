@@ -6,16 +6,16 @@ from helpers import log_execution_time, UsosException
 
 
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
-URI_CURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-
+URI_COURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
+#TODO:
+#dla wszystkich kursow pobranych pobrac oceny w taki sposob jak niezej tylko trzeba podac course_id
+URI_GETGRADESFORCURSE_INFO="/services/courses/course_edition?course_id=1000-612ARR&fields=course_id|course_name|term_id|grades"
 
 class USOSUpdater:
 
     def __init__(self, usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
 
         self.usosapi_base_url = usosapi_base_url
-        #usosapi_base_url_secure = usosapi_base_url.replace("http://", "https://")
-
         consumer = oauth.Consumer(consumer_key, consumer_secret)
         if access_token_key:
             access_token = oauth.Token(access_token_key, access_token_secret)
@@ -38,5 +38,5 @@ class USOSUpdater:
         return self.request(URI_USER_INFO)
 
     def request_curse_info(self):
-        return self.request(URI_CURSE_INFO)
+        return self.request(URI_COURSE_INFO)
 
