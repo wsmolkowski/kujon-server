@@ -1,13 +1,8 @@
-from datetime import datetime
 import motor
 import tornado.web
 from bson import json_util
-import sys
 
 from usosupdater import USOSUpdater
-from usosinstance import UsosInstances, UsosInstance
-import settings
-
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -30,39 +25,30 @@ class UserHandler(BaseHandler):
         if len(self.request.arguments) != 4:
             self.clear()
             self.set_status(400)
-            html = '<html><body>Arguments not supported</body></html>'.format(str(self.request.arguments))
-
-            self.finish(html)
+            self.finish('<html><body>Arguments not supported</body></html>'.format(str(self.request.arguments)))
             return
 
-        try:
-            usos_id = self.request.arguments['usos_id'][0]
-            usoses = UsosInstances()
-            usos = usoses.getbyid(usos_id)
-            if not usos:
-                self.write("usos not supported")
-                print "usos not supported: ", usos_id
-                return
-            user_id = self.request.arguments['user_id'][0]
-            access_token_key = self.request.arguments['access_token_key'][0]
-            access_token_secret = self.request.arguments['access_token_secret'][0]
-        except KeyError:
-            print "unexpexted error during parsing args:", sys.exc_info()[0]
-            self.write("arguments not supported")
+        usos_id = self.request.arguments['usos_id'][0]
+        user_id = self.request.arguments['user_id'][0]
+        access_token_key = self.request.arguments['access_token_key'][0]
+        access_token_secret = self.request.arguments['access_token_secret'][0]
+
+        usos = yield self.db.usosinstances.find_one({'usos_id': usos_id})
+
+        if not usos:
+            self.clear()
+            self.set_status(400)
+            self.finish('<html><body>Usos %s not supported</body></html>'.format(usos_id))
             return
 
-        try:
-            doc = yield self.db.users.find_one({'user_id': user_id})
-        except:
-            pass
+        doc = yield self.db.users.find_one({'user_id': user_id})
 
         if not doc:
-
-            updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, access_token_key, access_token_secret)
+            updater = USOSUpdater(usos['url'], usos['consumer_key'], usos['consumer_secret'], access_token_key, access_token_secret)
             result = updater.request_user_info()
 
             doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
-            print 'no user with id: ',user_id,' fetched from usos and user created in mongo with id:', doc_id
+            print 'no user with id: % fetched from usos and user created with id: %s'.format(user_id, doc_id)
 
             doc = yield self.db.users.find_one({'user_id': user_id})
         else:
@@ -115,12 +101,12 @@ class CoursesHandler(BaseHandler):
         # else:
         #     print 'get user from mongo with id:', doc['_id']
 
-        usoses = UsosInstances()
-        usos = usoses.getbyid("UW")
+        usos = yield self.db.usosinstances.find_one({'usos_id': "UW"})
+
         access_token_key = "3ShYQv8LyvgeXthKJzmJ"
         access_token_secret = "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"
-        updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, access_token_key, access_token_secret)
-        result = updater.requestUser()
+        updater = USOSUpdater(usos.url, usos['consumer_key'], usos['consumer_secret'], access_token_key, access_token_secret)
+        result = updater.request_user_info()
 
         self.write(json_util.dumps(result))
 
