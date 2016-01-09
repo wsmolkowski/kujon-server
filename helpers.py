@@ -5,9 +5,7 @@ from functools import wraps
 
 
 def UsosException(Exception):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
+    pass
 
 
 def log_execution_time(intercepted_function):

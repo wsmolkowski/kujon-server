@@ -10,6 +10,7 @@ from handlers import ClassGroupHandler
 from handlers import MainHandler
 from handlers import CoursesHandler
 from handlers import UserHandler
+from handlers import GradesHandler
 
 
 class Application(tornado.web.Application):
@@ -34,6 +35,7 @@ class Application(tornado.web.Application):
             (r"/?", MainHandler),
             (r"/api/user?", UserHandler),
             (r"/api/courses", CoursesHandler),
+            (r"/api/grades", GradesHandler),
             (r"/api/classgroup/([0-9])+", ClassGroupHandler),
         ]
 

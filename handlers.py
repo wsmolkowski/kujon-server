@@ -6,11 +6,34 @@ import constants
 from usosupdater import USOSUpdater
 
 
+class Parameters:
+    def __init__(self, usos_id, user_id, access_token_key, access_token_secret):
+        self.usos_id = usos_id
+        self.user_id = user_id
+        self.access_token_key = access_token_key
+        self.access_token_secret = access_token_secret
+
+
 class BaseHandler(tornado.web.RequestHandler):
     @property
     def db(self):
         return self.application.db
 
+    def get_parameters(self):
+        return Parameters(
+            self.get_argument(constants.USOS_ID, default=None, strip=True),
+            self.get_argument(constants.USER_ID, default=None, strip=True),
+            self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
+            self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
+        )
+
+    def validate_parameters(self, expected):
+        if len(self.request.arguments) != expected:
+            raise tornado.web.HTTPError(404, "<html><body>Arguments not supported {0}</body></html>".format(str(self.request.arguments)))
+
+    def validate_usos(self, usos, parameters):
+        if not usos:
+            raise tornado.web.HTTPError(404, "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
 
 class MainHandler(BaseHandler):
     def get(self):
@@ -23,37 +46,61 @@ class UserHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        if len(self.request.arguments) != 4:
-            self.clear()
-            self.set_status(400)
-            self.finish('<html><body>Arguments not supported</body></html>'.format(str(self.request.arguments)))
-            return
+        self.validate_parameters(4)
 
-        usos_id = self.request.arguments[constants.USOS_ID][0]
-        user_id = self.request.arguments[constants.USER_ID][0]
-        access_token_key = self.request.arguments[constants.ACCESS_TOKEN_KEY][0]
-        access_token_secret = self.request.arguments[constants.ACCESS_TOKEN_SECRET][0]
+        parameters = self.get_parameters()
 
-        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: usos_id})
+        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
 
-        if not usos:
-            self.clear()
-            self.set_status(400)
-            self.finish('<html><body>Usos %s not supported</body></html>'.format(usos_id))
-            return
+        self.validate_usos(usos, parameters)
 
-        doc = yield self.db.users.find_one({constants.USER_ID: user_id})
+        doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
 
         if not doc:
-            updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET], access_token_key, access_token_secret)
+            updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                                  parameters.access_token_key, parameters.access_token_secret)
+
             result = updater.request_user_info()
 
-            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: user_id, 'usos_data': result})
-            print 'no user with id: % fetched from usos and user created with id: %s'.format(user_id, doc_id)
+            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id, "usos_data": result})
+            print "no user with id: %s fetched from usos and user created with id: %s".format(parameters.user_id, doc_id)
 
-            doc = yield self.db.users.find_one({constants.USER_ID: user_id})
+            doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
         else:
-            print 'get user from mongo with id:', doc['_id']
+            print "get user from mongo with id:", doc["_id"]
+
+        self.write(json_util.dumps(doc))
+
+
+class GradesHandler(BaseHandler):
+
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        self.validate_parameters(5)
+
+        parameters = self.get_parameters()
+
+        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
+
+        self.validate_usos(usos, parameters)
+
+        doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
+
+        if not doc:
+            course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
+
+            updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                                  parameters.access_token_key, parameters.access_token_secret)
+            result = updater.request_grades_for_course(course_id)
+
+            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id, "usos_data": result})
+            print "no user with id: {0} fetched from usos and user created with id: {0}".format(parameters.user_id, doc_id)
+
+            doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
+        else:
+            print "get user from mongo with id:", doc["_id"]
 
         self.write(json_util.dumps(doc))
 
@@ -95,12 +142,12 @@ class CoursesHandler(BaseHandler):
         #     updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, access_token_key, access_token_secret)
         #     result = updater.requestUser()
         #
-        #     doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: user_id, 'usos_data': result})
-        #     print 'no user with id: ',user_id,' fetched from usos and user created in mongo with id:', doc_id
+        #     doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: user_id, "usos_data": result})
+        #     print "no user with id: ",user_id," fetched from usos and user created in mongo with id:", doc_id
         #
         #     doc = yield self.db.users.find_one({constants.USER_ID: user_id})
         # else:
-        #     print 'get user from mongo with id:', doc['_id']
+        #     print "get user from mongo with id:", doc["_id"]
 
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: "UW"})
 
@@ -117,13 +164,13 @@ class ClassGroupHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, classgroupid):
         classGroup = {
-            'classGroupId': classgroupid,
-            'start_time': '07:00',
-            'end_time': '09:00',
-            'type': 'egzamin',
-            'place': '5959',
-            'teacher': 'Jan Kiepuraa',
-            'occurs': 'co tydzien'
+            "classGroupId": classgroupid,
+            "start_time": "07:00",
+            "end_time": "09:00",
+            "type": "egzamin",
+            "place": "5959",
+            "teacher": "Jan Kiepuraa",
+            "occurs": "co tydzien"
         }
         self.write(classGroup)
 
@@ -133,10 +180,10 @@ class TermsHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         terms = {
-            '112': {
-                'name': 'Trymestr letni 2004/05',
-                'start_date': '',
-                'end_date': ''
+            "112": {
+                "name": "Trymestr letni 2004/05",
+                "start_date": "",
+                "end_date": ""
             }
         }
         self.write(terms)
@@ -147,9 +194,9 @@ class CoursesHandlers(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         courses = {
-            'courses': {
-                '1000-612BDB': 'Bazy danych w bankowosci i zarzadzaniu',
-                '1000-612BSK': 'Bezpieczenstwo sieci komputerowych'
+            "courses": {
+                "1000-612BDB": "Bazy danych w bankowosci i zarzadzaniu",
+                "1000-612BSK": "Bezpieczenstwo sieci komputerowych"
             }
         }
 
@@ -161,9 +208,9 @@ class CourseEditionsHandlers(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         course = {
-            'id': '1000-612BDB',
-            'edition': '123123123',
-            'name': 'Bazy danych w bankowosci i zarzadzaniu',
-            'desciption': '1. Tekstowe bazy danych. Dokumenty el.....'
+            "id": "1000-612BDB",
+            "edition": "123123123",
+            "name": "Bazy danych w bankowosci i zarzadzaniu",
+            "desciption": "1. Tekstowe bazy danych. Dokumenty el....."
         }
         self.write(course)
