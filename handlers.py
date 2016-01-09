@@ -61,7 +61,7 @@ class UserHandler(BaseHandler):
             access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
             updater = USOSUpdater('https://usosapps.uw.edu.pl/', 'KBt6uWPWUekUzFtNTyY9', 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG', access_token_key, access_token_secret)
-            result = updater.requestUserInfo()
+            result = updater.request_user_info()
 
             doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
             print 'new user created with id:', doc_id

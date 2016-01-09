@@ -4,6 +4,12 @@ import os
 from functools import wraps
 
 
+def UsosException(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+
 def log_execution_time(intercepted_function):
     @wraps(intercepted_function)
     def timer(*args, **kwargs):
@@ -16,9 +22,9 @@ def log_execution_time(intercepted_function):
         # call our actual function
         # store the return of the function in a parameter
 
-        start = datetime.datetime.now()
+        start = datetime.now()
         actual_result = intercepted_function(*args, **kwargs)
-        stop = datetime.datetime.now()
+        stop = datetime.now()
 
         execution_time = stop - start
         print 'file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(os.path.basename(filename), code_line, text, execution_time)
