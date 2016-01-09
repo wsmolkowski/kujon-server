@@ -1,6 +1,7 @@
 from tornado.testing import AsyncHTTPTestCase
 
 import server
+import settings
 TEST_PORT = 9999
 
 
@@ -14,7 +15,7 @@ class TestHelloApp(AsyncHTTPTestCase):
     def test_homepage(self):
         response = self.fetch('/')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, 'Hello, world from database test-db-mongo')
+        self.assertEqual(response.body, 'Hello, world from database ' + settings.MONGODB_NAME)
 
 
 
