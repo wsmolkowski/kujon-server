@@ -62,12 +62,14 @@ class UserHandler(BaseHandler):
 
             result = updater.request_user_info()
 
-            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id, "usos_data": result})
-            print "no user with id: %s fetched from usos and user created with id: %s".format(parameters.user_id, doc_id)
+            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id,
+                                                           constants.USOS_DATA: result})
+
+            print "no user with id: {0} fetched from usos and user created with id: {1}".format(parameters.user_id, doc_id)
 
             doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
         else:
-            print "get user from mongo with id:", doc["_id"]
+            print "get course from mongo with id:", doc["_id"]
 
         self.write(json_util.dumps(doc))
 
@@ -86,19 +88,22 @@ class GradesHandler(BaseHandler):
 
         self.validate_usos(usos, parameters)
 
-        doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
+        course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
+
+        doc = yield self.db.grades.find_one({constants.USER_ID: parameters.user_id, constants.COURSE_ID: course_id})
 
         if not doc:
-            course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
-
             updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
                                   parameters.access_token_key, parameters.access_token_secret)
             result = updater.request_grades_for_course(course_id)
 
-            doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id, "usos_data": result})
-            print "no user with id: {0} fetched from usos and user created with id: {0}".format(parameters.user_id, doc_id)
+            doc_id = yield motor.Op(self.db.grades.insert, {constants.COURSE_ID: course_id,
+                                                            constants.USER_ID: parameters.user_id,
+                                                            constants.USOS_DATA: result})
+            print "no course with id: {0} fetched for user: {1} from usos and user created with id: {2}".format(
+                    course_id, parameters.user_id, doc_id)
 
-            doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
+            doc = yield self.db.grades.find_one({constants.COURSE_ID: parameters.user_id})
         else:
             print "get user from mongo with id:", doc["_id"]
 
