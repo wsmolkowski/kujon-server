@@ -3,10 +3,8 @@ from datetime import datetime
 import motor
 import tornado.web
 from bson import json_util
-from bson.objectid import ObjectId
+
 import settings
-import usosupdater
-from helpers import log_execution_time
 from usosupdater import USOSUpdater
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -66,8 +64,11 @@ class UserHandler(BaseHandler):
             result = updater.requestUserInfo()
 
             doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
+            print 'new user created with id:', doc_id
 
             doc = yield self.db.users.find_one({'user_id': user_id})
+        else:
+            print 'user from mongo with id:', doc.user_id
 
         self.write(json_util.dumps(doc))
 
