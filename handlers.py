@@ -4,7 +4,7 @@ import motor
 import tornado.web
 
 import settings
-import usos
+import usosupdater
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -76,7 +76,7 @@ class UserHandler(BaseHandler):
         access_token_key = '3ShYQv8LyvgeXthKJzmJ'
         access_token_secret = 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
 
-        updater = usos.USOSUpdater(user_id, access_token_key, access_token_secret)
+        updater = usosupdater.USOSUpdater(user_id, access_token_key, access_token_secret)
         result = updater.request(url)
         self.write(result)
 
