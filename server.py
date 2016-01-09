@@ -3,7 +3,7 @@ import tornado.web
 from tornado.ioloop import IOLoop
 import motor
 
-
+from mongo_utils import Dao
 import settings
 
 from handlers import ClassGroupHandler
@@ -22,6 +22,13 @@ class Application(tornado.web.Application):
             self._db_connection = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         return self._db_connection[settings.MONGODB_NAME]
 
+    _dao = None
+    @property
+    def dao(self):
+        if not self._dao:
+            self._dao = Dao()
+        return self._dao
+
     def __init__(self):
 
         handlers = [
@@ -30,12 +37,18 @@ class Application(tornado.web.Application):
             (r"/api/user/id/([0-9]+)", UserHandler),
             (r"/api/schedule/user_id/([0-9])+/startdate/([0-9])+", ScheduleHandler),
             (r"/api/classgroup/([0-9])+", ClassGroupHandler),
-
         ]
 
         tornado.web.Application.__init__(self, handlers)
 
         self.db
+        self.dao
+
+        self.__prepare()
+
+    def __prepare(self):
+        self._dao.prepare()
+
 
 
 def main():
