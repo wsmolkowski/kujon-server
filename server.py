@@ -8,8 +8,7 @@ import settings
 
 from handlers import ClassGroupHandler
 from handlers import MainHandler
-from handlers import ScheduleHandler
-from handlers import SchoolHandler
+from handlers import CoursesHandler
 from handlers import UserHandler
 
 
@@ -33,9 +32,8 @@ class Application(tornado.web.Application):
 
         handlers = [
             (r"/?", MainHandler),
-            (r"/api/school/([0-9])+", SchoolHandler),
-            (r"/api/user/id/([0-9]+)", UserHandler),
-            (r"/api/schedule/user_id/([0-9])+/startdate/([0-9])+", ScheduleHandler),
+            (r"/api/user?", UserHandler),
+            (r"/api/Courses", CoursesHandler),
             (r"/api/classgroup/([0-9])+", ClassGroupHandler),
         ]
 

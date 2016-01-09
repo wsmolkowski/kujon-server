@@ -1,42 +1,42 @@
 import json
+from timeit import default_timer as timer
 
 import oauth2 as oauth
 
-from helpers import log_execution_time, UsosException
-
-
-URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
-URI_CURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-
 
 class USOSUpdater:
+    client = None
+    usosapi_base_url = None;
 
     def __init__(self, usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
-
+        if not (usosapi_base_url and consumer_key and consumer_secret):
+            raise Exception("Fill the settings first.")
         self.usosapi_base_url = usosapi_base_url
-        #usosapi_base_url_secure = usosapi_base_url.replace("http://", "https://")
-
+        usosapi_base_url_secure = usosapi_base_url.replace("http://", "https://")
         consumer = oauth.Consumer(consumer_key, consumer_secret)
         if access_token_key:
             access_token = oauth.Token(access_token_key, access_token_secret)
         else:
-            raise UsosException("No access_token_key, do lepszej obslugi aby komorka sie zautoryzowala.")
+            raise Exception("No access_token_key, do lepszej obslugi aby komorka sie zautoryzowala.")
 
         self.client = oauth.Client(consumer, access_token)
 
-    @log_execution_time
     def request(self, url):
-
-        resp, content = self.client.request(self.usosapi_base_url + url, 'GET')
+        start = timer()
+        resp, content = self.client.request(self.usosapi_base_url + url, "GET")
         if resp['status'] != '200':
-            raise UsosException('Invalid response %s.\n%s'.format(resp['status'], content))
+            raise Exception(u"Invalid response %s.\n%s" % (resp['status'], content))
         items = json.loads(content)
-
+        end = timer()
+        print "Execution time: " + str(end - start)
         return items
 
-    def request_user_info(self):
-        return self.request(URI_USER_INFO)
+    def requestUser(self):
+        url = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
+        return self.request(url)
 
-    def request_curse_info(self):
-        return self.request(URI_CURSE_INFO)
+
+    def requestCourses(self):
+        url = "services/courses/user?active_terms_only=false&fields=course_editions"
+        return self.request(url)
 
