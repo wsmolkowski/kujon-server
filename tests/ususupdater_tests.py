@@ -1,13 +1,10 @@
 import unittest
 from datetime import datetime
 
-from user import UsersForTests
 from usosinstance import UsosInstances
 from usosupdater import USOSUpdater
 
-
 class UsosupdaterTest(unittest.TestCase):
-
 
     def testShouldGetUserInformation(self):
 

@@ -31,8 +31,12 @@ class USOSUpdater:
         print "Execution time: " + str(end - start)
         return items
 
-    def requestUserInfo(self):
+    def requestUser(self):
         url = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
         return self.request(url)
 
+
+    def requestCourses(self):
+        url = "services/courses/user?active_terms_only=false&fields=course_editions"
+        return self.request(url)
 
