@@ -1,15 +1,16 @@
 from model import User
+import constants
 
 USOSTESTUSERS = {
     '1264': {
-        'usos_id': 'UW',
-        'access_token_key' : '3ShYQv8LyvgeXthKJzmJ',
-        'access_token_secret' : 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
+        constants.USOS_ID: 'UW',
+        constants.ACCESS_TOKEN_KEY: '3ShYQv8LyvgeXthKJzmJ',
+        constants.ACCESS_TOKEN_SECRET: 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y'
     },
     '15822': {
-        'usos_id': 'PS',
-        'access_token_key': 'uXLyCGpp5zfHPH4z4brg',
-        'access_token_secret': 'VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy'
+        constants.USOS_ID: 'PS',
+        constants.ACCESS_TOKEN_KEY: 'uXLyCGpp5zfHPH4z4brg',
+        constants.ACCESS_TOKEN_SECRET: 'VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy'
     }
 }
 
@@ -20,7 +21,7 @@ class UsersForTests:
         usoses = {}
         for key in USOSTESTUSERS:
             poz = USOSTESTUSERS[key]
-            self.userfsfortests[key] = User(key, poz['usos_id'], poz['access_token_key'], poz['access_token_secret'])
+            self.userfsfortests[key] = User(key, poz[constants.USOS_ID], poz[constants.ACCESS_TOKEN_KEY], poz[constants.ACCESS_TOKEN_SECRET])
 
     def getrandombyusosid(self,usos_id):
         for user in self.userfsfortests:

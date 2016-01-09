@@ -1,8 +1,10 @@
 import settings
 import pymongo
+import constants
+
 
 USOSINSTANCES = [{
-        'usos_id': 'UW',
+        constants.USOS_ID: 'UW',
         'name': 'Uniwersyst Warszawski',
         'url': 'https://usosapps.uw.edu.pl/',
         'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
@@ -33,9 +35,9 @@ class Dao:
             self.drop_collections()
 
         for usos in USOSINSTANCES:
-           doc = self.__db.usosinstances.find_one({'usos_id': usos['usos_id']})
+           doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
            if not doc:
                self.__db.usosinstances.insert(usos)
 
     def get_usos(self, usos_id):
-        return self.__db.usosinstances.find_one({'usos_id': usos_id})
+        return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})
