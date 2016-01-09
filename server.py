@@ -33,7 +33,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/?", MainHandler),
             (r"/api/user?", UserHandler),
-            (r"/api/Courses", CoursesHandler),
+            (r"/api/courses", CoursesHandler),
             (r"/api/classgroup/([0-9])+", ClassGroupHandler),
         ]
 

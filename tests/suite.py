@@ -2,6 +2,8 @@ import unittest
 
 from base_tests import TestHelloApp
 from ususupdater_tests import UsosupdaterTest
+from user_tests import ApiUserTest
+
 
 def build_suite():
 
@@ -9,6 +11,7 @@ def build_suite():
 
     test_suite.addTest(unittest.makeSuite(TestHelloApp))
     test_suite.addTest(unittest.makeSuite(UsosupdaterTest))
+    test_suite.addTest(unittest.makeSuite(ApiUserTest))
 
     return test_suite
 

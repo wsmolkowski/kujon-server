@@ -28,25 +28,28 @@ class UserHandler(BaseHandler):
     def get(self):
 
         if len(self.request.arguments) != 4:
-            self.write("arguments not supported")
-            print "arguments not supported: ", self.request.arguments
+            self.clear()
+            self.set_status(400)
+            html = '<html><body>Arguments not supported</body></html>'.format(str(self.request.arguments))
+
+            self.finish(html)
             return
-        else:
-            try:
-                usos_id = self.request.arguments['usos_id'][0]
-                usoses = UsosInstances()
-                usos = usoses.getbyid(usos_id)
-                if not usos:
-                    self.write("usos not supported")
-                    print "usos not supported: ", usos_id
-                    return
-                user_id = self.request.arguments['user_id'][0]
-                access_token_key = self.request.arguments['access_token_key'][0]
-                access_token_secret = self.request.arguments['access_token_secret'][0]
-            except KeyError:
-                print "unexpexted error during parsing args:", sys.exc_info()[0]
-                self.write("arguments not supported")
+
+        try:
+            usos_id = self.request.arguments['usos_id'][0]
+            usoses = UsosInstances()
+            usos = usoses.getbyid(usos_id)
+            if not usos:
+                self.write("usos not supported")
+                print "usos not supported: ", usos_id
                 return
+            user_id = self.request.arguments['user_id'][0]
+            access_token_key = self.request.arguments['access_token_key'][0]
+            access_token_secret = self.request.arguments['access_token_secret'][0]
+        except KeyError:
+            print "unexpexted error during parsing args:", sys.exc_info()[0]
+            self.write("arguments not supported")
+            return
 
         try:
             doc = yield self.db.users.find_one({'user_id': user_id})
@@ -56,7 +59,7 @@ class UserHandler(BaseHandler):
         if not doc:
 
             updater = USOSUpdater(usos.url, usos.consumer_key, usos.consumer_secret, access_token_key, access_token_secret)
-            result = updater.requestUser()
+            result = updater.request_user_info()
 
             doc_id = yield motor.Op(self.db.users.insert, {'user_id': user_id, 'usos_data': result})
             print 'no user with id: ',user_id,' fetched from usos and user created in mongo with id:', doc_id
