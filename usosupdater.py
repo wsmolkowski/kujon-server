@@ -26,11 +26,12 @@ class USOSUpdater:
 
         resp, content = self.client.request(self.usosapi_base_url + url, 'GET')
         if resp['status'] != '200':
-            msg = "Invalid USOS response from {0}" \
+            msg = "Invalid USOS response: {0}" \
                   "\nRequest url: {1} " \
                   "\nResponse status: {2} " \
                   "\nResponse content: {3}".format(
                     self.usosapi_base_url, url, resp['status'], content)
+            print msg
             raise Exception(msg)
         items = json.loads(content)
 

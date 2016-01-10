@@ -1,8 +1,8 @@
 import unittest
 
 from base_tests import TestHelloApp
+from handlers_tests import ApiUserTest
 from ususupdater_tests import UsosupdaterTest
-from user_tests import ApiUserTest
 
 
 def build_suite():
