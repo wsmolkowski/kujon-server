@@ -9,22 +9,7 @@ URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_stat
 URI_COURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 #TODO:
 #dla wszystkich kursow pobranych pobrac oceny w taki sposob jak niezej tylko trzeba podac course_id
-URI_GRADES_FOR_COURSE = "/services/courses/course_edition?course_id={0}&fields=course_id|course_name|term_id|grades"
-
-'''
-{0} podmieniam na 1000-612ARR
-
-i dostaje wyjatek:
-
-Exception: Invalid USOS response from https://usosapps.uw.edu.pl/.
-Request url: /services/courses/course_edition?course_id=1000-612ARR&fields=course_id|course_name|term_id|grades
-Response status: 401
-Response content: {"message": "Invalid signature."}
-
-chyba potrzebuje twojego loginu i hasla aby wygenerowac nowy pin, hmm?
-
-'''
-
+URI_GRADES_FOR_COURSE = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades"
 
 class USOSUpdater:
 
@@ -60,6 +45,6 @@ class USOSUpdater:
     def request_curse_info(self):
         return self.request(URI_COURSE_INFO)
 
-    def request_grades_for_course(self, course_id):
-        return self.request(URI_GRADES_FOR_COURSE.format(course_id))
+    def request_grades_for_course(self, course_id, term_id):
+        return self.request(URI_GRADES_FOR_COURSE.format(course_id,term_id))
 

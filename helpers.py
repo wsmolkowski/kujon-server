@@ -12,7 +12,7 @@ def log_execution_time(intercepted_function):
     @wraps(intercepted_function)
     def timer(*args, **kwargs):
         '''*args and **kwargs are the parameters that are supplied to our original function'''
-        '''add settings parameter for setting on/off'''
+        '''TODO: add settings parameter for setting on/off'''
         # get our actual function name
         stack = traceback.extract_stack()
         filename, code_line, func_name, text = stack[-2]

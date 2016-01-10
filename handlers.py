@@ -29,6 +29,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def validate_parameters(self, expected):
         if len(self.request.arguments) != expected:
+            # TODO: nie wypisuje tego arguments not suppored
             raise tornado.web.HTTPError(404, "<html><body>Arguments not supported {0}</body></html>".format(str(self.request.arguments)))
 
     def validate_usos(self, usos, parameters):
@@ -50,6 +51,7 @@ class UserHandler(BaseHandler):
 
         parameters = self.get_parameters()
 
+        # TODO: moim zdaniem nie ma sensu za kazdym razem pytac baze o usosa to tylko spowalnia
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
 
         self.validate_usos(usos, parameters)
@@ -65,7 +67,7 @@ class UserHandler(BaseHandler):
             doc_id = yield motor.Op(self.db.users.insert, {constants.USER_ID: parameters.user_id,
                                                            constants.USOS_DATA: result})
 
-            print "no user with id: {0} fetched from usos and user created with id: {1}".format(parameters.user_id, doc_id)
+            print "no user with id: {0} in mongo, fetched from usos and created with id: {1}".format(parameters.user_id, doc_id)
 
             doc = yield self.db.users.find_one({constants.USER_ID: parameters.user_id})
         else:
@@ -80,32 +82,34 @@ class GradesHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        self.validate_parameters(5)
-
+        self.validate_parameters(6)
         parameters = self.get_parameters()
 
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
 
         self.validate_usos(usos, parameters)
 
+        user_id = self.get_argument(constants.USER_ID, default=None, strip=True)
         course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
+        term_id = self.get_argument(constants.TERM_ID, default=None, strip=True)
 
-        doc = yield self.db.grades.find_one({constants.USER_ID: parameters.user_id, constants.COURSE_ID: course_id})
+        doc = yield self.db.grades.find_one({constants.USER_ID: parameters.user_id, constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
 
         if not doc:
             updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
                                   parameters.access_token_key, parameters.access_token_secret)
-            result = updater.request_grades_for_course(course_id)
+            result = updater.request_grades_for_course(course_id, term_id)
 
             doc_id = yield motor.Op(self.db.grades.insert, {constants.COURSE_ID: course_id,
+                                                            constants.TERM_ID: term_id,
                                                             constants.USER_ID: parameters.user_id,
                                                             constants.USOS_DATA: result})
-            print "no course with id: {0} fetched for user: {1} from usos and user created with id: {2}".format(
-                    course_id, parameters.user_id, doc_id)
+            print "no grades for user_id: {0} course_id: {1} term_id: {2} in mongo, fetched from usos and created with id: {4}".format(
+                    user_id, course_id, term_id, parameters.user_id, doc_id)
 
-            doc = yield self.db.grades.find_one({constants.COURSE_ID: parameters.user_id})
+            doc = yield self.db.grades.find_one({constants.USER_ID: parameters.user_id, constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
         else:
-            print "get user from mongo with id:", doc["_id"]
+            print "get grades from mongo with id:", doc["_id"]
 
         self.write(json_util.dumps(doc))
 

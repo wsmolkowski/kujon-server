@@ -33,7 +33,6 @@ class ApiUserTest(AsyncHTTPTestCase):
         # get data for existing user
         response = self.fetch('/api/user?user_id=2&usos_id=UW&access_token_key=3ShYQv8LyvgeXthKJzmJ&access_token_secret=JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y')
         self.assertEqual(response.code, 200)
-
         self.assertTrue(response.body.startswith('{\"usos_data\": {\"'))
 
     def testShouldGetGradesForUser(self):
@@ -50,9 +49,6 @@ class ApiUserTest(AsyncHTTPTestCase):
 
         #TODO: change this test to remove user, create user, check for user, and remove user
         # get data for existing user
-        #response = self.fetch("/services/courses/course_edition?course_id=1000-612ARR&fields=course_id|course_name|term_id|grades")
-
-        response = self.fetch('/api/grades?user_id=2&usos_id=UW&access_token_key=3ShYQv8LyvgeXthKJzmJ&access_token_secret=JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y&course_id=1000-612ARR')
+        response = self.fetch('/api/grades?user_id=2&usos_id=UW&course_id=1000-612ARR&term_id=2004/TZ&access_token_key=3ShYQv8LyvgeXthKJzmJ&access_token_secret=JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y')
         self.assertEqual(response.code, 200)
-        print response.body
-        self.assertTrue(response.body.startswith('{\"usos_data\": {\"'))
+        self.assertTrue(response.body.startswith('{\"course_id\": \"'))
