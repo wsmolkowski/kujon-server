@@ -1,15 +1,12 @@
 import json
 
 import oauth2 as oauth
-
 from helpers import log_execution_time
 
 
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
 URI_COURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-#TODO:
-#dla wszystkich kursow pobranych pobrac oceny w taki sposob jak niezej tylko trzeba podac course_id
-URI_GRADES_FOR_COURSE = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades"
+URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades"
 
 class USOSUpdater:
 
@@ -46,5 +43,5 @@ class USOSUpdater:
         return self.request(URI_COURSE_INFO)
 
     def request_grades_for_course(self, course_id, term_id):
-        return self.request(URI_GRADES_FOR_COURSE.format(course_id,term_id))
+        return self.request(URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id))
 

@@ -1,6 +1,8 @@
 from tornado.testing import AsyncHTTPTestCase
+
 import server
 import settings
+
 TEST_PORT = 9999
 
 
@@ -52,3 +54,13 @@ class ApiUserTest(AsyncHTTPTestCase):
         response = self.fetch('/api/grades?user_id=2&usos_id=UW&course_id=1000-612ARR&term_id=2004/TZ&access_token_key=3ShYQv8LyvgeXthKJzmJ&access_token_secret=JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y')
         self.assertEqual(response.code, 200)
         self.assertTrue(response.body.startswith('{\"course_id\": \"'))
+
+        #TODO: dopisac testy
+        # pobranie ocen dla kursu ktego nie ma
+
+    def testShouldGetCoursesForUser(self):
+        # TODO: dopisanie wszystkich testow
+        response = self.fetch('/api/courses')
+        self.assertEqual(response.code, 404)
+        self.assertTrue(response.body.startswith('<html><title>404:'))
+

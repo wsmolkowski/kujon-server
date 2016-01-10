@@ -1,16 +1,15 @@
+import motor
 import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
-import motor
 
-from mongo_utils import Dao
 import settings
-
-from handlers import ClassGroupHandler
-from handlers import MainHandler
 from handlers import CoursesHandler
+from handlers import GradesForAllCoursesAndTermsHandler
+from handlers import GradesForCourseAndTermHandler
+from handlers import MainHandler
 from handlers import UserHandler
-from handlers import GradesHandler
+from mongo_utils import Dao
 
 
 class Application(tornado.web.Application):
@@ -35,8 +34,8 @@ class Application(tornado.web.Application):
             (r"/?", MainHandler),
             (r"/api/user", UserHandler),
             (r"/api/courses", CoursesHandler),
-            (r"/api/grades", GradesHandler),
-            (r"/api/classgroup/([0-9])+", ClassGroupHandler),
+            (r"/api/grades", GradesForCourseAndTermHandler),
+            (r"/api/gradesall", GradesForAllCoursesAndTermsHandler),
         ]
 
         tornado.web.Application.__init__(self, handlers)
