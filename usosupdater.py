@@ -6,7 +6,7 @@ from helpers import log_execution_time
 
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles"
 URI_COURSE_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades"
+URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants"
 
 class USOSUpdater:
 
@@ -40,8 +40,8 @@ class USOSUpdater:
     def request_user_info(self):
         return self.request(URI_USER_INFO)
 
-    def request_curse_info(self):
-        return self.request(URI_COURSE_INFO)
+    def request_curse_info(self,usos_user_id):
+        return self.request(URI_COURSE_INFO.format(usos_user_id))
 
     def request_grades_for_course(self, course_id, term_id):
         return self.request(URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id))

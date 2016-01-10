@@ -2,15 +2,14 @@ import unittest
 from datetime import datetime
 
 import constants
-from model_tests import UsersForTests
-from usosupdater import USOSUpdater
 from mongo_utils import Dao
+from usosupdater import USOSUpdater
+
 
 class UsosupdaterTest(unittest.TestCase):
 
     def setUp(self):
         self.dao = Dao()
-        self.testusers = UsersForTests()
 
     def testShouldGetUserInformation(self):
         # assume
