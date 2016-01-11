@@ -77,7 +77,7 @@ class UserHandler(BaseHandler):
 
             user_doc = yield motor.Op(self.db.users.insert, result)
 
-            print "saved new user in database with id {0}".format(str(user_doc["_id"]))
+            print "saved new user in database: {0}".format(user_doc)
             user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
                                                  constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key},

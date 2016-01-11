@@ -40,7 +40,7 @@ class USOSUpdater:
     def request_user_info(self):
         return self.request(URI_USER_INFO)
 
-    def request_curse_info(self,usos_user_id):
+    def request_curse_info(self, usos_user_id):
         return self.request(URI_COURSE_INFO.format(usos_user_id))
 
     def request_grades_for_course(self, course_id, term_id):
