@@ -59,16 +59,19 @@ class UserHandler(BaseHandler):
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
         self.validate_usos(usos, parameters)
 
-        user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
-                                                 constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
                                                  constants.USER_PRESENT_KEYS)
 
         if not user_doc:
-            updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
-                                  parameters.access_token_key, parameters.access_token_secret)
+            try:
+                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                                      parameters.access_token_key, parameters.access_token_secret)
 
-            result = updater.request_user_info()
+                result = updater.request_user_info()
+            except Exception, ex:
+                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for user info %s".format(ex))
+
             result[constants.USOS_ID] = result.pop('id')
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.ACCESS_TOKEN_SECRET] = parameters.access_token_secret
@@ -95,27 +98,36 @@ class CoursesHandler(BaseHandler):
 
         self.validate_parameters(4)
         parameters = self.get_parameters()
-        # TODO: po co za kazdym razem ?
+
+        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                                 constants.USER_PRESENT_KEYS)
+
+        if not user_doc or user_doc[constants.USOS_ID] != parameters.usos_id:
+            raise tornado.web.HTTPError(404, "<html><body>User not authenticated</body></html>")
+
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
-        self.validate_usos(usos, parameters)
 
-        doc = yield self.db.courses.find_one({constants.MOBILE_ID: parameters.mobile_id})
+        course_doc = yield self.db.courses.find_one({constants.MOBILE_ID: parameters.mobile_id})
 
-        if not doc:
-            updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
-                                  parameters.access_token_key, parameters.access_token_secret)
-            result = updater.request_curse_info()
+        if not course_doc:
+            try:
+                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                                      parameters.access_token_key, parameters.access_token_secret)
+                result = updater.request_curse_info(user_doc[constants.USOS_ID])
+            except Exception, ex:
+                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for course info %s".format(ex))
 
-            result[constants.MOBILE_ID] = parameters.mobile_id
+            result[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
             doc_id = yield motor.Op(self.db.courses.insert, result)
             print "no courses for mobile_id: {0} in mongo, fetched from usos and created with id: {1}".format(
                     parameters.mobile_id, doc_id)
 
-            doc = yield self.db.courses.find_one({constants.MOBILE_ID: parameters.mobile_id})
+            course_doc = yield self.db.courses.find_one({constants.MOBILE_ID: parameters.mobile_id})
         else:
-            print "get courses for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, doc["_id"])
+            print "get courses for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, course_doc["_id"])
 
-        self.write(json_util.dumps(doc))
+        self.write(json_util.dumps(course_doc))
 
 
 class GradesForCourseAndTermHandler(BaseHandler):
@@ -130,6 +142,13 @@ class GradesForCourseAndTermHandler(BaseHandler):
 
         self.validate_usos(usos, parameters)
 
+        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                                 constants.USER_PRESENT_KEYS)
+
+        if not user_doc:
+            raise tornado.web.HTTPError(404, "<html><body>User not authenticated</body></html>")
+
         course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
         term_id = self.get_argument(constants.TERM_ID, default=None, strip=True)
 
@@ -139,15 +158,13 @@ class GradesForCourseAndTermHandler(BaseHandler):
         if not doc:
             try:
                 updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
-                                      usos[constants.CONSUMER_SECRET],
-                                      parameters.access_token_key, parameters.access_token_secret)
+                                  usos[constants.CONSUMER_SECRET],
+                                  parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_grades_for_course(course_id, term_id)
-            except:
-                e = sys.exc_info()[0]
-                # TODO: ponizszego bledu nie wyswietla tylko wali 400, chyba lepiej to nalezy jakos obsluzyc
-                raise tornado.web.HTTPError(400, "<html><body>Unexpected error: %s </body></html>".format(e.message))
-                return
+            except Exception, ex:
+                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for grades for the course %s".format(ex))
 
+            result[constants.USOS_ID] = parameters.usos_id
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.TERM_ID] = term_id
             result[constants.COURSE_ID] = course_id

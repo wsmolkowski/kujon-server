@@ -45,7 +45,7 @@ class UsosupdaterTest(unittest.TestCase):
         updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
                               '3ShYQv8LyvgeXthKJzmJ', 'JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y')
         # TODO: sprawdzic co zawraca
-        result = updater.request_curse_info()
+        result = updater.request_curse_info(None)
 
         # then
         self.assertListEqual([u'course_editions'], result.keys())
