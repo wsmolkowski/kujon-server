@@ -7,6 +7,7 @@ import settings
 from handlers import CoursesHandler
 from handlers import GradesForAllCoursesAndTermsHandler
 from handlers import GradesForCourseAndTermHandler
+from handlers import LogoutHandler
 from handlers import MainHandler
 from handlers import UserHandler
 from mongo_utils import Dao
@@ -33,6 +34,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/?", MainHandler),
             (r"/api/user", UserHandler),
+            (r"/api/logout", LogoutHandler),
             (r"/api/courses", CoursesHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
             (r"/api/gradesall", GradesForAllCoursesAndTermsHandler),

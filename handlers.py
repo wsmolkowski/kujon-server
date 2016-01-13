@@ -1,5 +1,5 @@
-import sys
 from datetime import datetime
+
 import motor
 import tornado.web
 from bson import json_util
@@ -90,6 +90,13 @@ class UserHandler(BaseHandler):
 
         self.write(json_util.dumps(user_doc))
 
+class LogoutHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+
+        self.write(json_util.dumps(None))
 
 class CoursesHandler(BaseHandler):
     @tornado.web.asynchronous
