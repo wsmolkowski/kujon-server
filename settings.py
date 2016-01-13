@@ -1,10 +1,12 @@
 VERSION = 001
+PROJECT_TITLE = "My title"
 PORT = 8888
 
 DATE_FORMAT = "%d-%m-%y"
 DEFAULT_SCHEDULE_PERIOD = 7
 
-MONGODB_URI = 'mongodb://dbuser1:dbpass1@ds035995.mongolab.com:35995/usos-test2'
+#MONGODB_URI = 'mongodb://dbuser1:dbpass1@ds035995.mongolab.com:35995/usos-test2'
+MONGODB_URI = 'mongodb://192.168.56.101:27017/'
 MONGODB_NAME = 'usos-test2'
 CLEAN_DB = False
 

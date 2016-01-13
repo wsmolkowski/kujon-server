@@ -40,12 +40,6 @@ class BaseHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(404,
                                         "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
 
-
-class MainHandler(BaseHandler):
-    def get(self):
-        self.write("Hello, world from database {0}".format(self.db.name))
-
-
 class UserHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -89,14 +83,6 @@ class UserHandler(BaseHandler):
             print "user data fetched from database {0}".format(user_doc)
 
         self.write(json_util.dumps(user_doc))
-
-class LogoutHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-
-
-        self.write(json_util.dumps(None))
 
 class CoursesHandler(BaseHandler):
     @tornado.web.asynchronous
