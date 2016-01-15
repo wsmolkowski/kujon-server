@@ -7,7 +7,7 @@ import settings
 import constants
 from handlers import BaseHandler
 import usosupdater
-
+import usosmixin
 
 class MainHandler(BaseHandler):
     def get(self):
@@ -35,7 +35,7 @@ class LoginHandler(BaseHandler):
             self.redirect("/")
         else:
             data = {
-                    'alert_message': "login authentication failed for {0} and {1}".format(access_token_key, access_token_key),
+                    'alert_message': "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret),
             }
 
         self.render("login.html", title=settings.PROJECT_TITLE, **data)
@@ -95,3 +95,14 @@ class CreateUserHandler(BaseHandler):
                 print ex
                 self.render("create.html", title=settings.PROJECT_TITLE, **data)
 
+
+class TestHandler(BaseHandler, usosmixin.UsosMixin):
+
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument("oauth_token", None):
+            user = yield self.get_authenticated_user()
+            # Save the user using e.g. set_secure_cookie()
+            print "usos user authenticated", user
+        else:
+            yield self.authorize_redirect("/authentication/login")

@@ -14,6 +14,7 @@ from web_handlers import MainHandler
 from web_handlers import LoginHandler
 from web_handlers import LogoutHandler
 from web_handlers import CreateUserHandler
+from web_handlers import TestHandler
 from mongo_utils import Dao
 
 
@@ -37,6 +38,7 @@ class Application(tornado.web.Application):
 
         handlers = [
             (r"/?", MainHandler),
+            (r"/test", TestHandler),
             (r"/authentication/login", LoginHandler),
             (r"/authentication/logout", LogoutHandler),
             (r"/authentication/create", CreateUserHandler),

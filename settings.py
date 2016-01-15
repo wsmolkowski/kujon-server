@@ -28,3 +28,7 @@ USOSINSTANCES = [
         'contact': 'd.walczyk@tu.kielce.pl'
     }
 ]
+
+consumer_name = "usosapi"
+consumer_key = "vxSehcx4RCA8m4kgjRhY"
+consumer_secret = "T7eJsSJHSxKCshK9jrdNbNy3XCG3UXzQuYKL2VbJ"
