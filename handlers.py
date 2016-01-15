@@ -59,6 +59,8 @@ class UserHandler(BaseHandler):
 
         if not user_doc:
             try:
+                print usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],\
+                    parameters.access_token_key, parameters.access_token_secret
                 updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
                                       parameters.access_token_key, parameters.access_token_secret)
 

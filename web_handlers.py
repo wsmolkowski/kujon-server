@@ -6,12 +6,15 @@ import tornado.web
 import settings
 import constants
 from handlers import BaseHandler
-from usosupdater import USOSUpdater
+import usosupdater
 
 
 class MainHandler(BaseHandler):
     def get(self):
-        self.render("base.html", title=settings.PROJECT_TITLE)
+        if self.get_current_user():
+            self.render("base.html", title=settings.PROJECT_TITLE)
+        else:
+            self.redirect("/authentication/login")
 
 
 class LoginHandler(BaseHandler):
@@ -31,10 +34,11 @@ class LoginHandler(BaseHandler):
             self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc)
             self.redirect("/")
         else:
-            print "login authentication failed for {0} and {1}".format(access_token_key, access_token_key)
-            print "creating user"
+            data = {
+                    'alert_message': "login authentication failed for {0} and {1}".format(access_token_key, access_token_key),
+            }
 
-            self.redirect("/create")
+        self.render("login.html", title=settings.PROJECT_TITLE, **data)
 
 
 class LogoutHandler(BaseHandler):
@@ -48,7 +52,7 @@ class CreateUserHandler(BaseHandler):
         self.render("create.html", title=settings.PROJECT_TITLE)
 
     @tornado.web.asynchronous
-    @tornado.gen.engine
+    @tornado.gen.coroutine
     def post(self):
         access_token_key = str(self.get_argument("inputAccessTokenKey"))
         access_token_secret = str(self.get_argument("inputAccessTokenSecret"))
@@ -63,25 +67,31 @@ class CreateUserHandler(BaseHandler):
             print "user already exists %s".format(user_doc)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc)
             self.redirect("/")
+
         else:
-            print "login authentication failed for {0} and {1}".format(access_token_key, access_token_key)
-            print "creating user access_token_key: {0} access_token_secret: {1} url: {2} consumer_key: {3} consumer_secret: {4}".format(
-                access_token_key, access_token_secret, url, consumer_key, consumer_secret
+            print "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret)
+            print "creating user url: {0} consumer_key: {1} consumer_secret: {2} access_token_key: {3} access_token_secret: {4}  ".format(
+                url, consumer_key, consumer_secret, access_token_key, access_token_secret
             )
+            try:
+                print url, consumer_key, consumer_secret, access_token_key, access_token_secret
+                result = yield usosupdater.request_user_info(url, consumer_key, consumer_secret, access_token_key, access_token_secret)
 
-            updater = USOSUpdater(url, consumer_key, consumer_secret,
-                                  access_token_key, access_token_secret)
+                result[constants.USOS_ID] = result.pop('id')
+                #result[constants.MOBILE_ID] = parameters.mobile_id
+                result[constants.ACCESS_TOKEN_SECRET] = access_token_secret
+                result[constants.ACCESS_TOKEN_KEY] = access_token_key
+                result[constants.CREATED_TIME] = datetime.now()
 
-            result = updater.request_user_info()
+                user_doc = yield motor.Op(self.db.users.insert, result)
 
+                print "saved new user in database: {0}".format(user_doc)
+                self.redirect("/")
+            except Exception, ex:
+                data = {
+                        'alert_message': "User creation fail failed for {0} and {1}".format(access_token_key, access_token_key),
+                        'alert_exception': ex,
+                }
+                print ex
+                self.render("create.html", title=settings.PROJECT_TITLE, **data)
 
-            result[constants.USOS_ID] = result.pop('id')
-            #result[constants.MOBILE_ID] = parameters.mobile_id
-            result[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-            result[constants.ACCESS_TOKEN_KEY] = access_token_key
-            result[constants.CREATED_TIME] = datetime.now()
-
-            user_doc = yield motor.Op(self.db.users.insert, result)
-
-            print "saved new user in database: {0}".format(user_doc)
-            self.redirect("/")

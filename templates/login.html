@@ -43,6 +43,24 @@
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
       </form>
 
+      {% try %}
+        {% if alert_message %}
+          <div class="alert alert-danger alert-dismissible form-signin fade in" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">×</span></button>
+            <strong>Holy guacamole!</strong> {{ alert_message }}
+          </div>
+        {% end %}
+      {% except %}
+      {% end %}
+
+      <div class="page-header form-signin">
+        <h2 class="page-header">If you are new</h2>
+        <p>
+          <a class="btn btn-lg btn-primary btn-block" href="/authentication/create" role="button">Create new user &raquo;</a>
+        </p>
+      </div>
+
     </div> <!-- /container -->
 
 
