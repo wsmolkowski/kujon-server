@@ -1,19 +1,20 @@
 import os
+
 import motor
 import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
 
 import settings
-from handlers import CoursesHandler
-from handlers import GradesForAllCoursesAndTermsHandler
-from handlers import GradesForCourseAndTermHandler
-from handlers import UserHandler
-
-from web_handlers import MainHandler
-from web_handlers import LoginHandler
-from web_handlers import LogoutHandler
-from web_handlers import CreateUserHandler
+from handlers_api import CoursesHandler
+from handlers_api import CreateUserHandler
+from handlers_api import GradesForAllCoursesAndTermsHandler
+from handlers_api import GradesForCourseAndTermHandler
+from handlers_api import UserHandler
+from handlers_api_usos import Usoses
+from handlers_web import LoginHandler
+from handlers_web import LogoutHandler
+from handlers_web import MainHandler
 from mongo_utils import Dao
 
 
@@ -45,6 +46,7 @@ class Application(tornado.web.Application):
             (r"/api/courses", CoursesHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
             (r"/api/gradesall", GradesForAllCoursesAndTermsHandler),
+            (r"/api/usoses", Usoses),
         ]
 
 

@@ -3,10 +3,10 @@ from datetime import datetime
 import motor
 import tornado.web
 
-import settings
 import constants
-from handlers import BaseHandler
+import settings
 import usosupdater
+from handlers_api import BaseHandler
 
 
 class MainHandler(BaseHandler):
@@ -31,7 +31,7 @@ class LoginHandler(BaseHandler):
                                                  constants.ACCESS_TOKEN_KEY: access_token_key},
                                                  constants.USER_PRESENT_KEYS)
         if user_doc:
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc)
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE, "wartosc")
             self.redirect("/")
         else:
             data = {
@@ -47,7 +47,6 @@ class LogoutHandler(BaseHandler):
         self.redirect("/")
 
 
-class CreateUserHandler(BaseHandler):
     def get(self):
         self.render("create.html", title=settings.PROJECT_TITLE)
 
@@ -65,8 +64,8 @@ class CreateUserHandler(BaseHandler):
                                                  constants.USER_PRESENT_KEYS)
         if user_doc:
             print "user already exists %s".format(user_doc)
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc)
-            self.redirect("/")
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE, "wartosc coookie")
+            self.redirect("/?userexists")
 
         else:
             print "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret)
