@@ -58,8 +58,6 @@ class UserHandler(BaseHandler):
 
         user_doc = self.get_current_user()
 
-
-
         if not user_doc:
             try:
                 print usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],\

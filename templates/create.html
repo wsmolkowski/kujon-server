@@ -35,16 +35,12 @@
       <form class="form-horizontal" action="/authentication/create" method="post">
         {% module xsrf_form_html() %}
         <h2 class="form-signin-heading">Create user</h2>
-        <label for="inputAccessTokenKey" class="sr-only">Access Token Key</label>
-        <input type="text" name="inputAccessTokenKey" id="inputAccessTokenKey" class="form-control" value="3ShYQv8LyvgeXthKJzmJ" required autofocus>
-        <label for="inputAccessTokenSecret" class="sr-only">Access Token Secret</label>
-        <input type="text" name="inputAccessTokenSecret" id="inputAccessTokenSecret" class="form-control" value="JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y" required>
-        <label for="inputUrl" class="sr-only">Access Token Key</label>
-        <input type="text" name="inputUrl" id="inputUrl" class="form-control" value="https://usosapps.uw.edu.pl/" required>
-        <label for="inputConsumerKey" class="sr-only">Consumer Key</label>
-        <input type="text" name="inputConsumerKey" id="inputConsumerKey" class="form-control" value="KBt6uWPWUekUzFtNTyY9" required>
-        <label for="inputConsumerSecret" class="sr-only">Consumer Secret</label>
-        <input type="text" name="inputConsumerSecret" id="inputConsumerSecret" class="form-control" value="Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG" required>
+
+        <label for="usos">Select your USOS instance:</label>
+        <!--TODO: tutaj wczytac dane usosow z /api/usoses-->
+        <select name="usos">
+          <option value="[{'name':'UW','url':'http://urlUW','consumer_key':'xxUWUWUW','consumer_secret':'yyUWyy'}]">Uniwersytet Warszawski</option>
+        </select>
         <input type="hidden" name="next" value="/" />
         <button class="btn btn-lg btn-primary btn-block" type="submit">Create user</button>
       </form>
