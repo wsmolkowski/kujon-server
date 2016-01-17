@@ -32,22 +32,21 @@
 
     <div class="container">
 
-      <form class="form-horizontal" action="/authentication/create" method="post">
-        {% module xsrf_form_html() %}
-        <h2 class="form-signin-heading">Create user</h2>
+      <form class="form-inline" action="/authentication/create" method="post">
+        <div class="form-group">
+          {% module xsrf_form_html() %}
+          <h2 class="form-signin-heading">Create user</h2>
 
-        <label for="usos">Select your USOS instance:</label>
+          <label for="usos">USOS instance</label>
 
-        <!--
-        <option value="[{'name':'UW','url':'http://urlUW','consumer_key':'xxUWUWUW','consumer_secret':'yyUWyy'}]">Uniwersytet Warszawski</option>
-        -->
-        <select name="usos">
-          {% for usos in usoses %}
-          <option value="{{usos['url']}}">{{usos['name']}}</option>
-          {% end %}
-        </select>
-        <input type="hidden" name="next" value="/" />
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Create user</button>
+          <select name="usos" class="form-control">
+            {% for usos in usoses %}
+            <option value="{{usos['url']}}">{{usos['name']}}</option>
+            {% end %}
+          </select>
+          <input type="hidden" name="next" value="/" />
+          <button class="btn btn-default btn-primary" type="submit">Create user</button>
+        </div>
       </form>
 
       {% try %}
