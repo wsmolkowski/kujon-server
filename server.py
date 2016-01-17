@@ -7,11 +7,11 @@ from tornado.ioloop import IOLoop
 
 import settings
 from handlers_api import CoursesHandler
-from handlers_api import CreateUserHandler
 from handlers_api import GradesForAllCoursesAndTermsHandler
 from handlers_api import GradesForCourseAndTermHandler
 from handlers_api import UserHandler
 from handlers_api_usos import Usoses
+from handlers_web import CreateUserHandler
 from handlers_web import LoginHandler
 from handlers_web import LogoutHandler
 from handlers_web import MainHandler

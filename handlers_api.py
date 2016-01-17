@@ -40,12 +40,6 @@ class BaseHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(404,
                                         "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
 
-class CreateUserHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        pass
-
 
 class UserHandler(BaseHandler):
     @tornado.web.asynchronous
