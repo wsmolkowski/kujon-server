@@ -9,18 +9,15 @@ DEFAULT_SCHEDULE_PERIOD = 7
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 CLEAN_DB = False
-
 USOSINSTANCES = [
-    {
-        'usos_id': 'UW',
+    {'usos_id': 'UW',
         'name': 'Uniwersyst Warszawski',
         'url': 'https://usosapps.uw.edu.pl/',
         'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
         'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',
         'contact': 'dsksysadm@adm.uw.edu.pl'
     },
-    {
-        'usos_id': 'PS',
+    {'usos_id': 'PS',
         'name': 'Politechnika Swietokrzystka',
         'url': 'https://api.usos.tu.kielce.pl/',
         'consumer_key': 'equujDB5ZLzTmPfcy2c2',
@@ -28,7 +25,7 @@ USOSINSTANCES = [
         'contact': 'd.walczyk@tu.kielce.pl'
     }
 ]
-
-consumer_name = "usosapi"
-consumer_key = "vxSehcx4RCA8m4kgjRhY"
-consumer_secret = "T7eJsSJHSxKCshK9jrdNbNy3XCG3UXzQuYKL2VbJ"
+CONSUMER_NAME = "usosapi"
+CONSUMER_KEY = "vxSehcx4RCA8m4kgjRhY"
+CONSUMER_SECRET = "T7eJsSJHSxKCshK9jrdNbNy3XCG3UXzQuYKL2VbJ"
+CALLBACK_URL= "http://localhost:{0}/authentication/verify".format(PORT)

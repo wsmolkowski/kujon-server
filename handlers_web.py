@@ -1,5 +1,7 @@
 import urlparse
+from datetime import datetime
 
+import motor
 import tornado.web
 
 import constants
@@ -8,12 +10,14 @@ import settings
 import usosmixin
 from handlers_api import BaseHandler
 
+
 class MainHandler(BaseHandler):
     def get(self):
         if self.get_current_user():
             self.render("base.html", title=settings.PROJECT_TITLE)
         else:
             self.redirect("/authentication/login")
+
 
 class LoginHandler(BaseHandler):
     def get(self):
@@ -29,14 +33,15 @@ class LoginHandler(BaseHandler):
 
         user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: access_token_key},
-                                                 constants.USER_PRESENT_KEYS)
+                                                constants.USER_PRESENT_KEYS)
         if user_doc:
             self.set_secure_cookie(constants.USER_SECURE_COOKIE, str(user_doc))
             self.redirect(next_page)
         else:
             data = {
-                    'alert_message': "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret),
-                    constants.NEXT_PAGE: next_page
+                'alert_message': "login authentication failed for {0} and {1}".format(access_token_key,
+                                                                                      access_token_secret),
+                constants.NEXT_PAGE: next_page
             }
 
             self.render("login.html", title=settings.PROJECT_TITLE, **data)
@@ -49,7 +54,6 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -62,58 +66,93 @@ class CreateUserHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
-        usos_url = self.get_argument("usos").strip()
+        mobile_id = self.get_argument("mobile_id").strip()
 
+        usos_url = self.get_argument("usos").strip()
         usos_doc = yield self.db.usosinstances.find_one({constants.URL: usos_url})
 
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+        # try to find user in db
+        user = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id, constants.USOS_ID: usos_doc})
+        if user:
+            data = {
+                'alert_message': "mobile_id / username: {0} already exists".format(mobile_id),
+            }
+            self.render("create.html", title=settings.PROJECT_TITLE, **data)
+        else:
+            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+            request_token_url = usos_doc[constants.URL] + 'services/oauth/request_token?scopes=studies|offline_access'
+            client = oauth.Client(consumer)
+            resp, content = client.request(request_token_url, "GET", callback_url=settings.CALLBACK_URL)
+            if resp['status'] != '200':
+                raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
 
-        request_token_url = usos_url + 'services/oauth/request_token?scopes=studies|offline_access'
+            request_token = self.get_token(content)
 
-        client = oauth.Client(consumer)
-        resp, content = client.request(request_token_url, "GET", callback_url='http://localhost:8888/authentication/verify')
-        if resp['status'] != '200':
-            raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
+            # updating to db user access_token_key & access_token_secret
+            access_token_key = request_token.key
+            access_token_secret = request_token.secret
 
-        request_token = self.get_token(content)
-        authorize_url = usos_url + 'services/oauth/authorize'
+            result = dict()
+            result[constants.USOS_ID] = usos_doc['usos_id']
+            result[constants.MOBILE_ID] = mobile_id
+            result[constants.ACCESS_TOKEN_SECRET] = access_token_secret
+            result[constants.ACCESS_TOKEN_KEY] = access_token_key
+            result[constants.CREATED_TIME] = datetime.now()
 
-        url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
-        self.redirect(url_redirect)
+            user_doc = yield motor.Op(self.db.users.insert, result)
+            print "saved new user in database: {0}".format(user_doc)
+
+            authorize_url = usos_url + 'services/oauth/authorize'
+            url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
+            self.redirect(url_redirect)
 
 
 class VerifyHandler(BaseHandler):
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        oauth_token = self.get_argument("oauth_token")
+        oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
 
-        print '''
-            TODO: zrob zapis/odczyt z bazy wzgledem, oauth_token, oauth_verifier
-            jesli ok przekierowanie do odpowiedniej strony badz blad 400/500
-            ''', oauth_token, oauth_verifier
+        # try to find user in db
+        user = yield self.db.users.find_one({constants.ACCESS_TOKEN_KEY: oauth_token_key})
+        if user:
 
-        '''
-        access_token_url = usos_url + 'services/oauth/access_token'
+            usos_id = user['usos_id']
+            usos_doc = yield self.db.usosinstances.find_one({constants.USOS_ID: usos_id})
 
-        request_token = self._read_token(content)
-        request_token.set_verifier(oauth_verifier)
+            request_token = oauth.Token(user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
+            request_token.set_verifier(oauth_verifier)
+            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
             client = oauth.Client(consumer, request_token)
-            resp, content = client.request(access_token_url, "GET")
+            access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
+            esp, content = client.request(access_token_url, "GET")
+
+            def _read_token(content):
+                arr = dict(urlparse.parse_qsl(content))
+                return oauth.Token(arr['oauth_token'], arr['oauth_token_secret'])
+
             try:
-                access_token = self._read_token(content)
+                access_token = _read_token(content)
+                data = {
+                    'alert_message': "user authenticated with mobile_id / username: {0}".format(user[constants.USOS_ID])
+                }
             except KeyError:
                 print "Cound not retrieve Access Token (invalid outh_verifier)."
-        '''
-
-        self.write("See logs for details")
+                data = {
+                    'alert_message': "failed user authenticate with mobile_id / username: {0}".format(user[constants.USOS_ID])
+                }
+            self.render("login.html", title=settings.PROJECT_TITLE, **data)
+        else:
+            data = {
+                    'alert_message': "user not found for given oauth_token_key:{0}, oauth_verifier: {1}"
+                        .format(oauth_token_key, oauth_verifier)
+            }
+            self.render("/authorization/create", title=settings.PROJECT_TITLE, **data)
 
 
 class TestHandler(BaseHandler, usosmixin.UsosMixin):
-
     @tornado.gen.coroutine
     def get(self):
         if self.get_argument("oauth_token", None):

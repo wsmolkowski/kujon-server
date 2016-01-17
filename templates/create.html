@@ -37,13 +37,17 @@
           {% module xsrf_form_html() %}
           <h2 class="form-signin-heading">Create user</h2>
 
-          <label for="usos">USOS instance</label>
+          <label for="mobile_id">Enter mobile_id or password: </label>
+          <input type="text" name="mobile_id" id="mobile_id" class="form-control" placeholder="mobile_id" required autofocus>
+          <br>
+          <label for="usos">Select your USOS localization: </label>
 
           <select name="usos" class="form-control">
             {% for usos in usoses %}
             <option value="{{usos['url']}}">{{usos['name']}}</option>
             {% end %}
           </select>
+          <br>
           <input type="hidden" name="next" value="/" />
           <button class="btn btn-default btn-primary" type="submit">Create user</button>
         </div>
