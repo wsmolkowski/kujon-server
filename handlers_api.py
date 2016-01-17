@@ -1,4 +1,5 @@
 from datetime import datetime
+import urlparse
 
 import motor
 import tornado.web
@@ -6,7 +7,7 @@ from bson import json_util
 
 import constants
 from usosupdater import USOSUpdater
-
+import oauth2 as oauth
 
 class Parameters:
     def __init__(self, usos_id, mobile_id, access_token_key, access_token_secret):
@@ -41,6 +42,10 @@ class BaseHandler(tornado.web.RequestHandler):
         if not usos:
             raise tornado.web.HTTPError(404,
                                         "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
+
+    def get_token(self, content):
+        arr = dict(urlparse.parse_qsl(content))
+        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
 
 class UserHandler(BaseHandler):
