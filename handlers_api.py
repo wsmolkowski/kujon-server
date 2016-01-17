@@ -21,6 +21,9 @@ class BaseHandler(tornado.web.RequestHandler):
     def db(self):
         return self.application.db
 
+    def get_current_user(self):
+        return self.get_secure_cookie(constants.USER_SECURE_COOKIE)
+
     def get_parameters(self):
         return Parameters(
                 self.get_argument(constants.USOS_ID, default=None, strip=True),
@@ -31,8 +34,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def validate_parameters(self, expected):
         if len(self.request.arguments) != expected:
-            # TODO: nie wypisuje tego arguments not suppored
-            raise tornado.web.HTTPError(404, "<html><body>Arguments not supported {0}</body></html>".format(
+            raise tornado.web.HTTPError(404, "<html><body>Arguments not supported %s</body></html>".format(
                 str(self.request.arguments)))
 
     def validate_usos(self, usos, parameters):
@@ -42,6 +44,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class UserHandler(BaseHandler):
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -50,13 +53,12 @@ class UserHandler(BaseHandler):
 
         parameters = self.get_parameters()
 
-        # TODO: moim zdaniem nie ma sensu za kazdym razem pytac baze o usosa to tylko spowalnia
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
         self.validate_usos(usos, parameters)
 
-        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
-                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                 constants.USER_PRESENT_KEYS)
+        user_doc = self.get_current_user()
+
+
 
         if not user_doc:
             try:

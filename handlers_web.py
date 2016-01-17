@@ -7,6 +7,7 @@ import constants
 import settings
 import usosupdater
 from handlers_api import BaseHandler
+import usosmixin
 
 
 class MainHandler(BaseHandler):
@@ -19,34 +20,36 @@ class MainHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
     def get(self):
-        self.render("login.html", title=settings.PROJECT_TITLE)
+        data = {constants.NEXT_PAGE: self.get_argument('next', '/')}
+        self.render("login.html", title=settings.PROJECT_TITLE, **data)
 
     @tornado.web.asynchronous
     @tornado.gen.engine
     def post(self):
-        data = None
         access_token_key = self.get_argument("inputAccessTokenKey")
         access_token_secret = self.get_argument("inputAccessTokenSecret")
+        next_page = self.get_argument(constants.NEXT_PAGE, "/")
 
         user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: access_token_key},
                                                  constants.USER_PRESENT_KEYS)
         if user_doc:
-            # TODO: zimienic wartosc cookie na cos lepszego
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE, "wartosc")
-            self.redirect("/")
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc)
+            self.redirect(next_page)
         else:
             data = {
                     'alert_message': "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret),
+                    constants.NEXT_PAGE: next_page
             }
 
-        self.render("login.html", title=settings.PROJECT_TITLE, **data)
+            self.render("login.html", title=settings.PROJECT_TITLE, **data)
 
 
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie(constants.USER_SECURE_COOKIE)
         self.redirect("/")
+
 
 class CreateUserHandler(BaseHandler):
 
@@ -120,3 +123,14 @@ class CreateUserHandler(BaseHandler):
                 print ex
                 self.render("create.html", title=settings.PROJECT_TITLE, **data)
 
+
+class TestHandler(BaseHandler, usosmixin.UsosMixin):
+
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument("oauth_token", None):
+            user = yield self.get_authenticated_user()
+            # Save the user using e.g. set_secure_cookie()
+            print "usos user authenticated", user
+        else:
+            yield self.authorize_redirect("/authentication/login")

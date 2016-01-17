@@ -13,3 +13,4 @@ CONSUMER_SECRET = 'consumer_secret'
 
 USER_PRESENT_KEYS = ("_id", "mobile_id", "usos_id", "first_name", "last_name")
 USER_SECURE_COOKIE = "USER_SECURE_COOKIE"
+NEXT_PAGE = "NEXT_PAGE"

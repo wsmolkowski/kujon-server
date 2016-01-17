@@ -5,16 +5,16 @@ import tornado.web
 from tornado.ioloop import IOLoop
 
 import settings
-from handlers import CoursesHandler
-from handlers import GradesForAllCoursesAndTermsHandler
-from handlers import GradesForCourseAndTermHandler
-from handlers import UserHandler
+from handlers_api import CoursesHandler
+from handlers_api import GradesForAllCoursesAndTermsHandler
+from handlers_api import GradesForCourseAndTermHandler
+from handlers_api import UserHandler
 
-from web_handlers import MainHandler
-from web_handlers import LoginHandler
-from web_handlers import LogoutHandler
-from web_handlers import CreateUserHandler
-from web_handlers import TestHandler
+from handlers_web import MainHandler
+from handlers_web import LoginHandler
+from handlers_web import LogoutHandler
+from handlers_web import CreateUserHandler
+from handlers_web import TestHandler
 from mongo_utils import Dao
 
 
@@ -54,7 +54,7 @@ class Application(tornado.web.Application):
             "template_path": os.path.join(os.path.dirname(__file__), "templates"),
             "static_path": os.path.join(os.path.dirname(__file__), "static"),
             "cookie_secret": "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
-            "login_url": "/login",
+            "login_url": "/authentication/login",
             "xsrf_cookies": True,
         }
 
