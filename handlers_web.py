@@ -54,6 +54,16 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
+
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def render_create2(self, data=dict()):
+
+        usoses = yield self.db.usosinstances.find().to_list(length=100)
+        update = dict({"usoses" : usoses})
+        update.update(data)
+        self.render("create.html", title=settings.PROJECT_TITLE, **update)
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -67,15 +77,17 @@ class CreateUserHandler(BaseHandler):
     @tornado.gen.coroutine
     def post(self):
         mobile_id = self.get_argument("mobile_id").strip()
-
         usos_url = self.get_argument("usos").strip()
+
         usos_doc = yield self.db.usosinstances.find_one({constants.URL: usos_url})
 
         # try to find user in db
-        user = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id, constants.USOS_ID: usos_doc})
+        user = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id, constants.USOS_ID: usos_doc[constants.USOS_ID]})
         if user:
+            usoses = yield self.db.usosinstances.find().to_list(length=100)
             data = {
-                'alert_message': "mobile_id / username: {0} already exists".format(mobile_id),
+                "alert_message": "mobile_id / username: {0} already exists".format(mobile_id),
+                "usoses": usoses
             }
             self.render("create.html", title=settings.PROJECT_TITLE, **data)
         else:
@@ -114,40 +126,35 @@ class VerifyHandler(BaseHandler):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
+        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_KEY: oauth_token_key})
 
-        # try to find user in db
-        user = yield self.db.users.find_one({constants.ACCESS_TOKEN_KEY: oauth_token_key})
-        if user:
+        if user_doc:
+            usos_doc = yield self.db.usosinstances.find_one({constants.USOS_ID: user_doc[constants.USOS_ID]})
 
-            usos_id = user['usos_id']
-            usos_doc = yield self.db.usosinstances.find_one({constants.USOS_ID: usos_id})
-
-            request_token = oauth.Token(user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
+            request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[constants.ACCESS_TOKEN_SECRET])
             request_token.set_verifier(oauth_verifier)
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
             client = oauth.Client(consumer, request_token)
             access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 
-            def _read_token(content):
-                arr = dict(urlparse.parse_qsl(content))
-                return oauth.Token(arr['oauth_token'], arr['oauth_token_secret'])
-
             try:
-                access_token = _read_token(content)
+                access_token = self.get_token(content)
                 data = {
-                    'alert_message': "user authenticated with mobile_id / username: {0}".format(user[constants.USOS_ID])
+                    'alert_message': "user_doc authenticated with mobile_id / username: {0}".format(user_doc[constants.USOS_ID]),
+                    constants.NEXT_PAGE: "/"
                 }
             except KeyError:
-                print "Cound not retrieve Access Token (invalid outh_verifier)."
                 data = {
-                    'alert_message': "failed user authenticate with mobile_id / username: {0}".format(user[constants.USOS_ID])
+                    'alert_message': "failed user_doc authenticate with mobile_id / username: {0}".format(user_doc[constants.USOS_ID]),
+                    constants.NEXT_PAGE: "/"
                 }
             self.render("login.html", title=settings.PROJECT_TITLE, **data)
         else:
             data = {
-                    'alert_message': "user not found for given oauth_token_key:{0}, oauth_verifier: {1}"
-                        .format(oauth_token_key, oauth_verifier)
+                    'alert_message': "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}"
+                        .format(oauth_token_key, oauth_verifier),
+                    constants.NEXT_PAGE: "/"
             }
             self.render("/authorization/create", title=settings.PROJECT_TITLE, **data)
 

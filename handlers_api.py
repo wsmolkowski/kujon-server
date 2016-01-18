@@ -47,7 +47,6 @@ class BaseHandler(tornado.web.RequestHandler):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-
 class UserHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
