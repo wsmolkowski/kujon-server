@@ -1,5 +1,5 @@
 VERSION = 001
-PROJECT_TITLE = "My title"
+PROJECT_TITLE = "Kujon-web"
 PORT = 8888
 
 DATE_FORMAT = "%d-%m-%y"

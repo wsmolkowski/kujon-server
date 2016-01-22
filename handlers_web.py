@@ -1,4 +1,3 @@
-import urlparse
 from datetime import datetime
 
 import motor
@@ -13,8 +12,11 @@ from handlers_api import BaseHandler
 
 class MainHandler(BaseHandler):
     def get(self):
+        page=self.get_argument('page', None)
+        if not page in ('chat', 'friends', 'school', 'settings'):
+            page = "main"
         if self.get_current_user():
-            self.render("base.html", title=settings.PROJECT_TITLE)
+            self.render("base.html", title=settings.PROJECT_TITLE, page=page)
         else:
             self.redirect("/authentication/login")
 
