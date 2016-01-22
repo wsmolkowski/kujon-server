@@ -11,8 +11,11 @@ from handlers_api import BaseHandler
 
 class LoginHandler(BaseHandler):
     def get(self):
-        data = {constants.NEXT_PAGE: self.get_argument('next', '/')}
-        self.render("login.html", title=settings.PROJECT_TITLE, **data)
+        data = {
+            'PROJECT_TITLE': settings.PROJECT_TITLE,
+            constants.NEXT_PAGE: self.get_argument('next', '/')
+        }
+        self.render("login.html", **data)
 
     @tornado.web.asynchronous
     @tornado.gen.engine
