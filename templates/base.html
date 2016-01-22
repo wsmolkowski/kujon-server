@@ -10,7 +10,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>{{PROJECT_TITLE}}</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
@@ -34,33 +34,28 @@
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
              {% if current_user %}
-                  <li><a href="/?page=chat">Wiadomości</a></li>
-                  <li><a href="/?page=friends">Znajomi</a></li>
-                  <li><a href="/?page=school">Szkoła</a></li>
-                  <li><a href="/?page=settings">Ustawienia</a></li>
-                  <li><a href="/authentication/logout">Logout</a></li>
+              <li><a href="/school">Szkoła</a></li>
+              <!--
+              <li><a href="/chat">Wiadomości</a></li>
+              <li><a href="/friends">Znajomi</a></li>
+              <li><a href="/settings">Ustawienia</a></li>
+              -->
+              <li><a href="/authentication/logout">Logout</a></li>
              {% else %}
-                  <li><a href="/authentication/login">Login</a></li>
-                  <li><a href="/authentication/create">Create user</a></li>
+              <li><a href="/authentication/login">Login</a></li>
+              <li><a href="/authentication/create">Create user</a></li>
              {% end %}
           </ul>
+          <h3 class="text-muted" href="/">{{PROJECT_TITLE}}</h3>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
     <div class="container">
 
-      <!-- Main component for a primary marketing message or call to action -->
-      <div class="jumbotron">
-        <h1>Current page: {{page}}</h1>
-          <div>
-              load {{page}} here -> use variable here
-              {%include chat.html %}
-              <!--{%include friends.html %}-->
-              <!--{%include school.html %}-->
-              <!--{%include settings.html %}-->
-          </div>
-      </div>
+      {% block main %}
+        <!--div class="container" style="padding-top:-10px"-->
+      {% end %}
 
     </div> <!-- /container -->
 
@@ -75,7 +70,6 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
 
   <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"

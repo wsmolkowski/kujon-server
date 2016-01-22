@@ -42,7 +42,7 @@
           <br>
           <label for="usos">Select your USOS localization: </label>
 
-          <select name="usos" class="form-control">
+          <select id="usos" name="usos" class="form-control">
             {% for usos in usoses %}
             <option value="{{usos['url']}}">{{usos['name']}}</option>
             {% end %}

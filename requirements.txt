@@ -1,4 +1,5 @@
 tornado
 motor
+httplib2
 # from https://usosapps.uw.edu.pl/developers/api/
 # oauth2

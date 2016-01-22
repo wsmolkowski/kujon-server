@@ -1,13 +1,16 @@
 from datetime import datetime
 import urlparse
 
+import httplib2
 import motor
 import tornado.web
 from bson import json_util
 
+import settings
 import constants
 from usosupdater import USOSUpdater
 import oauth2 as oauth
+
 
 class Parameters:
     def __init__(self, usos_id, mobile_id, access_token_key, access_token_secret):
@@ -46,6 +49,12 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_token(self, content):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
+
+    def get_proxy(self):
+        if settings.PROXY_PORT and settings.PROXY_URL:
+            return httplib2.ProxyInfo(httplib2.socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
+        return None
+
 
 class UserHandler(BaseHandler):
     @tornado.web.authenticated
