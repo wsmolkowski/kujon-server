@@ -8,7 +8,6 @@ from handlers_api import BaseHandler
 
 
 class MainHandler(BaseHandler):
-    @tornado.web.authenticated
     def get(self):
         data = {
             'PROJECT_TITLE': settings.PROJECT_TITLE
