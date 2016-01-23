@@ -14,10 +14,12 @@ class ApiCoursesGradesTest(AsyncHTTPTestCase):
         db_connection = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         db = db_connection[settings.MONGODB_NAME]
 
-        user_doc = db.users.find_one({constants.ACCESS_TOKEN_SECRET: "3ShYQv8LyvgeXthKJzmJ",
-                                                 constants.ACCESS_TOKEN_KEY: "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"},
-                                                constants.USER_PRESENT_KEYS)
-        if user_doc:
+        document = yield db.users.find_one({constants.ACCESS_TOKEN_SECRET: "3ShYQv8LyvgeXthKJzmJ"})
+
+        # user_doc = yield db.users.find_one({constants.ACCESS_TOKEN_SECRET: "3ShYQv8LyvgeXthKJzmJ",
+        #                                          constants.ACCESS_TOKEN_KEY: "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"},
+        #                                         constants.USER_PRESENT_KEYS)
+        if document:
             pass
         # if not user_doc:
         #     print "not found"
