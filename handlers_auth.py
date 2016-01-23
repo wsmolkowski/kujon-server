@@ -141,6 +141,17 @@ class VerifyHandler(BaseHandler):
 
             try:
                 access_token = self.get_token(content)
+
+                updated_user = dict()
+                updated_user[constants.USOS_ID] = user_doc['usos_id']
+                updated_user[constants.MOBILE_ID] = user_doc['mobile_id']
+                updated_user[constants.USOS_ID] = user_doc['usos_id']
+                updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
+                updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
+                updated_user[constants.CREATED_TIME] = datetime.now()
+
+                user_doc_updated = yield self.db.users.update({'_id': user_doc['_id']},updated_user)
+                print(usos_doc)
                 data = {
                     'alert_message': "user_doc authenticated with mobile_id / username: {0}".format(user_doc[constants.USOS_ID]),
                     constants.NEXT_PAGE: "/"
