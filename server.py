@@ -17,6 +17,10 @@ from handlers_auth import VerifyHandler
 
 from handlers_web import MainHandler
 from handlers_web import SchoolHandler
+from handlers_web import ChatHandler
+from handlers_web import FriendsHandler
+from handlers_web import SettingsHandler
+
 
 from mongo_utils import Dao
 
@@ -42,6 +46,9 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/?", MainHandler),
             (r"/school", SchoolHandler),
+            (r"/chat", ChatHandler),
+            (r"/friends", FriendsHandler),
+            (r"/settings", SettingsHandler),
             (r"/authentication/login", LoginHandler),
             (r"/authentication/logout", LogoutHandler),
             (r"/authentication/create", CreateUserHandler),

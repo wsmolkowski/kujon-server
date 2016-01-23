@@ -25,3 +25,36 @@ class SchoolHandler(BaseHandler):
             'PROJECT_TITLE': settings.PROJECT_TITLE
         }
         self.render("school.html", **data)
+
+
+class ChatHandler(BaseHandler):
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = {
+            'PROJECT_TITLE': settings.PROJECT_TITLE
+        }
+        self.render("chat.html", **data)
+
+
+class FriendsHandler(BaseHandler):
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = {
+            'PROJECT_TITLE': settings.PROJECT_TITLE
+        }
+        self.render("friends.html", **data)
+
+
+class SettingsHandler(BaseHandler):
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = {
+            'PROJECT_TITLE': settings.PROJECT_TITLE
+        }
+        self.render("settings.html", **data)
