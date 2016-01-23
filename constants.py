@@ -6,6 +6,7 @@ TERM_ID = 'term_id'
 CREATED_TIME = 'created_time'
 ACCESS_TOKEN_KEY = 'access_token_key'
 ACCESS_TOKEN_SECRET = 'access_token_secret'
+OAUTH_VERIFIER = 'oauth_verifier'
 
 URL = 'url'
 CONSUMER_KEY = 'consumer_key'
@@ -16,3 +17,5 @@ USER_SECURE_COOKIE = "USER_SECURE_COOKIE"
 NEXT_PAGE = "NEXT_PAGE"
 OAUTH_TOKEN = "oauth_token"
 OAUTH_TOKEN_SECRET = 'oauth_token_secret'
+
+ALERT_MESSAGE = 'alert_message'

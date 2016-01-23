@@ -57,6 +57,14 @@ class BaseHandler(tornado.web.RequestHandler):
             return httplib2.ProxyInfo(httplib2.socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None
 
+    @staticmethod
+    def template_data():
+        return {
+            'PROJECT_TITLE': settings.PROJECT_TITLE,
+            constants.NEXT_PAGE:  "/"
+
+        }
+
 
 class UserHandler(BaseHandler):
     @tornado.web.asynchronous

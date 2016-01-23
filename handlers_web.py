@@ -32,9 +32,7 @@ class CoursesWebHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = {
-            'PROJECT_TITLE': settings.PROJECT_TITLE
-        }
+        data = self.template_data()
         self.render("school-courses.html", **data)
 
 
@@ -43,9 +41,7 @@ class GradesWebHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = {
-            'PROJECT_TITLE': settings.PROJECT_TITLE
-        }
+        data = self.template_data()
         self.render("school-grades.html", **data)
 
 
@@ -54,10 +50,7 @@ class ChatHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = {
-            'PROJECT_TITLE': settings.PROJECT_TITLE
-        }
-        self.render("chat.html", **data)
+        self.render("chat.html", **self.template_data())
 
 
 class FriendsHandler(BaseHandler):
@@ -65,9 +58,7 @@ class FriendsHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = {
-            'PROJECT_TITLE': settings.PROJECT_TITLE
-        }
+        data = data = self.template_data()
         self.render("friends.html", **data)
 
 
@@ -76,7 +67,5 @@ class SettingsHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = {
-            'PROJECT_TITLE': settings.PROJECT_TITLE
-        }
+        data = self.template_data()
         self.render("settings.html", **data)
