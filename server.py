@@ -74,11 +74,7 @@ class Application(tornado.web.Application):
 
         self.db
         self.dao
-
-        self.__prepare()
-
-    def __prepare(self):
-        self._dao.prepare()
+        self.dao.prepare()
 
 
 

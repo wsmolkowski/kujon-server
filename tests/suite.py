@@ -11,9 +11,8 @@ def build_suite():
     test_suite = unittest.TestSuite()
 
     test_suite.addTest(unittest.makeSuite(TestHelloApp))
-    test_suite.addTest(unittest.makeSuite(UsosupdaterTest))
-    test_suite.addTest(unittest.makeSuite(ApiCoursesGradesTest))
     test_suite.addTest(unittest.makeSuite(ApiUserTest))
+    test_suite.addTest(unittest.makeSuite(ApiCoursesGradesTest))
 
     return test_suite
 

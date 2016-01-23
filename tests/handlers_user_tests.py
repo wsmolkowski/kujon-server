@@ -14,14 +14,6 @@ class ApiUserTest(AsyncHTTPTestCase):
     usos_id = "UW"
     auth_uri = "mobile_id={0}&usos_id={1}&access_token_key={2}&access_token_secret={3}".format(mobile_id,usos_id,access_token_key,access_token_secret)
 
-    @classmethod
-    def setUpClass(self):
-        pass
-
-    @classmethod
-    def tearDownClass(self):
-        pass
-
     def get_app(self):
         app = server.Application()
         app.listen(TEST_PORT)
