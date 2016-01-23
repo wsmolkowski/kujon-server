@@ -7,7 +7,6 @@ from tornado.ioloop import IOLoop
 
 import settings
 from handlers_api import CoursesHandler
-from handlers_api import GradesForAllCoursesAndTermsHandler
 from handlers_api import GradesForCourseAndTermHandler
 from handlers_api import UserHandler
 from handlers_auth import CreateUserHandler
@@ -50,7 +49,6 @@ class Application(tornado.web.Application):
             (r"/api/logout", LogoutHandler),
             (r"/api/courses", CoursesHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
-            (r"/api/gradesall", GradesForAllCoursesAndTermsHandler),
         ]
 
 

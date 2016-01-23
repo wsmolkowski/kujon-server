@@ -31,19 +31,19 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_parameters(self):
         return Parameters(
                 self.get_argument(constants.USOS_ID, default=None, strip=True),
-                int(self.get_argument(constants.MOBILE_ID, default=None, strip=True)),
+                self.get_argument(constants.MOBILE_ID, default=None, strip=True),
                 self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
                 self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
         )
 
     def validate_parameters(self, expected):
         if len(self.request.arguments) != expected:
-            raise tornado.web.HTTPError(404, "<html><body>Arguments not supported %s</body></html>".format(
-                str(self.request.arguments)))
+            raise tornado.web.HTTPError(400, "<html><body>Arguments not supported %s</body></html>".format(
+                    str(self.request.arguments)))
 
     def validate_usos(self, usos, parameters):
         if not usos:
-            raise tornado.web.HTTPError(404,
+            raise tornado.web.HTTPError(400,
                                         "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
 
     def get_token(self, content):
@@ -57,7 +57,6 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class UserHandler(BaseHandler):
-    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -69,13 +68,17 @@ class UserHandler(BaseHandler):
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
         self.validate_usos(usos, parameters)
 
-        user_doc = self.get_current_user()
+        user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
+                                                 constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                                constants.USER_PRESENT_KEYS)
 
         if not user_doc:
             try:
-                print usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],\
+                print usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET], \
                     parameters.access_token_key, parameters.access_token_secret
-                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
+                                      usos[constants.CONSUMER_SECRET],
                                       parameters.access_token_key, parameters.access_token_secret)
 
                 result = updater.request_user_info()
@@ -92,13 +95,14 @@ class UserHandler(BaseHandler):
 
             print "saved new user in database: {0}".format(user_doc)
             user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
-                                                 constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
-                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                 constants.USER_PRESENT_KEYS)
+                                                     constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                                     constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                                    constants.USER_PRESENT_KEYS)
         else:
             print "user data fetched from database {0}".format(user_doc)
 
         self.write(json_util.dumps(user_doc))
+
 
 class CoursesHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -110,10 +114,10 @@ class CoursesHandler(BaseHandler):
 
         user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                 constants.USER_PRESENT_KEYS)
+                                                constants.USER_PRESENT_KEYS)
 
-        if not user_doc or user_doc[constants.USOS_ID] != parameters.usos_id:
-            raise tornado.web.HTTPError(404, "<html><body>User not authenticated</body></html>")
+        if not user_doc:
+            raise tornado.web.HTTPError(400, "<html><body>User not authenticated</body></html>")
 
         usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
 
@@ -121,11 +125,12 @@ class CoursesHandler(BaseHandler):
 
         if not course_doc:
             try:
-                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY], usos[constants.CONSUMER_SECRET],
+                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
+                                      usos[constants.CONSUMER_SECRET],
                                       parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_curse_info(user_doc[constants.USOS_ID])
             except Exception, ex:
-                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for course info %s".format(ex))
+                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
 
             result[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
             doc_id = yield motor.Op(self.db.courses.insert, result)
@@ -134,7 +139,8 @@ class CoursesHandler(BaseHandler):
 
             course_doc = yield self.db.courses.find_one({constants.MOBILE_ID: parameters.mobile_id})
         else:
-            print "get courses for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, course_doc["_id"])
+            print "get courses for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id,
+                                                                                  course_doc["_id"])
 
         self.write(json_util.dumps(course_doc))
 
@@ -153,10 +159,10 @@ class GradesForCourseAndTermHandler(BaseHandler):
 
         user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                 constants.USER_PRESENT_KEYS)
+                                                constants.USER_PRESENT_KEYS)
 
         if not user_doc:
-            raise tornado.web.HTTPError(404, "<html><body>User not authenticated</body></html>")
+            raise tornado.web.HTTPError(400, "<html><body>User not authenticated</body></html>")
 
         course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
         term_id = self.get_argument(constants.TERM_ID, default=None, strip=True)
@@ -167,11 +173,11 @@ class GradesForCourseAndTermHandler(BaseHandler):
         if not doc:
             try:
                 updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
-                                  usos[constants.CONSUMER_SECRET],
-                                  parameters.access_token_key, parameters.access_token_secret)
+                                      usos[constants.CONSUMER_SECRET],
+                                      parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_grades_for_course(course_id, term_id)
             except Exception, ex:
-                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for grades for the course %s".format(ex))
+                raise tornado.web.HTTPError(400, log_message=ex.message)
 
             result[constants.USOS_ID] = parameters.usos_id
             result[constants.MOBILE_ID] = parameters.mobile_id
@@ -183,16 +189,9 @@ class GradesForCourseAndTermHandler(BaseHandler):
                     parameters.mobile_id, course_id, term_id, doc_id)
 
             doc = yield self.db.grades.find_one(
-                    {constants.MOBILE_ID: parameters.mobile_id, constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
+                    {constants.MOBILE_ID: parameters.mobile_id, constants.COURSE_ID: course_id,
+                     constants.TERM_ID: term_id})
         else:
             print "get grades for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, doc["_id"])
 
         self.write(json_util.dumps(doc))
-
-
-class GradesForAllCoursesAndTermsHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        pass
-        # TODO:
