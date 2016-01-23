@@ -3,7 +3,6 @@ import unittest
 from handlers_coursesgrades_tests import ApiCoursesGradesTest
 from handlers_user_tests import ApiUserTest
 from tests_base import TestHelloApp
-from ususupdater_tests import UsosupdaterTest
 
 
 def build_suite():

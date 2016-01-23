@@ -4,6 +4,8 @@ import urlparse
 import httplib2
 import motor
 import tornado.web
+from tornado.escape import json_decode
+from tornado.escape import json_encode
 from bson import json_util
 
 import settings
@@ -108,6 +110,9 @@ class CoursesHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
+
+        #json_obj = json_decode(self.request.body)
+        #print 'Post data received', json_obj
 
         self.validate_parameters(4)
         parameters = self.get_parameters()

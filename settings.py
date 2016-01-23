@@ -8,7 +8,7 @@ DEFAULT_SCHEDULE_PERIOD = 7
 # MONGODB_URI = 'mongodb://dbuser1:dbpass1@ds035995.mongolab.com:35995/usos-test2'
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
-CLEAN_DB = True
+CLEAN_DB = False
 USOSINSTANCES = [
     {'usos_id': 'UW',
         'name': 'Uniwersyst Warszawski',

@@ -2,6 +2,7 @@ from datetime import datetime
 
 import motor
 import tornado.web
+from bson import json_util
 
 import constants
 import oauth2 as oauth
@@ -28,7 +29,12 @@ class LoginHandler(BaseHandler):
                                                  constants.ACCESS_TOKEN_KEY: access_token_key},
                                                 constants.USER_PRESENT_KEYS)
         if user_doc:
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE, str(user_doc))
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE, user_doc[constants.MOBILE_ID]) #json_util.dumps(
+            self.set_cookie(constants.ACCESS_TOKEN_KEY, user_doc[constants.ACCESS_TOKEN_KEY])
+            self.set_cookie(constants.ACCESS_TOKEN_SECRET, user_doc[constants.ACCESS_TOKEN_SECRET])
+            self.set_cookie(constants.MOBILE_ID, user_doc[constants.MOBILE_ID])
+            self.set_cookie(constants.USOS_ID, user_doc[constants.USOS_ID])
+            # tornado.escape.url_escape(user_doc)
             self.redirect(next_page)
         else:
             data = {

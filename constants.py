@@ -11,7 +11,7 @@ URL = 'url'
 CONSUMER_KEY = 'consumer_key'
 CONSUMER_SECRET = 'consumer_secret'
 
-USER_PRESENT_KEYS = ("_id", "mobile_id", "usos_id", "first_name", "last_name")
+USER_PRESENT_KEYS = (MOBILE_ID, USOS_ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
 USER_SECURE_COOKIE = "USER_SECURE_COOKIE"
 NEXT_PAGE = "NEXT_PAGE"
 OAUTH_TOKEN = "oauth_token"
