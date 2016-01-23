@@ -1,5 +1,4 @@
 function drawElements(jsonData) {
-    console.log(jsonData);
 
     var html = '<table class="table table-hover">';
         html += '<tr><th></th><th>Course Id</th><th>Term Id</th><th>Course Name</th></tr></tr>'
@@ -9,7 +8,12 @@ function drawElements(jsonData) {
         });
     html += '</tbody></table>';
     $('#school-grades-id').html(html);
+}
 
+function drawError(data) {
+    var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Error while retrieving data' + '</strong>' + data.responseText.toString() + '</div>';
+
+    $('#school-grades-id').html(html);
 }
 
 $( document ).ready(function() {
@@ -31,7 +35,7 @@ $( document ).ready(function() {
             drawElements(JSON.parse(data));
       },
       error: function (err) {
-        alert("Error while calling Ajax: " + err.responseText.toString());
+        drawError(err);
       }
   });
 });
