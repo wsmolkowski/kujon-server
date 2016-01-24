@@ -1,14 +1,14 @@
 import os
-
 import motor
 import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
-
 import settings
-from handlers_api import CoursesHandler
-from handlers_api import GradesForCourseAndTermHandler
-from handlers_api import UserHandler
+
+from handlers_api_courses import CoursesHandler
+from handlers_api_grades import GradesForCourseAndTermHandler
+from handlers_api_user import UserHandler
+
 from handlers_auth import CreateUserHandler
 from handlers_auth import LoginHandler
 from handlers_auth import LogoutHandler
@@ -22,9 +22,7 @@ from handlers_web import ChatHandler
 from handlers_web import FriendsHandler
 from handlers_web import SettingsHandler
 
-
 from mongo_utils import Dao
-
 
 class Application(tornado.web.Application):
 
@@ -56,9 +54,11 @@ class Application(tornado.web.Application):
             (r"/authentication/logout", LogoutHandler),
             (r"/authentication/create", CreateUserHandler),
             (r"/authentication/verify", VerifyHandler),
+
             (r"/api/user", UserHandler),
             (r"/api/courses", CoursesHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
+
         ]
 
 
@@ -75,8 +75,6 @@ class Application(tornado.web.Application):
         self.db
         self.dao
         self.dao.prepare()
-
-
 
 def main():
     app = Application()

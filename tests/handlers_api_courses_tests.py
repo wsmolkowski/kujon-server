@@ -1,11 +1,9 @@
 from tornado.testing import AsyncHTTPTestCase
-
 import server
 
 TEST_PORT = 9999
 
-
-class ApiUserTest(AsyncHTTPTestCase):
+class ApiCoursesTest(AsyncHTTPTestCase):
 
     #TODO: change this test to remove user, create user, check for user, and remove user
     access_token_key = "3ShYQv8LyvgeXthKJzmJ"
@@ -19,18 +17,12 @@ class ApiUserTest(AsyncHTTPTestCase):
         app.listen(TEST_PORT)
         return app
 
-    def testEmptyUserShouldReturn404(self):
-        response = self.fetch('/api/user')
+    # Courses
+
+    def testShouldPresentEmptyPageForGetCoursesForUser(self):
+        response = self.fetch("/api/courses")
         self.assertEqual(response.code, 400)
 
-    def testShouldNotGetUser(self):
-        response = self.fetch('/api/user?a=1&b=1&b=3&d=4')
-        self.assertEqual(response.code, 400)
-
-    def testShouldGetUser(self):
-        response = self.fetch("/api/user?{0}".format(self.auth_uri))
+    def testShouldPresentCoursesForUser(self):
+        response = self.fetch("/api/courses?{0}".format(self.auth_uri))
         self.assertEqual(response.code, 200)
-        self.assertTrue('"mobile_id": "3"' in response.body)
-
-
-

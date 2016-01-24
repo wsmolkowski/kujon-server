@@ -3,7 +3,7 @@ import server
 
 TEST_PORT = 9999
 
-class ApiCoursesGradesTest(AsyncHTTPTestCase):
+class ApiGradesTest(AsyncHTTPTestCase):
 
     #TODO: change this test to remove user, create user, check for user, and remove user
     access_token_key = "3ShYQv8LyvgeXthKJzmJ"
@@ -16,18 +16,6 @@ class ApiCoursesGradesTest(AsyncHTTPTestCase):
         app = server.Application()
         app.listen(TEST_PORT)
         return app
-
-    # Courses
-
-    def testShouldPresentEmptyPageForGetCoursesForUser(self):
-        response = self.fetch("/api/courses")
-        self.assertEqual(response.code, 400)
-
-    def testShouldPresentCoursesForUser(self):
-        response = self.fetch("/api/courses?{0}".format(self.auth_uri))
-        self.assertEqual(response.code, 200)
-
-    # Grades
 
     def testShouldFailNonExistingTokenKey(self):
         response = self.fetch("/api/grades?course_id=xxx&term_id=xxx&{0}".format(self.auth_uri))
