@@ -5,7 +5,7 @@ import tornado.web
 from tornado.ioloop import IOLoop
 import settings
 
-from handlers_api_courses import CoursesHandler
+from handlers_api_courses import CoursesEditionsHandler, CourseHandler
 from handlers_api_grades import GradesForCourseAndTermHandler
 from handlers_api_user import UserHandler
 
@@ -56,7 +56,8 @@ class Application(tornado.web.Application):
             (r"/authentication/verify", VerifyHandler),
 
             (r"/api/user", UserHandler),
-            (r"/api/courses", CoursesHandler),
+            (r"/api/courseseditions", CoursesEditionsHandler),
+            (r"/api/courses/(.*)", CourseHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
 
         ]

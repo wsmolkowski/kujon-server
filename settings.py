@@ -1,6 +1,7 @@
 VERSION = 001
 PROJECT_TITLE = "Kujon-web"
 PORT = 8888
+APIHOST = 'http://localhost'
 
 DATE_FORMAT = "%d-%m-%y"
 DEFAULT_SCHEDULE_PERIOD = 7
@@ -10,14 +11,14 @@ MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 CLEAN_DB = False
 USOSINSTANCES = [
-    {'usos_id': 'UW',
+    {'usos': 'UW',
         'name': 'Uniwersyst Warszawski',
         'url': 'https://usosapps.uw.edu.pl/',
         'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
         'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',
         'contact': 'dsksysadm@adm.uw.edu.pl'
     },
-    {'usos_id': 'PS',
+    {'usos': 'PS',
         'name': 'Politechnika Swietokrzystka',
         'url': 'https://api.usos.tu.kielce.pl/',
         'consumer_key': 'equujDB5ZLzTmPfcy2c2',

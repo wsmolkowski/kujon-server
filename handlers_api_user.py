@@ -20,8 +20,7 @@ class UserHandler(BaseHandler):
 
         user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
                                                  constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
-                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                constants.USER_PRESENT_KEYS)
+                                                 constants.ACCESS_TOKEN_KEY: parameters.access_token_key})
 
         if not user_doc:
             try:
@@ -44,10 +43,8 @@ class UserHandler(BaseHandler):
             user_doc = yield motor.Op(self.db.users.insert, result)
 
             print "saved new user in database: {0}".format(user_doc)
-            user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
-                                                     constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
-                                                     constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
-                                                    constants.USER_PRESENT_KEYS)
+            user_doc = result
+
         else:
             print "user data fetched from database {0}".format(user_doc)
 
