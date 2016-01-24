@@ -15,6 +15,7 @@ class LoginHandler(BaseHandler):
         data = self.template_data()
         self.render("login.html", **data)
 
+    # TODO: mozna
     @tornado.web.asynchronous
     @tornado.gen.engine
     def post(self):

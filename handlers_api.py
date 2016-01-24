@@ -1,13 +1,12 @@
 from datetime import datetime
 import urlparse
-
 import httplib2
 import motor
 import tornado.web
 from tornado.escape import json_decode
 from tornado.escape import json_encode
 from bson import json_util
-
+from urllib import unquote
 import settings
 import constants
 from usosupdater import USOSUpdater
@@ -179,7 +178,8 @@ class GradesForCourseAndTermHandler(BaseHandler):
 
         course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
         term_id = self.get_argument(constants.TERM_ID, default=None, strip=True)
-
+        course_id = unquote(course_id)
+        term_id = unquote(term_id)
         doc = yield self.db.grades.find_one(
                 {constants.MOBILE_ID: parameters.mobile_id, constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
 
@@ -200,10 +200,7 @@ class GradesForCourseAndTermHandler(BaseHandler):
 
             print "no grades for mobile_id: {0} course_id: {1} term_id: {2} in mongo, fetched from usos and created with id: {3}".format(
                     parameters.mobile_id, course_id, term_id, doc_id)
-
-            doc = yield self.db.grades.find_one(
-                    {constants.MOBILE_ID: parameters.mobile_id, constants.COURSE_ID: course_id,
-                     constants.TERM_ID: term_id})
+            doc = result
         else:
             print "get grades for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, doc["_id"])
 

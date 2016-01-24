@@ -1,6 +1,10 @@
 {% extends "school.html" %}
 {% block school %}
-<div>
-    school courses
+<div id="school-courses-id">
+
 </div>
+{% end %}
+
+{% block extra_js %}
+    <script src="{{ static_url("main-courses.js") }}"></script>
 {% end %}

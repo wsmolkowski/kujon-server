@@ -1,19 +1,27 @@
 function drawElements(jsonData) {
 
     var html = '<table class="table table-hover">';
-        html += '<tr><th></th><th>Course Id</th><th>Term Id</th><th>Course Name</th></tr></tr>'
+        html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th>Action</th></tr></tr>'
         html += '<tbody>'
         $.each(jsonData['course_editions'], function(key, value){
-            html += '<tr><td>' + key + '</td><td>' + value[0]['course_id'] + '</td><td>' + value[0]['term_id'] + '</td><td>' + value[0]['course_name']['pl']+ '</td></tr>';
+            html += '<tr>'
+            html += '<td><a href=term_info?term_id='+encodeURIComponent(value[0]['term_id'])+'>' + value[0]['term_id'] + '</a>  </td>'
+            html += '<td>' + value[0]['course_id'] + '</td>'
+            html += '<td><a href=course_info?course_id='+ value[0]['course_id']+ '&term_id='+value[0]['term_id']+'>' + value[0]['course_name']['pl']+ '</a></td>'
+            html += '<td>'
+            html += '<a href=grades?course_id='+ value[0]['course_id']+ '&term_id='+encodeURIComponent(value[0]['term_id'])+'>Show grades >></a>&nbsp;&nbsp;'
+            html += '<a href=grades?course_id='+ value[0]['course_id']+ '&term_id='+value[0]['term_id']+'>Show friends >></a>'
+            html += '</td>'
+            html += '</tr>';
         });
     html += '</tbody></table>';
-    $('#school-grades-id').html(html);
+    $('#school-courses-id').html(html);
 }
 
 function drawError(data) {
     var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Error while retrieving data' + '</strong>' + data.responseText.toString() + '</div>';
 
-    $('#school-grades-id').html(html);
+    $('#school-courses-id').html(html);
 }
 
 $( document ).ready(function() {
