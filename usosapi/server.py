@@ -4,6 +4,7 @@ import logging
 import motor
 import tornado.ioloop
 import tornado.web
+import tornado.options
 from tornado.log import enable_pretty_logging
 
 from handlers.handlers_api_courses import CoursesEditionsHandler
@@ -26,6 +27,10 @@ from tornado.ioloop import IOLoop
 
 import settings
 from mongo_utils import Dao
+
+
+tornado.options.parse_command_line()
+enable_pretty_logging()
 
 
 class Application(tornado.web.Application):
@@ -90,7 +95,6 @@ class Application(tornado.web.Application):
 
 
 def main():
-    enable_pretty_logging()
 
     app = Application()
     app.listen(settings.PORT)
