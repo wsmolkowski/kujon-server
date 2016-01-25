@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 import traceback
 import os
@@ -25,7 +26,8 @@ def log_execution_time(intercepted_function):
         stop = datetime.now()
 
         execution_time = stop - start
-        print 'file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(os.path.basename(filename), code_line, text, execution_time)
+        logging.debug('file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(
+                os.path.basename(filename), code_line, text, execution_time))
 
         return actual_result
     # return our inner function which will intercept the call

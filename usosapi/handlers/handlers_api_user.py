@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import motor
@@ -47,10 +48,10 @@ class UserHandler(BaseHandler):
 
             user_doc = yield motor.Op(self.db.users.insert, result)
 
-            print "saved new user in database: {0}".format(user_doc)
+            logging.debug("saved new user in database: {0}".format(user_doc))
             user_doc = result
 
         else:
-            print "user data fetched from database {0}".format(user_doc)
+            logging.debug("user data fetched from database {0}".format(user_doc))
 
         self.write(json_util.dumps(user_doc))

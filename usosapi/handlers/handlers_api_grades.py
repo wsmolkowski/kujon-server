@@ -1,4 +1,4 @@
-from urllib import unquote
+import logging
 
 import motor
 import tornado.web
@@ -45,10 +45,10 @@ class GradesForCourseAndTermHandler(BaseHandler):
             result[constants.COURSE_ID] = course_id
             doc_id = yield motor.Op(self.db.grades.insert, result)
 
-            print "no grades for mobile_id: {0} course_id: {1} term_id: {2} in mongo, fetched from usos and created with id: {3}".format(
-                    parameters.mobile_id, course_id, term_id, doc_id)
+            logging.debug("no grades for mobile_id: {0} course_id: {1} term_id: {2} in db, fetched from usos and saved with id: {3}".format(
+                    parameters.mobile_id, course_id, term_id, doc_id))
             doc = result
         else:
-            print "get grades for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id, doc["_id"])
+            logging.debug("get grades for mobile_id: {0} from db with id: {1}".format(parameters.mobile_id, doc["_id"]))
 
         self.write(json_util.dumps(doc))

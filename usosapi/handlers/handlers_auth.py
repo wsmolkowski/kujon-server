@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import motor
@@ -96,7 +97,7 @@ class CreateUserHandler(BaseHandler):
             result[constants.CREATED_TIME] = datetime.now()
 
             user_doc = yield motor.Op(self.db.users.insert, result)
-            print "saved new user in database: {0}".format(user_doc)
+            logging.debug("saved new user in database: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
             url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)

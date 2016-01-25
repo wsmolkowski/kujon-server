@@ -1,8 +1,11 @@
 import os
+import logging
 
 import motor
 import tornado.ioloop
 import tornado.web
+from tornado.log import enable_pretty_logging
+
 from handlers.handlers_api_courses import CoursesEditionsHandler
 from handlers.handlers_api_courses import CourseHandler
 from handlers.handlers_api_grades import GradesForCourseAndTermHandler
@@ -87,11 +90,14 @@ class Application(tornado.web.Application):
 
 
 def main():
+    enable_pretty_logging()
+
     app = Application()
     app.listen(settings.PORT)
-    print 'http://localhost:{0}'.format(settings.PORT)
+    logging.info('http://localhost:{0}'.format(settings.PORT))
     IOLoop.instance().start()
 
 
 if __name__ == "__main__":
+
     main()
