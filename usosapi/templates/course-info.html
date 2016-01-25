@@ -1,0 +1,18 @@
+{% extends "school.html" %}
+{% block school %}
+<div id="course-info-id">
+
+</div>
+{% end %}
+
+{% block extra_js %}
+
+    <script>
+         $(document).ready(function() {
+            courseId = '{{course_id}}';
+        });
+    </script>
+
+
+    <script src="{{ static_url("main-course-info.js") }}"></script>
+{% end %}

@@ -83,13 +83,10 @@
     <script src="{{ static_url("js.cookie-2.1.0.min.js") }}"></script>
 
      <script>
-
-     $(document).ready(function() {
-        deployUrl = '{{DEPLOY_URL}}';
-    });
-
-
- </script>
+         $(document).ready(function() {
+            deployUrl = '{{DEPLOY_URL}}';
+        });
+    </script>
 
     {% block extra_js %}
 

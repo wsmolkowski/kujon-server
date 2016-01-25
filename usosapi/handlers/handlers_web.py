@@ -1,6 +1,6 @@
 import tornado.web
 
-import usosapi.settings
+from usosapi import constants
 from handlers_api import BaseHandler
 
 
@@ -24,6 +24,16 @@ class CoursesWebHandler(BaseHandler):
     def get(self):
         data = self.template_data()
         self.render("school-courses.html", **data)
+
+
+class CoursesInfoWebHandler(BaseHandler):
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self, course):
+        data = self.template_data()
+        data[constants.COURSE_ID] = course
+        self.render("course-info.html", **data)
 
 
 class GradesWebHandler(BaseHandler):
@@ -59,3 +69,5 @@ class SettingsHandler(BaseHandler):
     def get(self):
         data = self.template_data()
         self.render("settings.html", **data)
+
+

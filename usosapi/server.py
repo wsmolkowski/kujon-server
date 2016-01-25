@@ -18,6 +18,7 @@ from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import MainHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
+from handlers.handlers_web import CoursesInfoWebHandler
 from tornado.ioloop import IOLoop
 
 import settings
@@ -53,6 +54,7 @@ class Application(tornado.web.Application):
             (r"/school", SchoolHandler),
             (r"/school/grades", GradesWebHandler),
             (r"/school/courses", CoursesWebHandler),
+            (r"/school/courses/([^/]+)", CoursesInfoWebHandler),
             (r"/chat", ChatHandler),
             (r"/friends", FriendsHandler),
             (r"/settings", SettingsHandler),
