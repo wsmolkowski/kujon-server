@@ -37,7 +37,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def validate_usos(self, usos, parameters):
         if not usos:
             raise tornado.web.HTTPError(400,
-                                        "<html><body>Usos %s not supported</body></html>".format(parameters.usos_id))
+                                        "Usos {0} not supported!".format(parameters.usos_id))
 
     def get_token(self, content):
         arr = dict(urlparse.parse_qsl(content))

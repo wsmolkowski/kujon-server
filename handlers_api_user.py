@@ -34,7 +34,8 @@ class UserHandler(BaseHandler):
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while fetching USOS data for user info %s".format(ex))
 
-            result[constants.USOS_ID] = result.pop('id')
+            result[constants.USER_USOS_ID] = result.pop('id')
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.ACCESS_TOKEN_SECRET] = parameters.access_token_secret
             result[constants.ACCESS_TOKEN_KEY] = parameters.access_token_key

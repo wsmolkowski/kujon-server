@@ -80,8 +80,8 @@ class CoursesEditionsHandler(BaseHandler):
                 raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
 
             result[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
-            result['usos_id'] = user_doc['usos_id']
-            result['usos'] = user_doc['usos']
+            result[constants.USER_USOS_ID] = user_doc[constants.USER_USOS_ID]
+            result[constants.USOS_ID] = user_doc[constants.USOS_ID]
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             print "no courses for mobile_id: {0} in mongo, fetched from usos and created with id: {1}".format(
                         parameters.mobile_id, doc_id)
