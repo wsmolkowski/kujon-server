@@ -39,7 +39,7 @@ $( document ).ready(function() {
 
     $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courses/1000-621MRB',
+      url: deployUrl + '/api/courseseditions',
       //data: $.param(args),
       success:  function (data) {
             drawElements(JSON.parse(data));
