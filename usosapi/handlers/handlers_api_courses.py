@@ -60,7 +60,7 @@ class CoursesEditionsHandler(BaseHandler):
 
         if not course_doc:
             try:
-                updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
+                updater = usosupdater.USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
                                       usos[constants.CONSUMER_SECRET],
                                       parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_curseseditions_info()
