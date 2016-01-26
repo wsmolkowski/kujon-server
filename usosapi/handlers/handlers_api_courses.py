@@ -7,7 +7,7 @@ from bson import json_util
 from handlers_api import BaseHandler
 from usosapi import constants
 from usosapi import usosupdater
-
+from usosapi import usoshelper
 
 class CourseHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -26,15 +26,16 @@ class CourseHandler(BaseHandler):
             usos = self.get_usos(parameters.user_usos_id)
             logging.info("Course with courseId: {0} not found in mongo for user: {1}, fetching from usos.".format(
                     courseId, parameters.mobile_id))
-            try:
-                updater = usosupdater.USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
-                                      usos[constants.CONSUMER_SECRET],
-                                      parameters.access_token_key, parameters.access_token_secret)
-                result = updater.request_course_info(courseId)
-                #result = yield usosupdater.request_course_info()
-            except Exception, ex:
-                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
+            # try:
+            #     updater = usosupdater.USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
+            #                           usos[constants.CONSUMER_SECRET],
+            #                           parameters.access_token_key, parameters.access_token_secret)
+            #     result = updater.request_course_info(courseId)
+            #
+            # except Exception, ex:
+            #     raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
 
+            result = yield usoshelper.get_course_info(usos[constants.URL], courseId)
             doc_id = yield motor.Op(self.db.courses.insert, result)
             logging.info(
                     "Course with courseId: {0} for mobile_id: {1}, fetched from usos and created with id: {2}".format(
