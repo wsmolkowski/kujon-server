@@ -8,7 +8,7 @@ function drawElements(jsonData) {
             for(var i=0; i< value.length; i++) {
                 html += '<td><a href=term_info?term_id='+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
                 html += '<td>' + value[i]['course_id'] + '</td>'
-                html += '<td><a href=/school/courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=course_info?course_id='+ value[i]['course_id']+ '&term_id='+value[i]['term_id']+'>' + value[i]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
                 html += '<a href=grades?course_id='+ value[i]['course_id']+ '&term_id='+encodeURIComponent(value[i]['term_id'])+'>Show grades >></a>&nbsp;&nbsp;'
                 html += '<a href=grades?course_id='+ value[0]['course_id']+ '&term_id='+value[0]['term_id']+'>Show friends >></a>'

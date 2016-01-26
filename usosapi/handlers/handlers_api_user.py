@@ -9,7 +9,22 @@ from handlers_api import BaseHandler
 from usosapi.usosupdater import USOSUpdater
 
 
+
+
 class UserHandler(BaseHandler):
+
+    def loadUserData(self,user_doc):
+
+        # load courseeditions
+        import urllib2
+        # response = urllib2.urlopen("http://localhost:8888/api/courseseditions?{0}")
+        # response = http.fetch("/api/courseseditions?{0}".format(self.auth_uri))
+        # print response
+
+        # for each courseeditions load courses and grades
+
+        pass
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -54,3 +69,4 @@ class UserHandler(BaseHandler):
             print "user data fetched from database {0}".format(user_doc)
 
         self.write(json_util.dumps(user_doc))
+        self.loadUserData(user_doc)

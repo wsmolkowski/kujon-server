@@ -18,7 +18,7 @@ function drawElements(jsonData) {
         html += '<tr><td>' + jsonData['course_name']['pl'] + '</td><td>' + jsonData['term_id'] +'</td></tr>'
         html += '</tbody></table>';
         html += '<table class="table table-hover">';
-        html += '<tr><th>No</th><th>Grade</th><th>Grade name</th></tr>'
+        html += '<tr><th>Exam turn</th><th>Grade</th><th>Grade name</th></tr>'
         html += '<tbody>'
         $.each(jsonData['grades']['course_grades'], function(key, value){
             html += '<tr>'

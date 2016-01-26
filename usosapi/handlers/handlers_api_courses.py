@@ -11,13 +11,19 @@ class CourseHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, courseId):
-        print self.usoses
+
+        # to sie powtarza w obu metodach courses do zmiany
         parameters = self.get_parameters()
+        user = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
+                                             constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                             constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                             constants.USER_PRESENT_KEYS)
+        usos = user[constants.USOS_ID]
 
-        usos = self.get_usos(parameters.user_usos_id)  #yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
-
+        course_doc = yield self.db.courseseditions.find_one({constants.MOBILE_ID: user[constants.MOBILE_ID]})
         if not courseId:
-            raise tornado.web.HTTPError(400, "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
+            raise tornado.web.HTTPError(400,
+                                        "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
 
         # najperw sprawdzamy czy jest ten kurs, jak nie ma scigamy wszystkie i jeszcze raz sprawdzamy
         course_doc = yield self.db.courses.find_one({constants.COURSE_ID: courseId})
@@ -35,11 +41,11 @@ class CourseHandler(BaseHandler):
 
             doc_id = yield motor.Op(self.db.courses.insert, result)
             print "Course with courseId: {0} for mobile_id: {1}, fetched from usos and created with id: {2}".format(
-                        courseId,parameters.mobile_id,doc_id)
+                    courseId, parameters.mobile_id, doc_id)
             course_doc = result
         else:
-                print "Courses with courseId: {0} for mobile_id: {1} fetched from mongo with id: {2}".format(
-                        courseId, parameters.mobile_id, course_doc["_id"])
+            print "Courses with courseId: {0} for mobile_id: {1} fetched from mongo with id: {2}".format(
+                    courseId, parameters.mobile_id, course_doc["_id"])
 
         self.write(json_util.dumps(course_doc))
 
@@ -50,10 +56,13 @@ class CoursesEditionsHandler(BaseHandler):
     def get(self):
 
         parameters = self.get_parameters()
+        user = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
+                                             constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
+                                             constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
+                                             constants.USER_PRESENT_KEYS)
+        usos = user[constants.USOS_ID]
 
-        usos = self.get_usos(parameters.user_usos_id)
-
-        course_doc = yield self.db.courseseditions.find_one({constants.MOBILE_ID: parameters.mobile_id})
+        course_doc = yield self.db.courseseditions.find_one({constants.MOBILE_ID: user[constants.MOBILE_ID]})
 
         if not course_doc:
             try:
@@ -66,14 +75,13 @@ class CoursesEditionsHandler(BaseHandler):
 
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.USER_USOS_ID] = parameters.user_usos_id
-            #result[constants.USOS_ID] = user_doc[constants.USOS_ID]
+            # result[constants.USOS_ID] = user_doc[constants.USOS_ID]
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             print "no courses for mobile_id: {0} in mongo, fetched from usos and created with id: {1}".format(
-                        parameters.mobile_id, doc_id)
+                    parameters.mobile_id, doc_id)
             course_doc = result
         else:
             print "get courses for mobile_id: {0} from mongo with id: {1}".format(parameters.mobile_id,
-                                                                                      course_doc["_id"])
+                                                                                  course_doc["_id"])
 
         self.write(json_util.dumps(course_doc))
-
