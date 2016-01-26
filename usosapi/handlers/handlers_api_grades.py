@@ -15,9 +15,12 @@ class GradesForCourseAndTermHandler(BaseHandler):
     def get(self):
         parameters = self.get_parameters()
 
-        usos = self.get_usos(parameters.user_usos_id)
 
         user_doc = self.get_current_user()
+
+        usos = self.get_usos(user_doc[constants.USOS_ID])
+
+
         if not user_doc:
             user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                      constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
@@ -39,8 +42,8 @@ class GradesForCourseAndTermHandler(BaseHandler):
             except Exception, ex:
                 raise tornado.web.HTTPError(400, log_message=ex.message)
 
-            result[constants.USOS_ID] = parameters.usos_id
-            result[constants.MOBILE_ID] = parameters.mobile_id
+            result[constants.USOS_ID] = user_doc[constants.USOS_ID]
+            result[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
             result[constants.TERM_ID] = term_id
             result[constants.COURSE_ID] = course_id
             doc_id = yield motor.Op(self.db.grades.insert, result)

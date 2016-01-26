@@ -3,7 +3,6 @@ from tornado.testing import AsyncHTTPTestCase
 
 from usosapi import server
 
-
 class TestBaseClassApp(AsyncHTTPTestCase):
     #TODO: change this test to remove user, create user, check for user, and remove user
     access_token_key = "3ShYQv8LyvgeXthKJzmJ"
@@ -20,12 +19,12 @@ class TestBaseClassApp(AsyncHTTPTestCase):
 
     @classmethod
     def setUpClass(self):
-        print "Preparing tests for class: {0}".format(self.__class__.__name__)
+        print "Preparing tests for class: {0}".format(self.__name__)
         self.app = server.Application()
 
     @classmethod
     def tearDownClass(self):
-        print "Finishing tests for class: {0}".format(self.__class__.__name__)
+        print "Finishing tests for class: {0}".format(self.__name__)
 
     def test_homepage(self):
         response = self.fetch('/')
