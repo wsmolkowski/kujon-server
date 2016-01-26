@@ -30,6 +30,6 @@ USOSINSTANCES = [
 CONSUMER_NAME = "usosapi"
 CONSUMER_KEY = "vxSehcx4RCA8m4kgjRhY"
 CONSUMER_SECRET = "T7eJsSJHSxKCshK9jrdNbNy3XCG3UXzQuYKL2VbJ"
-CALLBACK_URL = "http://localhost:{0}/authentication/verify".format(PORT)
+CALLBACK_URL = "{0}:{1}/authentication/verify".format(APIHOST, PORT)
 PROXY_URL = None  #
 PROXY_PORT = None  #
