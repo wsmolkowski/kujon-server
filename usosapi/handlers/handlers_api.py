@@ -9,7 +9,8 @@ from usosapi import constants, settings
 
 
 class Parameters:
-    def __init__(self, mobile_id, access_token_key, access_token_secret):
+    def __init__(self, user_usos_id, mobile_id, access_token_key, access_token_secret):
+        self.user_usos_id = user_usos_id
         self.mobile_id = mobile_id
         self.access_token_key = access_token_key
         self.access_token_secret = access_token_secret
@@ -34,12 +35,14 @@ class BaseHandler(tornado.web.RequestHandler):
         user = self.get_current_user()
         if not user:
             return Parameters(
+                    self.get_argument(constants.USOS_ID, default=None, strip=True),
                     self.get_argument(constants.MOBILE_ID, default=None, strip=True),
                     self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
                     self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
             )
         else:
             return Parameters(
+                    user[constants.USOS_ID],
                     user[constants.MOBILE_ID],
                     user[constants.ACCESS_TOKEN_KEY],
                     user[constants.ACCESS_TOKEN_SECRET],

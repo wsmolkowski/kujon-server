@@ -1,5 +1,5 @@
-USOS_ID = 'usos'
-USER_USOS_ID = 'usos_id'
+USOS_ID = 'usos_id'
+USER_USOS_ID = 'user_usos_id'
 MOBILE_ID = 'mobile_id'
 COURSE_ID = 'course_id'
 TERM_ID = 'term_id'
