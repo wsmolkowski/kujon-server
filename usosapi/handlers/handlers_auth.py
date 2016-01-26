@@ -1,13 +1,14 @@
+import logging
 from datetime import datetime
 
 import motor
 import tornado.web
 from bson import json_util
 
-from usosapi import constants
 import usosapi.oauth2 as oauth
 import usosapi.settings
 from handlers_api import BaseHandler
+from usosapi import constants
 
 
 class LoginHandler(BaseHandler):
@@ -32,7 +33,8 @@ class LoginHandler(BaseHandler):
             self.redirect(next_page)
         else:
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key, access_token_secret)
+            data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key,
+                                                                                                 access_token_secret)
             self.render("login.html", **data)
 
 
@@ -43,7 +45,6 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -81,7 +82,6 @@ class CreateUserHandler(BaseHandler):
             if resp['status'] != '200':
                 raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
 
-
             request_token = self.get_token(content)
 
             # updating to db user access_token_key & access_token_secret
@@ -96,7 +96,7 @@ class CreateUserHandler(BaseHandler):
             result[constants.CREATED_TIME] = datetime.now()
 
             user_doc = yield motor.Op(self.db.users.insert, result)
-            print "saved new user in database: {0}".format(user_doc)
+            logging.info("saved new user in database: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
             url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
@@ -127,7 +127,6 @@ class VerifyHandler(BaseHandler):
             access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 
-
             try:
                 access_token = self.get_token(content)
 
@@ -142,16 +141,18 @@ class VerifyHandler(BaseHandler):
 
                 user_doc_updated = yield self.db.users.update({'_id': user_doc['_id']}, updated_user)
 
-                data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(user_doc_updated)
+                data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
+                    user_doc_updated)
 
             except KeyError:
                 data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
-                            updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
+                        updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                             constants.ACCESS_TOKEN_KEY])
 
             self.render("login.html", **data)
         else:
 
             data[
-                constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(oauth_token_key, oauth_verifier)
+                constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
+                oauth_token_key, oauth_verifier)
             self.render("/authorization/create", **data)

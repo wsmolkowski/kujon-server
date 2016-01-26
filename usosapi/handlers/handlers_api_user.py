@@ -1,11 +1,12 @@
+import logging
 from datetime import datetime
 
 import motor
 import tornado.web
 from bson import json_util
 
-from usosapi import constants
 from handlers_api import BaseHandler
+from usosapi import constants
 from usosapi.usosupdater import USOSUpdater
 
 
@@ -62,11 +63,11 @@ class UserHandler(BaseHandler):
 
             user_doc = yield motor.Op(self.db.users.insert, result)
 
-            print "saved new user in database: {0}".format(user_doc)
+            logging.info("saved new user in database: {0}".format(user_doc))
             user_doc = result
 
         else:
-            print "user data fetched from database {0}".format(user_doc)
+            logging.info("user data fetched from database {0}".format(user_doc))
 
         self.write(json_util.dumps(user_doc))
         self.loadUserData(user_doc)

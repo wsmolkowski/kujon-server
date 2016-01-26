@@ -1,11 +1,11 @@
 import urlparse
 
+import httplib2
 import tornado.web
 from bson import json_util
 
-from usosapi import constants, settings
-import httplib2
 import usosapi.oauth2 as oauth
+from usosapi import constants, settings
 
 
 class Parameters:
