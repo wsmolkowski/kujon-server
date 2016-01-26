@@ -74,7 +74,7 @@ class Application(tornado.web.Application):
 
             (r"/api/user", UserHandler),
             (r"/api/courseseditions", CoursesEditionsHandler),
-            (r"/api/courses/(.*)", CourseHandler),
+            (r"/api/courses/([^/]+)", CourseHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
 
         ]
