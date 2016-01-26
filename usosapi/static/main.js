@@ -85,7 +85,7 @@ $( document ).ready(function() {
         if (pathSplit.length == 3){
             fetchCursesAndDraw();
         } else if (pathSplit.length == 4) {
-            fetchCurseInfo(pathSplit[-1]);
+            fetchCurseInfo(pathSplit[3]);
         }
     }
 
