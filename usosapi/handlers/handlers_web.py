@@ -10,6 +10,7 @@ class MainHandler(BaseHandler):
 
 
 class SchoolHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -18,6 +19,7 @@ class SchoolHandler(BaseHandler):
 
 
 class CoursesWebHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -26,17 +28,18 @@ class CoursesWebHandler(BaseHandler):
         self.render("school-courses.html", **data)
 
 
-class CoursesInfoWebHandler(BaseHandler):
+class CourseInfoWebHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course):
         data = self.template_data()
-        data[constants.COURSE_ID] = course
         self.render("course-info.html", **data)
 
 
 class GradesWebHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -46,6 +49,7 @@ class GradesWebHandler(BaseHandler):
 
 
 class ChatHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -54,6 +58,7 @@ class ChatHandler(BaseHandler):
 
 
 class FriendsHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -63,6 +68,7 @@ class FriendsHandler(BaseHandler):
 
 
 class SettingsHandler(BaseHandler):
+    @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

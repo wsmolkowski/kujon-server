@@ -59,7 +59,7 @@
     <div class="container">
 
       {% block main %}
-        <!--div class="container" style="padding-top:-10px"-->
+
       {% end %}
 
     </div> <!-- /container -->
@@ -80,13 +80,16 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
             integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
+    <!--
     <script src="{{ static_url("js.cookie-2.1.0.min.js") }}"></script>
-
+    -->
      <script>
          $(document).ready(function() {
             deployUrl = '{{DEPLOY_URL}}';
         });
     </script>
+
+    <script src="{{ static_url("main.js") }}"></script>
 
     {% block extra_js %}
 
