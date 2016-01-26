@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime
-import traceback
 import os
+import traceback
+from datetime import datetime
 from functools import wraps
 
 
@@ -30,5 +30,6 @@ def log_execution_time(intercepted_function):
                 os.path.basename(filename), code_line, text, execution_time))
 
         return actual_result
+
     # return our inner function which will intercept the call
     return timer

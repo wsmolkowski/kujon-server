@@ -5,8 +5,8 @@ import motor
 import tornado.web
 from bson import json_util
 
-from usosapi import constants
 from handlers_api import BaseHandler
+from usosapi import constants
 from usosapi.usosupdater import USOSUpdater
 
 

@@ -1,14 +1,16 @@
-import os
 import logging
+import os
 
 import motor
 import tornado.ioloop
-import tornado.web
 import tornado.options
+import tornado.web
+from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
-from handlers.handlers_api_courses import CoursesEditionsHandler
+import settings
 from handlers.handlers_api_courses import CourseHandler
+from handlers.handlers_api_courses import CoursesEditionsHandler
 from handlers.handlers_api_grades import GradesForCourseAndTermHandler
 from handlers.handlers_api_user import UserHandler
 from handlers.handlers_auth import CreateUserHandler
@@ -16,18 +18,14 @@ from handlers.handlers_auth import LoginHandler
 from handlers.handlers_auth import LogoutHandler
 from handlers.handlers_auth import VerifyHandler
 from handlers.handlers_web import ChatHandler
+from handlers.handlers_web import CourseInfoWebHandler
 from handlers.handlers_web import CoursesWebHandler
 from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import MainHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
-from handlers.handlers_web import CourseInfoWebHandler
-from tornado.ioloop import IOLoop
-
-import settings
 from mongo_utils import Dao
-
 
 tornado.options.parse_command_line()
 enable_pretty_logging()
@@ -35,6 +33,7 @@ enable_pretty_logging()
 
 class Application(tornado.web.Application):
     _usoses = None
+
     @property
     def usoses(self):
         if not self._usoses:
@@ -42,6 +41,7 @@ class Application(tornado.web.Application):
         return self._usoses
 
     _db_connection = None
+
     @property
     def db(self):
         if not self._db_connection:
@@ -49,6 +49,7 @@ class Application(tornado.web.Application):
         return self._db_connection[settings.MONGODB_NAME]
 
     _dao = None
+
     @property
     def dao(self):
         if not self._dao:
@@ -95,7 +96,6 @@ class Application(tornado.web.Application):
 
 
 def main():
-
     app = Application()
     app.listen(settings.PORT)
     logging.info('http://localhost:{0}'.format(settings.PORT))
@@ -103,5 +103,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()

@@ -1,6 +1,5 @@
 import tornado.web
 
-from usosapi import constants
 from handlers_api import BaseHandler
 
 
@@ -75,5 +74,3 @@ class SettingsHandler(BaseHandler):
     def get(self):
         data = self.template_data()
         self.render("settings.html", **data)
-
-
