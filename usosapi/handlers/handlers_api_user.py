@@ -31,15 +31,17 @@ class UserHandler(BaseHandler):
     def get(self):
 
         self.validate_parameters(4)
-
         parameters = self.get_parameters()
-
-        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: parameters.usos_id})
-        self.validate_usos(usos, parameters)
-
-        user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
+        try:
+            user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
                                                  constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key})
+        except Exception, ex:
+                raise tornado.web.HTTPError(500, "Exception while fetching user data %s".format(ex))
+
+        # TODO: to nie powinno dzilac jak nie ma usera
+        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: user_doc[constants.USOS_ID]})
+        self.validate_usos(usos, parameters)
 
         if not user_doc:
             try:

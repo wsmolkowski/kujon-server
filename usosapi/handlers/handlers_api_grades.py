@@ -18,9 +18,6 @@ class GradesForCourseAndTermHandler(BaseHandler):
 
         user_doc = self.get_current_user()
 
-        usos = self.get_usos(user_doc[constants.USOS_ID])
-
-
         if not user_doc:
             user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                      constants.ACCESS_TOKEN_KEY: parameters.access_token_key},
@@ -28,6 +25,7 @@ class GradesForCourseAndTermHandler(BaseHandler):
         if not user_doc:
             raise tornado.web.HTTPError(400, "<html><body>User not authenticated</body></html>")
 
+        usos = self.get_usos(user_doc[constants.USOS_ID])
         course_id = self.get_argument(constants.COURSE_ID, default=None, strip=True)
         term_id = self.get_argument(constants.TERM_ID, default=None, strip=True)
         doc = yield self.db.grades.find_one(

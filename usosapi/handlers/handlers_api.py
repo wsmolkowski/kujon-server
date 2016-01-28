@@ -10,6 +10,10 @@ from usosapi import constants, settings
 
 class Parameters:
     def __init__(self, user_usos_id, mobile_id, access_token_key, access_token_secret):
+
+        if not user_usos_id or not mobile_id or not access_token_key or not access_token_secret:
+            raise tornado.web.HTTPError(400, "Given Parameters not supported.")
+
         self.user_usos_id = user_usos_id
         self.mobile_id = mobile_id
         self.access_token_key = access_token_key
@@ -50,7 +54,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def validate_parameters(self, expected):
         if len(self.request.arguments) != expected:
-            raise tornado.web.HTTPError(400, "<html><body>Arguments not supported %s</body></html>".format(
+            raise tornado.web.HTTPError(400, "Arguments not supported: {0} ".format(
                     str(self.request.arguments)))
 
     def validate_usos(self, usos, parameters):

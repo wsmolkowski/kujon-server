@@ -14,7 +14,7 @@ class ApiCoursesTest(TestBaseClassApp):
         self.assertEqual(response.code, 200)
 
     def testShouldFailForWrongUser(self):
-        response = self.fetch("/api/courseseditions?mobile_id=FAKE&usos={0}&access_token_key={1}&access_token_secret={2}".format(self.usos,self.access_token_key,self.access_token_secret))
+        response = self.fetch("/api/courseseditions?mobile_id=FAKE&usos={UW}&access_token_key=FAKE&access_token_secret=FAKE")
         self.assertEqual(response.code, 400)
 
     # courses
