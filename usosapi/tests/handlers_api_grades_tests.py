@@ -1,6 +1,5 @@
 from tests_base import TestBaseClassApp
 
-
 class ApiGradesTest(TestBaseClassApp):
 
     def testShouldFailNonExistingTokenKey(self):

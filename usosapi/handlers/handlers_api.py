@@ -1,15 +1,19 @@
 import urlparse
 
+import httplib2
 import tornado.web
 from bson import json_util
 
-from usosapi import constants, settings
-import httplib2
 import usosapi.oauth2 as oauth
+from usosapi import constants, settings
 
 
 class Parameters:
     def __init__(self, user_usos_id, mobile_id, access_token_key, access_token_secret):
+
+        if not user_usos_id or not mobile_id or not access_token_key or not access_token_secret:
+            raise tornado.web.HTTPError(400, "Given Parameters not supported.")
+
         self.user_usos_id = user_usos_id
         self.mobile_id = mobile_id
         self.access_token_key = access_token_key
@@ -35,14 +39,14 @@ class BaseHandler(tornado.web.RequestHandler):
         user = self.get_current_user()
         if not user:
             return Parameters(
-                    self.get_argument(constants.USER_USOS_ID, default=None, strip=True),
+                    self.get_argument(constants.USOS_ID, default=None, strip=True),
                     self.get_argument(constants.MOBILE_ID, default=None, strip=True),
                     self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
                     self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
             )
         else:
             return Parameters(
-                    user[constants.USER_USOS_ID],
+                    user[constants.USOS_ID],
                     user[constants.MOBILE_ID],
                     user[constants.ACCESS_TOKEN_KEY],
                     user[constants.ACCESS_TOKEN_SECRET],
@@ -50,7 +54,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def validate_parameters(self, expected):
         if len(self.request.arguments) != expected:
-            raise tornado.web.HTTPError(400, "<html><body>Arguments not supported %s</body></html>".format(
+            raise tornado.web.HTTPError(400, "Arguments not supported: {0} ".format(
                     str(self.request.arguments)))
 
     def validate_usos(self, usos, parameters):
@@ -75,8 +79,8 @@ class BaseHandler(tornado.web.RequestHandler):
             constants.NEXT_PAGE: "/"
         }
 
-    def get_usos(self, usos_id):
+    def get_usos(self, usos):
         for u in self.usoses:
-            if u[constants.USER_USOS_ID] == usos_id:
+            if u[constants.USOS_ID] == usos:
                 return u
         return None

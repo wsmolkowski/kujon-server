@@ -20,9 +20,9 @@ class Dao:
             self.drop_collections()
 
         for usos in settings.USOSINSTANCES:
-           doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
-           if not doc:
-               self.__db.usosinstances.insert(usos)
+            doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
+            if not doc:
+                self.__db.usosinstances.insert(usos)
 
     def get_usos(self, usos_id):
         return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})

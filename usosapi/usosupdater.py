@@ -1,8 +1,9 @@
 import json
 
+import tornado.web
+
 import oauth2 as oauth
 from helpers import log_execution_time
-import tornado.web
 
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
 URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
@@ -59,7 +60,7 @@ class USOSUpdater:
         return self.request(URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id))
 
 
-#TODO: przepisac request_curse_info oraz request_grades_for_course jako wywolania asynchroniczne, jak to ponizej
+# TODO: przepisac request_curse_info oraz request_grades_for_course jako wywolania asynchroniczne, jak to ponizej
 
 @tornado.gen.coroutine
 def request_user_info(usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):

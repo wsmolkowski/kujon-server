@@ -10,6 +10,10 @@ class ApiUserTest(TestBaseClassApp):
         response = self.fetch('/api/user?a=1&b=1&c=3&d=4')
         self.assertEqual(response.code, 400)
 
+    def testShouldFailForFakeUser(self):
+        response = self.fetch('/api/user?mobile_id=FAKE&b=1&c=3&d=4')
+        self.assertEqual(response.code, 400)
+
     def testShouldGetUser(self):
 
         # todo: najpierw wystaworwac apliacke a dopiero potem rejestrowac usera....
