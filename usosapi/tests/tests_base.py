@@ -34,10 +34,6 @@ class TestBaseClassApp(AsyncHTTPTestCase):
     def get_new_ioloop(self):
         return IOLoop.instance()
 
-    def test_homepage(self):
-        response = self.fetch('/')
-        self.assertEqual(response.code, 200)
-        self.assertTrue(response.body.startswith("\n<!DOCTYPE html>\n<html la"))
 
 
 
