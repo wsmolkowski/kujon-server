@@ -10,8 +10,6 @@ from usosapi import constants
 from usosapi.usosupdater import USOSUpdater
 
 
-
-
 class UserHandler(BaseHandler):
 
     def loadUserData(self,user_doc):

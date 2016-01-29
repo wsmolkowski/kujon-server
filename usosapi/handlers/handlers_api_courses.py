@@ -83,7 +83,6 @@ class CoursesEditionsHandler(BaseHandler):
 
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.USER_USOS_ID] = parameters.user_usos_id
-            # result[constants.USOS_ID] = user_doc[constants.USOS_ID]
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             logging.info("no courses for mobile_id: {0} in db. fetched from usos and saved with id: {1}".format(
                     parameters.mobile_id, doc_id))

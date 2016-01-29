@@ -15,6 +15,13 @@ class Dao:
             print 'Cleaning collection:', collection
             self.__db.drop_collection(collection)
 
+    def create(self):
+        for collection in self.__db.collection_names():
+            if 'system' in collection:
+                continue
+            print 'Cleaning collection:', collection
+            self.__db.drop_collection(collection)
+
     def prepare(self):
         if settings.CLEAN_DB:
             self.drop_collections()
