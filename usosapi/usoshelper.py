@@ -19,8 +19,8 @@ def get_course_info(usos_base_url, courseId, validate_cert=False):
         raise tornado.web.HTTPError(400, "Don't have data for given courseId: {0}.".format(courseId))
 
     course = json.loads(response.body)
-    course[constants.COURSE_ID] = course['id']
-    course.pop('id', None)
+    course[constants.COURSE_ID] = course.pop('id')
+
     raise tornado.gen.Return(json.dumps(course))
 
 
@@ -34,7 +34,6 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
         raise tornado.web.HTTPError(400, "Don't have data for given term_id: {0}.".format(term_id))
 
     term = json.loads(response.body)
-    term[constants.TERM_ID] = term_id['id']
-    term.pop('id', None)
+    term[constants.TERM_ID] = term.pop('id')
 
     raise tornado.gen.Return(json.dumps(term_id))
