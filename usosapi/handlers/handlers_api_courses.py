@@ -27,7 +27,8 @@ class CourseHandler(BaseHandler):
             raise tornado.web.HTTPError(400,
                                         "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
 
-        courseDoc = yield self.db.courses.find_one({constants.COURSE_ID: courseId})
+        courseDoc = yield self.db.courses.find_one({constants.COURSE_ID: courseId,
+                                                    constants.USOS_ID: user_doc[constants.USOS_ID]})
 
         if not courseDoc:
             usos = self.get_usos(user_doc[constants.USOS_ID])
@@ -38,6 +39,7 @@ class CourseHandler(BaseHandler):
 
             try:
                 courseDoc = json_util.loads(courseDoc)
+                courseDoc[constants.USOS_ID] = user_doc[constants.USOS_ID]
                 courseDocId = yield motor.Op(self.db.courses.insert, courseDoc)
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while inserting courseId to mongo {0}.".format(ex.message))
@@ -70,7 +72,8 @@ class CoursesEditionsHandler(BaseHandler):
 
         usos = self.get_usos(user_doc[constants.USOS_ID])
 
-        course_doc = yield self.db.courseseditions.find_one({constants.MOBILE_ID: parameters.mobile_id})
+        course_doc = yield self.db.courseseditions.find_one({constants.MOBILE_ID: parameters.mobile_id,
+                                                             constants.USOS_ID: user_doc[constants.USOS_ID]})
 
         if not course_doc:
             try:
@@ -79,10 +82,11 @@ class CoursesEditionsHandler(BaseHandler):
                                       parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_curseseditions_info()
             except Exception, ex:
-                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
+                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info: {0}".format(ex))
 
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.USER_USOS_ID] = parameters.user_usos_id
+
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             logging.info("no courses for mobile_id: {0} in db. fetched from usos and saved with id: {1}".format(
                     parameters.mobile_id, doc_id))

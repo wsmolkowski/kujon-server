@@ -26,7 +26,7 @@ def get_course_info(usos_base_url, courseId, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_term_info(usos_base_url, term_id, validate_cert=False):
-    url = URL_COURSE_INFO.format(usos_base_url, term_id)
+    url = URL_TERM_INFO.format(usos_base_url, term_id)
     request = tornado.httpclient.HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert)
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
@@ -36,4 +36,4 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
     term = json.loads(response.body)
     term[constants.TERM_ID] = term.pop('id')
 
-    raise tornado.gen.Return(json.dumps(term_id))
+    raise tornado.gen.Return(json.dumps(term))

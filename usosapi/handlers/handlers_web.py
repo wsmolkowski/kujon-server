@@ -46,6 +46,14 @@ class GradesWebHandler(BaseHandler):
         data = self.template_data()
         self.render("school-grades.html", **data)
 
+class TermsWebHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self, courseId):
+        data = self.template_data()
+        self.render("school-terms.html", **data)
 
 class ChatHandler(BaseHandler):
     @tornado.web.removeslash
