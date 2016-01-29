@@ -23,6 +23,7 @@ from handlers.handlers_web import CourseInfoWebHandler
 from handlers.handlers_web import CoursesWebHandler
 from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import GradesWebHandler
+from handlers.handlers_web import TermsWebHandler
 from handlers.handlers_web import MainHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
@@ -30,7 +31,6 @@ from mongo_utils import Dao
 
 tornado.options.parse_command_line()
 enable_pretty_logging()
-
 
 class Application(tornado.web.Application):
     _usoses = None
@@ -65,6 +65,8 @@ class Application(tornado.web.Application):
             (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
             (r"/school/courses", CoursesWebHandler),
             (r"/school/courses/([^/]+)", CourseInfoWebHandler),
+            (r"/school/terms/([^/]+)", TermsWebHandler),
+
 
             (r"/chat", ChatHandler),
 

@@ -27,7 +27,7 @@ class TermsHandler(BaseHandler):
             raise tornado.web.HTTPError(400,
                                         "Don't have given courseId for user: ".format(termId, parameters.mobile_id))
 
-        termDoc = yield self.db.terms.find_one({constants.COURSE_ID: termId})
+        termDoc = yield self.db.terms.find_one({constants.TERM_ID: termId, constants.USOS_ID: user_doc[constants.USOS_ID]})
 
         if not termDoc:
             usos = self.get_usos(user_doc[constants.USOS_ID])
@@ -38,6 +38,7 @@ class TermsHandler(BaseHandler):
 
             try:
                 termDoc = json_util.loads(termDoc)
+                termDoc[constants.USOS_ID] = user_doc[constants.USOS_ID]
                 termDocId = yield motor.Op(self.db.terms.insert, termDoc)
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while inserting courseId to mongo {0}.".format(ex.message))
