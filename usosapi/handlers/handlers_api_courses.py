@@ -27,7 +27,7 @@ class CourseHandler(BaseHandler):
             raise tornado.web.HTTPError(400,
                                         "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
 
-        courseDoc = yield self.db.courses.find_one({constants.COURSES_ID: courseId})
+        courseDoc = yield self.db.courses.find_one({constants.COURSE_ID: courseId})
 
         if not courseDoc:
             usos = self.get_usos(user_doc[constants.USOS_ID])
