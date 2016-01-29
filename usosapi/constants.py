@@ -2,6 +2,7 @@ USOS_ID = 'usos'
 USER_USOS_ID = 'usos_id'
 MOBILE_ID = 'mobile_id'
 COURSE_ID = 'course_id'
+COURSES_ID = 'id'
 TERM_ID = 'term_id'
 
 CREATED_TIME = 'created_time'

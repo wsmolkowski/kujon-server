@@ -27,8 +27,7 @@ class CourseHandler(BaseHandler):
             raise tornado.web.HTTPError(400,
                                         "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
 
-        # najperw sprawdzamy czy jest ten kurs, jak nie ma scigamy wszystkie i jeszcze raz sprawdzamy
-        courseDoc = yield self.db.courses.find_one({constants.COURSE_ID: courseId})
+        courseDoc = yield self.db.courses.find_one({constants.COURSES_ID: courseId})
 
         if not courseDoc:
             usos = self.get_usos(user_doc[constants.USOS_ID])
@@ -38,7 +37,8 @@ class CourseHandler(BaseHandler):
             courseDoc = yield usoshelper.get_course_info(usos[constants.URL], courseId)
 
             try:
-                courseDocId = yield motor.Op(self.db.courcourses.insert, json_util.loads(courseDoc))
+                courseDoc = json_util.loads(courseDoc)
+                courseDocId = yield motor.Op(self.db.courses.insert, courseDoc)
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while inserting courseId to mongo {0}.".format(ex.message))
 
@@ -47,9 +47,9 @@ class CourseHandler(BaseHandler):
                             courseId, parameters.mobile_id,courseDocId))
         else:
             logging.info("Courses with courseId: {0} for mobile_id: {1} fetched from db with id: {2}".format(
-                    courseId, parameters.mobilDid, courseDoc["_id"]))
+                    courseId, parameters.mobile_id, courseDoc["_id"]))
 
-        self.write(courseDoc)
+        self.write(json_util.dumps(courseDoc))
 
 
 class CoursesEditionsHandler(BaseHandler):
