@@ -38,18 +38,18 @@ class CourseHandler(BaseHandler):
             courseDoc = yield usoshelper.get_course_info(usos[constants.URL], courseId)
 
             try:
-                courseDoc = yield motor.Op(self.db.courcourses.insert, json_util.loads(courseDoc))
+                courseDocId = yield motor.Op(self.db.courcourses.insert, json_util.loads(courseDoc))
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while inserting courseId to mongo {0}.".format(ex.message))
 
             logging.info(
                     "Course with courseId: {0} for mobile_id: {1}, fetched from usos and created with id: {2}".format(
-                            courseId, parameters.mobile_id,courseDoc["_id"]))
+                            courseId, parameters.mobile_id,courseDocId))
         else:
             logging.info("Courses with courseId: {0} for mobile_id: {1} fetched from db with id: {2}".format(
                     courseId, parameters.mobilDid, courseDoc["_id"]))
 
-        self.write(json_util.Dmps(courseDoc))
+        self.write(courseDoc)
 
 
 class CoursesEditionsHandler(BaseHandler):
