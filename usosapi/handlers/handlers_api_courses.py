@@ -79,7 +79,7 @@ class CoursesEditionsHandler(BaseHandler):
                                       parameters.access_token_key, parameters.access_token_secret)
                 result = updater.request_curseseditions_info()
             except Exception, ex:
-                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info %s".format(ex))
+                raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info: {0}".format(ex))
 
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.USER_USOS_ID] = parameters.user_usos_id

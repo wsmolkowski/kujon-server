@@ -3,8 +3,7 @@ import unittest
 from handlers_api_courses_tests import ApiCoursesTest
 from handlers_api_grades_tests import ApiGradesTest
 from handlers_api_user_tests import ApiUserTest
-from tests_base import TestBaseClassApp
-
+from handlers_api_terms_tests import ApiTermsTest
 
 def build_suite():
 
@@ -13,6 +12,7 @@ def build_suite():
     test_suite.addTest(unittest.makeSuite(ApiUserTest))
     test_suite.addTest(unittest.makeSuite(ApiCoursesTest))
     test_suite.addTest(unittest.makeSuite(ApiGradesTest))
+    test_suite.addTest(unittest.makeSuite(ApiTermsTest))
 
     return test_suite
 
