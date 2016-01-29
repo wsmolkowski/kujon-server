@@ -27,7 +27,6 @@ class CourseHandler(BaseHandler):
             raise tornado.web.HTTPError(400,
                                         "Don't have given courseId for user: ".format(courseId, parameters.mobile_id))
 
-        # najperw sprawdzamy czy jest ten kurs, jak nie ma scigamy wszystkie i jeszcze raz sprawdzamy
         courseDoc = yield self.db.courses.find_one({constants.COURSE_ID: courseId})
 
         if not courseDoc:
@@ -38,18 +37,19 @@ class CourseHandler(BaseHandler):
             courseDoc = yield usoshelper.get_course_info(usos[constants.URL], courseId)
 
             try:
-                courseDoc = yield motor.Op(self.db.courcourses.insert, json_util.loads(courseDoc))
+                courseDoc = json_util.loads(courseDoc)
+                courseDocId = yield motor.Op(self.db.courses.insert, courseDoc)
             except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while inserting courseId to mongo {0}.".format(ex.message))
 
             logging.info(
                     "Course with courseId: {0} for mobile_id: {1}, fetched from usos and created with id: {2}".format(
-                            courseId, parameters.mobile_id,courseDoc["_id"]))
+                            courseId, parameters.mobile_id,courseDocId))
         else:
             logging.info("Courses with courseId: {0} for mobile_id: {1} fetched from db with id: {2}".format(
-                    courseId, parameters.mobilDid, courseDoc["_id"]))
+                    courseId, parameters.mobile_id, courseDoc["_id"]))
 
-        self.write(json_util.Dmps(courseDoc))
+        self.write(json_util.dumps(courseDoc))
 
 
 class CoursesEditionsHandler(BaseHandler):
@@ -83,7 +83,6 @@ class CoursesEditionsHandler(BaseHandler):
 
             result[constants.MOBILE_ID] = parameters.mobile_id
             result[constants.USER_USOS_ID] = parameters.user_usos_id
-            # result[constants.USOS_ID] = user_doc[constants.USOS_ID]
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             logging.info("no courses for mobile_id: {0} in db. fetched from usos and saved with id: {1}".format(
                     parameters.mobile_id, doc_id))

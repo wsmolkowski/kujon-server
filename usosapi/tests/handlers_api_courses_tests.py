@@ -21,11 +21,11 @@ class ApiCoursesTest(TestBaseClassApp):
 
     def testShouldReturnGivenCourse(self):
         response = self.fetch("/api/courses/1000-612ARR?{0}".format(self.auth_uri))
-        self.assertTrue('"id": "1000-612ARR"' in response.body)
+        self.assertTrue('"course_id": "1000-612ARR"' in response.body)
         self.assertEqual(response.code, 200)
 
         response = self.fetch("/api/courses/1000-621MRB?{0}".format(self.auth_uri))
-        self.assertTrue('"id": "1000-621MRB"' in response.body)
+        self.assertTrue('"course_id": "1000-621MRB"' in response.body)
         self.assertEqual(response.code, 200)
 
     def testShouldnotReturnForFakeCourse(self):

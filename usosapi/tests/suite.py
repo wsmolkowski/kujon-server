@@ -10,7 +10,6 @@ def build_suite():
 
     test_suite = unittest.TestSuite()
 
-    test_suite.addTest(unittest.makeSuite(TestBaseClassApp))
     test_suite.addTest(unittest.makeSuite(ApiUserTest))
     test_suite.addTest(unittest.makeSuite(ApiCoursesTest))
     test_suite.addTest(unittest.makeSuite(ApiGradesTest))
