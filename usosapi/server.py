@@ -27,11 +27,19 @@ from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
 from mongo_utils import Dao
 
-tornado.options.parse_command_line()
-enable_pretty_logging()
+from usosqueue import UsosQueue
 
 
 class Application(tornado.web.Application):
+    _crowler = None
+
+    @property
+    def crowler(self):
+        if not self._crowler:
+            self._crowler = UsosQueue()
+        return self._crowler
+
+
     _usoses = None
 
     @property
@@ -93,12 +101,17 @@ class Application(tornado.web.Application):
         self.dao
         self.dao.prepare()
         self.usoses
+        self.crowler
 
 
 def main():
+    tornado.options.parse_command_line()
+    enable_pretty_logging()
+
     app = Application()
     app.listen(settings.PORT)
     logging.info('http://localhost:{0}'.format(settings.PORT))
+    IOLoop.instance().add_callback(app.crowler.queue_watcher)
     IOLoop.instance().start()
 
 
