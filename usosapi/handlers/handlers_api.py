@@ -30,8 +30,10 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.application.usoses
 
     def get_current_user(self):
-        if self.get_secure_cookie(constants.USER_SECURE_COOKIE):
-            return json_util.loads(tornado.escape.json_decode(self.get_secure_cookie(constants.USER_SECURE_COOKIE)))
+        cookie = self.get_secure_cookie(constants.USER_SECURE_COOKIE)
+        if cookie:
+            cookie = tornado.escape.json_decode(cookie)
+            return json_util.loads(cookie)
         return None
 
     def get_parameters(self):

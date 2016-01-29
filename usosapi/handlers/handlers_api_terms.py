@@ -14,7 +14,6 @@ class TermsHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self, termId):
 
-
         parameters = self.get_parameters()
 
         try:
@@ -22,7 +21,7 @@ class TermsHandler(BaseHandler):
                                                  constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key})
         except Exception, ex:
-                raise tornado.web.HTTPError(500, "Exception while fetching user data %s".format(ex))
+                raise tornado.web.HTTPError(500, "Exception while fetching user data: {0}".format(ex))
 
         if not termId:
             raise tornado.web.HTTPError(400,
