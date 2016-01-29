@@ -21,9 +21,9 @@ function drawCoursesTable(jsonData) {
             for(var i=0; i< value.length; i++) {
                 html += '<td><a href=terms/'+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
                 html += '<td>' + value[i]['course_id'] + '</td>'
-                html += '<td><a href=courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=course/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
-                html += '<a href=grades/courses/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Grades</a>'
+                html += '<a href=grades/course/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Grades</a>'
                 html += '</td>'
                 html += '</tr>';
             }
@@ -79,7 +79,6 @@ $( document ).ready(function() {
 
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
-
     if (pathname.indexOf('/school/courses') === 0){
         if (pathSplit.length == 3){
             fetchCursesAndDraw();
