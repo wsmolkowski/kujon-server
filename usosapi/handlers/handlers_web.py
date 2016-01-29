@@ -32,7 +32,7 @@ class CourseInfoWebHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, course):
+    def get(self, courseId):
         data = self.template_data()
         self.render("course-info.html", **data)
 
@@ -42,7 +42,7 @@ class GradesWebHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self):
+    def get(self,courseId,termId):
         data = self.template_data()
         self.render("school-grades.html", **data)
 

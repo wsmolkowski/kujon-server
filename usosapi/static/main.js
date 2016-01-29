@@ -1,5 +1,6 @@
 var cursesElement = '#school-courses-id';
 var courseInfoElement = '#course-info-id';
+var gradesElement = '#school-grades-id';
 
 function drawErrorMessage(data, elementId) {
     $(elementId).empty();
@@ -20,9 +21,9 @@ function drawCoursesTable(jsonData) {
             for(var i=0; i< value.length; i++) {
                 html += '<td><a href=terms/'+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
                 html += '<td>' + value[i]['course_id'] + '</td>'
-                html += '<td><a href=courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=course/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
-                html += '<a href=grades/courses/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Grades</a>'
+                html += '<a href=grades/course/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Grades</a>'
                 html += '</td>'
                 html += '</tr>';
             }
@@ -47,12 +48,11 @@ function fetchCursesAndDraw(){
 
 function drawCourseInfoTable(jsonData){
     $(courseInfoElement).empty();
-
      var html = '<table class="table table-hover">';
         html += '<tr><th>ID</th><th>Description</th><th>Name</th><th></th></tr></tr>'
         html += '<tbody>'
         html += '<tr>'
-        html += '<td>' + jsonData['id'] + '</td>'
+        html += '<td>' + jsonData['course_id'] + '</td>'
         html += '<td>' + jsonData['description']['pl'] + '</td>'
         html += '<td>' + jsonData['name']['pl'] + '</td>'
         html += '</tr>'
@@ -61,12 +61,11 @@ function drawCourseInfoTable(jsonData){
     $(courseInfoElement).html(html);
 }
 
-function fetchCurseInfo(course){
+function fetchCurseInfo(courseId){
 
      $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courses/' + course,
-      //data: $.param(args),
+      url: deployUrl + '/api/courses/' + courseId,
       success:  function (data) {
             drawCourseInfoTable(JSON.parse(data));
       },
@@ -80,7 +79,6 @@ $( document ).ready(function() {
 
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
-
     if (pathname.indexOf('/school/courses') === 0){
         if (pathSplit.length == 3){
             fetchCursesAndDraw();
