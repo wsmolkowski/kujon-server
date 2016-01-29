@@ -1,5 +1,6 @@
 var cursesElement = '#school-courses-id';
 var courseInfoElement = '#course-info-id';
+var gradesElement = '#school-grades-id';
 
 function drawErrorMessage(data, elementId) {
     $(elementId).empty();
@@ -47,12 +48,11 @@ function fetchCursesAndDraw(){
 
 function drawCourseInfoTable(jsonData){
     $(courseInfoElement).empty();
-
      var html = '<table class="table table-hover">';
         html += '<tr><th>ID</th><th>Description</th><th>Name</th><th></th></tr></tr>'
         html += '<tbody>'
         html += '<tr>'
-        html += '<td>' + jsonData['id'] + '</td>'
+        html += '<td>' + jsonData['course_id'] + '</td>'
         html += '<td>' + jsonData['description']['pl'] + '</td>'
         html += '<td>' + jsonData['name']['pl'] + '</td>'
         html += '</tr>'
@@ -61,12 +61,11 @@ function drawCourseInfoTable(jsonData){
     $(courseInfoElement).html(html);
 }
 
-function fetchCurseInfo(course){
+function fetchCurseInfo(courseId){
 
      $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courses/' + course,
-      //data: $.param(args),
+      url: deployUrl + '/api/courses/' + courseId,
       success:  function (data) {
             drawCourseInfoTable(JSON.parse(data));
       },

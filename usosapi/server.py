@@ -61,7 +61,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/?", MainHandler),
             (r"/school", SchoolHandler),
-            (r"/school/grades", GradesWebHandler),
+            (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
             (r"/school/courses", CoursesWebHandler),
             (r"/school/courses/([^/]+)", CourseInfoWebHandler),
             (r"/chat", ChatHandler),
