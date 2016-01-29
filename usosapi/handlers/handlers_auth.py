@@ -123,7 +123,7 @@ class VerifyHandler(BaseHandler):
             request_token.set_verifier(oauth_verifier)
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
                 constants.CONSUMER_SECRET])
-            client = oauth.Client(consumer, request_token)
+            client = oauth.Client(consumer, request_token, proxy_info=self.get_proxy())
             access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 
