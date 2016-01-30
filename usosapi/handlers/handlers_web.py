@@ -55,6 +55,7 @@ class TermsWebHandler(BaseHandler):
         data = self.template_data()
         self.render("school-terms.html", **data)
 
+
 class ChatHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
@@ -71,8 +72,17 @@ class FriendsHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         data = data = self.template_data()
-        self.render("friends.html", **data)
+        self.render("school.html", **data)
 
+
+class FriendsSuggestionsHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = data = self.template_data()
+        self.render("school.html", **data)
 
 class SettingsHandler(BaseHandler):
     @tornado.web.removeslash

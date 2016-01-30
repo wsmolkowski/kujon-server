@@ -14,6 +14,7 @@ from handlers.handlers_api_courses import CoursesEditionsHandler
 from handlers.handlers_api_grades import GradesForCourseAndTermHandler
 from handlers.handlers_api_user import UserHandler
 from handlers.handlers_api_terms import TermsHandler
+from handlers.handlers_api_friends import FriendsSuggestionsApi
 from handlers.handlers_auth import CreateUserHandler
 from handlers.handlers_auth import LoginHandler
 from handlers.handlers_auth import LogoutHandler
@@ -22,6 +23,7 @@ from handlers.handlers_web import ChatHandler
 from handlers.handlers_web import CourseInfoWebHandler
 from handlers.handlers_web import CoursesWebHandler
 from handlers.handlers_web import FriendsHandler
+from handlers.handlers_web import FriendsSuggestionsHandler
 from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import TermsWebHandler
 from handlers.handlers_web import MainHandler
@@ -79,7 +81,7 @@ class Application(tornado.web.Application):
             (r"/chat", ChatHandler),
 
             (r"/friends", FriendsHandler),
-
+            (r"/friends/suggestions", FriendsSuggestionsHandler),
             (r"/settings", SettingsHandler),
 
             (r"/authentication/login", LoginHandler),
@@ -92,6 +94,7 @@ class Application(tornado.web.Application):
             (r"/api/courses/([^/]+)", CourseHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
             (r"/api/terms/([^/]+)", TermsHandler),
+            (r"/api/fiends/suggestions", FriendsSuggestionsApi),
 
         ]
 

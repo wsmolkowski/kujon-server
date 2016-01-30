@@ -2,6 +2,9 @@ var cursesElement = '#school-courses-id';
 var courseInfoElement = '#course-info-id';
 var gradesElement = '#school-grades-id';
 var termsElement = '#school-terms-id';
+var baseContainer = '#base-container-id';
+
+var htmlHelper = new HtmlHelper();
 
 function drawErrorMessage(data, elementId) {
     $(elementId).empty();
@@ -150,15 +153,37 @@ function drawTermsTable(jsonData){
 function fetchTermsAndDraw(termId){
 
      $.ajax({
-      type: 'GET',
-      url: deployUrl + '/api/terms/'+ termId,
-      success:  function (data) {
+           type: 'GET',
+           url: deployUrl + '/api/terms/'+ termId,
+           success:  function (data) {
             drawTermsTable(JSON.parse(data));
-      },
-      error: function (err) {
-        drawErrorMessage(err, termsElement);
-      }
+           },
+           error: function (err) {
+            drawErrorMessage(err, termsElement);
+           }
     });
+}
+
+function drawFriendsSuggestionsTable(jsonData){
+    $(baseContainer).empty();
+
+    html = htmlHelper.generateTable(JSON.parse(jsonData));
+
+    $(baseContainer).html(html);
+}
+
+function fetchFriendsSuggestionsAndDraw(){
+
+       $.ajax({
+             type: 'GET',
+             url: deployUrl + '/api/fiends/suggestions',
+             success:  function (data) {
+                drawFriendsSuggestionsTable(JSON.parse(data));
+             },
+             error: function (err) {
+                drawErrorMessage(err, cursesElement);
+            }
+       });
 }
 
 $( document ).ready(function() {
@@ -171,12 +196,12 @@ $( document ).ready(function() {
         } else if (pathSplit.length == 4) {
             fetchCurseInfo(pathSplit[3]);
         }
-    }
-    if (pathname.indexOf('/school/grades/course/') === 0){
+    } else if (pathname.indexOf('/school/grades/course/') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);
-    }
-    if (pathname.indexOf('/school/terms/') === 0){
+    } else if (pathname.indexOf('/school/terms/') === 0){
         fetchTermsAndDraw(pathSplit[3]);
+    } else if (pathname.indexOf('/friends/suggestions') === 0){
+        fetchFriendsSuggestionsAndDraw();
     }
 
 });
