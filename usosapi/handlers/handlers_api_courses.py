@@ -6,8 +6,8 @@ from bson import json_util
 
 from handlers_api import BaseHandler
 from usosapi import constants
-from usosapi import usosupdater
 from usosapi import usoshelper
+from usosapi import usosupdater
 
 class CourseHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -85,7 +85,7 @@ class CoursesEditionsHandler(BaseHandler):
                 raise tornado.web.HTTPError(400, "Exception while fetching USOS data for course info: {0}".format(ex))
 
             result[constants.MOBILE_ID] = parameters.mobile_id
-            result[constants.USER_USOS_ID] = parameters.user_usos_id
+            result[constants.USER_ID] = user_doc[constants.USERS_ID]
 
             doc_id = yield motor.Op(self.db.courseseditions.insert, result)
             logging.info("no courses for mobile_id: {0} in db. fetched from usos and saved with id: {1}".format(

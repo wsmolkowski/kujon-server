@@ -6,7 +6,7 @@ var termsElement = '#school-terms-id';
 function drawErrorMessage(data, elementId) {
     $(elementId).empty();
 
-    var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Error while retrieving data' + '</strong>' + data.responseText.toString() + '</div>';
+    var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Error while retrieving data: ' + '</strong>' + data.responseText.toString() + '</div>';
 
     $(elementId).html(html);
 }
