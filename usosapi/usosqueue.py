@@ -24,6 +24,8 @@ class UsosQueue():
     @tornado.gen.coroutine
     def crowl(self, user_id):
         logging.info('crawling for: {0}'.format(user_id))
+        crowl_time = datetime.now()
+
         user = self.dao.get_user(user_id)
         usos = self.dao.get_usos(user[constants.USOS_ID])
 
@@ -34,7 +36,8 @@ class UsosQueue():
         logging.info('request_user_info fetch for : {0}'.format(user_id))
         result = updater.request_user_info()
         result[constants.USER_ID] = user_id
-        result[constants.CREATED_TIME] = datetime.now()
+        result[constants.CREATED_TIME] = crowl_time
+        result[constants.UPDATE_TIME] = crowl_time
 
         logging.info('request_user_info result: {0}'.format(result))
         doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
@@ -43,18 +46,21 @@ class UsosQueue():
         logging.info('request_curseseditions_info for: {0}'.format(user_id))
         result = updater.request_curseseditions_info()
         result[constants.USER_ID] = user_id
-        result[constants.CREATED_TIME] = datetime.now()
+        result[constants.CREATED_TIME] = crowl_time
+        result[constants.UPDATE_TIME] = crowl_time
         logging.info('request_curseseditions_info result: {0}'.format(result))
 
         doc = self.dao.insert(constants.COLLECTION_CURSES_EDITIONS, result)
         logging.info('request_user_info inserted: {0}'.format(doc))
 
         for term_id in self.dao.get_user_terms(user_id):
+            result = dict()
             logging.info('requesting term info for url {0} and term_id'.format(usos[constants.URL], term_id))
             result = yield usoshelper.get_term_info(usos[constants.URL], term_id)
             result = json.loads(result)
             result[constants.USER_ID] = user_id
-            result[constants.CREATED_TIME] = datetime.now()
+            result[constants.CREATED_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
             result[constants.USOS_ID] = usos[constants.USOS_ID]
 
             logging.info('requesting term info result {0}'.format(result))
@@ -68,7 +74,8 @@ class UsosQueue():
             result = json.loads(result)
             result[constants.USER_ID] = user_id
             result[constants.USOS_ID] = usos[constants.USOS_ID]
-            result[constants.CREATED_TIME] = datetime.now()
+            result[constants.CREATED_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
 
             logging.info('get_course_info result {0}'.format(result))
             doc = self.dao.insert(constants.COLLECTION_COURSES, result)
@@ -79,14 +86,36 @@ class UsosQueue():
             logging.info('requesting grade for term_id {0} and user_id {1}'.format(term_id, course_id))
             result = updater.request_grades_for_course(course_id, term_id)
 
-            #result[user_id] = user_id
+            participants = result.pop('participants')
+
+            result[constants.USER_ID] = user_id
             result[constants.USOS_ID] = usos[constants.USOS_ID]
-            result[constants.CREATED_TIME] = datetime.now()
+            result[constants.CREATED_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
 
             logging.info('grade for term_id {0} and user_id {1} {2}'.format(term_id, course_id, result))
             doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             logging.info('grades inserted with id {0}'.format(doc))
 
+            result = dict()
+            result[constants.TERM_ID] = term_id
+            result[constants.COURSE_ID] = course_id
+            result[constants.PARTICIPANTS] = participants
+            result[constants.CREATED_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
+
+            logging.info('participants for term_id {0} and user_id {1} {2}'.format(term_id, course_id, result))
+            doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
+            logging.info('participants inserted with id {0}'.format(doc))
+
+        # crowl collection
+        result = dict()
+        result[constants.USER_ID] = user_id
+        result[constants.CREATED_TIME] = crowl_time
+        result[constants.UPDATE_TIME] = crowl_time
+
+        doc = self.dao.insert(constants.COLLECTION_CROWLLOG, result)
+        logging.info('crowl log inserted with id {0}'.format(doc))
 
     @tornado.gen.coroutine
     def queue_watcher(self):
@@ -105,7 +134,7 @@ def main():
     #print 'terms:',  d.get_user_terms(existing_user_id)
     #print 'courses:',  d.get_user_courses(existing_user_id)
     #print 'terms and courses', d.get_user_terms_and_courses(existing_user_id)
-
+    #print 'fiends', d.get_suggested_friends(existing_user_id)
 
 if __name__ == "__main__":
     logging.basicConfig()
