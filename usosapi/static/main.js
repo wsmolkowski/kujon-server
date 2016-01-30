@@ -1,21 +1,16 @@
-var cursesElement = '#school-courses-id';
-var courseInfoElement = '#course-info-id';
-var gradesElement = '#school-grades-id';
-var termsElement = '#school-terms-id';
 var baseContainer = '#base-container-id';
-
 var htmlHelper = new HtmlHelper();
 
-function drawErrorMessage(data, elementId) {
-    $(elementId).empty();
+function drawErrorMessage(data) {
+    $(baseContainer).empty();
 
     var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Error while retrieving data' + '</strong>' + data.responseText.toString() + '</div>';
 
-    $(elementId).html(html);
+    $(baseContainer).html(html);
 }
 
 function drawCoursesTable(jsonData) {
-    $(cursesElement).empty();
+    $(baseContainer).empty();
 
     var html = '<table class="table table-hover">';
         html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th></th></tr></tr>'
@@ -33,7 +28,7 @@ function drawCoursesTable(jsonData) {
             }
         });
     html += '</tbody></table>';
-    $(cursesElement).html(html);
+    $(baseContainer).html(html);
 }
 
 function fetchCursesAndDraw(){
@@ -42,16 +37,16 @@ function fetchCursesAndDraw(){
       url: deployUrl + '/api/courseseditions',
       //data: $.param(args),
       success:  function (data) {
-            drawCoursesTable(JSON.parse(data), cursesElement);
+            drawCoursesTable(JSON.parse(data));
       },
       error: function (err) {
-        drawErrorMessage(err, cursesElement);
+        drawErrorMessage(err);
       }
     });
 }
 
 function drawCourseInfoTable(jsonData){
-    $(courseInfoElement).empty();
+    $(baseContainer).empty();
      var html = '<table class="table table-hover">';
         html += '<tr><th>ID</th><th>Description</th><th>Name</th><th></th></tr>'
         html += '<tbody>'
@@ -61,11 +56,11 @@ function drawCourseInfoTable(jsonData){
         html += '<td>' + jsonData['description']['pl'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
-    $(courseInfoElement).html(html);
+    $(baseContainer).html(html);
 }
 
 function drawGradesTable(jsonData){
-    $(gradesElement).empty();
+    $(baseContainer).empty();
      var html = '<table class="table table-hover">';
         html += '<tr><th>Course name</th><th>Course id</th></tr>'
         html += '<tbody>'
@@ -103,7 +98,7 @@ function drawGradesTable(jsonData){
         });
         html += '</tbody></table>';
 
-    $(gradesElement).html(html);
+    $(baseContainer).html(html);
 }
 
 function fetchCurseInfo(courseId){
@@ -115,12 +110,12 @@ function fetchCurseInfo(courseId){
             drawCourseInfoTable(JSON.parse(data));
       },
       error: function (err) {
-        drawErrorMessage(err, courseInfoElement);
+        drawErrorMessage(err);
       }
     });
 }
 
-function fetchGradesAndDraw(courseId,termId){
+function fetchGradesAndDraw(courseId, termId){
 
      $.ajax({
       type: 'GET',
@@ -129,13 +124,19 @@ function fetchGradesAndDraw(courseId,termId){
             drawGradesTable(JSON.parse(data));
       },
       error: function (err) {
-        drawErrorMessage(err, courseInfoElement);
+        drawErrorMessage(err);
       }
     });
 }
 
 function drawTermsTable(jsonData){
-    $(termsElement).empty();
+    $(baseContainer).empty();
+    $(baseContainer).html(jsonData);
+}
+
+function drawTermTable(jsonData){
+
+    $(baseContainer).empty();
      var html = '<table class="table table-hover">';
         html += '<tr><th>Term ID</th><th>Name</th><th>Start date</th><th>End date</th><th>Finish date</th></tr>'
         html += '<tbody>'
@@ -147,21 +148,40 @@ function drawTermsTable(jsonData){
         html += '<td>' + jsonData['finish_date'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
-    $(termsElement).html(html);
+    $(baseContainer).html(html);
 }
 
 function fetchTermsAndDraw(termId){
 
-     $.ajax({
+     if (typeof termId != 'undefined'){
+
+        $.ajax({
            type: 'GET',
-           url: deployUrl + '/api/terms/'+ termId,
+           url: url = deployUrl + '/api/terms/'+ termId,
            success:  function (data) {
-            drawTermsTable(JSON.parse(data));
+            drawTermTable(JSON.parse(data));
            },
            error: function (err) {
-            drawErrorMessage(err, termsElement);
+            drawErrorMessage(err);
            }
-    });
+        });
+
+     } else {
+
+        $.ajax({
+           type: 'GET',
+           url: url = url = deployUrl + '/api/terms',
+           success:  function (data) {
+            drawTermsTable(data);
+           },
+           error: function (err) {
+            drawErrorMessage(err);
+           }
+        });
+
+     };
+
+
 }
 
 function drawFriendsSuggestionsTable(jsonData){
@@ -198,8 +218,13 @@ $( document ).ready(function() {
         }
     } else if (pathname.indexOf('/school/grades/course/') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);
-    } else if (pathname.indexOf('/school/terms/') === 0){
-        fetchTermsAndDraw(pathSplit[3]);
+    } else if (pathname.indexOf('/school/terms') === 0){
+        if (pathSplit.length == 3){
+            fetchTermsAndDraw();
+        } else if (pathSplit.length == 4) {
+            fetchTermsAndDraw(pathSplit[3]);
+        }
+
     } else if (pathname.indexOf('/friends/suggestions') === 0){
         fetchFriendsSuggestionsAndDraw();
     }
