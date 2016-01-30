@@ -21,6 +21,13 @@ class Parameters:
 
 
 class BaseHandler(tornado.web.RequestHandler):
+
+    user_doc = None
+
+    usos = None
+
+    parameters = None
+
     @property
     def db(self):
         return self.application.db
@@ -39,25 +46,23 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_parameters(self):
 
         user = self.get_current_user()
-        if not user:
-            return Parameters(
-                    self.get_argument(constants.USOS_ID, default=None, strip=True),
-                    self.get_argument(constants.MOBILE_ID, default=None, strip=True),
-                    self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
-                    self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
-            )
-        else:
-            return Parameters(
-                    user[constants.USOS_ID],
-                    user[constants.MOBILE_ID],
-                    user[constants.ACCESS_TOKEN_KEY],
-                    user[constants.ACCESS_TOKEN_SECRET],
-            )
-
-    def validate_parameters(self, expected):
-        if len(self.request.arguments) != expected:
-            raise tornado.web.HTTPError(400, "Arguments not supported: {0} ".format(
-                    str(self.request.arguments)))
+        try:
+            if not user:
+                return Parameters(
+                        self.get_argument(constants.USOS_ID, default=None, strip=True),
+                        self.get_argument(constants.MOBILE_ID, default=None, strip=True),
+                        self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
+                        self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
+                )
+            else:
+                return Parameters(
+                        user[constants.USOS_ID],
+                        user[constants.MOBILE_ID],
+                        user[constants.ACCESS_TOKEN_KEY],
+                        user[constants.ACCESS_TOKEN_SECRET],
+                )
+        except Exception, ex:
+            raise tornado.web.HTTPError(400,"Parameters not supported".format(ex.message))
 
     def validate_usos(self, usos, parameters):
         if not usos:

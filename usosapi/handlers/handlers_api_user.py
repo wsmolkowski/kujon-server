@@ -12,47 +12,32 @@ from usosapi.usosupdater import USOSUpdater
 
 class UserHandler(BaseHandler):
 
-    def loadUserData(self,user_doc):
-
-        # load courseeditions
-        import urllib2
-        # response = urllib2.urlopen("http://localhost:8888/api/courseseditions?{0}")
-        # response = http.fetch("/api/courseseditions?{0}".format(self.auth_uri))
-        # print response
-
-        # for each courseeditions load courses and grades
-
-        pass
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        self.validate_parameters(4)
+        # przeniesc cala sekcje do oddzielnej metody najlpeiej do base handler bo to sie powtarza
         parameters = self.get_parameters()
         try:
             user_doc = yield self.db.users.find_one({constants.MOBILE_ID: parameters.mobile_id,
                                                  constants.ACCESS_TOKEN_SECRET: parameters.access_token_secret,
                                                  constants.ACCESS_TOKEN_KEY: parameters.access_token_key})
+            if user_doc:
+                    usos = yield self.db.usosinstances.find_one({constants.USOS_ID: user_doc[constants.USOS_ID]})
+                    self.validate_usos(usos, parameters)
         except Exception, ex:
-                raise tornado.web.HTTPError(500, "Exception while fetching user data %s".format(ex))
+                raise tornado.web.HTTPError(500, "Exception while fetching user data (0)".format(ex.message))
+        # do tego miejsca
 
-        # TODO: to nie powinno dzilac jak nie ma usera
-        usos = yield self.db.usosinstances.find_one({constants.USOS_ID: user_doc[constants.USOS_ID]})
-        self.validate_usos(usos, parameters)
-
-        if not user_doc:
+        if not user_doc or not constants.USER_USOS_ID in user_doc:
             try:
-                print usos[constants.URL], usos[constants.CONSUMER_KEY], usos[
-                    constants.CONSUMER_SECRET], \
-                    parameters.access_token_key, parameters.access_token_secret
                 updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
                                       usos[constants.CONSUMER_SECRET],
                                       parameters.access_token_key, parameters.access_token_secret)
 
                 result = updater.request_user_info()
             except Exception, ex:
-                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for user info %s".format(ex))
+                raise tornado.web.HTTPError(500, "Exception while fetching USOS data for user info: {0}".format(ex.message))
 
             result[constants.USER_USOS_ID] = result.pop('id')
             result[constants.USOS_ID] = usos[constants.USOS_ID]
@@ -61,7 +46,10 @@ class UserHandler(BaseHandler):
             result[constants.ACCESS_TOKEN_KEY] = parameters.access_token_key
             result[constants.CREATED_TIME] = datetime.now()
 
-            user_doc = yield motor.Op(self.db.users.insert, result)
+            if not user_doc:
+                user_doc = yield motor.Op(self.db.users.insert, result)
+            else:
+                user_doc = yield self.db.users.update({'_id': user_doc['_id']}, result)
 
             logging.info("saved new user in database: {0}".format(user_doc))
             user_doc = result
@@ -70,4 +58,3 @@ class UserHandler(BaseHandler):
             logging.info("user data fetched from database {0}".format(user_doc))
 
         self.write(json_util.dumps(user_doc))
-        self.loadUserData(user_doc)

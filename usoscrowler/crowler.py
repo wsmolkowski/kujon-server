@@ -5,6 +5,7 @@ from tornado import gen, ioloop, queues
 
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
+CONST_USOS_ID = 'usos'
 
 SLEEP = 10
 
@@ -19,7 +20,7 @@ def main():
     @gen.coroutine
     def crowl():
         for user in db.users.find():
-            usos = db.usosinstances.find_one({'usos_id': user['usos_id']})
+            usos = db.usosinstances.find_one({CONST_USOS_ID: user[CONST_USOS_ID]})
 
             updater = USOSUpdater(usos['url'], usos['consumer_key'], usos['consumer_secret'], user['access_token_key'], user['access_token_secret'])
             print user['mobile_id'], updater.request_user_info()
