@@ -8,6 +8,11 @@ class MainHandler(BaseHandler):
         self.render("main.html", **self.template_data())
 
 
+class UserHandler(BaseHandler):
+    def get(self):
+        self.render("school.html", **self.template_data())
+
+
 class SchoolHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated

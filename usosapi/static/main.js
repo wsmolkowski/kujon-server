@@ -192,6 +192,33 @@ function drawFriendsSuggestionsTable(jsonData){
     $(baseContainer).html(html);
 }
 
+function drawUserInfo(jsonData){
+    $(baseContainer).empty();
+
+    var html = '<table class="table table-hover">';
+    html += '<caption>Informacje USOS o użytkowniku</caption>'
+    html += '<tr><th></th><th></th></tr>'
+    html += '<tbody>'
+    html += '<tr><td>Imię</td><td>' + jsonData['first_name'] + '</td></tr>'
+    html += '<tr><td>Nazwisko</td><td>' + jsonData['last_name'] + '</td></tr>'
+    html += '<tr><td>Student number</td><td>' + jsonData['student_number'] + '</td></tr>'
+    html += '<tr><td>Email</td><td>' + jsonData['email'] + '</td></tr>'
+
+    $.each(jsonData['student_programmes'], function(key, value){
+            for(var i=1; i< 2; i++) {
+                html += '<tr><td>Program id</td><td>' + value['id'] + '</td></tr>'
+                html += '<tr><td>Opis</td><td>' + value['programme']['description']['pl'] + '</td></tr>'
+                html += '<tr><td></td><td>' + value['programme']['id'] + '</td></tr>'
+            }
+    });
+
+    html += '<tr><td></td><td></td></tr>'
+    html += '<tr><td></td><td><img src="' + jsonData['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    html += '</tbody></table>';
+
+    $(baseContainer).html(html);
+}
+
 function fetchFriendsSuggestionsAndDraw(){
 
        $.ajax({
@@ -199,6 +226,19 @@ function fetchFriendsSuggestionsAndDraw(){
              url: deployUrl + '/api/fiends/suggestions',
              success:  function (data) {
                 drawFriendsSuggestionsTable(JSON.parse(data));
+             },
+             error: function (err) {
+                drawErrorMessage(err, cursesElement);
+            }
+       });
+}
+
+function fetchUserInfoAndDraw() {
+    $.ajax({
+             type: 'GET',
+             url: deployUrl + '/api/user',
+             success:  function (data) {
+                drawUserInfo(JSON.parse(data));
              },
              error: function (err) {
                 drawErrorMessage(err, cursesElement);
@@ -227,6 +267,8 @@ $( document ).ready(function() {
 
     } else if (pathname.indexOf('/friends/suggestions') === 0){
         fetchFriendsSuggestionsAndDraw();
+    } else if (pathname.indexOf('/user') === 0){
+        fetchUserInfoAndDraw();
     }
 
 });

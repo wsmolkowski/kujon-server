@@ -12,7 +12,7 @@ import settings
 from handlers.handlers_api_courses import CourseHandler
 from handlers.handlers_api_courses import CoursesEditionsHandler
 from handlers.handlers_api_grades import GradesForCourseAndTermHandler
-from handlers.handlers_api_user import UserHandler
+from handlers.handlers_api_user import UserApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi
 from handlers.handlers_auth import CreateUserHandler
@@ -26,7 +26,7 @@ from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import FriendsSuggestionsHandler
 from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import TermsWebHandler, TermWebHandler
-from handlers.handlers_web import MainHandler
+from handlers.handlers_web import MainHandler, UserHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
 from mongo_utils import Dao
@@ -71,6 +71,7 @@ class Application(tornado.web.Application):
 
         handlers = [
             (r"/?", MainHandler),
+            (r"/user", UserHandler),
             (r"/school", SchoolHandler),
             (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
             (r"/school/courses", CoursesWebHandler),
@@ -90,7 +91,7 @@ class Application(tornado.web.Application):
             (r"/authentication/create", CreateUserHandler),
             (r"/authentication/verify", VerifyHandler),
 
-            (r"/api/user", UserHandler),
+            (r"/api/user", UserApi),
             (r"/api/courseseditions", CoursesEditionsHandler),
             (r"/api/courses/([^/]+)", CourseHandler),
             (r"/api/grades", GradesForCourseAndTermHandler),
