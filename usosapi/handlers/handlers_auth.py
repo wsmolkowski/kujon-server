@@ -143,12 +143,15 @@ class VerifyHandler(BaseHandler):
                 updated_user[constants.CREATED_TIME] = datetime.now()
                 updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
-                user_doc_updated = yield self.db.users.update({'_id': user_doc['_id']}, updated_user)
+                user_doc_updated = yield self.db.users.update({constants.ID: user_doc[constants.ID]}, updated_user)
 
                 data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
 
-                self.crowler.put_user(usos_doc['_id'])
+                # fetch user again to get actual id
+                user_id = yield self.db.users.find_one({}, {constants.ACCESS_TOKEN_KEY: oauth_token_key})
+
+                self.crowler.put_user(user_id[constants.ID])
 
             except KeyError:
                 data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(

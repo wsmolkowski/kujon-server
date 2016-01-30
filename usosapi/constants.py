@@ -5,6 +5,7 @@ USERS_ID = '_id'
 MOBILE_ID = 'mobile_id'
 COURSE_ID = 'course_id'
 TERM_ID = 'term_id'
+ID = '_id'
 
 PARTICIPANTS = 'participants'
 CREATED_TIME = 'created_time'
