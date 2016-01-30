@@ -32,7 +32,6 @@ class USOSUpdater:
                   "\nResponse status: {2} " \
                   "\nResponse content: {3}".format(
                     self.usosapi_base_url, url, resp['status'], content)
-            print msg
             raise Exception(msg)
 
         try:
@@ -44,7 +43,6 @@ class USOSUpdater:
                   "\nResponse content: {3}" \
                   "\nException: {4}".format(
                     self.usosapi_base_url, url, resp['status'], content, ex)
-            print msg
             raise Exception(msg)
 
     def request_user_info(self):

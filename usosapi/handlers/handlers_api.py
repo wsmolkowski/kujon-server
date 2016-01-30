@@ -29,6 +29,10 @@ class BaseHandler(tornado.web.RequestHandler):
     parameters = None
 
     @property
+    def crowler(self):
+        return self.application.crowler
+
+    @property
     def db(self):
         return self.application.db
 
