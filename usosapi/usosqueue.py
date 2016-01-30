@@ -112,7 +112,7 @@ class UsosQueue():
         result = dict()
         result[constants.USER_ID] = user_id
         result[constants.CREATED_TIME] = crowl_time
-        result[constants.UPDATE_TIME] = crowl_time
+        result[constants.UPDATE_TIME] = datetime.now()
 
         doc = self.dao.insert(constants.COLLECTION_CROWLLOG, result)
         logging.info('crowl log inserted with id {0}'.format(doc))
