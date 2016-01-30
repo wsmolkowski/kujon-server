@@ -18,7 +18,6 @@ class ApiUserTest(TestBaseClassApp):
         response = self.fetch("/api/user?{0}".format(self.auth_uri))
         self.assertEqual(response.code, 200)
         self.assertTrue('"mobile_id": "{0}"'.format(self.mobile_id) in response.body)
-        self.assertTrue('"usos_id": "1613"' in response.body)
 
 
 

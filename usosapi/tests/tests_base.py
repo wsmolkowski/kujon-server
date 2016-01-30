@@ -2,7 +2,6 @@ from tornado.ioloop import IOLoop
 from tornado.testing import AsyncHTTPTestCase
 from usosapi import server
 from datetime import datetime
-import motor
 import constants
 
 class TestBaseClassApp(AsyncHTTPTestCase):
@@ -11,7 +10,8 @@ class TestBaseClassApp(AsyncHTTPTestCase):
     access_token_secret = "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"
     mobile_id = "w1"
     usos = "UW"
-    auth_uri = "mobile_id={0}&usos={1}&access_token_key={2}&access_token_secret={3}".format(mobile_id,usos,access_token_key,access_token_secret)
+    user_id = None
+    auth_uri = None
 
     @classmethod
     def setUpClass(self):
@@ -20,11 +20,16 @@ class TestBaseClassApp(AsyncHTTPTestCase):
         self.app = server.Application()
         self.app.dao.drop_collections()
         self.app.dao.prepare()
+
         print "Creating user {0} for tests for Usos: {1}.".format(self.mobile_id,self.usos)
-        userDoc = {constants.USOS_ID: self.usos, constants.MOBILE_ID: self.mobile_id,
+        user_id = {constants.USOS_ID: self.usos, constants.MOBILE_ID: self.mobile_id,
                   constants.ACCESS_TOKEN_SECRET: self.access_token_secret,
                   constants.ACCESS_TOKEN_KEY: self.access_token_key, constants.CREATED_TIME: datetime.now()}
-        userDocId = motor.Op(self.app.db.users.insert, userDoc)
+        # TODO: change users to constants.COLLECTION_USERS
+        userdocid = self.app.dao.insert('users', user_id)
+        self.user_id = userdocid
+        self.auth_uri = "mobile_id={0}&user_id={1}&usos={2}&access_token_key={3}&access_token_secret={4}".format(self.mobile_id,self.user_id,self.usos,self.access_token_key,self.access_token_secret)
+
 
     @classmethod
     def tearDownClass(self):

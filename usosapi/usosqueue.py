@@ -97,7 +97,7 @@ class UsosQueue():
 @tornado.gen.coroutine
 def main():
     from bson.objectid import ObjectId
-    existing_user_id = ObjectId("56ab545dc4f9d26710590a2f")
+    existing_user_id = ObjectId("56ac61f23d78210722816521")
     u = UsosQueue()
     yield u.crowl(existing_user_id)
 
