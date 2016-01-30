@@ -144,6 +144,8 @@ class VerifyHandler(BaseHandler):
                 data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
 
+                self.crowler.put_user(usos_doc['_id'])
+
             except KeyError:
                 data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
                         updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[

@@ -66,3 +66,9 @@ class Dao:
                 if tc not in result:
                     result.append(tc)
         return result
+
+    def get_suggested_friends(self, user_id):
+        for data in self.get_user_terms_and_courses(user_id):
+            term_id, course_id = str(data[0]), str(data[1])
+            print term_id, course_id
+
