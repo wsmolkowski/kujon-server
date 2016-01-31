@@ -22,7 +22,7 @@ function drawCoursesTable(jsonData) {
                 html += '<td>' + value[i]['course_id'] + '</td>'
                 html += '<td><a href=/school/courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
-                html += '<a href=/school/grades/course/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Grades</a>'
+                html += '<a href=/school/grades/course/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Ocena</a>'
                 html += '</td>'
                 html += '</tr>';
             }
@@ -60,6 +60,37 @@ function drawCourseInfoTable(jsonData){
 }
 
 function drawGradesTable(jsonData){
+
+    $(baseContainer).empty();
+
+    var html = '<table class="table table-hover">';
+    //html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th></th></tr></tr>'
+    html += '<tbody>'
+    var grades = JSON.parse(jsonData);
+
+    $.each(grades, function(key, value){
+
+        var cg = value['grades']['course_grades'];
+        for (var g in cg){
+            html += '<tr>'
+            html += '<td><a href=terms/'+value['term_id']+'>' + value['term_id'] + '</a></td>'
+            html += '<td><a href=terms/'+value['course_id']+'>' + value['course_id'] + '</a></td>'
+            html += '<td>' + value['course_name']['pl'] + '</td>'
+
+            html += '<td>' + cg[g]['value_symbol'] + '</td>'
+            html += '<td>' + cg[g]['exam_session_number'] + '</td>'
+            html += '<td>' + cg[g]['exam_id'] + '</td>'
+            html += '<td>' + cg[g]['value_description'] + '</td>'
+            html += '</tr>'
+        };
+    });
+
+    html += '</tbody></table>';
+
+    $(baseContainer).html(html);
+}
+
+function drawGradeTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
         html += '<tr><th>Course name</th><th>Course id</th></tr>'
@@ -85,9 +116,11 @@ function drawGradesTable(jsonData){
         });
         html += '</tbody></table>';
 
+        /*
         html += '<table class="table table-hover">';
         html += '<tr><th>First name</th><th>Last name</th><th></th></tr>'
         html += '<tbody>'
+
         count = jsonData['participants'].length
         $.each(jsonData['participants'], function(key, value){
                 html += '<tr>'
@@ -97,6 +130,7 @@ function drawGradesTable(jsonData){
                 html += '</tr>'
         });
         html += '</tbody></table>';
+        */
 
     $(baseContainer).html(html);
 }
@@ -116,17 +150,30 @@ function fetchCurseInfo(courseId){
 }
 
 function fetchGradesAndDraw(courseId, termId){
+     if (typeof courseId != 'undefined'){
+        $.ajax({
+        type: 'GET',
+        url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
+        success:  function (data) {
+             drawGradeTable(JSON.parse(data));
+          },
+          error: function (err) {
+            drawErrorMessage(err);
+          }
+        });
+     } else {
+        $.ajax({
+        type: 'GET',
+        url: deployUrl + '/api/grades',
+        success:  function (data) {
+           drawGradesTable(data);
+          },
+          error: function (err) {
+            drawErrorMessage(err);
+          }
+        });
+     }
 
-     $.ajax({
-      type: 'GET',
-      url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
-      success:  function (data) {
-            drawGradesTable(JSON.parse(data));
-      },
-      error: function (err) {
-        drawErrorMessage(err);
-      }
-    });
 }
 
 function drawTermsTable(jsonData){
@@ -203,9 +250,9 @@ function fetchTermsAndDraw(termId){
 function drawFriendsSuggestionsTable(jsonData){
     $(baseContainer).empty();
 
-    html = htmlHelper.generateTable(JSON.parse(jsonData));
+    //html = htmlHelper.generateTable(JSON.parse(jsonData));
 
-    $(baseContainer).html(html);
+    $(baseContainer).html(jsonData);
 }
 
 function drawUserInfo(jsonData){
@@ -274,6 +321,8 @@ $( document ).ready(function() {
         }
     } else if (pathname.indexOf('/school/grades/course/') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);
+    } else if (pathname.indexOf('/school/grades') === 0){
+        fetchGradesAndDraw();
     } else if (pathname.indexOf('/school/terms') === 0){
         if (pathSplit.length == 3){
             fetchTermsAndDraw();

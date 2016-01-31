@@ -1,6 +1,6 @@
 import tornado.web
 from bson import json_util
-
+from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
@@ -11,11 +11,11 @@ class GradesForUserApi(BaseHandler):
     def get(self):
 
         user_doc, usos_doc = yield self.get_parameters()
-        grade_docs = yield self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: user_doc[constants.ID]}, {"grades": 1})
-        if not grade_docs:
-            pass    # TODO: return json with custom message
-
-        self.write(json_util.dumps(grade_docs))
+        grades = []
+        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        while (yield cursor.fetch_next):
+            grades.append(cursor.next_object())
+        self.write(json_util.dumps(grades))
 
 class GradesForCourseAndTermApi(BaseHandler):
     @tornado.web.asynchronous
@@ -25,7 +25,10 @@ class GradesForCourseAndTermApi(BaseHandler):
         user_doc, usos_doc = yield self.get_parameters()
 
         grade_doc = yield self.db[constants.COLLECTION_GRADES].find_one(
-                {constants.MOBILE_ID: user_doc[constants.MOBILE_ID], constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
+                {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),
+                 constants.COURSE_ID: course_id,
+                 constants.TERM_ID: term_id})
+
         if not grade_doc:
             pass    # TODO: return json with custom message
 

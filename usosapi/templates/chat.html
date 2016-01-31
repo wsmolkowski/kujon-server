@@ -1,40 +1,31 @@
 {% extends "base.html" %}
 {% block main %}
-<div>
-    <ul class="nav navbar-nav navbar-right">
-        <table>
+<div id="chat-id">
+
+    <div id="inbox">
+        {% for message in messages %}
+          {% include "message.html" %}
+        {% end %}
+      </div>
+      <div id="input">
+        <form action="/a/message/new" method="post" id="messageform">
+          <table>
             <tr>
-                napisz do:
-                <select name="osoba">
-                    <option value="Janek">Janek</option>
-                    <option value="Tomek">Tomek</option>
-                </select>
-                <td>
-                    treść:<input type="text">
-                </td>
+              <td><input name="body" id="message" style="width:500px"></td>
+              <td style="padding-left:5px">
+                <input type="submit" value="{{ _("Post") }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                {% module xsrf_form_html() %}
+              </td>
             </tr>
-        </table>
-        <table>
-            <tr>
-                <td>Agnieszka</td>
-                <td>
-                    wpisz:<input type="text">
-                    <p>co tam?</p>
-                    <p>amndsans ad asdasd</p>
-                    <p[>asdasdasdas</p>
-                </td>
-            </tr>
-            <tr>
-                <td>Zenek</td>
-                <td>
-                    wpisz:<input type="text">
-                    <p>co tam?</p>
-                    <p>amndsans ad asdasd</p>
-                    <p[>asdasdasdas</p>
-                </td>
-            </tr>
-        </table>
-    </ul>
+          </table>
+        </form>
+      </div>
+
 
 </div>
 {% end %}
+
+{% block extra_js %}
+    <script src="{{ static_url("chat.js") }}"></script>
+{% end%}

@@ -72,14 +72,6 @@ class TermsWebHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class ChatHandler(BaseHandler):
-    @tornado.web.removeslash
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        self.render("chat.html", **self.template_data())
-
 
 class FriendsHandler(BaseHandler):
     @tornado.web.removeslash
