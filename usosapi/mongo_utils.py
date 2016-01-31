@@ -19,13 +19,11 @@ class Dao:
         if settings.CLEAN_DB:
             self.drop_collections()
 
-        print 'Creating USOS collection for {0} usoses:'.format(len(settings.USOSINSTANCES)),
         for usos in settings.USOSINSTANCES:
             doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
             print usos[constants.USOS_ID],
             if not doc:
                 self.__db.usosinstances.insert(usos)
-        print "."
 
     def get_usos(self, usos_id):
         return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})
