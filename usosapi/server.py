@@ -10,9 +10,9 @@ from tornado.log import enable_pretty_logging
 
 import settings
 from handlers.handlers_api_courses import CourseHandler
-from handlers.handlers_api_courses import CoursesEditionsHandler
+from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi
-from handlers.handlers_api_grades import GradesForCourseAndTermHandler, GradesForUserHandler
+from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserApi
 from handlers.handlers_auth import CreateUserHandler
@@ -94,10 +94,10 @@ class Application(tornado.web.Application):
             (r"/authentication/verify", VerifyHandler),
 
             (r"/api/user", UserApi),
-            (r"/api/courseseditions", CoursesEditionsHandler),
+            (r"/api/courseseditions", CoursesEditionsApi),
             (r"/api/courses/([^/]+)", CourseHandler),
-            (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermHandler),
-            (r"/api/grades", GradesForUserHandler),
+            (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
+            (r"/api/grades", GradesForUserApi),
             (r"/api/terms", TermsApi),
             (r"/api/terms/([^/]+)", TermApi),
             (r"/api/fiends/suggestions", FriendsSuggestionsApi),

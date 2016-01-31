@@ -1,3 +1,4 @@
+import logging
 import pymongo
 
 import constants
@@ -12,7 +13,7 @@ class Dao:
         for collection in self.__db.collection_names():
             if 'system' in collection:
                 continue
-            print 'Cleaning collection:', collection
+            logging.warn("Cleaning collection: {0}".format(collection))
             self.__db.drop_collection(collection)
 
     def prepare(self):
@@ -21,7 +22,6 @@ class Dao:
 
         for usos in settings.USOSINSTANCES:
             doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
-            print usos[constants.USOS_ID],
             if not doc:
                 self.__db.usosinstances.insert(usos)
 
@@ -39,7 +39,7 @@ class Dao:
 
     def get_user_terms(self, user_id):
         terms = []
-        data = self.__db.curses_editions.find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
         for term in data['course_editions'].keys():
             if term not in terms:
                 terms.append(term)
@@ -47,7 +47,7 @@ class Dao:
 
     def get_user_courses(self, user_id):
         courses = []
-        data = self.__db.curses_editions.find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
 
         for term_data in data['course_editions'].values():
             for term in term_data:
@@ -57,7 +57,7 @@ class Dao:
 
     def get_user_terms_and_courses(self, user_id):
         result = []
-        data = self.__db.curses_editions.find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
         for term_data in data['course_editions'].values():
             for term in term_data:
                 tc = term[constants.TERM_ID], term[constants.COURSE_ID]

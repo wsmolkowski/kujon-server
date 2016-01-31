@@ -54,7 +54,7 @@ class UsosQueue():
         result[constants.UPDATE_TIME] = crowl_time
         logging.debug('request_curseseditions_info result: {0}'.format(result))
 
-        doc = self.dao.insert(constants.COLLECTION_CURSES_EDITIONS, result)
+        doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
         logging.info('request_user_info inserted: {0}'.format(doc))
 
         for term_id in self.dao.get_user_terms(user_id):

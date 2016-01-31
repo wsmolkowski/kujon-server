@@ -30,7 +30,7 @@ class LoginHandler(BaseHandler):
             user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
             user_doc.pop('_id')
             pom = json_util.dumps(user_doc)
-            print pom
+
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)

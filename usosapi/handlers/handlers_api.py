@@ -8,26 +8,7 @@ import usosapi.oauth2 as oauth
 from usosapi import constants, settings
 
 
-class Parameters:
-    def __init__(self, usos_id, mobile_id, user_id, access_token_key, access_token_secret):
-
-        if not usos_id or not mobile_id or not access_token_key or not access_token_secret:
-            raise tornado.web.HTTPError(400, "Given Parameters not supported.")
-
-        self.usos_id = usos_id
-        self.mobile_id = mobile_id
-        self.access_token_key = access_token_key
-        self.access_token_secret = access_token_secret
-
-
 class BaseHandler(tornado.web.RequestHandler):
-
-    user_doc = None
-
-    usos = None
-
-    parameters = None
-
     @property
     def crowler(self):
         return self.application.crowler
@@ -40,35 +21,34 @@ class BaseHandler(tornado.web.RequestHandler):
     def usoses(self):
         return self.application.usoses
 
+    @tornado.gen.coroutine
+    def get_parameters(self):
+
+        user_doc = self.get_current_user()
+
+        if not user_doc:
+            # usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
+            mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
+            atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
+            ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
+
+            user_doc = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id,
+                                             constants.ACCESS_TOKEN_SECRET: atk,
+                                             constants.ACCESS_TOKEN_KEY: ats})
+
+        if not user_doc:
+            raise tornado.web.HTTPError(500, "Request not authenticated")
+
+        usos_doc = self.get_usos(user_doc[constants.USOS_ID])
+
+        raise tornado.gen.Return((user_doc, usos_doc))
+
     def get_current_user(self):
         cookie = self.get_secure_cookie(constants.USER_SECURE_COOKIE)
         if cookie:
             cookie = tornado.escape.json_decode(cookie)
             return json_util.loads(cookie)
         return None
-
-    def get_parameters(self):
-
-        user = self.get_current_user()
-        try:
-            if not user:
-                return Parameters(
-                        self.get_argument(constants.USOS_ID, default=None, strip=True),
-                        self.get_argument(constants.MOBILE_ID, default=None, strip=True),
-                        self.get_argument(constants.USER_ID, default=None, strip=True),
-                        self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True),
-                        self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True),
-                )
-            else:
-                return Parameters(
-                        user[constants.USOS_ID],
-                        user[constants.MOBILE_ID],
-                        user[constants.USER_ID],
-                        user[constants.ACCESS_TOKEN_KEY],
-                        user[constants.ACCESS_TOKEN_SECRET],
-                )
-        except Exception, ex:
-            raise tornado.web.HTTPError(400,"Parameters not supported".format(ex.message))
 
     def validate_usos(self, usos, parameters):
         if not usos:

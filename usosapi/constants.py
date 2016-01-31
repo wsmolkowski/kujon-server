@@ -29,7 +29,7 @@ ALERT_MESSAGE = 'alert_message'
 
 # COLLECTION_USERS = 'users'
 COLLECTION_USERS_INFO = 'users_info'
-COLLECTION_CURSES_EDITIONS = 'curses_editions'
+COLLECTION_COURSES_EDITIONS = 'courses_editions'
 COLLECTION_TERMS = 'terms'
 COLLECTION_COURSES = 'courses'
 COLLECTION_GRADES = 'grades'
