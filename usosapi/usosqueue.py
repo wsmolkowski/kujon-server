@@ -1,17 +1,17 @@
+import json
 import logging
 from datetime import datetime
-import json
 
 import tornado.gen
 import tornado.options
-from tornado.queues import LifoQueue
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
+from tornado.queues import LifoQueue
 
 import constants
+import usoshelper
 from mongo_utils import Dao
 from usosupdater import USOSUpdater
-import usoshelper
 
 
 class UsosQueue():
@@ -129,7 +129,7 @@ class UsosQueue():
 @tornado.gen.coroutine
 def main():
     from bson.objectid import ObjectId
-    existing_user_id = ObjectId("56ac6cefc4f9d24ac072c128")
+    existing_user_id = ObjectId("56ad99d53d78210a3645b5d8")
     u = UsosQueue()
     yield u.crowl(existing_user_id)
 

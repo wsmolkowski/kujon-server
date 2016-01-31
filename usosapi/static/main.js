@@ -48,7 +48,7 @@ function fetchCursesAndDraw(){
 function drawCourseInfoTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>ID</th><th>Description</th><th>Name</th><th></th></tr>'
+        html += '<tr><th>ID</th><th>Name</th><th>Description</th><th></th></tr>'
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['course_id'] + '</td>'
@@ -119,7 +119,7 @@ function fetchGradesAndDraw(courseId, termId){
 
      $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/grades?course_id=' + courseId + '&term_id=' + termId,
+      url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
       success:  function (data) {
             drawGradesTable(JSON.parse(data));
       },
@@ -131,7 +131,23 @@ function fetchGradesAndDraw(courseId, termId){
 
 function drawTermsTable(jsonData){
     $(baseContainer).empty();
-    $(baseContainer).html(jsonData);
+    var html = '<table class="table table-hover">';
+        html += '<tr><th>Term name</th><th>Term ID</th><th>Start date</th><th>End date</th><th>Finish date</th></tr></tr>'
+        html += '<tbody>'
+        $.each(jsonData, function(key, value){
+            html += '<tr>'
+            for(var i=0; i< 1; i++) {
+                html += '<td>' + value['name']['pl'] + '</td>'
+                html += '<td>' + value['term_id'] + '</td>'
+                html += '<td>' + value['start_date'] + '</td>'
+                html += '<td>' + value['end_date'] + '</td>'
+                html += '<td>' + value['finish_date'] + '</td>'
+                html += '</tr>';
+            }
+        });
+    html += '</tbody></table>';
+
+    $(baseContainer).html(html);
 }
 
 function drawTermTable(jsonData){
@@ -172,7 +188,7 @@ function fetchTermsAndDraw(termId){
            type: 'GET',
            url: url = url = deployUrl + '/api/terms',
            success:  function (data) {
-            drawTermsTable(data);
+            drawTermsTable(JSON.parse(data));
            },
            error: function (err) {
             drawErrorMessage(err);

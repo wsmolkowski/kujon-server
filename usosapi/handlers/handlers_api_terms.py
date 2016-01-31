@@ -14,15 +14,15 @@ class TermsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        terms = []
+        terms = {}
         cursor = self.db.terms.find()       #TODO: add user_id
+        i=0
         while (yield cursor.fetch_next):
-            terms.append(cursor.next_object())
-        self.write(json_util.dumps(terms))
-
-
-        self.write(json_util.dumps('all terms'))
-
+            obj=cursor.next_object()
+            terms[i]=obj
+            i=i+1
+        terms = json_util.dumps(terms)
+        self.write(terms)
 
 class TermApi(BaseHandler):
     @tornado.web.asynchronous

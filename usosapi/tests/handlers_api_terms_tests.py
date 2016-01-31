@@ -16,9 +16,9 @@ class ApiTermsTest(TestBaseClassApp):
 
 
     def testShouldNotGetTermForFakeParams(self):
-        response = self.fetch('/api/terms/FAKE?a=1&b=1&c=3&d=4')
+        response = self.fetch('/api/terms/FAKE?user_id=FAKE&a=1&b=1&c=3&d=4')
         self.assertEqual(response.code, 400)
-        response = self.fetch('/api/terms/FAKE?mobile_id=FAKE&b=1&c=3&d=4')
+        response = self.fetch('/api/terms/FAKE?mobile_id=FAKE&user_id=FAKE&b=1&c=3&d=4')
         self.assertEqual(response.code, 400)
         response = self.fetch("/api/terms/FAKE?{0}".format(self.auth_uri))
         self.assertEqual(response.code, 400)

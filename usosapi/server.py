@@ -11,10 +11,10 @@ from tornado.log import enable_pretty_logging
 import settings
 from handlers.handlers_api_courses import CourseHandler
 from handlers.handlers_api_courses import CoursesEditionsHandler
-from handlers.handlers_api_grades import GradesForCourseAndTermHandler
-from handlers.handlers_api_user import UserApi
-from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi
+from handlers.handlers_api_grades import GradesForCourseAndTermHandler, GradesForUserHandler
+from handlers.handlers_api_terms import TermsApi, TermApi
+from handlers.handlers_api_user import UserApi
 from handlers.handlers_auth import CreateUserHandler
 from handlers.handlers_auth import LoginHandler
 from handlers.handlers_auth import LogoutHandler
@@ -25,13 +25,13 @@ from handlers.handlers_web import CoursesWebHandler
 from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import FriendsSuggestionsHandler
 from handlers.handlers_web import GradesWebHandler
-from handlers.handlers_web import TermsWebHandler, TermWebHandler
 from handlers.handlers_web import MainHandler, UserHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
+from handlers.handlers_web import TermsWebHandler, TermWebHandler
 from mongo_utils import Dao
-
 from usosqueue import UsosQueue
+
 
 class Application(tornado.web.Application):
     _crowler = None
@@ -71,7 +71,9 @@ class Application(tornado.web.Application):
 
         handlers = [
             (r"/?", MainHandler),
+
             (r"/user", UserHandler),
+
             (r"/school", SchoolHandler),
             (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
             (r"/school/courses", CoursesWebHandler),
@@ -79,11 +81,11 @@ class Application(tornado.web.Application):
             (r"/school/terms", TermsWebHandler),
             (r"/school/terms/([^/]+)", TermWebHandler),
 
-
             (r"/chat", ChatHandler),
 
             (r"/friends", FriendsHandler),
             (r"/friends/suggestions", FriendsSuggestionsHandler),
+
             (r"/settings", SettingsHandler),
 
             (r"/authentication/login", LoginHandler),
@@ -94,7 +96,8 @@ class Application(tornado.web.Application):
             (r"/api/user", UserApi),
             (r"/api/courseseditions", CoursesEditionsHandler),
             (r"/api/courses/([^/]+)", CourseHandler),
-            (r"/api/grades", GradesForCourseAndTermHandler),
+            (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermHandler),
+            (r"/api/grades", GradesForUserHandler),
             (r"/api/terms", TermsApi),
             (r"/api/terms/([^/]+)", TermApi),
             (r"/api/fiends/suggestions", FriendsSuggestionsApi),
