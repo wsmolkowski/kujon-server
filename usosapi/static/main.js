@@ -18,7 +18,7 @@ function drawCoursesTable(jsonData) {
         $.each(jsonData['course_editions'], function(key, value){
             html += '<tr>'
             for(var i=0; i< value.length; i++) {
-                html += '<td><a href=terms/'+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
+                html += '<td><a href=/school/terms/'+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
                 html += '<td>' + value[i]['course_id'] + '</td>'
                 html += '<td><a href=/school/courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
@@ -73,8 +73,8 @@ function drawGradesTable(jsonData){
         var cg = value['grades']['course_grades'];
         for (var g in cg){
             html += '<tr>'
-            html += '<td><a href=terms/'+value['term_id']+'>' + value['term_id'] + '</a></td>'
-            html += '<td><a href=terms/'+value['course_id']+'>' + value['course_id'] + '</a></td>'
+            html += '<td><a href=/school/terms/' + encodeURIComponent(value['term_id']) + '>' + value['term_id'] + '</a></td>'
+            html += '<td><a href=/school/courses/' + value['course_id']+'>' + value['course_id'] + '</a></td>'
             html += '<td>' + value['course_name']['pl'] + '</td>'
 
             html += '<td>' + cg[g]['value_symbol'] + '</td>'

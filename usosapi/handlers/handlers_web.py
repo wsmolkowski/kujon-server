@@ -57,7 +57,7 @@ class TermWebHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, courseId):
+    def get(self, term_id):
         data = self.template_data()
         self.render("school.html", **data)
 
