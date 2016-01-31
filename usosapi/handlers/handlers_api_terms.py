@@ -6,13 +6,28 @@ from bson import json_util
 
 from handlers_api import BaseHandler
 from usosapi import constants
-from usosapi import usosupdater
 from usosapi import usoshelper
 
-class TermsHandler(BaseHandler):
+
+class TermsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, termId):
+    def get(self):
+
+        terms = []
+        cursor = self.db.terms.find()       #TODO: add user_id
+        while (yield cursor.fetch_next):
+            terms.append(cursor.next_object())
+        self.write(json_util.dumps(terms))
+
+
+        self.write(json_util.dumps('all terms'))
+
+
+class TermApi(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self, term_id):
 
         parameters = self.get_parameters()
 
@@ -23,18 +38,18 @@ class TermsHandler(BaseHandler):
         except Exception, ex:
                 raise tornado.web.HTTPError(500, "Exception while fetching user data: {0}".format(ex))
 
-        if not termId:
+        if not term_id:
             raise tornado.web.HTTPError(400,
-                                        "Don't have given courseId for user: ".format(termId, parameters.mobile_id))
+                                        "Don't have given courseId for user: ".format(term_id, parameters.mobile_id))
 
-        termDoc = yield self.db.terms.find_one({constants.TERM_ID: termId, constants.USOS_ID: user_doc[constants.USOS_ID]})
+        termDoc = yield self.db.terms.find_one({constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]})
 
         if not termDoc:
             usos = self.get_usos(user_doc[constants.USOS_ID])
             logging.info("Course with courseId: {0} not found in mongo for user: {1}, fetching from usos.".format(
-                    termId, parameters.mobile_id))
+                    term_id, parameters.mobile_id))
 
-            termDoc = yield usoshelper.get_term_info(usos[constants.URL], termId)
+            termDoc = yield usoshelper.get_term_info(usos[constants.URL], term_id)
 
             try:
                 termDoc = json_util.loads(termDoc)
@@ -45,10 +60,10 @@ class TermsHandler(BaseHandler):
 
             logging.info(
                     "Course with courseId: {0} for mobile_id: {1}, fetched from usos and created with id: {2}".format(
-                            termId, parameters.mobile_id,termDocId))
+                            term_id, parameters.mobile_id,termDocId))
         else:
             logging.info("Courses with courseId: {0} for mobile_id: {1} fetched from db with id: {2}".format(
-                    termId, parameters.mobile_id, termDoc["_id"]))
+                    term_id, parameters.mobile_id, termDoc["_id"]))
 
         self.write(json_util.dumps(termDoc))
 

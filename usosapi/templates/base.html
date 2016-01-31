@@ -37,8 +37,12 @@
               <li class="dropdown">
                 <a href="/school" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Szkoła <span class="caret"></span></a>
                 <ul class="dropdown-menu">
+                    <li><a href="/user">Użytkownik</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="/school/terms">Semestry</a></li>
                     <li><a href="/school/courses">Przedmioty</a></li>
                     <li><a href="/school/grades">Oceny</a></li>
+
                     <li role="separator" class="divider"></li>
                     <li><a href="/friends">Znajomi</a></li>
                   </ul>
@@ -51,12 +55,14 @@
               <li><a href="/authentication/create">Create user</a></li>
              {% end %}
           </ul>
-          <h3 class="text-muted" href="/">{{PROJECT_TITLE}}</h3>
+
+          <a class="navbar-brand" href="{{DEPLOY_URL}}">{{PROJECT_TITLE}}</a>
+
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
-    <div class="container">
+    <div class="container" id="base-container-id">
 
       {% block main %}
 
@@ -89,6 +95,7 @@
         });
     </script>
 
+    <script src="{{ static_url("HtmlHelper.js") }}"></script>
     <script src="{{ static_url("main.js") }}"></script>
 
     {% block extra_js %}
