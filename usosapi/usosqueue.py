@@ -37,15 +37,38 @@ class UsosQueue():
                               usos[constants.CONSUMER_SECRET],
                               user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
 
-        logging.debug('request_user_info fetch for : {0}'.format(user_id))
-        result = updater.request_user_info()
-        result[constants.USER_ID] = user_id
-        result[constants.CREATED_TIME] = crowl_time
-        result[constants.UPDATE_TIME] = crowl_time
+        user_info = None
+        try:
+            user_info = self.dao.get_users_info(user_id)
+        except Exception, ex:
+            print "Exeption: {0}".format(ex.message)
+        if not user_info:
+            try:
+                logging.debug('no user_info data in mongo, request_user_info fetch for : {0}'.format(user_id))
+                result = updater.request_user_info()
+                result[constants.USER_ID] = user_id
+                result[constants.CREATED_TIME] = crowl_time
 
-        logging.debug('request_user_info result: {0}'.format(result))
-        doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.info('request_user_info inserted: {0}'.format(doc))
+                logging.debug('request_user_info result: {0}'.format(result))
+                doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
+                logging.info('request_user_info inserted: {0}'.format(doc))
+            except Exception, ex:
+                print ex.message
+                return
+        else:
+            try:
+                logging.debug('user_info data in mongo, updatingg request_user_info for : {0}'.format(user_id))
+                result = updater.request_user_info()
+                result[constants.USER_ID] = user_id
+                result[constants.UPDATE_TIME] = crowl_time
+
+                logging.debug('request_user_info result: {0}'.format(result))
+                doc = self.dao.update_users_info(user_info[constants.ID], result)
+                logging.info('request_user_info updated: {0}'.format(user_id))
+            except Exception, ex:
+                print ex.message;
+                return
+
 
         logging.debug('request_curseseditions_info for: {0}'.format(user_id))
         result = updater.request_curseseditions_info()
@@ -55,7 +78,7 @@ class UsosQueue():
         logging.debug('request_curseseditions_info result: {0}'.format(result))
 
         doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.info('request_user_info inserted: {0}'.format(doc))
+        logging.info('request_curseseditions_info inserted: {0}'.format(doc))
 
         for term_id in self.dao.get_user_terms(user_id):
             logging.debug('requesting term info for url {0} and term_id'.format(usos[constants.URL], term_id))
@@ -129,7 +152,7 @@ class UsosQueue():
 @tornado.gen.coroutine
 def main():
     from bson.objectid import ObjectId
-    existing_user_id = ObjectId("56ad99d53d78210a3645b5d8")
+    existing_user_id = ObjectId("56ade44d3d78210dc078e594")
     u = UsosQueue()
     yield u.crowl(existing_user_id)
 

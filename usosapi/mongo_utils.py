@@ -1,4 +1,5 @@
 import logging
+
 import pymongo
 
 import constants
@@ -33,6 +34,12 @@ class Dao:
 
     def get_user(self, user_id):
         return self.__db.users.find_one({"_id": user_id})
+
+    def get_users_info(self, user_id):
+        return self.__db.users_info.find_one({"user_id": user_id})
+
+    def update_users_info(self, record_id, users_info):
+        return self.__db.users_info.update({"_id": record_id }, users_info)
 
     def insert(self, collection, document):
         return self.__db[collection].insert(document)

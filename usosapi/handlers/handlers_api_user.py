@@ -14,5 +14,7 @@ class UserApi(BaseHandler):
         user_doc, usos_doc = yield self.get_parameters()
 
         user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        if not user_info:
+            pass    # TODO: return json with custom message
 
         self.write(json_util.dumps(user_info))

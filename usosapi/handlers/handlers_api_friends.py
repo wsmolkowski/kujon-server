@@ -1,10 +1,8 @@
-import logging
-
-from usosapi import constants
 import tornado.web
 from bson import json_util
 
 from handlers_api import BaseHandler
+from usosapi import constants
 
 
 class Parameters:
@@ -26,8 +24,12 @@ class FriendsSuggestionsApi(BaseHandler):
                                                       ('course_editions', ))
         '''
 
-        participants = []
+        participants = {}
+        i = 0
         cursor = self.db[constants.COLLECTION_PARTICIPANTS].find()
         while (yield cursor.fetch_next):
-            participants.append(cursor.next_object())
+            parts = cursor.next_object()
+            participants[i] = parts
+            i += 1
+
         self.write(json_util.dumps(participants))
