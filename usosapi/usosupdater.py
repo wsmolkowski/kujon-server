@@ -48,8 +48,11 @@ class USOSUpdater:
     def request_user_info(self):
         return self.request(URI_USER_INFO)
 
-    def request_curseseditions_info(self):
+    def request_courses_editions(self):
         return self.request(URI_COURSESEDITIONS_INFO)
+
+    def request_terms(self):
+        return self.request(URI_TER)
 
     def request_course_info(self, course_id):
         return self.request(URI_COURSE_INFO.format(course_id))

@@ -363,7 +363,7 @@ def _updateCache(request_headers, response_headers, content, cache, cachekey):
         cc = _parse_cache_control(request_headers)
         cc_response = _parse_cache_control(response_headers)
         if cc.has_key('no-store') or cc_response.has_key('no-store'):
-            cache.delete(cachekey)
+            cache.remove(cachekey)
         else:
             info = email.Message.Message()
             for key, value in response_headers.iteritems():
@@ -1036,7 +1036,7 @@ a string that contains the response entity body.
                         info = feedparser.close()
                         feedparser._parse = None
                     except IndexError:
-                        self.cache.delete(cachekey)
+                        self.cache.remove(cachekey)
                         cachekey = None
                         cached_value = None
             else:

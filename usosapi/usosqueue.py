@@ -4,6 +4,7 @@ from datetime import datetime
 
 import tornado.gen
 import tornado.options
+from bson.objectid import ObjectId
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.queues import LifoQueue
@@ -37,102 +38,133 @@ class UsosQueue():
                               usos[constants.CONSUMER_SECRET],
                               user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
 
+        # user_info
         user_info = None
         try:
             user_info = self.dao.get_users_info(user_id)
         except Exception, ex:
-            print "Exeption: {0}".format(ex.message)
+            print "Can't get_users_info for user: {0}, exception: {1}".format(user_id,ex.message)
         if not user_info:
             try:
-                logging.debug('no user_info data in mongo, request_user_info fetch for : {0}'.format(user_id))
                 result = updater.request_user_info()
                 result[constants.USER_ID] = user_id
                 result[constants.CREATED_TIME] = crowl_time
-
-                logging.debug('request_user_info result: {0}'.format(result))
                 doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-                logging.info('request_user_info inserted: {0}'.format(doc))
+                logging.info('user_info for user_id {0} inserted: {1}'.format(user_id,doc))
             except Exception, ex:
-                print ex.message
-                return
+                print "Can't insert get_users_info for user: {0}, exception: {1}".format(user_id,ex.message)
         else:
             try:
-                logging.debug('user_info data in mongo, updatingg request_user_info for : {0}'.format(user_id))
                 result = updater.request_user_info()
-                result[constants.USER_ID] = user_id
                 result[constants.UPDATE_TIME] = crowl_time
-
-                logging.debug('request_user_info result: {0}'.format(result))
-                doc = self.dao.update_users_info(user_info[constants.ID], result)
-                logging.info('request_user_info updated: {0}'.format(user_id))
+                result[constants.USER_ID] = user_id
+                result = self.dao.update(constants.COLLECTION_USERS_INFO, constants.ID, user_info[constants.ID], result)
+                logging.info('user_info updated: {0}'.format(user_info[constants.ID]))
             except Exception, ex:
-                print ex.message;
-                return
+                print "Can't update users_info for user: {0}, exception: {1}".format(user_id,ex.message)
+
+        # course_editions
+        courseseditions = self.dao.get_courses_editions(user_id)
+        if not courseseditions:
+            try:
+                result = updater.request_courses_editions()
+                result[constants.UPDATE_TIME] = crowl_time
+                result[constants.USER_ID] = user_id
+                result[constants.USOS_ID] = usos[constants.USOS_ID]
+                courseseditions = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
+                logging.info('course_editions inserted into courses_editions: {0}'.format(courseseditions))
+            except Exception, ex:
+                print "Can't insert into courses_editions for user: {0}, exception: {1}".format(user_id,ex.message)
+        else:
+            try:
+                result = updater.request_courses_editions()
+                result[constants.UPDATE_TIME] = crowl_time
+                result[constants.USER_ID] = user_id
+                result = self.dao.update(constants.COLLECTION_COURSES_EDITIONS, constants.ID, courseseditions[constants.ID], result)
+                logging.info('course_editions updated: {0}'.format(courseseditions[constants.ID]))
+            except Exception, ex:
+                print "Can't update courses_editions for user: {0}, exception: {1}".format(user_id,ex.message)
 
 
-        logging.debug('request_curseseditions_info for: {0}'.format(user_id))
-        result = updater.request_curseseditions_info()
-        result[constants.USER_ID] = user_id
-        result[constants.CREATED_TIME] = crowl_time
-        result[constants.UPDATE_TIME] = crowl_time
-        logging.debug('request_curseseditions_info result: {0}'.format(result))
-
-        doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.info('request_curseseditions_info inserted: {0}'.format(doc))
-
+        # terms
         for term_id in self.dao.get_user_terms(user_id):
-            logging.debug('requesting term info for url {0} and term_id'.format(usos[constants.URL], term_id))
+
+            term = self.dao.get_terms(term_id, user_id)
             result = yield usoshelper.get_term_info(usos[constants.URL], term_id)
             result = json.loads(result)
             result[constants.USER_ID] = user_id
-            result[constants.CREATED_TIME] = crowl_time
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            if not term:
+                result[constants.CREATED_TIME] = crowl_time
+            else:
+                result[constants.CREATED_TIME] = term[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
             result[constants.UPDATE_TIME] = crowl_time
             result[constants.USOS_ID] = usos[constants.USOS_ID]
-
-            logging.debug('requesting term info result {0}'.format(result))
             doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-            logging.info('term inserted with id {0}'.format(doc))
+            if not term:
+                logging.info('term with term_id: {0} inserted with id: {1}'.format(term_id, doc))
+            else:
+                logging.info('term with term_id: {0} updated with new id: {1}'.format(term_id, doc))
 
+        # courses
         for course_id in self.dao.get_user_courses(user_id):
-            logging.info('requesting get_course_info for url {0} and term_id {1}'.format(usos[constants.URL], course_id))
-
+            course = self.dao.get_courses(course_id, user_id)
             result = yield usoshelper.get_course_info(usos[constants.URL], course_id)
             result = json.loads(result)
             result[constants.USER_ID] = user_id
             result[constants.USOS_ID] = usos[constants.USOS_ID]
-            result[constants.CREATED_TIME] = crowl_time
+            if not course:
+                result[constants.CREATED_TIME] = crowl_time
+
+            else:
+                result[constants.CREATED_TIME] = course[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
             result[constants.UPDATE_TIME] = crowl_time
-
-            logging.info('get_course_info result {0}'.format(result))
             doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-            logging.info('course info inserted with id {0}'.format(doc))
+            if not course:
+                logging.info('course with course_id: {0} inserted with id: {1}'.format(course_id, doc))
+            else:
+                logging.info('course with course_id: {0} updated with new id: {1} '.format(course_id, doc))
 
-        for data in self.dao.get_user_terms_and_courses(user_id):
+        # grades and participants
+        for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
-            logging.debug('requesting grade for term_id {0} and user_id {1}'.format(term_id, course_id))
+            grades = self.dao.get_grades(course_id, term_id, user_id)
             result = updater.request_grades_for_course(course_id, term_id)
-
             participants = result.pop('participants')
-
             result[constants.USER_ID] = user_id
             result[constants.USOS_ID] = usos[constants.USOS_ID]
-            result[constants.CREATED_TIME] = crowl_time
+            if not grades:
+                result[constants.CREATED_TIME] = crowl_time
+            else:
+                result[constants.CREATED_TIME] = grades[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_GRADES, constants.ID, grades[constants.ID])
             result[constants.UPDATE_TIME] = crowl_time
-
-            logging.debug('grade for term_id {0} and user_id {1} {2}'.format(term_id, course_id, result))
             doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.info('grades inserted with id {0}'.format(doc))
+            if not grades:
+                logging.info('grades for term_id: {0} and course_id: {1} inserted with id: {2} '.format(term_id,course_id,doc))
+            else:
+                logging.info('grades for term_id: {0} and course_id: {1} updated with id: {2} '.format(term_id,course_id,doc))
 
+            # participants
             result = dict()
+            partic = self.dao.get_participants(course_id, term_id)
             result[constants.TERM_ID] = term_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
             result[constants.COURSE_ID] = course_id
             result[constants.PARTICIPANTS] = participants
-            result[constants.CREATED_TIME] = crowl_time
+            if not partic:
+                result[constants.CREATED_TIME] = crowl_time
+            else:
+                result[constants.CREATED_TIME] = partic[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_PARTICIPANTS, term_id, course_id)
             result[constants.UPDATE_TIME] = crowl_time
-
-            logging.info('participants for term_id {0} and user_id {1} {2}'.format(term_id, course_id, result))
             doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
-            logging.info('participants inserted with id {0}'.format(doc))
+            if not partic:
+                logging.info('participants for term_id: {0} and course_id: {1} inserted with id: {2}'.format(term_id,course_id,doc))
+            else:
+                logging.info('participants for term_id: {0} and course_id: {1} updated with id: {2}'.format(term_id,course_id,doc))
 
         # crowl collection
         result = dict()
@@ -151,16 +183,15 @@ class UsosQueue():
 
 @tornado.gen.coroutine
 def main():
-    from bson.objectid import ObjectId
-    existing_user_id = ObjectId("56ade44d3d78210dc078e594")
-    u = UsosQueue()
-    yield u.crowl(existing_user_id)
 
-    #d = Dao()
-    #print 'terms:',  d.get_user_terms(existing_user_id)
-    #print 'courses:',  d.get_user_courses(existing_user_id)
-    #print 'terms and courses', d.get_user_terms_and_courses(existing_user_id)
-    #print 'fiends', d.get_suggested_friends(existing_user_id)
+    uqueue = UsosQueue()
+
+    existing_user_id = ObjectId("56ae5a793d7821151c33954d")
+    yield uqueue.crowl(existing_user_id)
+    existing_user_id = ObjectId("56ae69173d7821151c339550")
+    yield uqueue.crowl(existing_user_id)
+
+
 
 if __name__ == "__main__":
     logging.basicConfig()

@@ -1,6 +1,7 @@
 import logging
 
 import pymongo
+from bson.objectid import ObjectId
 
 import constants
 import settings
@@ -26,6 +27,9 @@ class Dao:
             if not doc:
                 self.__db.usosinstances.insert(usos)
 
+    def insert(self, collection, document):
+        return self.__db[collection].insert(document)
+
     def get_usos(self, usos_id):
         return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})
 
@@ -38,11 +42,29 @@ class Dao:
     def get_users_info(self, user_id):
         return self.__db.users_info.find_one({"user_id": user_id})
 
-    def update_users_info(self, record_id, users_info):
-        return self.__db.users_info.update({"_id": record_id }, users_info)
+    def get_courses_editions(self, user_id):
+        return self.__db.courses_editions.find_one({"user_id": user_id})
 
-    def insert(self, collection, document):
-        return self.__db[collection].insert(document)
+    def update(self, collection, key, key_value, document):
+        return self.__db[collection].update({key: key_value}, document)
+
+    def remove(self, collection, key, key_value):
+        return self.__db[collection].remove({key: key_value})
+
+    def update_courses_editions(self, record_id, courses_editions):
+        return self.__db.courses_editions.update({constants.USER_ID: ObjectId(record_id)}, courses_editions)
+
+    def get_terms(self,term_id, user_id):
+        return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USER_ID: user_id})
+
+    def get_courses(self,course_id, user_id):
+        return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USER_ID: user_id})
+
+    def get_grades(self, course_id, term_id, user_id):
+        return self.__db.grades.find_one({constants.COURSE_ID: course_id, constants.USER_ID: user_id})
+
+    def get_participants(self, course_id, term_id):
+        return self.__db.participants.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
 
     def get_user_terms(self, user_id):
         terms = []
@@ -62,15 +84,18 @@ class Dao:
                     courses.append(term['course_id'])
         return courses
 
-    def get_user_terms_and_courses(self, user_id):
+    def get_user_courses_editions(self, user_id):
         result = []
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
-        for term_data in data['course_editions'].values():
-            for term in term_data:
-                tc = term[constants.TERM_ID], term[constants.COURSE_ID]
-                if tc not in result:
-                    result.append(tc)
-        return result
+        if data:
+            for term_data in data['course_editions'].values():
+                for term in term_data:
+                    tc = term[constants.TERM_ID], term[constants.COURSE_ID]
+                    if tc not in result:
+                        result.append(tc)
+            return result
+        else:
+            return None
 
     def get_suggested_friends(self, user_id):
         for data in self.get_user_terms_and_courses(user_id):
