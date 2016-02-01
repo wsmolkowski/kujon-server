@@ -11,6 +11,11 @@ class Dao:
     def __init__(self):
         self.__db = pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
+    def drop_collection(self,collection):
+        logging.warn("Cleaning collection: {0}".format(collection))
+        self.__db.drop_collection(collection)
+
+
     def drop_collections(self):
         for collection in self.__db.collection_names():
             if 'system' in collection:

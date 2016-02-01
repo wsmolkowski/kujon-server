@@ -19,6 +19,7 @@ from handlers.handlers_auth import CreateUserHandler
 from handlers.handlers_auth import LoginHandler
 from handlers.handlers_auth import LogoutHandler
 from handlers.handlers_auth import VerifyHandler
+from handlers.handlers_chat import ChatHandler, ChatSocketHandler
 from handlers.handlers_web import CourseInfoWebHandler
 from handlers.handlers_web import CoursesWebHandler
 from handlers.handlers_web import FriendsHandler
@@ -28,8 +29,6 @@ from handlers.handlers_web import MainHandler, UserHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
 from handlers.handlers_web import TermsWebHandler, TermWebHandler
-from handlers.handlers_chat import ChatHandler, ChatSocketHandler
-
 from mongo_utils import Dao
 from usosqueue import UsosQueue
 
@@ -123,6 +122,7 @@ class Application(tornado.web.Application):
         self.dao.prepare()
         self.usoses
         self.crowler
+        self.crowler.update_usoses_dictionaries()
 
 
 def main():

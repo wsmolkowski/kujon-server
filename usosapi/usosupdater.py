@@ -9,7 +9,7 @@ URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_stat
 URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 URI_COURSE_INFO = "services/courses/course?course_id={0}&fields=id|name|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
-
+URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 
 class USOSUpdater:
     def __init__(self, usosapi_base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
@@ -50,9 +50,6 @@ class USOSUpdater:
 
     def request_courses_editions(self):
         return self.request(URI_COURSESEDITIONS_INFO)
-
-    def request_terms(self):
-        return self.request(URI_TER) # TODO: dokonczyc
 
     def request_course_info(self, course_id):
         return self.request(URI_COURSE_INFO.format(course_id))

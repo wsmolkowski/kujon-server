@@ -182,10 +182,30 @@ class UsosQueue():
             users_id = yield self.user_queue.get()
             self.crowl(users_id)
 
+    @tornado.gen.coroutine
+    def update_usoses_dictionaries(self):
+        crowl_time = datetime.now()
+
+
+
+        # courses_classtypes
+        self.dao.drop_collection('courses_classtypes')
+        for usos in self.dao.get_usoses():
+            logging.info('Loading dictionaries for USOS: {0}'.format(usos[constants.USOS_ID]))
+
+            result = yield usoshelper.get_courses_classtypes(usos[constants.URL])
+            result = json.loads(result)
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, result)
+            logging.info('courses_classtypes for usos {0} inserted: {1}'.format(usos[constants.USOS_ID],doc))
+
 @tornado.gen.coroutine
 def main():
 
     uqueue = UsosQueue()
+
+    yield uqueue.update_usoses_dictionaries()
+
 
     existing_user_id = ObjectId("56ae5a793d7821151c33954d")
     yield uqueue.crowl(existing_user_id)
