@@ -39,51 +39,35 @@ class UsosQueue():
                               user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
 
         # user_info
-        user_info = None
-        try:
-            user_info = self.dao.get_users_info(user_id)
-        except Exception, ex:
-            print "Can't get_users_info for user: {0}, exception: {1}".format(user_id,ex.message)
+        user_info = self.dao.get_users_info(user_id)
         if not user_info:
-            try:
-                result = updater.request_user_info()
-                result[constants.USER_ID] = user_id
-                result[constants.CREATED_TIME] = crowl_time
-                doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-                logging.info('user_info for user_id {0} inserted: {1}'.format(user_id,doc))
-            except Exception, ex:
-                print "Can't insert get_users_info for user: {0}, exception: {1}".format(user_id,ex.message)
+            result = updater.request_user_info()
+            result[constants.USER_ID] = user_id
+            result[constants.CREATED_TIME] = crowl_time
+            doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
+            logging.info('user_info for user_id {0} inserted: {1}'.format(user_id,doc))
         else:
-            try:
-                result = updater.request_user_info()
-                result[constants.UPDATE_TIME] = crowl_time
-                result[constants.USER_ID] = user_id
-                result = self.dao.update(constants.COLLECTION_USERS_INFO, constants.ID, user_info[constants.ID], result)
-                logging.info('user_info updated: {0}'.format(user_info[constants.ID]))
-            except Exception, ex:
-                print "Can't update users_info for user: {0}, exception: {1}".format(user_id,ex.message)
+            result = updater.request_user_info()
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result = self.dao.update(constants.COLLECTION_USERS_INFO, constants.ID, user_info[constants.ID], result)
+            logging.info('user_info updated: {0}'.format(user_info[constants.ID]))
 
         # course_editions
         courseseditions = self.dao.get_courses_editions(user_id)
         if not courseseditions:
-            try:
-                result = updater.request_courses_editions()
-                result[constants.UPDATE_TIME] = crowl_time
-                result[constants.USER_ID] = user_id
-                result[constants.USOS_ID] = usos[constants.USOS_ID]
-                courseseditions = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-                logging.info('course_editions inserted into courses_editions: {0}'.format(courseseditions))
-            except Exception, ex:
-                print "Can't insert into courses_editions for user: {0}, exception: {1}".format(user_id,ex.message)
+            result = updater.request_courses_editions()
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            courseseditions = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
+            logging.info('course_editions inserted into courses_editions: {0}'.format(courseseditions))
         else:
-            try:
-                result = updater.request_courses_editions()
-                result[constants.UPDATE_TIME] = crowl_time
-                result[constants.USER_ID] = user_id
-                result = self.dao.update(constants.COLLECTION_COURSES_EDITIONS, constants.ID, courseseditions[constants.ID], result)
-                logging.info('course_editions updated: {0}'.format(courseseditions[constants.ID]))
-            except Exception, ex:
-                print "Can't update courses_editions for user: {0}, exception: {1}".format(user_id,ex.message)
+            result = updater.request_courses_editions()
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result = self.dao.update(constants.COLLECTION_COURSES_EDITIONS, constants.ID, courseseditions[constants.ID], result)
+            logging.info('course_editions updated: {0}'.format(courseseditions[constants.ID]))
 
 
         # terms

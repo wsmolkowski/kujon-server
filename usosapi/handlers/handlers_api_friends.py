@@ -24,12 +24,8 @@ class FriendsSuggestionsApi(BaseHandler):
                                                       ('course_editions', ))
         '''
 
-        participants = {}
-        i = 0
+        participants = []
         cursor = self.db[constants.COLLECTION_PARTICIPANTS].find()
         while (yield cursor.fetch_next):
-            parts = cursor.next_object()
-            participants[i] = parts
-            i += 1
-
+            participants.append(cursor.next_object())
         self.write(json_util.dumps(participants))

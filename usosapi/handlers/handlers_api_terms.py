@@ -1,5 +1,6 @@
 import tornado.web
 from bson import json_util
+from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
@@ -12,19 +13,11 @@ class TermsApi(BaseHandler):
 
         user_doc, usos_doc = yield self.get_parameters()
 
-        terms = {}
-        cursor = self.db.terms.find()       # TODO: add user_id
-        i = 0
-        try:
-            while (yield cursor.fetch_next):
-                obj = cursor.next_object()
-                terms[i] = obj
-                i += 1
-            terms = json_util.dumps(terms)
-        except Exception, e:
-            pass    # TODO: return json with custom message
-        self.write(terms)
-
+        terms = []
+        cursor = self.db.terms.find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        while (yield cursor.fetch_next):
+            terms.append(cursor.next_object())
+        self.write(json_util.dumps(terms))
 
 class TermApi(BaseHandler):
     @tornado.web.asynchronous
