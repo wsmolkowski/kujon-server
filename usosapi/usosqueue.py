@@ -100,7 +100,6 @@ class UsosQueue():
             result[constants.USOS_ID] = usos[constants.USOS_ID]
             if not course:
                 result[constants.CREATED_TIME] = crowl_time
-
             else:
                 result[constants.CREATED_TIME] = course[constants.CREATED_TIME]
                 self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
@@ -111,12 +110,13 @@ class UsosQueue():
             else:
                 logging.info('course with course_id: {0} updated with new id: {1} '.format(course_id, doc))
 
-        # grades and participants
+        # grades and participants and units
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
             grades = self.dao.get_grades(course_id, term_id, user_id)
             result = updater.request_grades_for_course(course_id, term_id)
             participants = result.pop('participants')
+            units = result.pop('course_units_ids')
             result[constants.USER_ID] = user_id
             result[constants.USOS_ID] = usos[constants.USOS_ID]
             if not grades:
@@ -149,6 +149,23 @@ class UsosQueue():
                 logging.info('participants for term_id: {0} and course_id: {1} inserted with id: {2}'.format(term_id,course_id,doc))
             else:
                 logging.info('participants for term_id: {0} and course_id: {1} updated with id: {2}'.format(term_id,course_id,doc))
+            #units
+            for unit_id in units:
+                unit = self.dao.get_courses_units(unit_id)
+                result = yield usoshelper.get_courses_units(usos[constants.URL], unit_id)
+                result = json.loads(result)
+                if not unit:
+                    result[constants.USOS_ID] = usos[constants.USOS_ID]
+                    result[constants.CREATED_TIME] = crowl_time
+                else:
+                    result[constants.CREATED_TIME] = unit[constants.CREATED_TIME]
+                    self.dao.remove(constants.COLLECTION_COURSES_UNITS, constants.UNIT_ID, unit)
+                doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
+                if not unit:
+                    logging.info('unit {0} inserted with id: {1}'.format(unit_id, doc))
+                else:
+                    logging.info('unit {0} updated for id: {1}'.format(unit_id, doc))
+
 
         # crowl collection
         result = dict()

@@ -7,7 +7,22 @@ import constants
 
 URL_COURSE_INFO = '{0}/services/courses/course?course_id={1}&fields=id|name|description'
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
+URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|classtype_id&unit_id={1}'
 
+
+@tornado.gen.coroutine
+def get_courses_units(usos_base_url, unit_id, validate_cert=False):
+    url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
+    request = tornado.httpclient.HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert)
+
+    response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
+    if response.code is not 200:
+        raise tornado.web.HTTPError(400, "Don't have data for given units: {0}.".format(unit_id))
+
+    unit = json.loads(response.body)
+    unit[constants.UNIT_ID] = unit.pop('id')
+
+    raise tornado.gen.Return(json.dumps(unit))
 
 @tornado.gen.coroutine
 def get_course_info(usos_base_url, courseId, validate_cert=False):

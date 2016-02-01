@@ -8,7 +8,7 @@ from helpers import log_execution_time
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
 URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 URI_COURSE_INFO = "services/courses/course?course_id={0}&fields=id|name|description"
-URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants"
+URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 
 
 class USOSUpdater:
@@ -52,7 +52,7 @@ class USOSUpdater:
         return self.request(URI_COURSESEDITIONS_INFO)
 
     def request_terms(self):
-        return self.request(URI_TER)
+        return self.request(URI_TER) # TODO: dokonczyc
 
     def request_course_info(self, course_id):
         return self.request(URI_COURSE_INFO.format(course_id))

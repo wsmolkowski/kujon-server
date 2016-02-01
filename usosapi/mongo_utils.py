@@ -40,10 +40,13 @@ class Dao:
         return self.__db.users.find_one({"_id": user_id})
 
     def get_users_info(self, user_id):
-        return self.__db.users_info.find_one({"user_id": user_id})
+        return self.__db.users_info.find_one({constants.USER_ID: user_id})
 
     def get_courses_editions(self, user_id):
-        return self.__db.courses_editions.find_one({"user_id": user_id})
+        return self.__db.courses_editions.find_one({constants.USER_ID: user_id})
+
+    def get_courses_units(self, unit_id):
+        return self.__db.courses_units.find_one({constants.UNIT_ID: unit_id})
 
     def update(self, collection, key, key_value, document):
         return self.__db[collection].update({key: key_value}, document)
