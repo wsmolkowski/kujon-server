@@ -60,7 +60,7 @@ function drawCourseInfoTable(jsonData){
 }
 
 function drawGradesTable(jsonData){
-
+    debugger;
     $(baseContainer).empty();
 
     var html = '<table class="table table-hover">';
@@ -96,21 +96,20 @@ function drawGradesTable(jsonData){
                     html += '<td>' + grades[g]['course_name']['pl'] + '</td>'
 
                     for (var cug in grades[g]['grades']['course_units_grades']) {
-//                        html+= '<table class="table table-hover">'
                         html+= '<td>'
+                        html+= '<table class="table table-hover">'
 
                         for (var session in grades[g]['grades']['course_units_grades'][cug]) {
                             html+= '<tr>'
-                            grade = grades[g]['grades']['course_units_grades'][cug][session]
+                            var grade = grades[g]['grades']['course_units_grades'][cug][session]
                             html += '<td>' + grade['value_symbol'] + '</td>'
                             html += '<td>' + grade['value_description']['pl'] + '</td>'
                             html += '<td>' + grade['exam_session_number'] + '</td>'
                             html += '<td>' + grade['exam_id'] + '</td>'
                             html += '</tr>'
                         }
+                        html+= '</table>'
                         html+= '</td>'
-
-//                         html+= '</table>'
                     }
                     html += '</tr>'
 
@@ -282,7 +281,7 @@ function fetchTermsAndDraw(termId){
 function drawFriendsSuggestionsTable(jsonData){
     $(baseContainer).empty();
 
-    //html = htmlHelper.generateTable(JSON.parse(jsonData));
+//    html = htmlHelper.generateTable(JSON.parse(jsonData));
 
     $(baseContainer).html(jsonData);
 }
@@ -323,7 +322,7 @@ function fetchFriendsSuggestionsAndDraw(){
                 drawFriendsSuggestionsTable(JSON.parse(data));
              },
              error: function (err) {
-                drawErrorMessage(err, cursesElement);
+                drawErrorMessage(err, baseContainer);
             }
        });
 }
@@ -336,7 +335,7 @@ function fetchUserInfoAndDraw() {
                 drawUserInfo(JSON.parse(data));
              },
              error: function (err) {
-                drawErrorMessage(err, cursesElement);
+                drawErrorMessage(err, baseContainer);
             }
        });
 }
