@@ -64,27 +64,59 @@ function drawGradesTable(jsonData){
     $(baseContainer).empty();
 
     var html = '<table class="table table-hover">';
-    //html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th></th></tr></tr>'
-    html += '<tbody>'
+
     var grades = JSON.parse(jsonData);
 
-    $.each(grades, function(key, value){
+    for (var k in grades) {
+    var g = []
+    g = grades[k]['grades']['course_grades']
+    if ('1' in g) {
+        html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th>Grade</th><th>Description</th><th>Session</th><th>Exam id</th></tr></tr>'
+        html += '<tbody>'
+        $.each(grades[k]['grades']['course_grades'], function(key, value){
+                    html += '<tr>'
+                    html += '<td><a href=/school/terms/' + encodeURIComponent(grades[k]['term_id']) + '>' + grades[k]['term_id'] + '</a></td>'
+                    html += '<td><a href=/school/courses/' + grades[k]['course_id']+'>' + grades[k]['course_id'] + '</a></td>'
+                    html += '<td>' + grades[k]['course_name']['pl'] + '</td>'
 
-        var cg = value['grades']['course_grades'];
-        for (var g in cg){
-            html += '<tr>'
-            html += '<td><a href=/school/terms/' + encodeURIComponent(value['term_id']) + '>' + value['term_id'] + '</a></td>'
-            html += '<td><a href=/school/courses/' + value['course_id']+'>' + value['course_id'] + '</a></td>'
-            html += '<td>' + value['course_name']['pl'] + '</td>'
+                    html += '<td>' + value['value_symbol'] + '</td>'
+                    html += '<td>' + value['value_description']['pl'] + '</td>'
+                    html += '<td>' + value['exam_session_number'] + '</td>'
+                    html += '<td>' + value['exam_id'] + '</td>'
+                    html += '</tr>'
+        });
+    }
+    else {
+        for (var g in grades) {
+                    html += '<tr><th>Term</th><th>Course Id</th><th>Course Name</th><th>Grades</th><th></th></tr></tr>'
+                    html += '<tbody>'
+                    html += '<tr>'
+                    html += '<td><a href=/school/terms/' + encodeURIComponent(grades[k]['term_id']) + '>' + grades[k]['term_id'] + '</a></td>'
+                    html += '<td><a href=/school/courses/' + grades[k]['course_id']+'>' + grades[k]['course_id'] + '</a></td>'
+                    html += '<td>' + grades[g]['course_name']['pl'] + '</td>'
 
-            html += '<td>' + cg[g]['value_symbol'] + '</td>'
-            html += '<td>' + cg[g]['exam_session_number'] + '</td>'
-            html += '<td>' + cg[g]['exam_id'] + '</td>'
-            html += '<td>' + cg[g]['value_description'] + '</td>'
-            html += '</tr>'
+                    for (var cug in grades[g]['grades']['course_units_grades']) {
+//                        html+= '<table class="table table-hover">'
+                        html+= '<td>'
+
+                        for (var session in grades[g]['grades']['course_units_grades'][cug]) {
+                            html+= '<tr>'
+                            grade = grades[g]['grades']['course_units_grades'][cug][session]
+                            html += '<td>' + grade['value_symbol'] + '</td>'
+                            html += '<td>' + grade['value_description']['pl'] + '</td>'
+                            html += '<td>' + grade['exam_session_number'] + '</td>'
+                            html += '<td>' + grade['exam_id'] + '</td>'
+                            html += '</tr>'
+                        }
+                        html+= '</td>'
+
+//                         html+= '</table>'
+                    }
+                    html += '</tr>'
+
         };
-    });
-
+    };
+    }
     html += '</tbody></table>';
 
     $(baseContainer).html(html);

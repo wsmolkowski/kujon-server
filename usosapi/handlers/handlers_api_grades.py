@@ -1,6 +1,7 @@
 import tornado.web
 from bson import json_util
 from bson.objectid import ObjectId
+
 from handlers_api import BaseHandler
 from usosapi import constants
 
@@ -14,7 +15,15 @@ class GradesForUserApi(BaseHandler):
         grades = []
         cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
         while (yield cursor.fetch_next):
-            grades.append(cursor.next_object())
+            g = cursor.next_object()
+            units = []
+            for unit in g['grades']['course_units_grades']:
+                pipeline = [{'$match': {'unit_id': int(unit)}},{'$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id', 'as': 'courses_classtypes'}}]
+                unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
+                u = yield unit_coursor.to_list(None)
+                units.append(u)
+            g['grades']['course_units'] = units
+            grades.append(g)
         self.write(json_util.dumps(grades))
 
 class GradesForCourseAndTermApi(BaseHandler):

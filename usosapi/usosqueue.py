@@ -195,9 +195,14 @@ class UsosQueue():
 
             result = yield usoshelper.get_courses_classtypes(usos[constants.URL])
             result = json.loads(result)
-            result[constants.USOS_ID] = usos[constants.USOS_ID]
-            doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, result)
-            logging.info('courses_classtypes for usos {0} inserted: {1}'.format(usos[constants.USOS_ID],doc))
+            r2 = []
+            for r in result:
+                rek = result[r]
+                rek[constants.USOS_ID] = usos[constants.USOS_ID]
+                r2.append(rek)
+
+            doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, r2)
+            logging.info('courses_classtypes for usos {0} inserted.'.format(usos[constants.USOS_ID]))
 
 @tornado.gen.coroutine
 def main():
