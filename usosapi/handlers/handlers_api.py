@@ -17,10 +17,6 @@ class BaseHandler(tornado.web.RequestHandler):
     def db(self):
         return self.application.db
 
-    @property
-    def usoses(self):
-        return self.application.usoses
-
     @tornado.gen.coroutine
     def get_parameters(self):
 
@@ -39,7 +35,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if not user_doc:
             raise tornado.web.HTTPError(500, "Request not authenticated")
 
-        usos_doc = self.get_usos(user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(user_doc[constants.USOS_ID])
 
         raise tornado.gen.Return((user_doc, usos_doc))
 
@@ -72,8 +68,22 @@ class BaseHandler(tornado.web.RequestHandler):
             constants.NEXT_PAGE: "/"
         }
 
+
+    @tornado.gen.coroutine
+    def get_usoses(self):
+        usoses = []
+
+        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+        while (yield cursor.fetch_next):
+            usoses.append(cursor.next_object())
+
+        raise tornado.gen.Return(usoses)
+
+    @tornado.gen.coroutine
     def get_usos(self, usos):
-        for u in self.usoses:
+        usoses = yield self.get_usoses()
+
+        for u in usoses:
             if u[constants.USOS_ID] == usos:
-                return u
-        return None
+                raise tornado.gen.Return(u)
+        raise tornado.gen.Return(None)

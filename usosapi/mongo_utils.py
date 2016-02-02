@@ -11,10 +11,10 @@ class Dao:
     def __init__(self):
         self.__db = pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
-    def drop_collection(self,collection):
-        logging.warn("Cleaning collection: {0}".format(collection))
-        self.__db.drop_collection(collection)
-
+    def drop_collection(self, collection):
+        if collection in self.__db.collection_names():
+            logging.warn("Cleaning collection: {0}".format(collection))
+            self.__db.drop_collection(collection)
 
     def drop_collections(self):
         for collection in self.__db.collection_names():
@@ -23,14 +23,8 @@ class Dao:
             logging.warn("Cleaning collection: {0}".format(collection))
             self.__db.drop_collection(collection)
 
-    def prepare(self):
-        if settings.CLEAN_DB:
-            self.drop_collections()
-
-        for usos in settings.USOSINSTANCES:
-            doc = self.__db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
-            if not doc:
-                self.__db.usosinstances.insert(usos)
+    def find_usos(self, usos_id):
+        return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})
 
     def insert(self, collection, document):
         return self.__db[collection].insert(document)
@@ -62,10 +56,10 @@ class Dao:
     def update_courses_editions(self, record_id, courses_editions):
         return self.__db.courses_editions.update({constants.USER_ID: ObjectId(record_id)}, courses_editions)
 
-    def get_terms(self,term_id, user_id):
+    def get_terms(self, term_id, user_id):
         return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USER_ID: user_id})
 
-    def get_courses(self,course_id, user_id):
+    def get_courses(self, course_id, user_id):
         return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USER_ID: user_id})
 
     def get_grades(self, course_id, term_id, user_id):
@@ -109,4 +103,3 @@ class Dao:
         for data in self.get_user_terms_and_courses(user_id):
             term_id, course_id = str(data[0]), str(data[1])
             print term_id, course_id
-

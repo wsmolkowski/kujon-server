@@ -9,6 +9,7 @@ from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
 import settings
+import constants
 from handlers.handlers_api_courses import CourseHandler
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi
@@ -29,7 +30,6 @@ from handlers.handlers_web import MainHandler, UserHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
 from handlers.handlers_web import TermsWebHandler, TermWebHandler
-from mongo_utils import Dao
 from usosqueue import UsosQueue
 
 
@@ -42,15 +42,6 @@ class Application(tornado.web.Application):
             self._crowler = UsosQueue()
         return self._crowler
 
-
-    _usoses = None
-
-    @property
-    def usoses(self):
-        if not self._usoses:
-            self._usoses = list(self.dao.get_usoses())
-        return self._usoses
-
     _db_connection = None
 
     @property
@@ -58,14 +49,6 @@ class Application(tornado.web.Application):
         if not self._db_connection:
             self._db_connection = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         return self._db_connection[settings.MONGODB_NAME]
-
-    _dao = None
-
-    @property
-    def dao(self):
-        if not self._dao:
-            self._dao = Dao()
-        return self._dao
 
     def __init__(self):
 
@@ -118,16 +101,22 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **app_settings)
 
         self.db
-        self.dao
-        self.dao.prepare()
-        self.usoses
         self.crowler
-        self.crowler.update_usoses_dictionaries()
+
+
+def prepare_environment():
+    from usoscrowler import UsosCrowler
+
+    uc = UsosCrowler()
+    uc.recreate_dictionaries()
+    uc.prepare_database()
 
 
 def main():
     tornado.options.parse_command_line()
     enable_pretty_logging()
+
+    prepare_environment()
 
     app = Application()
     app.listen(settings.PORT)

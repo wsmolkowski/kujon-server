@@ -10,6 +10,7 @@ URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|classtype_id&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
+
 @tornado.gen.coroutine
 def get_courses_classtypes(usos_base_url, validate_cert=False):
     url = URI_COURSES_CLASSTYPES.format(usos_base_url)
@@ -19,8 +20,7 @@ def get_courses_classtypes(usos_base_url, validate_cert=False):
     if response.code is not 200:
         raise tornado.web.HTTPError(400, "Don't have data for course_classtypes.")
 
-    classtypes = json.loads(response.body)
-    raise tornado.gen.Return(json.dumps(classtypes))
+    raise tornado.gen.Return(json.loads(response.body))
 
 
 @tornado.gen.coroutine
@@ -36,6 +36,7 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
     unit[constants.UNIT_ID] = unit.pop('id')
 
     raise tornado.gen.Return(json.dumps(unit))
+
 
 @tornado.gen.coroutine
 def get_course_info(usos_base_url, courseId, validate_cert=False):

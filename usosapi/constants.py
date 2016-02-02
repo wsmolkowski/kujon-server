@@ -29,6 +29,7 @@ OAUTH_TOKEN_SECRET = 'oauth_token_secret'
 ALERT_MESSAGE = 'alert_message'
 
 # COLLECTION_USERS = 'users'
+COLLECTION_USOSINSTANCES = 'usosinstances'
 COLLECTION_COURSES_CLASSTYPES = 'courses_classtypes'
 COLLECTION_USERS_INFO = 'users_info'
 COLLECTION_COURSES_EDITIONS = 'courses_editions'
