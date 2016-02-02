@@ -9,7 +9,6 @@ from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
 import settings
-import constants
 from handlers.handlers_api_courses import CourseHandler
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi
@@ -80,14 +79,17 @@ class Application(tornado.web.Application):
             (r"/authentication/verify", VerifyHandler),
 
             (r"/api/user", UserApi),
+
             (r"/api/courseseditions", CoursesEditionsApi),
             (r"/api/courses/([^/]+)", CourseHandler),
+
             (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
             (r"/api/grades", GradesForUserApi),
+
             (r"/api/terms", TermsApi),
             (r"/api/terms/([^/]+)", TermApi),
-            (r"/api/fiends/suggestions", FriendsSuggestionsApi),
 
+            (r"/api/friends/suggestions", FriendsSuggestionsApi),
         ]
 
         app_settings = {
