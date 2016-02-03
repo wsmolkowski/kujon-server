@@ -4,7 +4,7 @@ from datetime import datetime
 
 import tornado.gen
 
-import usosapi.constants
+from usosapi import constants
 import usoshelper
 import usosinstances
 from usosapi.mongo_dao import Dao
@@ -23,16 +23,16 @@ class UsosCrowler():
             data = dict()
 
         if not user_id:
-            data[usosapi.constants.USER_ID] = user_id
+            data[constants.USER_ID] = user_id
 
         if not usos:
-            data[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
+            data[constants.USOS_ID] = usos[constants.USOS_ID]
 
         if not create_time:
-            data[usosapi.constants.CREATED_TIME] = create_time
+            data[constants.CREATED_TIME] = create_time
 
         if not update_time:
-            data[usosapi.constants.UPDATE_TIME] = update_time
+            data[constants.UPDATE_TIME] = update_time
 
         return data
 
@@ -41,37 +41,37 @@ class UsosCrowler():
 
         recreate_time = datetime.now()
 
-        self.dao.drop_collection(usosapi.constants.COLLECTION_COURSES_CLASSTYPES)
+        self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
         for usos in self.dao.get_usoses():
             logging.info(
                 'recreating dictionaries in collections {0} for {1}'.format(
-                    usosapi.constants.COLLECTION_COURSES_CLASSTYPES,
-                    usos[usosapi.constants.USOS_ID]))
+                    constants.COLLECTION_COURSES_CLASSTYPES,
+                    usos[constants.USOS_ID]))
             inserts = []
-            class_types = yield usoshelper.get_courses_classtypes(usos[usosapi.constants.URL])
+            class_types = yield usoshelper.get_courses_classtypes(usos[constants.URL])
             if len(class_types) > 0:
                 for class_type in class_types.values():
-                    class_type[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
-                    class_type[usosapi.constants.CREATED_TIME] = recreate_time
-                    class_type[usosapi.constants.UPDATE_TIME] = recreate_time
+                    class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+                    class_type[constants.CREATED_TIME] = recreate_time
+                    class_type[constants.UPDATE_TIME] = recreate_time
                     inserts.append(class_type)
-                doc = self.dao.insert(usosapi.constants.COLLECTION_COURSES_CLASSTYPES, inserts)
+                doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
             else:
                 raise Exception(
-                    'fail to recreate_dictionaries {0} for {1}'.format(usosapi.constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                       usos[usosapi.constants.USOS_ID]))
+                    'fail to recreate_dictionaries {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                                                       usos[constants.USOS_ID]))
         raise tornado.gen.Return(True)
 
     def drop_collections(self):
         self.dao.drop_collections()
 
     def recreate_usos(self):
-        self.dao.drop_collection(usosapi.constants.COLLECTION_USOSINSTANCES)
+        self.dao.drop_collection(constants.COLLECTION_USOSINSTANCES)
         for usos in usosinstances.USOSINSTANCES:
-            logging.info('adding usos: {0} '.format(usos[usosapi.constants.USOS_ID]))
-            doc = self.dao.find_usos(usos[usosapi.constants.USOS_ID])
+            logging.info('adding usos: {0} '.format(usos[constants.USOS_ID]))
+            doc = self.dao.find_usos(usos[constants.USOS_ID])
             if not doc:
-                self.dao.insert(usosapi.constants.COLLECTION_USOSINSTANCES, usos)
+                self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
 
     @tornado.gen.coroutine
     def initial_user_crowl(self, user_id):
@@ -83,62 +83,62 @@ class UsosCrowler():
             logging.error("could not crowl for usos data for unknown user with id: {0}".format(user_id))
             return
 
-        usos = self.dao.get_usos(user[usosapi.constants.USOS_ID])
+        usos = self.dao.get_usos(user[constants.USOS_ID])
 
-        updater = USOSUpdater(usos[usosapi.constants.URL], usos[usosapi.constants.CONSUMER_KEY],
-                              usos[usosapi.constants.CONSUMER_SECRET],
-                              user[usosapi.constants.ACCESS_TOKEN_KEY], user[usosapi.constants.ACCESS_TOKEN_SECRET])
+        updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
+                              usos[constants.CONSUMER_SECRET],
+                              user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
 
         # user_info
         user_info = self.dao.get_users_info(user_id)
         if not user_info:
             result = updater.request_user_info()
-            result[usosapi.constants.USER_ID] = user_id
-            result[usosapi.constants.CREATED_TIME] = crowl_time
-            doc = self.dao.insert(usosapi.constants.COLLECTION_USERS_INFO, result)
+            result[constants.USER_ID] = user_id
+            result[constants.CREATED_TIME] = crowl_time
+            doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
             logging.debug('user_info for user_id {0} inserted: {1}'.format(user_id, doc))
         else:
             result = updater.request_user_info()
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            result[usosapi.constants.USER_ID] = user_id
-            result = self.dao.update(usosapi.constants.COLLECTION_USERS_INFO, usosapi.constants.ID, user_info[
-                usosapi.constants.ID], result)
-            logging.debug('user_info updated: {0}'.format(user_info[usosapi.constants.ID]))
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result = self.dao.update(constants.COLLECTION_USERS_INFO, constants.ID, user_info[
+                constants.ID], result)
+            logging.debug('user_info updated: {0}'.format(user_info[constants.ID]))
 
         # course_editions
         courseseditions = self.dao.get_courses_editions(user_id)
         if not courseseditions:
             result = updater.request_courses_editions()
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            result[usosapi.constants.USER_ID] = user_id
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
-            courseseditions = self.dao.insert(usosapi.constants.COLLECTION_COURSES_EDITIONS, result)
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            courseseditions = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug('course_editions inserted into courses_editions: {0}'.format(courseseditions))
         else:
             result = updater.request_courses_editions()
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            result[usosapi.constants.USER_ID] = user_id
-            result = self.dao.update(usosapi.constants.COLLECTION_COURSES_EDITIONS, usosapi.constants.ID, courseseditions[
-                usosapi.constants.ID],
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USER_ID] = user_id
+            result = self.dao.update(constants.COLLECTION_COURSES_EDITIONS, constants.ID, courseseditions[
+                constants.ID],
                                      result)
-            logging.debug('course_editions updated: {0}'.format(courseseditions[usosapi.constants.ID]))
+            logging.debug('course_editions updated: {0}'.format(courseseditions[constants.ID]))
 
         # terms
         for term_id in self.dao.get_user_terms(user_id):
 
             term = self.dao.get_terms(term_id, user_id)
-            result = yield usoshelper.get_term_info(usos[usosapi.constants.URL], term_id)
+            result = yield usoshelper.get_term_info(usos[constants.URL], term_id)
             result = json.loads(result)
-            result[usosapi.constants.USER_ID] = user_id
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
+            result[constants.USER_ID] = user_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
             if not term:
-                result[usosapi.constants.CREATED_TIME] = crowl_time
+                result[constants.CREATED_TIME] = crowl_time
             else:
-                result[usosapi.constants.CREATED_TIME] = term[usosapi.constants.CREATED_TIME]
-                self.dao.remove(usosapi.constants.COLLECTION_TERMS, usosapi.constants.ID, term[usosapi.constants.ID])
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
-            doc = self.dao.insert(usosapi.constants.COLLECTION_TERMS, result)
+                result[constants.CREATED_TIME] = term[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
+            result[constants.UPDATE_TIME] = crowl_time
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            doc = self.dao.insert(constants.COLLECTION_TERMS, result)
             if not term:
                 logging.debug('term with term_id: {0} inserted with id: {1}'.format(term_id, doc))
             else:
@@ -147,17 +147,17 @@ class UsosCrowler():
         # courses
         for course_id in self.dao.get_user_courses(user_id):
             course = self.dao.get_courses(course_id, user_id)
-            result = yield usoshelper.get_course_info(usos[usosapi.constants.URL], course_id)
+            result = yield usoshelper.get_course_info(usos[constants.URL], course_id)
             result = json.loads(result)
-            result[usosapi.constants.USER_ID] = user_id
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
+            result[constants.USER_ID] = user_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
             if not course:
-                result[usosapi.constants.CREATED_TIME] = crowl_time
+                result[constants.CREATED_TIME] = crowl_time
             else:
-                result[usosapi.constants.CREATED_TIME] = course[usosapi.constants.CREATED_TIME]
-                self.dao.remove(usosapi.constants.COLLECTION_TERMS, usosapi.constants.ID, term[usosapi.constants.ID])
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            doc = self.dao.insert(usosapi.constants.COLLECTION_COURSES, result)
+                result[constants.CREATED_TIME] = course[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
+            result[constants.UPDATE_TIME] = crowl_time
+            doc = self.dao.insert(constants.COLLECTION_COURSES, result)
             if not course:
                 logging.debug('course with course_id: {0} inserted with id: {1}'.format(course_id, doc))
             else:
@@ -170,15 +170,15 @@ class UsosCrowler():
             result = updater.request_grades_for_course(course_id, term_id)
             participants = result.pop('participants')
             units = result.pop('course_units_ids')
-            result[usosapi.constants.USER_ID] = user_id
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
+            result[constants.USER_ID] = user_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
             if not grades:
-                result[usosapi.constants.CREATED_TIME] = crowl_time
+                result[constants.CREATED_TIME] = crowl_time
             else:
-                result[usosapi.constants.CREATED_TIME] = grades[usosapi.constants.CREATED_TIME]
-                self.dao.remove(usosapi.constants.COLLECTION_GRADES, usosapi.constants.ID, grades[usosapi.constants.ID])
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            doc = self.dao.insert(usosapi.constants.COLLECTION_GRADES, result)
+                result[constants.CREATED_TIME] = grades[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_GRADES, constants.ID, grades[constants.ID])
+            result[constants.UPDATE_TIME] = crowl_time
+            doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             if not grades:
                 logging.info(
                     'grades for term_id: {0} and course_id: {1} inserted with id: {2} '.format(term_id, course_id, doc))
@@ -189,17 +189,17 @@ class UsosCrowler():
             # participants
             result = dict()
             participants = self.dao.get_participants(course_id, term_id)
-            result[usosapi.constants.TERM_ID] = term_id
-            result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
-            result[usosapi.constants.COURSE_ID] = course_id
-            result[usosapi.constants.PARTICIPANTS] = participants
+            result[constants.TERM_ID] = term_id
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            result[constants.COURSE_ID] = course_id
+            result[constants.PARTICIPANTS] = participants
             if not participants:
-                result[usosapi.constants.CREATED_TIME] = crowl_time
+                result[constants.CREATED_TIME] = crowl_time
             else:
-                result[usosapi.constants.CREATED_TIME] = participants[usosapi.constants.CREATED_TIME]
-                self.dao.remove(usosapi.constants.COLLECTION_PARTICIPANTS, term_id, course_id)
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
-            doc = self.dao.insert(usosapi.constants.COLLECTION_PARTICIPANTS, result)
+                result[constants.CREATED_TIME] = participants[constants.CREATED_TIME]
+                self.dao.remove(constants.COLLECTION_PARTICIPANTS, term_id, course_id)
+            result[constants.UPDATE_TIME] = crowl_time
+            doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
             if not participants:
                 logging.debug(
                     'participants for term_id: {0} and course_id: {1} inserted with id: {2}'.format(term_id, course_id,
@@ -211,15 +211,15 @@ class UsosCrowler():
             # units
             for unit_id in units:
                 unit = self.dao.get_courses_units(unit_id)
-                result = yield usoshelper.get_courses_units(usos[usosapi.constants.URL], unit_id)
+                result = yield usoshelper.get_courses_units(usos[constants.URL], unit_id)
                 result = json.loads(result)
                 if not unit:
-                    result[usosapi.constants.USOS_ID] = usos[usosapi.constants.USOS_ID]
-                    result[usosapi.constants.CREATED_TIME] = crowl_time
+                    result[constants.USOS_ID] = usos[constants.USOS_ID]
+                    result[constants.CREATED_TIME] = crowl_time
                 else:
-                    result[usosapi.constants.CREATED_TIME] = unit[usosapi.constants.CREATED_TIME]
-                    self.dao.remove(usosapi.constants.COLLECTION_COURSES_UNITS, usosapi.constants.UNIT_ID, unit)
-                doc = self.dao.insert(usosapi.constants.COLLECTION_COURSES_UNITS, result)
+                    result[constants.CREATED_TIME] = unit[constants.CREATED_TIME]
+                    self.dao.remove(constants.COLLECTION_COURSES_UNITS, constants.UNIT_ID, unit)
+                doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
                 if not unit:
                     logging.debug('unit {0} inserted with id: {1}'.format(unit_id, doc))
                 else:
@@ -227,9 +227,15 @@ class UsosCrowler():
 
         # crowl collection
         result = dict()
-        result[usosapi.constants.USER_ID] = user_id
-        result[usosapi.constants.CREATED_TIME] = crowl_time
-        result[usosapi.constants.UPDATE_TIME] = datetime.now()
+        result[constants.USER_ID] = user_id
+        result[constants.CREATED_TIME] = crowl_time
+        result[constants.UPDATE_TIME] = datetime.now()
 
-        doc = self.dao.insert(usosapi.constants.COLLECTION_CROWLLOG, result)
+        doc = self.dao.insert(constants.COLLECTION_CROWLLOG, result)
         logging.debug('crowl log inserted with id {0}'.format(doc))
+
+if __name__ == "__main__":
+    from bson.objectid import ObjectId
+
+    u = UsosCrowler()
+    u.initial_user_crowl(ObjectId("56b267cfc4f9d22360be77fc"))
