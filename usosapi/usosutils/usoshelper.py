@@ -38,24 +38,24 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
     unit = json.loads(response.body)
     unit[constants.UNIT_ID] = unit.pop('id')
 
-    raise tornado.gen.Return(json.dumps(unit))
+    raise tornado.gen.Return(unit)
 
 
 @tornado.gen.coroutine
-def get_course_info(usos_base_url, courseId, validate_cert=False):
-    url = URL_COURSE_INFO.format(usos_base_url, courseId)
+def get_course_info(usos_base_url, course_id, validate_cert=False):
+    url = URL_COURSE_INFO.format(usos_base_url, course_id)
     request = tornado.httpclient.HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert)
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
         raise tornado.web.HTTPError(response.code,
                                     "Error while fetching ourse_info for courseId: {0}. Response body: {1}".format(
-                                        courseId, response.body))
+                                        course_id, response.body))
 
     course = json.loads(response.body)
     course[constants.COURSE_ID] = course.pop('id')
 
-    raise tornado.gen.Return(json.dumps(course))
+    raise tornado.gen.Return(course)
 
 
 @tornado.gen.coroutine
@@ -72,4 +72,4 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
     term = json.loads(response.body)
     term[constants.TERM_ID] = term.pop('id')
 
-    raise tornado.gen.Return(json.dumps(term))
+    raise tornado.gen.Return(term)
