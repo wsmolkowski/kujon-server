@@ -7,7 +7,6 @@ from usosapi import constants
 from usosapi.mongo_dao import Dao
 from usosapi.usosutils.usoscrowler import UsosCrowler
 
-
 class CrowlerTest(AsyncTestCase):
 
     def setUp(self):

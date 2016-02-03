@@ -6,10 +6,10 @@ import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.options import define, options, parse_command_line
-from usosutils.usosqueue import UsosQueue
 
 import settings
 from handlers_list import HANDLERS
+from usosutils.usosqueue import UsosQueue
 
 define('debug', default=settings.DEBUG)
 # define('port', default=settings.PORT)
@@ -17,7 +17,6 @@ define('ssl', default=settings.SSL)
 define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=settings.COOKIE_SECRET)
 define('autoreload', default=settings.AUTORELOAD_ENABLED)
-
 
 class Application(tornado.web.Application):
     _crowler = None
@@ -59,7 +58,6 @@ class Application(tornado.web.Application):
         self.db
         self.crowler
 
-
 def prepare_environment():
     from usosapi.usosutils.usoscrowler import UsosCrowler
 
@@ -69,7 +67,6 @@ def prepare_environment():
     if settings.UPDATE_DICTIONARIES:
         uc.recreate_usos()
         uc.recreate_dictionaries()
-
 
 def main():
     parse_command_line()
@@ -82,7 +79,6 @@ def main():
     logging.info(settings.DEPLOY_URL)
     IOLoop.instance().add_callback(application.crowler.queue_watcher)
     IOLoop.instance().start()
-
 
 if __name__ == "__main__":
     main()
