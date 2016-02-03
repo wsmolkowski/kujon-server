@@ -5,15 +5,18 @@ from datetime import datetime
 import settings
 import constants
 import usoshelper
-from mongo_utils import Dao
+from mongo_dao import Dao
 from usosupdater import USOSUpdater
 
 import tornado.gen
 
 
 class UsosCrowler():
-    def __init__(self):
-        self.dao = Dao()
+    def __init__(self, dao=None):
+        if not dao:
+            self.dao = Dao()
+        else:
+            self.dao = dao
 
     def __update_dict(self, data, user_id, usos, create_time, update_time):
         if not data:
