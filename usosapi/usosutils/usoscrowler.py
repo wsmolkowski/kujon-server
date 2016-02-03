@@ -102,7 +102,7 @@ class UsosCrowler():
             result[constants.UPDATE_TIME] = crowl_time
             result[constants.USER_ID] = user_id
             result = self.dao.update(constants.COLLECTION_USERS_INFO, constants.ID, user_info[
-                usosapi.constants.ID], result)
+                constants.ID], result)
             logging.debug('user_info updated: {0}'.format(user_info[constants.ID]))
 
         # course_editions
@@ -177,7 +177,7 @@ class UsosCrowler():
             else:
                 result[constants.CREATED_TIME] = grades[constants.CREATED_TIME]
                 self.dao.remove(constants.COLLECTION_GRADES, constants.ID, grades[constants.ID])
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
             doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             if not grades:
                 logging.info(
@@ -195,9 +195,9 @@ class UsosCrowler():
             if not participants:
                 result[constants.CREATED_TIME] = crowl_time
             else:
-                # result[usosapi.constants.CREATED_TIME] = participants[usosapi.constants.CREATED_TIME]
+                # result[constants.CREATED_TIME] = participants[constants.CREATED_TIME]
                 self.dao.remove(constants.COLLECTION_PARTICIPANTS, term_id, course_id)
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
             doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
             if not participants:
                 logging.debug(
