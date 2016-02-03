@@ -1,7 +1,7 @@
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'
 
-from tornado.testing import AsyncTestCase
+from tornado.testing import AsyncTestCase, gen_test
 import tornado.gen
 from usosapi import constants
 from usosapi.usoscrowler import UsosCrowler
@@ -23,16 +23,13 @@ class CrowlerTest(AsyncTestCase):
         self.crowler.drop_collections()
         self.crowler.recreate_usos()
 
-    @tornado.gen.coroutine
-    def recreate_dictionaries(self):
-        yield self.crowler.recreate_dictionaries()
-
     def tearDown(self):
         self.stop()
 
+    @gen_test
     def testRecreateDictionaries(self):
         # assume - run crowler
-        self.io_loop.run_sync(self.recreate_dictionaries)
+        yield self.crowler.recreate_dictionaries()
 
         # then - check if tables are filled
         result = self.dao.count(constants.COLLECTION_COURSES_CLASSTYPES)
