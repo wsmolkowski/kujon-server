@@ -18,7 +18,8 @@ def get_courses_classtypes(usos_base_url, validate_cert=False):
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
-        raise tornado.web.HTTPError(400, "Don't have data for course_classtypes.")
+        raise tornado.web.HTTPError(response.code, "Error while fetching courses_classtypes. Response body: {0}".format(
+            response.body))
 
     raise tornado.gen.Return(json.loads(response.body))
 
@@ -30,7 +31,9 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
-        raise tornado.web.HTTPError(400, "Don't have data for given units: {0}.".format(unit_id))
+        raise tornado.web.HTTPError(response.code,
+                                    "Error while fetching courses_units for: {0}. Response body: {1}".format(
+                                        unit_id, response.body))
 
     unit = json.loads(response.body)
     unit[constants.UNIT_ID] = unit.pop('id')
@@ -45,7 +48,9 @@ def get_course_info(usos_base_url, courseId, validate_cert=False):
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
-        raise tornado.web.HTTPError(400, "Don't have data for given courseId: {0}.".format(courseId))
+        raise tornado.web.HTTPError(response.code,
+                                    "Error while fetching ourse_info for courseId: {0}. Response body: {1}".format(
+                                        courseId, response.body))
 
     course = json.loads(response.body)
     course[constants.COURSE_ID] = course.pop('id')
@@ -60,7 +65,9 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
 
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
-        raise tornado.web.HTTPError(400, "Don't have data for given term_id: {0}.".format(term_id))
+        raise tornado.web.HTTPError(response.code,
+                                    "Error while fetching term_info for term_id: {0}. Response body: {1}".format
+                                    (term_id, response.body))
 
     term = json.loads(response.body)
     term[constants.TERM_ID] = term.pop('id')
