@@ -114,7 +114,6 @@ def prepare_environment():
     uc.recreate_dictionaries()
 
 
-
 def main():
     tornado.options.parse_command_line()
     enable_pretty_logging()
