@@ -12,9 +12,8 @@ class Dao:
         self.__db = pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
     def drop_collection(self, collection):
-        if collection in self.__db.collection_names():
-            logging.warn("Cleaning collection: {0}".format(collection))
-            self.__db.drop_collection(collection)
+        logging.info("Cleaning collection: {0}".format(collection))
+        self.__db.drop_collection(collection)
 
     def drop_collections(self):
         for collection in self.__db.collection_names():

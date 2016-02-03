@@ -15,12 +15,13 @@ URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 def get_courses_classtypes(usos_base_url, validate_cert=False):
     url = URI_COURSES_CLASSTYPES.format(usos_base_url)
     request = tornado.httpclient.HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert)
-
+    body = ""
     response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
     if response.code is not 200:
-        raise tornado.web.HTTPError(400, "Don't have data for course_classtypes.")
-
-    raise tornado.gen.Return(json.loads(response.body))
+        print ("Error: {0} during receiving course_classtypes for: {1} ".format(response.error, url))
+        raise tornado.gen.Return([])
+    body = json.loads(response.body)
+    raise tornado.gen.Return(body)
 
 
 @tornado.gen.coroutine

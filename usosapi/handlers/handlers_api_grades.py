@@ -26,7 +26,11 @@ class GradesForUserApi(BaseHandler):
                     unit_id = elem['unit_id']
                     elem.pop('unit_id')
                     units[unit_id] = elem
-            grades_for_course_and_term['grades']['course_units'] = units
+            if len(units) > 0:
+                grades_for_course_and_term['grades']['course_units'] = units
+                del grades_for_course_and_term['grades']['course_grades']
+            else:
+                del grades_for_course_and_term['grades']['course_units_grades']
             grades.append(grades_for_course_and_term)
         self.write(json_util.dumps(grades))
 
@@ -36,13 +40,23 @@ class GradesForCourseAndTermApi(BaseHandler):
     def get(self, course_id, term_id):
 
         user_doc, usos_doc = yield self.get_parameters()
+        grade_doc = []
+        pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),constants.COURSE_ID: course_id, constants.TERM_ID: term_id}
+        grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline)
 
-        grade_doc = yield self.db[constants.COLLECTION_GRADES].find_one(
-                {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),
-                 constants.COURSE_ID: course_id,
-                 constants.TERM_ID: term_id})
+        # for unit in grades_for_course_and_term['grades']['course_units_grades']:
+        #     # TODO: to refactor - join data for 2 usoses and data not connected well
+        #     pipeline = [{'$match': {'unit_id': int(unit)}},{'$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id', 'as': 'courses_classtypes'}}]
+        #     unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
+        #     u = yield unit_coursor.to_list(None)
+        #     for elem in u:
+        #         unit_id = elem['unit_id']
+        #         elem.pop('unit_id')
+        #         units[unit_id] = elem
+        # if len(units) > 0:
+        #     grades_for_course_and_term['grades']['course_units'] = units
+        #     del grades_for_course_and_term['grades']['course_grades']
+        # else:
+        #     del grades_for_course_and_term['grades']['course_units_grades']
 
-        if not grade_doc:
-            pass    # TODO: return json with custom message
-
-        self.write(json_util.dumps(grade_doc))
+        self.write(json_util.dumps(grades))

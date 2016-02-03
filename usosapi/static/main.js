@@ -15,18 +15,18 @@ function drawCoursesTable(jsonData) {
     var html = '<table class="table table-hover">';
         html += '<tr><th>Semestr</th><th>Nr kursu</th><th>Nazwa kursu</th><th></th></tr></tr>'
         html += '<tbody>'
-        $.each(jsonData['course_editions'], function(key, value){
-            html += '<tr>'
-            for(var i=0; i< value.length; i++) {
-                html += '<td><a href=/school/terms/'+encodeURIComponent(value[i]['term_id'])+'>' + value[i]['term_id'] + '</a>  </td>'
-                html += '<td>' + value[i]['course_id'] + '</td>'
-                html += '<td><a href=/school/courses/'+ value[i]['course_id']+ '>' + value[i]['course_name']['pl']+ '</a></td>'
+        debugger;
+        for (var term in jsonData['course_editions']) {
+            for (var course in jsonData['course_editions'][term]) {
+                html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
+                html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
+                html += '<td><a href=/school/courses/'+ jsonData['course_editions'][term][course]['course_id']+ '>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
-                html += '<a href=/school/grades/course/'+ value[i]['course_id']+ '/'+encodeURIComponent(value[i]['term_id'])+'>Oceny</a>'
+                html += '<a href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
                 html += '</tr>';
             }
-        });
+        }
     html += '</tbody></table>';
     $(baseContainer).html(html);
 }
@@ -66,7 +66,7 @@ function drawGradesTable(jsonData){
     var grades = JSON.parse(jsonData);
 
     var html = '<table class="table table-hover">';
-    html += '<tr><th>Semestr</th><th>Kurs</th><th>Nazwa kursu</th><th>Oceny</th></tr>'
+    html += '<tr><th>Semestr</th><th>Kurs</th><th>Nazwa kursu</th><th></th></tr>'
     html += '<tbody>'
 
     for (var key in grades) {
@@ -76,9 +76,9 @@ function drawGradesTable(jsonData){
                 html += '<td>' + grades[key]['course_name']['pl'] + '</td>'
                 html += '<td><table class="table table-hover">'
 
-                var pom = grades[key]['grades']['course_grades'].length
+                var pom = grades[key]['grades']['course_grades']
                 if (typeof pom != 'undefined') {
-                    html += '<tr><th>Ocena</th><th>słownie</th><th>próba</th></tr>'
+                    html += '<tr><th>Ocena</th><th>Słownie</th><th>Termin</th></tr>'
 
                     for (var exam in grades[key]['grades']['course_grades']) {
                         html += '<tr>'
@@ -89,7 +89,7 @@ function drawGradesTable(jsonData){
                     }
                 }
                 else {
-                    html += '<tr><th>zajęcia</th><th>ocena</th><th>słownie</th><th>próba</th></tr>'
+                    html += '<tr><th>zajęcia</th><th>ocena</th><th>słownie</th><th>termin</th></tr>'
                     for (var unit in grades[key]['grades']['course_units_grades']) {
                         for (var pass in grades[key]['grades']['course_units_grades'][unit]) {
                             html += '<tr>'
@@ -113,7 +113,7 @@ function drawGradesTable(jsonData){
 function drawGradeTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Course name</th><th>Course id</th></tr>'
+        html += '<tr><th>Kurs</th><th>Numer kursu</th></tr>'
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['course_name']['pl'] + '</td>'
@@ -122,18 +122,32 @@ function drawGradeTable(jsonData){
         html += '</tbody></table>';
 
         html += '<table class="table table-hover">';
-        html += '<tr><th>Exam ID</th><th>Exam session</th><th>Grade</th><th>Grade description</th></tr>'
-        html += '<tbody>'
-        $.each(jsonData['grades']['course_grades'], function(key, value){
-            for(var i=1; i< 2; i++) {
+
+        if (typeof jsonData['grades']['course_grades'] != 'undefined') {
+            html += '<tr><th>Nr egzaminu</th><th>Termin egzaminu</th><th>Ocena</th><th>Ocena opisowa</th></tr>'
+            html += '<tbody>'
+            for (exam in jsonData['grades']['course_grades']) {
                 html += '<tr>'
-                html += '<td>' + value['exam_id']+ '</td>'
-                html += '<td>' + value['exam_session_number']+ '</td>'
-                html += '<td>' + value['value_symbol']+ '</td>'
-                html += '<td>' + value['value_description']['pl']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_grades'][exam]['exam_id']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_grades'][exam]['exam_session_number']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_grades'][exam]['value_symbol']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_grades'][exam]['value_description']['pl']+ '</td>'
                 html += '</tr>'
             }
-        });
+        }
+        else {
+            html += '<tr><th>Zajęcia</th><th>Termin</th><th>Ocena</th><th>Ocena opisowa</th></tr>'
+            html += '<tbody>'
+            for (exam in jsonData['grades']['course_units_grades']) {
+                html += '<tr>'
+                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['exam_id']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['exam_session_number']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['value_symbol']+ '</td>'
+                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['value_description']['pl']+ '</td>'
+                html += '</tr>'
+            }
+        }
+
         html += '</tbody></table>';
 
     $(baseContainer).html(html);

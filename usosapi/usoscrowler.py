@@ -2,13 +2,13 @@ import json
 import logging
 from datetime import datetime
 
-import settings
+import tornado.gen
+
 import constants
+import settings
 import usoshelper
 from mongo_utils import Dao
 from usosupdater import USOSUpdater
-
-import tornado.gen
 
 
 class UsosCrowler():
@@ -35,33 +35,36 @@ class UsosCrowler():
 
     @tornado.gen.coroutine
     def recreate_dictionaries(self):
+        if settings.UPDATE_DICTIONARIES:
+            recreate_time = datetime.now()
+            # TODO: no sens to drop entire collection every time, just update or drop for one USOS
+            self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
+            for usos in self.dao.get_usoses():
+                logging.info('recreating dictionaries in collections {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES, usos[constants.USOS_ID]))
+                inserts = []
+                class_types = yield usoshelper.get_courses_classtypes(usos[constants.URL])
+                if len(class_types) > 0:
+                    for class_type in class_types.values():
+                        class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+                        class_type[constants.CREATED_TIME] = recreate_time
+                        class_type[constants.UPDATE_TIME] = recreate_time
+                        inserts.append(class_type)
+                    doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
+                else:
+                    logging.info('fail to create {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES, usos[constants.USOS_ID]))
 
-        logging.debug('recreating dictionaries in collections {0}'.format(constants.COLLECTION_COURSES_CLASSTYPES))
-        recreate_time = datetime.now()
-
-        self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
-        for usos in self.dao.get_usoses():
-
-            class_types = yield usoshelper.get_courses_classtypes(usos[constants.URL])
-            inserts = []
-            for class_type in class_types.values():
-                class_type[constants.USOS_ID] = usos[constants.USOS_ID]
-                class_type[constants.CREATED_TIME] = recreate_time
-                class_type[constants.UPDATE_TIME] = recreate_time
-                inserts.append(class_type)
-
-            doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
-
-        logging.debug('recreated dictionaries')
 
     def prepare_database(self):
         if settings.CLEAN_DB:
             self.dao.drop_collections()
 
-        for usos in settings.USOSINSTANCES:
-            doc = self.dao.find_usos(usos[constants.USOS_ID])
-            if not doc:
-                self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
+        if settings.UPDATE_DICTIONARIES:
+            self.dao.drop_collection(constants.COLLECTION_USOSINSTANCES)
+            for usos in settings.USOSINSTANCES:
+                logging.info('adding usos: {0} '.format(usos[constants.USOS_ID]))
+                doc = self.dao.find_usos(usos[constants.USOS_ID])
+                if not doc:
+                    self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
 
     @tornado.gen.coroutine
     def initial_user_crowl(self, user_id):
