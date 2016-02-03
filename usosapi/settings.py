@@ -11,7 +11,7 @@ DEFAULT_SCHEDULE_PERIOD = 7
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 CLEAN_DB = False
-UPDATE_DICTIONARIES = True
+UPDATE_DICTIONARIES = False
 USOSINSTANCES = [
     {'usos': 'UW',
      'name': 'Uniwersyst Warszawski',
@@ -69,9 +69,6 @@ USOSINSTANCES = [
      'consumer_secret': '',
      'contact': 'marekmac@ukw.edu.pl'
      },
-
-
-
 ]
 CONSUMER_NAME = "usosapi"
 CONSUMER_KEY = "vxSehcx4RCA8m4kgjRhY"
