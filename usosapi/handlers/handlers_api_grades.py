@@ -43,8 +43,8 @@ class GradesForCourseAndTermApi(BaseHandler):
         grade_doc = []
         pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),constants.COURSE_ID: course_id, constants.TERM_ID: term_id}
         grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline)
-        units = []
-        if len(grades) > 0:
+        units = {}
+        if grades and len(grades) > 0:
             for unit in grades['grades']['course_units_grades']:
                 # TODO: to refactor - join data for 2 usoses and data not connected well
                 pipeline = [{'$match': {'unit_id': int(unit)}},{'$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id', 'as': 'courses_classtypes'}}]

@@ -48,7 +48,7 @@ function fetchCursesAndDraw(){
 function drawCourseInfoTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Numer kursu</th><th>Nazwa</th><th>Opis</th><th></th></tr>'
+        html += '<tr><th>Numer przedmiotu</th><th>Nazwa przedmiotu</th><th>Opis</th><th></th></tr>'
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['course_id'] + '</td>'
@@ -113,16 +113,15 @@ function drawGradesTable(jsonData){
 function drawGradeTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Kurs</th><th>Numer kursu</th></tr>'
+        html += '<tr><th>Przedmiot</th><th>Numer przedmiotu</th></tr>'
         html += '<tbody>'
         html += '<tr>'
-        html += '<td>' + jsonData['course_name']['pl'] + '</td>'
+        html += '<td><a href=/school/courses/' + jsonData['course_id'] + '>' + jsonData['course_name']['pl'] + '</a></td>'
         html += '<td>' + jsonData['course_id'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
 
         html += '<table class="table table-hover">';
-
         if (typeof jsonData['grades']['course_grades'] != 'undefined') {
             html += '<tr><th>Nr egzaminu</th><th>Termin egzaminu</th><th>Ocena</th><th>Ocena opisowa</th></tr>'
             html += '<tbody>'
@@ -139,12 +138,14 @@ function drawGradeTable(jsonData){
             html += '<tr><th>Zajęcia</th><th>Termin</th><th>Ocena</th><th>Ocena opisowa</th></tr>'
             html += '<tbody>'
             for (exam in jsonData['grades']['course_units_grades']) {
-                html += '<tr>'
-                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['exam_id']+ '</td>'
-                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['exam_session_number']+ '</td>'
-                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['value_symbol']+ '</td>'
-                html += '<td>' + jsonData['grades']['course_units_grades'][exam][1]['value_description']['pl']+ '</td>'
-                html += '</tr>'
+                for (term in jsonData['grades']['course_units_grades'][exam]) {
+                    html += '<tr>'
+                    html += '<td>' + jsonData['grades']['course_units'][exam]['classtype_id']+ '</td>'
+                    html += '<td>' + jsonData['grades']['course_units_grades'][exam][term]['exam_session_number']+ '</td>'
+                    html += '<td>' + jsonData['grades']['course_units_grades'][exam][term]['value_symbol']+ '</td>'
+                    html += '<td>' + jsonData['grades']['course_units_grades'][exam][term]['value_description']['pl']+ '</td>'
+                    html += '</tr>'
+                }
             }
         }
 
@@ -287,9 +288,7 @@ function drawUserInfo(jsonData){
 
     $.each(jsonData['student_programmes'], function(key, value){
             for(var i=1; i< 2; i++) {
-                html += '<tr><td>Program id</td><td>' + value['id'] + '</td></tr>'
-                html += '<tr><td>Opis</td><td>' + value['programme']['description']['pl'] + '</td></tr>'
-                html += '<tr><td></td><td>' + value['programme']['id'] + '</td></tr>'
+                html += '<tr><td>Program</td><td>' + value['programme']['id'] + ' (' + value['id'] + ') - ' + value['programme']['description']['pl']+ '</td></tr>'
             }
     });
 
