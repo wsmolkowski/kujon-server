@@ -5,7 +5,7 @@ from datetime import datetime
 import tornado.gen
 
 import constants
-import settings
+import usosinstances
 import usoshelper
 from mongo_dao import Dao
 from usosupdater import USOSUpdater
@@ -66,7 +66,7 @@ class UsosCrowler():
 
     def recreate_usos(self):
         self.dao.drop_collection(constants.COLLECTION_USOSINSTANCES)
-        for usos in settings.USOSINSTANCES:
+        for usos in usosinstances.USOSINSTANCES:
             logging.info('adding usos: {0} '.format(usos[constants.USOS_ID]))
             doc = self.dao.find_usos(usos[constants.USOS_ID])
             if not doc:

@@ -1,35 +1,22 @@
 import logging
-import os
 
 import motor
 import tornado.ioloop
-import tornado.options
 import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
+from tornado.options import define, options, parse_command_line
 
 import settings
-from handlers.handlers_api_courses import CourseHandler
-from handlers.handlers_api_courses import CoursesEditionsApi
-from handlers.handlers_api_friends import FriendsSuggestionsApi
-from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
-from handlers.handlers_api_terms import TermsApi, TermApi
-from handlers.handlers_api_user import UserApi
-from handlers.handlers_auth import CreateUserHandler
-from handlers.handlers_auth import LoginHandler
-from handlers.handlers_auth import LogoutHandler
-from handlers.handlers_auth import VerifyHandler
-from handlers.handlers_chat import ChatHandler, ChatSocketHandler
-from handlers.handlers_web import CourseInfoWebHandler
-from handlers.handlers_web import CoursesWebHandler
-from handlers.handlers_web import FriendsHandler
-from handlers.handlers_web import FriendsSuggestionsHandler
-from handlers.handlers_web import GradesWebHandler
-from handlers.handlers_web import MainHandler, UserHandler
-from handlers.handlers_web import SchoolHandler
-from handlers.handlers_web import SettingsHandler
-from handlers.handlers_web import TermsWebHandler, TermWebHandler
+from handlers_list import HANDLERS
 from usosqueue import UsosQueue
+
+define('debug', default=settings.DEBUG)
+# define('port', default=settings.PORT)
+define('ssl', default=settings.SSL)
+define('xsrf_cookie', default=settings.XSRF_COOKIE)
+define('cookie_secret', default=settings.COOKIE_SECRET)
+define('autoreload', default=settings.AUTORELOAD_ENABLED)
 
 
 class Application(tornado.web.Application):
@@ -41,66 +28,33 @@ class Application(tornado.web.Application):
             self._crowler = UsosQueue()
         return self._crowler
 
-    _db_connection = None
+    _db = None
 
     @property
     def db(self):
-        if not self._db_connection:
-            self._db_connection = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db_connection[settings.MONGODB_NAME]
+        if not self._db:
+            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
+        return self._db[settings.MONGODB_NAME]
 
     def __init__(self):
 
-        handlers = [
-            (r"/?", MainHandler),
+        _settings = dict(
+            debug=options.debug,
+            ssl=options.ssl,
+            xsrf_cookies=options.xsrf_cookie,
+            cookie_secret=options.cookie_secret,
+            login_url=settings.LOGIN_URL,
+            path=settings.ROOT_PATH,
+            static_path=settings.STATIC_PATH,
+            site_title=settings.PROJECT_TITLE,
+            site_description=settings.PROJECT_DESCRIPTION,
+            site_domain=settings.SITE_DOMAIN,
+            site_root=settings.SITE_ROOT,
+            template_path=settings.TEMPLATES_PATH,
 
-            (r"/user", UserHandler),
+        )
 
-            (r"/school", SchoolHandler),
-            (r"/school/grades", SchoolHandler),
-            (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
-            (r"/school/courses", CoursesWebHandler),
-            (r"/school/courses/([^/]+)", CourseInfoWebHandler),
-            (r"/school/terms", TermsWebHandler),
-            (r"/school/terms/([^/]+)", TermWebHandler),
-
-            (r"/chat", ChatHandler),
-            (r"/chatsocket", ChatSocketHandler),
-
-
-            (r"/friends", FriendsHandler),
-            (r"/friends/suggestions", FriendsSuggestionsHandler),
-
-            (r"/settings", SettingsHandler),
-
-            (r"/authentication/login", LoginHandler),
-            (r"/authentication/logout", LogoutHandler),
-            (r"/authentication/create", CreateUserHandler),
-            (r"/authentication/verify", VerifyHandler),
-
-            (r"/api/user", UserApi),
-
-            (r"/api/courseseditions", CoursesEditionsApi),
-            (r"/api/courses/([^/]+)", CourseHandler),
-
-            (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
-            (r"/api/grades", GradesForUserApi),
-
-            (r"/api/terms", TermsApi),
-            (r"/api/terms/([^/]+)", TermApi),
-
-            (r"/api/friends/suggestions", FriendsSuggestionsApi),
-        ]
-
-        app_settings = {
-            "template_path": os.path.join(os.path.dirname(__file__), "templates"),
-            "static_path": os.path.join(os.path.dirname(__file__), "static"),
-            "cookie_secret": "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
-            "login_url": "/authentication/login",
-            "xsrf_cookies": True,
-        }
-
-        tornado.web.Application.__init__(self, handlers, **app_settings)
+        tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
         self.db
         self.crowler
@@ -114,20 +68,19 @@ def prepare_environment():
         uc.drop_collections()
     if settings.UPDATE_DICTIONARIES:
         uc.recreate_usos()
-    if settings.UPDATE_DICTIONARIES:
         uc.recreate_dictionaries()
 
 
 def main():
-    tornado.options.parse_command_line()
+    parse_command_line()
     enable_pretty_logging()
 
     prepare_environment()
 
-    app = Application()
-    app.listen(settings.PORT)
-    logging.info('http://localhost:{0}'.format(settings.PORT))
-    IOLoop.instance().add_callback(app.crowler.queue_watcher)
+    application = Application()
+    application.listen(settings.PORT)
+    logging.info(settings.DEPLOY_URL)
+    IOLoop.instance().add_callback(application.crowler.queue_watcher)
     IOLoop.instance().start()
 
 
