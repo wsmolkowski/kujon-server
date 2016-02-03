@@ -110,8 +110,12 @@ def prepare_environment():
     from usoscrowler import UsosCrowler
 
     uc = UsosCrowler()
-    uc.prepare_database()
-    uc.recreate_dictionaries()
+    if settings.CLEAN_DB:
+        uc.drop_collections()
+    if settings.UPDATE_DICTIONARIES:
+        uc.recreate_usos()
+    if settings.UPDATE_DICTIONARIES:
+        uc.recreate_dictionaries()
 
 
 def main():
