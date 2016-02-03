@@ -2,10 +2,10 @@ MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'
 
 from tornado.testing import AsyncTestCase, gen_test
-import tornado.gen
+
 from usosapi import constants
-from usosapi.usoscrowler import UsosCrowler
 from usosapi.mongo_dao import Dao
+from usosapi.usosutils.usoscrowler import UsosCrowler
 
 
 class CrowlerTest(AsyncTestCase):

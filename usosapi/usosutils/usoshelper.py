@@ -3,7 +3,7 @@ import json
 import tornado.gen
 import tornado.httpclient
 
-import constants
+import usosapi.constants
 
 URL_COURSE_INFO = '{0}/services/courses/course?course_id={1}&fields=id|name|description'
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
@@ -36,7 +36,7 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
                                         unit_id, response.body))
 
     unit = json.loads(response.body)
-    unit[constants.UNIT_ID] = unit.pop('id')
+    unit[usosapi.constants.UNIT_ID] = unit.pop('id')
 
     raise tornado.gen.Return(json.dumps(unit))
 
@@ -53,7 +53,7 @@ def get_course_info(usos_base_url, courseId, validate_cert=False):
                                         courseId, response.body))
 
     course = json.loads(response.body)
-    course[constants.COURSE_ID] = course.pop('id')
+    course[usosapi.constants.COURSE_ID] = course.pop('id')
 
     raise tornado.gen.Return(json.dumps(course))
 
@@ -70,6 +70,6 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
                                     (term_id, response.body))
 
     term = json.loads(response.body)
-    term[constants.TERM_ID] = term.pop('id')
+    term[usosapi.constants.TERM_ID] = term.pop('id')
 
     raise tornado.gen.Return(json.dumps(term))

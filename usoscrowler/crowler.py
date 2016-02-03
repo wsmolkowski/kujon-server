@@ -1,6 +1,6 @@
 import time
-import pymongo
 
+import pymongo
 from tornado import gen, ioloop, queues
 
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
@@ -9,7 +9,7 @@ CONST_USOS_ID = 'usos'
 
 SLEEP = 10
 
-from usosapi.usosupdater import USOSUpdater
+from usosapi.usosutils.usosupdater import USOSUpdater
 
 
 @gen.coroutine

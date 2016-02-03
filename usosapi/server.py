@@ -6,10 +6,10 @@ import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.options import define, options, parse_command_line
+from usosutils.usosqueue import UsosQueue
 
 import settings
 from handlers_list import HANDLERS
-from usosqueue import UsosQueue
 
 define('debug', default=settings.DEBUG)
 # define('port', default=settings.PORT)
@@ -61,7 +61,7 @@ class Application(tornado.web.Application):
 
 
 def prepare_environment():
-    from usoscrowler import UsosCrowler
+    from usosapi.usosutils.usoscrowler import UsosCrowler
 
     uc = UsosCrowler()
     if settings.CLEAN_DB:

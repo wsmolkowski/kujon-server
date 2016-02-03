@@ -2,8 +2,8 @@ import json
 
 import tornado.web
 
-import oauth2 as oauth
-from helpers import log_execution_time
+import usosapi.oauth2 as oauth
+from usosapi.helpers import log_execution_time
 
 URI_USER_INFO = "services/users/user?fields=id|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
 URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
