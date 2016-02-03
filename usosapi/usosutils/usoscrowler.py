@@ -156,7 +156,7 @@ class UsosCrowler():
             else:
                 result[constants.CREATED_TIME] = course[constants.CREATED_TIME]
                 self.dao.remove(constants.COLLECTION_TERMS, constants.ID, term[constants.ID])
-            result[usosapi.constants.UPDATE_TIME] = crowl_time
+            result[constants.UPDATE_TIME] = crowl_time
             doc = self.dao.insert(constants.COLLECTION_COURSES, result)
             if not course:
                 logging.debug('course with course_id: {0} inserted with id: {1}'.format(course_id, doc))
