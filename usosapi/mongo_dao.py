@@ -8,8 +8,18 @@ import settings
 
 
 class Dao:
-    def __init__(self):
-        self.__db = pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
+    def __init__(self, dburi=None, dbname=None):
+        if not dburi:
+            self.__dburi = settings.MONGODB_URI
+        else:
+            self.__dburi = dburi
+
+        if not dbname:
+            self.__dbname = settings.MONGODB_NAME
+        else:
+            self.__dbname = dbname
+
+        self.__db = pymongo.Connection(self.__dburi)[self.__dbname]
 
     def drop_collection(self, collection):
         logging.info("Cleaning collection: {0}".format(collection))
@@ -102,3 +112,6 @@ class Dao:
         for data in self.get_user_terms_and_courses(user_id):
             term_id, course_id = str(data[0]), str(data[1])
             print term_id, course_id
+
+    def count(self, collection):
+        return self.__db[collection].count()
