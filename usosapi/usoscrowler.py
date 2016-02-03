@@ -40,7 +40,7 @@ class UsosCrowler():
     def recreate_dictionaries(self):
 
         recreate_time = datetime.now()
-        # TODO: no sens to drop entire collection every time, just update or drop for one USOS
+
         self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
         for usos in self.dao.get_usoses():
             logging.info(
@@ -59,6 +59,7 @@ class UsosCrowler():
                 raise Exception(
                     'fail to recreate_dictionaries {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                        usos[constants.USOS_ID]))
+        raise tornado.gen.Return(True)
 
     def drop_collections(self):
         self.dao.drop_collections()
