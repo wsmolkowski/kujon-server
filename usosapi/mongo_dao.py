@@ -22,7 +22,7 @@ class Dao:
         self.__db = pymongo.Connection(self.__dburi)[self.__dbname]
 
     def drop_collection(self, collection):
-        logging.info("Cleaning collection: {0}".format(collection))
+        logging.warn("Cleaning collection: {0}".format(collection))
         self.__db.drop_collection(collection)
 
     def drop_collections(self):
@@ -53,8 +53,8 @@ class Dao:
     def get_courses_editions(self, user_id):
         return self.__db.courses_editions.find_one({constants.USER_ID: user_id})
 
-    def get_courses_units(self, unit_id):
-        return self.__db.courses_units.find_one({constants.UNIT_ID: unit_id})
+    def get_courses_units(self, unit_id, usos_id):
+        return self.__db.courses_units.find_one({constants.UNIT_ID: unit_id, constants.USOS_ID: usos_id})
 
     def update(self, collection, key, key_value, document):
         return self.__db[collection].update({key: key_value}, document)
