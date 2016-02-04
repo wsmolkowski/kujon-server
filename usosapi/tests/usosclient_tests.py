@@ -1,4 +1,3 @@
-import json
 import unittest
 
 from usosapi.usosutils.usosclient import UsosClient
