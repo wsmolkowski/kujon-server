@@ -65,14 +65,14 @@ class Dao:
     def update_courses_editions(self, record_id, courses_editions):
         return self.__db.courses_editions.update({constants.USER_ID: ObjectId(record_id)}, courses_editions)
 
-    def get_terms(self, term_id, user_id):
-        return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USER_ID: user_id})
+    def get_term(self, term_id, usos_id):
+        return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_courses(self, course_id, user_id):
-        return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USER_ID: user_id})
+    def get_course(self, course_id, usos_id):
+        return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id):
-        return self.__db.grades.find_one({constants.COURSE_ID: course_id, constants.USER_ID: user_id})
+        return self.__db.grades.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id})
 
     def get_participants(self, course_id, term_id):
         return self.__db.participants.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id})

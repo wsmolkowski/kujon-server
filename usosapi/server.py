@@ -77,6 +77,7 @@ def main():
     application = Application()
     application.listen(settings.PORT)
     logging.info(settings.DEPLOY_URL)
+
     IOLoop.instance().add_callback(application.crowler.queue_watcher)
     IOLoop.instance().start()
 

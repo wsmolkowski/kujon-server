@@ -23,7 +23,7 @@ class BaseHandler(tornado.web.RequestHandler):
         user_doc = self.get_current_user()
 
         if not user_doc:
-            # usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
+            usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
             mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
             atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)

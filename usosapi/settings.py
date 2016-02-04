@@ -2,7 +2,7 @@ import os
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = True
+DEBUG = False
 PORT = 8888
 SSL = False
 XSRF_COOKIE = True
@@ -23,8 +23,8 @@ DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 
-CLEAN_DB = False
-UPDATE_DICTIONARIES = False
+CLEAN_DB = True
+UPDATE_DICTIONARIES = True
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
 PROXY_URL = None  #
