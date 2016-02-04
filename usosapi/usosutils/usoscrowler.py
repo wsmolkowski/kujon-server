@@ -1,30 +1,28 @@
-import json
 import logging
 from datetime import datetime
-from bson.objectid import ObjectId
 
 import tornado.gen
+from bson.objectid import ObjectId
 
-from usosapi import constants
 import usoshelper
 import usosinstances
+from usosapi import constants
 from usosapi.mongo_dao import Dao
 from usosupdater import USOSUpdater
 
 
 class UsosCrowler():
     def __init__(self, dao=None):
+        logging.basicConfig(level=logging.DEBUG)
+
         if not dao:
             self.dao = Dao()
         else:
             self.dao = dao
 
-    def append(self, data, user_id, usos_id, create_time, update_time):
+    def append(self, data, usos_id, create_time, update_time):
         if not data:
             data = dict()
-
-        if user_id:
-            data[constants.USER_ID] = user_id
 
         if usos_id:
             data[constants.USOS_ID] = usos_id
@@ -79,7 +77,6 @@ class UsosCrowler():
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
-        logging.debug('crawling for user id: {0}'.format(user_id))
         crowl_time = datetime.now()
 
         user = self.dao.get_user(user_id)
@@ -95,32 +92,32 @@ class UsosCrowler():
 
         # user_info
         result = updater.request_user_info()
-        result = self.append(result, user_id, None, crowl_time, crowl_time)
+        result = self.append(result, None, crowl_time, crowl_time)
+        result[constants.USER_ID] = user_id
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.debug('user_info inserted: {0}'.format(ui_doc))
+        logging.info('user_info inserted: {0}'.format(ui_doc))
 
         # course_editions
         result = updater.request_courses_editions()
-        result = self.append(result, user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
-
+        result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+        result[constants.USER_ID] = user_id
         ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.debug('course_editions inserted: {0}'.format(ce_doc))
+        logging.info('course_editions inserted: {0}'.format(ce_doc))
 
         # terms
         for term_id in self.dao.get_user_terms(user_id):
             result = yield usoshelper.get_term_info(usos[constants.URL], term_id)
-            result = self.append(result, user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
-
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-            logging.debug('terms inserted: {0}'.format(t_doc))
+            logging.info('terms inserted: {0}'.format(t_doc))
 
         # courses
         for course_id in self.dao.get_user_courses(user_id):
             result = yield usoshelper.get_course_info(usos[constants.URL], course_id)
-            result = self.append(result, user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-            logging.debug('course inserted: {0}'.format(c_doc))
+            logging.info('course inserted: {0}'.format(c_doc))
 
         # grades and participants and units
         for data in self.dao.get_user_courses_editions(user_id):
@@ -129,25 +126,30 @@ class UsosCrowler():
             result = updater.request_grades_for_course(course_id, term_id)
             participants = result.pop('participants')
             units = result.pop('course_units_ids')
-            result = self.append(result, user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result[constants.USER_ID] = user_id
 
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.debug('grades inserted: {0}'.format(g_doc))
+            logging.info('grades inserted: {0}'.format(g_doc))
 
             # participants
-            result = self.append(dict(), user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PARTICIPANTS] = participants
+            course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
+            result[constants.COURSE_ID] = course_doc[constants.ID]
+            term_doc = self.dao.get_term(term_id, usos[constants.USOS_ID])
+            result[constants.COURSE_ID] = term_doc[constants.ID]
 
             p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
-            logging.debug('participants inserted: {0}'.format(p_doc))
+            logging.info('participants inserted: {0}'.format(p_doc))
 
             # units
             for unit_id in units:
                 result = yield usoshelper.get_courses_units(usos[constants.URL], unit_id)
-                result = self.append(result, user_id, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
                 u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-                logging.debug('units inserted: {0}'.format(u_doc))
+                logging.info('units inserted: {0}'.format(u_doc))
 
         # crowl collection
         result = dict()
@@ -160,4 +162,4 @@ class UsosCrowler():
 
 if __name__ == "__main__":
     u = UsosCrowler()
-    u.initial_user_crowl(ObjectId("56b267cfc4f9d22360be77fc"))
+    u.initial_user_crowl(ObjectId("56b2fba4f296ff122ac4ab08"))

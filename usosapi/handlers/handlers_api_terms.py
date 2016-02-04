@@ -14,10 +14,16 @@ class TermsApi(BaseHandler):
         user_doc, usos_doc = yield self.get_parameters()
 
         terms = []
-        cursor = self.db.terms.find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
-        while (yield cursor.fetch_next):
-            terms.append(cursor.next_object())
-        self.write(json_util.dumps(terms))
+        terms_doc = []
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+
+        for term in courses_editions_doc['course_editions']:
+            terms.append(term)
+            cursor = self.db.terms.find({constants.TERM_ID: term, constants.USOS_ID: usos_doc[constants.USOS_ID]})
+            while (yield cursor.fetch_next):
+                terms_doc.append(cursor.next_object())
+
+        self.write(json_util.dumps(terms_doc))
 
 class TermApi(BaseHandler):
     @tornado.web.asynchronous

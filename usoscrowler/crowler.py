@@ -36,6 +36,6 @@ def main():
 
 if __name__ == '__main__':
     import logging
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
     io_loop = ioloop.IOLoop.current()
     io_loop.run_sync(main)
