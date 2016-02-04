@@ -8,7 +8,6 @@ from bson import json_util
 
 from usosapi import constants, settings
 
-
 class BaseHandler(tornado.web.RequestHandler):
     @property
     def oauth_parameters(self):

@@ -34,7 +34,6 @@ class UsosCrowler():
 
         return data
 
-    @log_execution_time
     @tornado.gen.coroutine
     def recreate_dictionaries(self):
 

@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
+from usosapi.mixins.JSendMixin import JSendMixin
 
 
 class Parameters:
@@ -12,7 +13,7 @@ class Parameters:
         self.usos_doc = usos_doc
 
 
-class FriendsSuggestionsApi(BaseHandler):
+class FriendsSuggestionsApi(BaseHandler, JSendMixin):
 
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -40,4 +41,4 @@ class FriendsSuggestionsApi(BaseHandler):
                     participants[user_id]=friend
                     participants[user_id]['count'] = 1
 
-        self.write(json_util.dumps(participants))
+        self.success(json_util.dumps(participants))

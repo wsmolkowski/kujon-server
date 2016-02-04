@@ -4,9 +4,10 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
+from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class TermsApi(BaseHandler):
+class TermsApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -23,9 +24,10 @@ class TermsApi(BaseHandler):
             while (yield cursor.fetch_next):
                 terms_doc.append(cursor.next_object())
 
-        self.write(json_util.dumps(terms_doc))
+        self.success(json_util.dumps(terms_doc))
 
-class TermApi(BaseHandler):
+
+class TermApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, term_id):
@@ -36,4 +38,4 @@ class TermApi(BaseHandler):
         if not term_doc:
             pass    # TODO: return json with custom message
 
-        self.write(json_util.dumps(term_doc))
+        self.success(json_util.dumps(term_doc))

@@ -4,9 +4,10 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
+from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class GradesForUserApi(BaseHandler):
+class GradesForUserApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -32,15 +33,17 @@ class GradesForUserApi(BaseHandler):
             else:
                 del grades_for_course_and_term['grades']['course_units_grades']
             grades.append(grades_for_course_and_term)
-        self.write(json_util.dumps(grades))
 
-class GradesForCourseAndTermApi(BaseHandler):
+        self.success(json_util.dumps(grades))
+
+
+class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
 
         user_doc, usos_doc = yield self.get_parameters()
-        grade_doc = []
+
         pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),constants.COURSE_ID: course_id, constants.TERM_ID: term_id}
         grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline)
         units = {}
@@ -61,4 +64,4 @@ class GradesForCourseAndTermApi(BaseHandler):
                 del grades['grades']['course_units_grades']
 
 
-        self.write(json_util.dumps(grades))
+        self.success(json_util.dumps(grades))
