@@ -20,33 +20,27 @@ class ClientTest(unittest.TestCase):
 
     def testUserInfo(self):
         # when
-        code, body = self.client.user_info()
+        response = self.client.user_info()
 
         # then
-        self.assertEquals(200, int(code['status']))
-        body = json.loads(body)
-        self.assertIsNotNone(0, len(body))
+        self.assertIsNotNone(0, len(response))
 
     def testCourseEditionsInfo(self):
         # when
-        code, body = self.client.courseeditions_info()
+        response = self.client.courseeditions_info()
 
         # then
-        self.assertEquals(200, int(code['status']))
-        body = json.loads(body)
-        self.assertIsNotNone(0, len(body))
+        self.assertIsNotNone(0, len(response))
 
     def testCourseInfo(self):
         # assume
         course_id = "1000-612ARR"
 
         # when
-        code, body = self.client.course_info(course_id)
+        response = self.client.course_info(course_id)
 
         # then
-        self.assertEquals(200, int(code['status']))
-        body = json.loads(body)
-        self.assertIsNotNone(0, len(body))
+        self.assertIsNotNone(0, len(response))
 
     def testGradesForTermAndCourse(self):
         # assume
@@ -54,18 +48,14 @@ class ClientTest(unittest.TestCase):
         term_id = "2004/TZ"
 
         # when
-        code, body = self.client.grades(course_id, term_id)
+        response = self.client.grades(course_id, term_id)
 
         # then
-        self.assertEquals(200, int(code['status']))
-        body = json.loads(body)
-        self.assertIsNotNone(0, len(body))
+        self.assertIsNotNone(0, len(response))
 
     def testClassTypes(self):
         # when
-        code, body = self.client.class_types()
+        response = self.client.class_types()
 
         # then
-        self.assertEquals(200, int(code['status']))
-        body = json.loads(body)
-        self.assertIsNotNone(0, len(body))
+        self.assertIsNotNone(0, len(response))

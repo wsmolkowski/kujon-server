@@ -1,3 +1,5 @@
+import json
+
 import httplib2
 import oauth2 as oauth
 import socks
@@ -34,17 +36,35 @@ class UsosClient:
         return None
 
     def user_info(self):
-        return self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception("Error while fetching user info. Response code: {0} body: {1}".format(code, body))
 
     def courseeditions_info(self):
-        return self.client.request("{0}{1}".format(self.base_url, URI_COURSESEDITIONS_INFO))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSESEDITIONS_INFO))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception("Error while fetching courseeditions_info. Response code: {0} body: {1}".format(code, body))
 
     def course_info(self, course_id):
-        return self.client.request("{0}{1}".format(self.base_url, URI_COURSE_INFO.format(course_id)))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_INFO.format(course_id)))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception(
+            "Error while fetching course_info {0}. Response code: {1} body: {2}".format(course_id, code, body))
 
     def grades(self, course_id, term_id):
-        return self.client.request(
+        code, body = self.client.request(
             "{0}{1}".format(self.base_url, URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id)))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception(
+            "Error while fetching grades for term_id {0} and course_id {1}. Response code: {2} body: {3}".format(
+                term_id, course_id, code, body))
 
     def class_types(self):
-        return self.client.request("{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception("Error while fetching class_types. Response code: {0} body: {1}".format(code, body))

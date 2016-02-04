@@ -5,7 +5,7 @@ from handlers_api_grades_tests import ApiGradesTest
 from handlers_api_user_tests import ApiUserTest
 from handlers_api_terms_tests import ApiTermsTest
 from usoscrowler_tests import CrowlerTest
-
+from usosclient_tests import ClientTest
 def build_suite():
 
     test_suite = unittest.TestSuite()
@@ -15,6 +15,7 @@ def build_suite():
     #test_suite.addTest(unittest.makeSuite(ApiGradesTest))
     #test_suite.addTest(unittest.makeSuite(ApiTermsTest))
     test_suite.addTest(unittest.makeSuite(CrowlerTest))
+    test_suite.addTest(unittest.makeSuite(ClientTest))
 
     return test_suite
 

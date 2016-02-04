@@ -1,12 +1,12 @@
 import logging
 from datetime import datetime
 
+import oauth2 as oauth
 import motor
 import tornado.web
 from bson import json_util
 
-import usosapi.oauth2 as oauth
-import usosapi.settings
+from usosapi import settings
 from handlers_api import BaseHandler
 from usosapi import constants
 
@@ -79,10 +79,12 @@ class CreateUserHandler(BaseHandler):
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
                 constants.CONSUMER_SECRET])
-            request_token_url = usos_doc[
-                                    constants.URL] + 'services/oauth/request_token?scopes=studies|offline_access'
-            client = oauth.Client(consumer, proxy_info=self.get_proxy())
-            resp, content = client.request(request_token_url, "GET", callback_url=usosapi.settings.CALLBACK_URL)
+
+            request_token_url = "{0}services/oauth/request_token?oauth_callback={1}?{2}".format(
+                usos_doc[constants.URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
+
+            client = oauth.Client(consumer, **self.oauth_parameters)
+            resp, content = client.request(request_token_url)
             if resp['status'] != '200':
                 raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
 
@@ -127,7 +129,7 @@ class VerifyHandler(BaseHandler):
             request_token.set_verifier(oauth_verifier)
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
                 constants.CONSUMER_SECRET])
-            client = oauth.Client(consumer, request_token, proxy_info=self.get_proxy())
+            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
             access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 

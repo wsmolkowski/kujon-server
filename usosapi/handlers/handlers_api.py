@@ -1,14 +1,21 @@
 import urlparse
 
+import httplib2
+import oauth2 as oauth
+import socks
 import tornado.web
 from bson import json_util
 
-import httplib2
-import usosapi.oauth2 as oauth
 from usosapi import constants, settings
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    @property
+    def oauth_parameters(self):
+        return {
+            'proxy_info': self.get_proxy(),
+        }
+
     @property
     def crowler(self):
         return self.application.crowler
@@ -29,8 +36,8 @@ class BaseHandler(tornado.web.RequestHandler):
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
             user_doc = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id,
-                                             constants.ACCESS_TOKEN_SECRET: atk,
-                                             constants.ACCESS_TOKEN_KEY: ats})
+                                                     constants.ACCESS_TOKEN_SECRET: atk,
+                                                     constants.ACCESS_TOKEN_KEY: ats})
 
         if not user_doc:
             raise tornado.web.HTTPError(500, "Request not authenticated")
@@ -57,7 +64,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def get_proxy(self):
         if settings.PROXY_PORT and settings.PROXY_URL:
-            return httplib2.ProxyInfo(httplib2.socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
+            return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None
 
     @staticmethod
@@ -67,7 +74,6 @@ class BaseHandler(tornado.web.RequestHandler):
             'DEPLOY_URL': settings.DEPLOY_URL,
             constants.NEXT_PAGE: "/"
         }
-
 
     @tornado.gen.coroutine
     def get_usoses(self):

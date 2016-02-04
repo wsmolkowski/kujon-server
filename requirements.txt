@@ -2,5 +2,6 @@ tornado
 motor
 httplib2
 oauth2
+pycurl
 # from https://usosapps.uw.edu.pl/developers/api/
 # oauth2

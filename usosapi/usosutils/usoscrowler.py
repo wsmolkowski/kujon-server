@@ -8,7 +8,7 @@ import usoshelper
 import usosinstances
 from usosapi import constants
 from usosapi.mongo_dao import Dao
-from usosupdater import USOSUpdater
+from usosapi.usosutils.usosclient import UsosClient
 
 
 class UsosCrowler():
@@ -86,19 +86,19 @@ class UsosCrowler():
 
         usos = self.dao.get_usos(user[constants.USOS_ID])
 
-        updater = USOSUpdater(usos[constants.URL], usos[constants.CONSUMER_KEY],
-                              usos[constants.CONSUMER_SECRET],
-                              user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
+        client = UsosClient(usos[constants.URL], usos[constants.CONSUMER_KEY],
+                            usos[constants.CONSUMER_SECRET],
+                            user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
 
         # user_info
-        result = updater.request_user_info()
+        result = client.user_info()
         result = self.append(result, None, crowl_time, crowl_time)
         result[constants.USER_ID] = user_id
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.info('user_info inserted: {0}'.format(ui_doc))
 
         # course_editions
-        result = updater.request_courses_editions()
+        result = client.courseeditions_info()
         result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
         result[constants.USER_ID] = user_id
         ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
@@ -123,7 +123,7 @@ class UsosCrowler():
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
 
-            result = updater.request_grades_for_course(course_id, term_id)
+            result = client.grades(course_id, term_id)
             participants = result.pop('participants')
             units = result.pop('course_units_ids')
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -159,6 +159,7 @@ class UsosCrowler():
 
         doc = self.dao.insert(constants.COLLECTION_CROWLLOG, result)
         logging.info('crowl log inserted with id {0}'.format(doc))
+
 
 if __name__ == "__main__":
     u = UsosCrowler()
