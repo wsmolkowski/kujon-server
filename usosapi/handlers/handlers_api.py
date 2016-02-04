@@ -2,9 +2,9 @@ import urlparse
 
 import httplib2
 import oauth2 as oauth
-import socks
 import tornado.web
 from bson import json_util
+from httplib2 import socks
 
 from usosapi import constants, settings
 

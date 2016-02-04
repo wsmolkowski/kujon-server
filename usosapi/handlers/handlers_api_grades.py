@@ -63,5 +63,7 @@ class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
             else:
                 del grades['grades']['course_units_grades']
 
-
-        self.success(json_util.dumps(grades))
+        if not grades:
+            self.error("No grades for course_id: {0} term_id {1}.".format(course_id,term_id))
+        else:
+            self.success(json_util.dumps(grades))

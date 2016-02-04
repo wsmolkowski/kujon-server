@@ -21,10 +21,12 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
 
         user_doc, usos_doc = yield self.get_parameters()
 
-        '''
-        data = yield self.db.curses_editions.find_one({'user_id': parameters.user_doc[constants.ID]},
-                                                      ('course_editions', ))
-        '''
+
+        # for each course, terms in courses_editions
+        # select courses, id, _id from courses
+        # for each course select participants
+        # for each participantsbiuld sugeested_participant
+        # return sugested participant
 
         participants = {}
         pipeline = [{'$match': {'user_id' : ObjectId("56ae5a793d7821151c33954d")}},

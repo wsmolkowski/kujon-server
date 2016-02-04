@@ -5,10 +5,10 @@ function drawErrorMessage(data) {
     $(baseContainer).empty();
     if ((typeof data) == 'string'){
         var html = '<div class="alert alert-warning" role="alert"><strong>' + 'Error while retrieving data: ' + '</strong>' + data + '</div>';
-    } else {
+    }
+    else {
         var html = '<div class="alert alert-danger" role="alert"><strong>' + 'Exception while retrieving data: ' + '</strong>' + data.responseText.toString() + '</div>';
     }
-
     $(baseContainer).html(html);
 }
 
@@ -111,7 +111,6 @@ function drawGradesTable(jsonData){
                 html += '</tr>'
     }
     html += '</tbody></table>';
-
     $(baseContainer).html(html);
 }
 
@@ -153,14 +152,11 @@ function drawGradeTable(jsonData){
                 }
             }
         }
-
         html += '</tbody></table>';
-
     $(baseContainer).html(html);
 }
 
 function fetchCurseInfo(courseId){
-
      $.ajax({
       type: 'GET',
       url: deployUrl + '/api/courses/' + courseId,
@@ -172,7 +168,7 @@ function fetchCurseInfo(courseId){
             }
       },
       error: function (err) {
-        drawErrorMessage(err);
+            drawErrorMessage(err);
       }
     });
 }
@@ -180,33 +176,33 @@ function fetchCurseInfo(courseId){
 function fetchGradesAndDraw(courseId, termId){
      if (typeof courseId != 'undefined'){
         $.ajax({
-        type: 'GET',
-        url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
-        success:  function (data) {
-            if (data.status == 'success'){
-                drawGradeTable(JSON.parse(data.data));
-            } else {
-                drawErrorMessage(data.message);
+            type: 'GET',
+            url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
+            success:  function (data) {
+                if (data.status == 'success'){
+                    drawGradeTable(JSON.parse(data.data));
+                } else {
+                    drawErrorMessage(data.message);
+                }
+            },
+            error: function (err) {
+                drawErrorMessage(err);
             }
-          },
-          error: function (err) {
-            drawErrorMessage(err);
-          }
         });
      } else {
         $.ajax({
-        type: 'GET',
-        url: deployUrl + '/api/grades',
-        success:  function (data) {
-            if (data.status == 'success'){
-                drawGradesTable(data.data);
-            } else {
-                drawErrorMessage(data.message);
+            type: 'GET',
+            url: deployUrl + '/api/grades',
+            success:  function (data) {
+                if (data.status == 'success'){
+                    drawGradesTable(data.data);
+                } else {
+                    drawErrorMessage(data.message);
+                }
+            },
+            error: function (err) {
+                drawErrorMessage(err);
             }
-          },
-          error: function (err) {
-            drawErrorMessage(err);
-          }
         });
      }
 
@@ -229,7 +225,6 @@ function drawTermsTable(jsonData){
             }
         });
     html += '</tbody></table>';
-
     $(baseContainer).html(html);
 }
 
@@ -251,12 +246,10 @@ function drawTermTable(jsonData){
 }
 
 function fetchTermsAndDraw(termId){
-
      if (typeof termId != 'undefined'){
-
         $.ajax({
            type: 'GET',
-           url: url = deployUrl + '/api/terms/'+ termId,
+           url: deployUrl + '/api/terms/'+ termId,
            success:  function (data) {
             if (data.status == 'success'){
                 drawTermTable(JSON.parse(data.data));
@@ -268,25 +261,21 @@ function fetchTermsAndDraw(termId){
             drawErrorMessage(err);
            }
         });
-
      } else {
-
         $.ajax({
            type: 'GET',
-           url: url = url = deployUrl + '/api/terms',
+           url: deployUrl + '/api/terms',
            success:  function (data) {
-           if (data.status == 'success'){
+            if (data.status == 'success'){
                 drawTermsTable(JSON.parse(data.data));
             } else {
                 drawErrorMessage(data.message);
             }
-
            },
            error: function (err) {
             drawErrorMessage(err);
            }
         });
-
      };
 
 
@@ -367,24 +356,29 @@ $( document ).ready(function() {
     if (pathname.indexOf('/school/courses') === 0){
         if (pathSplit.length == 3){
             fetchCursesAndDraw();
-        } else if (pathSplit.length == 4) {
+        }
+        else if (pathSplit.length == 4) {
             fetchCurseInfo(pathSplit[3]);
         }
-    } else if (pathname.indexOf('/school/grades/course/') === 0){
+    }
+    else if (pathname.indexOf('/school/grades/course/') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);
-    } else if (pathname.indexOf('/school/grades') === 0){
+    }
+    else if (pathname.indexOf('/school/grades') === 0){
         fetchGradesAndDraw();
-    } else if (pathname.indexOf('/school/terms') === 0){
+    }
+    else if (pathname.indexOf('/school/terms') === 0){
         if (pathSplit.length == 3){
             fetchTermsAndDraw();
-        } else if (pathSplit.length == 4) {
+        }
+        else if (pathSplit.length == 4) {
             fetchTermsAndDraw(pathSplit[3]);
         }
-
-    } else if (pathname.indexOf('/friends/suggestions') === 0){
+    }
+    else if (pathname.indexOf('/friends/suggestions') === 0){
         fetchFriendsSuggestionsAndDraw();
-    } else if (pathname.indexOf('/user') === 0){
+    }
+    else if (pathname.indexOf('/user') === 0){
         fetchUserInfoAndDraw();
     }
-
 });

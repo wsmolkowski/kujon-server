@@ -24,6 +24,8 @@ class TermsApi(BaseHandler, JSendMixin):
             while (yield cursor.fetch_next):
                 terms_doc.append(cursor.next_object())
 
+
+
         self.success(json_util.dumps(terms_doc))
 
 
@@ -36,6 +38,6 @@ class TermApi(BaseHandler, JSendMixin):
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]})
         if not term_doc:
-            pass    # TODO: return json with custom message
-
-        self.success(json_util.dumps(term_doc))
+            self.error("Don't hava data for given term: {0}".format(term_id))
+        else:
+            self.success(json_util.dumps(term_doc))
