@@ -18,6 +18,7 @@ define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=settings.COOKIE_SECRET)
 define('autoreload', default=settings.AUTORELOAD_ENABLED)
 
+
 class Application(tornado.web.Application):
     _crowler = None
 
@@ -71,6 +72,10 @@ def prepare_environment():
 def main():
     parse_command_line()
     enable_pretty_logging()
+
+    if options.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug(u"DEBUG MODE is ON")
 
     prepare_environment()
 
