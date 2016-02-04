@@ -27,11 +27,11 @@ class FriendsSuggestionsApi(BaseHandler):
 
         participants = {}
         pipeline = [{'$match': {'user_id' : ObjectId("56ae5a793d7821151c33954d")}},
-                   {'$lookup': {'from': 'participants','localField': 'course_id', 'foreignField': 'course_id', 'as': 'participants'}},
+                   {'$lookup': {'from': 'courses_participants','localField': 'course_id', 'foreignField': 'course_id', 'as': 'participants'}},
                    {'$project': {'participants.participants': 1}}]
         cursor = self.db[constants.COLLECTION_COURSES].aggregate(pipeline)
         while (yield cursor.fetch_next):
-            participants_collections=cursor.next_object()
+            participants_collections = cursor.next_object()
             for friend in participants_collections['participants']:
                 user_id = friend['id']
                 if user_id in participants:

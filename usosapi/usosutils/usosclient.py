@@ -1,6 +1,6 @@
 import httplib2
 import oauth2 as oauth
-import socks
+from httplib2 import socks
 
 from usosapi import settings
 
