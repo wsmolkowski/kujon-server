@@ -7,12 +7,6 @@ from usosapi import constants
 from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class Parameters:
-    def __init__(self, user_doc, usos_doc):
-        self.user_doc = user_doc
-        self.usos_doc = usos_doc
-
-
 class FriendsSuggestionsApi(BaseHandler, JSendMixin):
 
     @tornado.web.asynchronous
@@ -21,26 +15,24 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
 
         user_doc, usos_doc = yield self.get_parameters()
 
-
-        # for each course, terms in courses_editions
-        # select courses, id, _id from courses
-        # for each course select participants
-        # for each participantsbiuld sugeested_participant
-        # return sugested participant
-
-        participants = {}
-        pipeline = [{'$match': {'user_id' : ObjectId("56ae5a793d7821151c33954d")}},
-                   {'$lookup': {'from': 'courses_participants','localField': 'course_id', 'foreignField': 'course_id', 'as': 'participants'}},
-                   {'$project': {'participants.participants': 1}}]
-        cursor = self.db[constants.COLLECTION_COURSES].aggregate(pipeline)
-        while (yield cursor.fetch_next):
-            participants_collections = cursor.next_object()
-            for friend in participants_collections['participants']:
-                user_id = friend['id']
-                if user_id in participants:
-                    participants[user_id]['count']=int(participants[user_id]['count']) + 1
+        courses = {}
+        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        for term in course_doc['course_editions']:
+            for course in course_doc['course_editions'][term]:
+                courses[course[constants.COURSE_ID]] = course
+        suggested_participants = {}
+        for course in courses:
+            course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one({constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID]})
+            for participant in course_participants[constants.PARTICIPANTS]:
+                if not participant[constants.USER_ID] in suggested_participants:
+                    suggested_participants[participant[constants.USER_ID]] = participant
+                    suggested_participants[participant[constants.USER_ID]]['count'] = 1
                 else:
-                    participants[user_id]=friend
-                    participants[user_id]['count'] = 1
+                    suggested_participants[participant[constants.USER_ID]]['count'] += 1
 
-        self.success(json_util.dumps(participants))
+        # posortowac suggested_participants
+
+        if not suggested_participants:
+            self.error("No suggested_participants found...")
+        else:
+            self.success(json_util.dumps(suggested_participants))

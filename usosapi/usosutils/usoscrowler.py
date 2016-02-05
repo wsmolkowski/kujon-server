@@ -160,7 +160,8 @@ class UsosCrowler():
         course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
         result[constants.COURSE_ID] = course_doc[constants.ID]
         term_doc = self.dao.get_term(term_id, usos[constants.USOS_ID])
-        result[constants.COURSE_ID] = term_doc[constants.ID]
+        result[constants.COURSE_ID] = course_id
+        result[constants.TERM_ID] = term_id
         p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
         logging.debug('participants inserted: {0}'.format(p_doc))
 
@@ -244,7 +245,7 @@ class UsosCrowler():
         except Exception, ex:
             logging.exception("Exception while initial user usos crowler", ex)
 
-
-if __name__ == "__main__":
-    u = UsosCrowler()
-    u.initial_user_crowl(ObjectId("56b2fba4f296ff122ac4ab08"))
+#
+# if __name__ == "__main__":
+#     u = UsosCrowler()
+#     u.initial_user_crowl(ObjectId("56b2fba4f296ff122ac4ab08"))
