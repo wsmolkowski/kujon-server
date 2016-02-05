@@ -1,7 +1,7 @@
 from tests_base import TestBaseClassApp
 
-class ApiGradesTest(TestBaseClassApp):
 
+class ApiGradesTest(TestBaseClassApp):
     # all grades
 
     def testGradesShouldFailNonExistingTokenKey(self):
@@ -18,9 +18,9 @@ class ApiGradesTest(TestBaseClassApp):
         self.assertEqual(response.code, 400)
 
     def testGradesShouldFailGettingGradesForFakeUser(self):
-        response = self.fetch("/api/grades/?mobile_id=-1&user_id=FAKE&usos_id=FAKE&access_token_key=FAKE&access_token_secret=FAKE")
+        response = self.fetch(
+            "/api/grades/?mobile_id=-1&user_id=FAKE&usos_id=FAKE&access_token_key=FAKE&access_token_secret=FAKE")
         self.assertEqual(response.code, 400)
-
 
     # grades for course and term
 
@@ -38,9 +38,6 @@ class ApiGradesTest(TestBaseClassApp):
         self.assertEqual(response.code, 400)
 
     def testShouldFailGettingGradesForFakeUser(self):
-        response = self.fetch("/api/grades/course/1000-612ARR/2004%2FTZ?mobile_id=-1&user_id=FAKE&usos_id=FAKE&access_token_key=FAKE&access_token_secret=FAKE")
+        response = self.fetch(
+            "/api/grades/course/1000-612ARR/2004%2FTZ?mobile_id=-1&user_id=FAKE&usos_id=FAKE&access_token_key=FAKE&access_token_secret=FAKE")
         self.assertEqual(response.code, 400)
-
-
-
-

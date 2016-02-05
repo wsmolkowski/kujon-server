@@ -30,7 +30,8 @@ class UsosClient:
 
         self.client = oauth.Client(consumer=self.consumer, token=self.token, **self.parameters)
 
-    def __get_proxy(self):
+    @staticmethod
+    def __get_proxy():
         if settings.PROXY_PORT and settings.PROXY_URL:
             return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None

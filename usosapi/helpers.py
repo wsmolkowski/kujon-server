@@ -5,10 +5,6 @@ from datetime import datetime
 from functools import wraps
 
 
-def UsosException(Exception):
-    pass
-
-
 def log_execution_time(intercepted_function):
     @wraps(intercepted_function)
     def timer(*args, **kwargs):

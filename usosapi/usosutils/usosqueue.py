@@ -5,7 +5,7 @@ from tornado.queues import LifoQueue
 from usoscrowler import UsosCrowler
 
 
-class UsosQueue():
+class UsosQueue:
     crower = UsosCrowler()
     user_queue = LifoQueue()
 
