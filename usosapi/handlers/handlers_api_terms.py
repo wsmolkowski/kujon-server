@@ -1,5 +1,4 @@
 import tornado.web
-from bson import json_util
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
@@ -16,7 +15,8 @@ class TermsApi(BaseHandler, JSendMixin):
 
         terms = []
         terms_doc = []
-        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
 
         for term in courses_editions_doc['course_editions']:
             terms.append(term)
@@ -24,9 +24,10 @@ class TermsApi(BaseHandler, JSendMixin):
             while (yield cursor.fetch_next):
                 terms_doc.append(cursor.next_object())
 
-
-
-        self.success(json_util.dumps(terms_doc))
+        if not terms_doc:
+            self.error("Please hold on we are looking your terms.")
+        else:
+            self.success(terms_doc)
 
 
 class TermApi(BaseHandler, JSendMixin):
@@ -36,8 +37,9 @@ class TermApi(BaseHandler, JSendMixin):
 
         user_doc, usos_doc = yield self.get_parameters()
 
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]})
+        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+            {constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]})
         if not term_doc:
-            self.error("Don't hava data for given term: {0}".format(term_id))
+            self.error("We could not find term: {0}.".format(term_id))
         else:
-            self.success(json_util.dumps(term_doc))
+            self.success(term_doc)

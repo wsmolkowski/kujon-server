@@ -38,8 +38,9 @@ function fetchCursesAndDraw(){
       type: 'GET',
       url: deployUrl + '/api/courseseditions',
       success:  function (data) {
+            data = JSON.parse(data);
             if (data.status == 'success'){
-                drawCoursesTable(JSON.parse(data.data));
+                drawCoursesTable(data.data);
             } else {
                 drawErrorMessage(data.message);
             }
@@ -161,8 +162,9 @@ function fetchCurseInfo(courseId){
       type: 'GET',
       url: deployUrl + '/api/courses/' + courseId,
       success:  function (data) {
+            data = JSON.parse(data);
             if (data.status == 'success'){
-                drawCourseInfoTable(JSON.parse(data.data));
+                drawCourseInfoTable(data.data);
             } else {
                 drawErrorMessage(data.data);
             }
@@ -179,8 +181,9 @@ function fetchGradesAndDraw(courseId, termId){
             type: 'GET',
             url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
             success:  function (data) {
+                data = JSON.parse(data);
                 if (data.status == 'success'){
-                    drawGradeTable(JSON.parse(data.data));
+                    drawGradeTable(data.data);
                 } else {
                     drawErrorMessage(data.message);
                 }
@@ -194,6 +197,7 @@ function fetchGradesAndDraw(courseId, termId){
             type: 'GET',
             url: deployUrl + '/api/grades',
             success:  function (data) {
+                data = JSON.parse(data);
                 if (data.status == 'success'){
                     drawGradesTable(data.data);
                 } else {
@@ -251,8 +255,9 @@ function fetchTermsAndDraw(termId){
            type: 'GET',
            url: deployUrl + '/api/terms/'+ termId,
            success:  function (data) {
+            data = JSON.parse(data);
             if (data.status == 'success'){
-                drawTermTable(JSON.parse(data.data));
+                drawTermTable(data.data);
             } else {
                 drawErrorMessage(data.message);
             }
@@ -266,8 +271,9 @@ function fetchTermsAndDraw(termId){
            type: 'GET',
            url: deployUrl + '/api/terms',
            success:  function (data) {
+           data = JSON.parse(data);
             if (data.status == 'success'){
-                drawTermsTable(JSON.parse(data.data));
+                drawTermsTable(data.data);
             } else {
                 drawErrorMessage(data.message);
             }
@@ -318,10 +324,11 @@ function fetchFriendsSuggestionsAndDraw(){
 
        $.ajax({
              type: 'GET',
-             url: deployUrl + '/api/fiends/suggestions',
+             url: deployUrl + '/api/friends/suggestions',
              success:  function (data) {
+             data = JSON.parse(data);
              if (data.status == 'success'){
-                drawFriendsSuggestionsTable(JSON.parse(data.data));
+                drawFriendsSuggestionsTable(data.data);
             } else {
                 drawErrorMessage(data.message);
             }
@@ -337,8 +344,9 @@ function fetchUserInfoAndDraw() {
              type: 'GET',
              url: deployUrl + '/api/user',
              success:  function (data) {
+                data = JSON.parse(data);
                 if (data.status == 'success'){
-                    drawUserInfo(JSON.parse(data.data));
+                    drawUserInfo(data.data);
                 } else {
                     drawErrorMessage(data.message);
                 }

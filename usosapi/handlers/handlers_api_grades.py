@@ -1,5 +1,4 @@
 import tornado.web
-from bson import json_util
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
@@ -20,7 +19,9 @@ class GradesForUserApi(BaseHandler, JSendMixin):
             units = {}
             for unit in grades_for_course_and_term['grades']['course_units_grades']:
                 # TODO: to refactor - join data for 2 usoses and data not connected well
-                pipeline = [{'$match': {'unit_id': int(unit)}},{'$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id', 'as': 'courses_classtypes'}}]
+                pipeline = [{'$match': {'unit_id': int(unit)}}, {
+                    '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
+                                'as': 'courses_classtypes'}}]
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
                 u = yield unit_coursor.to_list(None)
                 for elem in u:
@@ -34,7 +35,10 @@ class GradesForUserApi(BaseHandler, JSendMixin):
                 del grades_for_course_and_term['grades']['course_units_grades']
             grades.append(grades_for_course_and_term)
 
-        self.success(json_util.dumps(grades))
+        if not grades:
+            self.error("Please hold on we are looking your grades.")
+        else:
+            self.success(grades)
 
 
 class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
@@ -44,13 +48,16 @@ class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
 
         user_doc, usos_doc = yield self.get_parameters()
 
-        pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),constants.COURSE_ID: course_id, constants.TERM_ID: term_id}
+        pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]), constants.COURSE_ID: course_id,
+                    constants.TERM_ID: term_id}
         grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline)
         units = {}
         if grades and len(grades) > 0:
             for unit in grades['grades']['course_units_grades']:
                 # TODO: to refactor - join data for 2 usoses and data not connected well
-                pipeline = [{'$match': {'unit_id': int(unit)}},{'$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id', 'as': 'courses_classtypes'}}]
+                pipeline = [{'$match': {'unit_id': int(unit)}}, {
+                    '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
+                                'as': 'courses_classtypes'}}]
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
                 u = yield unit_coursor.to_list(None)
                 for elem in u:
@@ -64,6 +71,6 @@ class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
                 del grades['grades']['course_units_grades']
 
         if not grades:
-            self.error("No grades for course_id: {0} term_id {1}.".format(course_id,term_id))
+            self.error("We could not find grades for course_id: {0} term_id {1}.".format(course_id, term_id))
         else:
-            self.success(json_util.dumps(grades))
+            self.success(grades)

@@ -1,3 +1,6 @@
+from bson import json_util
+
+
 class JSendMixin(object):
     """http://labs.omniti.com/labs/jsend
     JSend is a specification that lays down some rules for how JSON
@@ -11,13 +14,13 @@ class JSendMixin(object):
         """When an API call is successful, the JSend object is used as a simple
         envelope for the results, using the data key.
         """
-        self.write({'status': 'success', 'data': data})
+        self.__write_json({'status': 'success', 'data': data})
 
     def fail(self, data):
         """There was a problem with the data submitted, or some pre-condition
         of the API call wasn't satisfied.
         """
-        self.write({'status': 'fail', 'data': data})
+        self.__write_json({'status': 'fail', 'data': data})
 
     def error(self, message, data=None, code=None):
         """An error occurred in processing the request, i.e. an exception was
@@ -30,4 +33,8 @@ class JSendMixin(object):
         if code:
             result['code'] = code
 
-        self.write(result)
+        self.__write_json(result)
+
+    def __write_json(self, data):
+        self.write(json_util.dumps(data))
+        self.finish()
