@@ -4,7 +4,7 @@ from datetime import datetime
 import tornado.gen
 from bson.objectid import ObjectId
 
-import usoshelper
+import usosasync
 import usosinstances
 from usosapi import constants
 from usosapi.helpers import log_execution_time
@@ -47,7 +47,7 @@ class UsosCrowler:
                     constants.COLLECTION_COURSES_CLASSTYPES,
                     usos[constants.USOS_ID]))
             inserts = []
-            class_types = yield usoshelper.get_courses_classtypes(usos[constants.URL])
+            class_types = yield usosasync.get_courses_classtypes(usos[constants.URL])
             if len(class_types) > 0:
                 for class_type in class_types.values():
                     class_type[constants.USOS_ID] = usos[constants.USOS_ID]
@@ -119,7 +119,7 @@ class UsosCrowler:
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
 
-            result = yield usoshelper.get_term_info(usos[constants.URL], term_id)
+            result = yield usosasync.get_term_info(usos[constants.URL], term_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
             logging.debug('terms for term_id: {0} inserted {1}'.format(term_id, t_doc))
@@ -138,7 +138,7 @@ class UsosCrowler:
             if self.dao.get_course(course_id, usos[constants.USOS_ID]):
                 continue  # course already exists
 
-            result = yield usoshelper.get_course_info(usos[constants.URL], course_id)
+            result = yield usosasync.get_course_info(usos[constants.URL], course_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
@@ -181,7 +181,7 @@ class UsosCrowler:
             if self.dao.get_courses_units(unit_id, usos[constants.USOS_ID]):
                 continue  # units already exists
 
-            result = yield usoshelper.get_courses_units(usos[constants.URL], unit_id)
+            result = yield usosasync.get_courses_units(usos[constants.URL], unit_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)

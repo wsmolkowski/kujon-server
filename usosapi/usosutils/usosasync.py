@@ -3,22 +3,23 @@ import json
 import tornado.gen
 import tornado.httpclient
 
-from usosapi import settings
 from usosapi import constants
-
+from usosapi import settings
 
 URL_COURSE_INFO = '{0}/services/courses/course?course_id={1}&fields=id|name|description'
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|classtype_id&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
-tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(proxy_host=settings.PROXY_URL,
+                                                           proxy_port=settings.PROXY_PORT))
 ASYNC_HTTP_CLIENT = tornado.httpclient.AsyncHTTPClient()
 
 
 def build_request(url, validate_cert=False):
     return tornado.httpclient.HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert,
-                                             proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT)
+                                          proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT)
 
 
 @tornado.gen.coroutine

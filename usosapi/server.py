@@ -52,7 +52,8 @@ class Application(tornado.web.Application):
             site_domain=settings.SITE_DOMAIN,
             site_root=settings.SITE_ROOT,
             template_path=settings.TEMPLATES_PATH,
-            gzip=settings.GZIP
+            gzip=settings.GZIP,
+            google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)

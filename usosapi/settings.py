@@ -10,7 +10,8 @@ COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 LOGIN_URL = "/authentication/login"
 STATIC_PATH = os.path.join(ROOT_PATH, 'static')
 TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
-AUTORELOAD_ENABLED = True
+AUTORELOAD_ENABLED = False
+GZIP = True
 
 # site
 SITE_DOMAIN = 'localhost'
@@ -27,5 +28,9 @@ CLEAN_DB = False
 UPDATE_DICTIONARIES = False
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
-PROXY_URL = None  #
-PROXY_PORT = None  #
+PROXY_URL = None    #
+PROXY_PORT = None   #
+
+GOOGLE_CLIENT_ID = ""
+GOOGLE_CLIENT_SECRET = ""
+

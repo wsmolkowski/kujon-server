@@ -5,34 +5,37 @@
 
     <div class="container">
 
-      <form class="form-signin" action="/authentication/login" method="post">
-        {% module xsrf_form_html() %}
-        <h2 class="form-signin-heading">Please sign in</h2>
-        <label for="inputAccessTokenKey" class="sr-only">Access Token Key</label>
-        <input type="password" name="inputAccessTokenKey" id="inputAccessTokenKey" class="form-control" placeholder="access_token_key" required autofocus>
-        <label for="inputAccessTokenSecret" class="sr-only">Access Token Secret</label>
-        <input type="password" name="inputAccessTokenSecret" id="inputAccessTokenSecret" class="form-control" placeholder="access_token_secret" required>
-        <input type="hidden" name="NEXT_PAGE" value="{{NEXT_PAGE}}" />
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-      </form>
+        <form class="form-signin" action="/authentication/login" method="post">
+            {% module xsrf_form_html() %}
+            <h2 class="form-signin-heading">Sign in using access token key</h2>
+            <label for="inputAccessTokenKey" class="sr-only">Access Token Key</label>
+            <input type="password" name="inputAccessTokenKey" id="inputAccessTokenKey" class="form-control"
+                   placeholder="access_token_key" required autofocus>
+            <label for="inputAccessTokenSecret" class="sr-only">Access Token Secret</label>
+            <input type="password" name="inputAccessTokenSecret" id="inputAccessTokenSecret" class="form-control"
+                   placeholder="access_token_secret" required>
+            <input type="hidden" name="NEXT_PAGE" value="{{NEXT_PAGE}}"/>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        </form>
 
-      {% try %}
+
+        <div class="form-signin">
+            <button class="btn btn-lg btn-primary btn-block btn-danger" type="submit"
+                    onclick="location.href = 'http://localhost:8888/authentication/google'">Sign in using Google+
+            </button>
+        </div>
+
+        {% try %}
         {% if alert_message %}
-          <div class="alert alert-danger alert-dismissible form-signin fade in" role="alert">
+        <div class="alert alert-danger alert-dismissible form-signin fade in" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-              <span aria-hidden="true">×</span></button>
+                <span aria-hidden="true">×</span></button>
             <strong>Holy guacamole!</strong> {{ alert_message }}
-          </div>
+        </div>
         {% end %}
-      {% except %}
-      {% end %}
+        {% except %}
+        {% end %}
 
-      <div class="page-header form-signin">
-        <h2 class="page-header">If you are new</h2>
-        <p>
-          <a class="btn btn-lg btn-primary btn-block" href="/authentication/create" role="button">Create new user &raquo;</a>
-        </p>
-      </div>
 
     </div> <!-- /container -->
 

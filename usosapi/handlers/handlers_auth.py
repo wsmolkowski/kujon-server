@@ -4,6 +4,8 @@ from datetime import datetime
 import oauth2 as oauth
 import motor
 import tornado.web
+import tornado.gen
+import tornado.auth
 from bson import json_util
 
 from usosapi import settings
@@ -39,6 +41,30 @@ class LoginHandler(BaseHandler):
             data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key,
                                                                                                  access_token_secret)
             self.render("login.html", **data)
+
+
+class GoogleOAuth2LoginHandler(tornado.web.RequestHandler,
+                               tornado.auth.GoogleOAuth2Mixin):
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument('code', False):
+            access = yield self.get_authenticated_user(
+                redirect_uri='http://localhost:8888/authentication/google',
+                code=self.get_argument('code'))
+            user = yield self.oauth2_request(
+                "https://www.googleapis.com/oauth2/v1/userinfo",
+                access_token=access["access_token"])
+            # Save the user and access token with
+            # e.g. set_secure_cookie.
+            print user
+
+        else:
+            yield self.authorize_redirect(
+                redirect_uri='http://localhost:8888/authentication/google',
+                client_id=self.settings['google_oauth']['key'],
+                scope=['profile', 'email'],
+                response_type='code',
+                extra_params={'approval_prompt': 'auto'})
 
 
 class LogoutHandler(BaseHandler):

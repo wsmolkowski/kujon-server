@@ -4,10 +4,7 @@ from handlers.handlers_api_friends import FriendsSuggestionsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserApi
-from handlers.handlers_auth import CreateUserHandler
-from handlers.handlers_auth import LoginHandler
-from handlers.handlers_auth import LogoutHandler
-from handlers.handlers_auth import VerifyHandler
+from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler, GoogleOAuth2LoginHandler
 from handlers.handlers_chat import ChatHandler, ChatSocketHandler
 from handlers.handlers_web import CourseInfoWebHandler
 from handlers.handlers_web import CoursesWebHandler
@@ -44,6 +41,7 @@ HANDLERS = [
     (r"/authentication/logout", LogoutHandler),
     (r"/authentication/create", CreateUserHandler),
     (r"/authentication/verify", VerifyHandler),
+    (r"/authentication/google", GoogleOAuth2LoginHandler),
 
     (r"/api/user", UserApi),
 
