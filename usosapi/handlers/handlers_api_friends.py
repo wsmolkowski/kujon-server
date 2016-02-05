@@ -24,7 +24,12 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
         suggested_participants = {}
         for course in courses:
             course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one(
-                {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID]})
+                {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                 constants.USOS_ID: usos_doc[constants.USOS_ID]})
+
+            if not course_participants:
+                continue
+
             for participant in course_participants[constants.PARTICIPANTS]:
                 if not participant[constants.USER_ID] in suggested_participants:
                     suggested_participants[participant[constants.USER_ID]] = participant
