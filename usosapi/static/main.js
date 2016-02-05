@@ -65,16 +65,13 @@ function drawCourseInfoTable(jsonData){
     $(baseContainer).html(html);
 }
 
-function drawGradesTable(jsonData){
+function drawGradesTable(grades){
 
     $(baseContainer).empty();
-
-    var grades = JSON.parse(jsonData);
 
     var html = '<table class="table table-hover">';
     html += '<tr><th>Semestr</th><th>Kurs</th><th>Nazwa kursu</th><th></th></tr>'
     html += '<tbody>'
-
     for (var key in grades) {
                 html += '<tr>'
                 html += '<td><a href=/school/terms/' + encodeURIComponent(grades[key]['term_id']) + '>' + grades[key]['term_id'] + '</a></td>'
@@ -198,6 +195,7 @@ function fetchGradesAndDraw(courseId, termId){
             url: deployUrl + '/api/grades',
             success:  function (data) {
                 data = JSON.parse(data);
+
                 if (data.status == 'success'){
                     drawGradesTable(data.data);
                 } else {

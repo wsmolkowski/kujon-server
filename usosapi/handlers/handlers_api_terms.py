@@ -20,9 +20,12 @@ class TermsApi(BaseHandler, JSendMixin):
 
         for term in courses_editions_doc['course_editions']:
             terms.append(term)
-            cursor = self.db.terms.find({constants.TERM_ID: term, constants.USOS_ID: usos_doc[constants.USOS_ID]})
+            cursor = self.db.terms.find({constants.TERM_ID: term, constants.USOS_ID: usos_doc[constants.USOS_ID]},
+                                        ('name', 'end_date', 'finish_date', 'start_date', 'name'))
             while (yield cursor.fetch_next):
-                terms_doc.append(cursor.next_object())
+                term_data = cursor.next_object()
+                term_data.pop(constants.ID)
+                terms_doc.append(term_data)
 
         if not terms_doc:
             self.error("Please hold on we are looking your terms.")
@@ -38,7 +41,9 @@ class TermApi(BaseHandler, JSendMixin):
         user_doc, usos_doc = yield self.get_parameters()
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]})
+            {constants.TERM_ID: term_id, constants.USOS_ID: user_doc[constants.USOS_ID]},
+            ('name', 'end_date', 'finish_date', 'start_date', 'name'))
+
         if not term_doc:
             self.error("We could not find term: {0}.".format(term_id))
         else:

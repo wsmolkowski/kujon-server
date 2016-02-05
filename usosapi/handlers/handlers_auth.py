@@ -28,7 +28,7 @@ class LoginHandler(BaseHandler):
                                                 constants.USER_PRESENT_KEYS)
         if user_doc:
             user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
-            user_doc.pop('_id')
+            user_doc.pop(constants.ID)
 
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),

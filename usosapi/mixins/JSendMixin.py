@@ -1,3 +1,4 @@
+from usosapi import constants
 from bson import json_util
 
 
@@ -19,6 +20,9 @@ class JSendMixin(object):
         :param data:
         :return:
         '''
+
+        if constants.ID in data:
+            data.pop(constants.ID)
 
         self.__write_json({'status': 'success', 'data': data})
 

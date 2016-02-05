@@ -13,9 +13,12 @@ class GradesForUserApi(BaseHandler, JSendMixin):
 
         user_doc, usos_doc = yield self.get_parameters()
         grades = []
-        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])},
+                                                           ('grades', 'term_id', 'course_id', 'course_name'))
         while (yield cursor.fetch_next):
             grades_for_course_and_term = cursor.next_object()
+            grades_for_course_and_term.pop(constants.ID)
+
             units = {}
             for unit in grades_for_course_and_term['grades']['course_units_grades']:
                 # TODO: to refactor - join data for 2 usoses and data not connected well
@@ -50,7 +53,9 @@ class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
 
         pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id}
-        grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline)
+        limit_fields = ('course_name', 'course_id', 'grades')
+
+        grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline, limit_fields)
         units = {}
         if grades and len(grades) > 0:
             for unit in grades['grades']['course_units_grades']:

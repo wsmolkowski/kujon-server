@@ -46,18 +46,20 @@ class Application(tornado.web.Application):
             login_url=settings.LOGIN_URL,
             path=settings.ROOT_PATH,
             static_path=settings.STATIC_PATH,
+            site_url=settings.DEPLOY_URL,
             site_title=settings.PROJECT_TITLE,
             site_description=settings.PROJECT_DESCRIPTION,
             site_domain=settings.SITE_DOMAIN,
             site_root=settings.SITE_ROOT,
             template_path=settings.TEMPLATES_PATH,
-
+            gzip=settings.GZIP
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
         self.db
         self.crowler
+
 
 def prepare_environment():
     from usosapi.usosutils.usoscrowler import UsosCrowler
@@ -68,6 +70,7 @@ def prepare_environment():
     if settings.UPDATE_DICTIONARIES:
         uc.recreate_usos()
         uc.recreate_dictionaries()
+
 
 def main():
     parse_command_line()
