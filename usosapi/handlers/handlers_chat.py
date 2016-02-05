@@ -47,8 +47,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
         for waiter in cls.waiters:
             try:
                 waiter.write_message(chat)
-            except:
-                logging.error("Error sending message", exc_info=True)
+            except Exception, ex:
+                logging.exception(ex)
 
     def on_message(self, message):
         logging.info("got message %r", message)

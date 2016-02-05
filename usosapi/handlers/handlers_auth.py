@@ -29,7 +29,6 @@ class LoginHandler(BaseHandler):
         if user_doc:
             user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
             user_doc.pop('_id')
-            pom = json_util.dumps(user_doc)
 
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
@@ -133,10 +132,10 @@ class VerifyHandler(BaseHandler):
             access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 
+            updated_user = dict()
             try:
                 access_token = self.get_token(content)
 
-                updated_user = dict()
                 updated_user[constants.USOS_ID] = user_doc[constants.USOS_ID]
                 updated_user[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
                 updated_user[constants.USOS_ID] = user_doc[constants.USOS_ID]

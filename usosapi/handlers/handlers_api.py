@@ -8,6 +8,7 @@ from httplib2 import socks
 
 from usosapi import constants, settings
 
+
 class BaseHandler(tornado.web.RequestHandler):
     @property
     def oauth_parameters(self):
@@ -29,7 +30,7 @@ class BaseHandler(tornado.web.RequestHandler):
         user_doc = self.get_current_user()
 
         if not user_doc:
-            usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
+            # usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
             mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
             atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
@@ -52,16 +53,19 @@ class BaseHandler(tornado.web.RequestHandler):
             return json_util.loads(cookie)
         return None
 
-    def validate_usos(self, usos, parameters):
+    @staticmethod
+    def validate_usos(usos, parameters):
         if not usos:
             raise tornado.web.HTTPError(400,
                                         "Usos {0} not supported!".format(parameters.usos_id))
 
-    def get_token(self, content):
+    @staticmethod
+    def get_token(content):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-    def get_proxy(self):
+    @staticmethod
+    def get_proxy():
         if settings.PROXY_PORT and settings.PROXY_URL:
             return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None

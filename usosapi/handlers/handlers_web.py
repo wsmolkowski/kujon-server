@@ -37,7 +37,7 @@ class CourseInfoWebHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, courseId):
+    def get(self, course_id):
         data = self.template_data()
         self.render("school.html", **data)
 
@@ -47,7 +47,7 @@ class GradesWebHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, courseId, termId):
+    def get(self, course_id, term_id):
         data = self.template_data()
         self.render("school.html", **data)
 
@@ -79,7 +79,7 @@ class FriendsHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = data = self.template_data()
+        data = self.template_data()
         self.render("school.html", **data)
 
 
@@ -89,7 +89,7 @@ class FriendsSuggestionsHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = data = self.template_data()
+        data = self.template_data()
         self.render("school.html", **data)
 
 
