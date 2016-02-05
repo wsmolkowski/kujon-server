@@ -58,8 +58,6 @@ def get_course_info(usos_base_url, course_id, validate_cert=False):
     tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
-    client = tornado.httpclient.AsyncHTTPClient()
-
     url = URL_COURSE_INFO.format(usos_base_url, course_id)
     request = build_request(url=url, validate_cert=validate_cert)
 
@@ -80,8 +78,6 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
     tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
-    client = tornado.httpclient.AsyncHTTPClient()
-
     url = URL_TERM_INFO.format(usos_base_url, term_id)
     request = build_request(url=url, validate_cert=validate_cert)
 

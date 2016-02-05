@@ -286,11 +286,21 @@ function fetchTermsAndDraw(termId){
 }
 
 function drawFriendsSuggestionsTable(jsonData){
+
     $(baseContainer).empty();
-
-//    html = htmlHelper.generateTable(JSON.parse(jsonData));
-
-    $(baseContainer).html(jsonData);
+     var html = '<table class="table table-hover">';
+        html += '<tr><th>Imię</th><th>Nazisko</th><th>User ID</th><th>Ilość zajęć razem</th></tr>'
+        html += '<tbody>'
+        for(var key in jsonData) {
+            html += '<tr>'
+            html += '<td>' + jsonData[key]['first_name'] + '</td>'
+            html += '<td>' + jsonData[key]['last_name'] + '</td>'
+            html += '<td>' + jsonData[key]['user_id'] + '</td>'
+            html += '<td>' + jsonData[key]['count'] + '</td>'
+            html += '</tr>'
+        }
+        html += '</tbody></table>';
+    $(baseContainer).html(html);
 }
 
 function drawUserInfo(jsonData){
@@ -325,15 +335,16 @@ function fetchFriendsSuggestionsAndDraw(){
              url: deployUrl + '/api/friends/suggestions',
              success:  function (data) {
              data = JSON.parse(data);
-             if (data.status == 'success'){
-                drawFriendsSuggestionsTable(data.data);
-            } else {
-                drawErrorMessage(data.message);
-            }
-             },
-             error: function (err) {
-                drawErrorMessage(err, baseContainer);
-            }
+                 if (data.status == 'success'){
+                    drawFriendsSuggestionsTable(data.data);
+                 }
+                 else {
+                    drawErrorMessage(data.message);
+                 }
+            },
+                error: function (err) {
+                    drawErrorMessage(err, baseContainer);
+                }
        });
 }
 

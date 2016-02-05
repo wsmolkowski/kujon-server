@@ -31,13 +31,14 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
                 continue
 
             for participant in course_participants[constants.PARTICIPANTS]:
-                if not participant[constants.USER_ID] in suggested_participants:
-                    suggested_participants[participant[constants.USER_ID]] = participant
-                    suggested_participants[participant[constants.USER_ID]]['count'] = 1
+                participant_id = int(participant[constants.USER_ID])
+                if participant_id in suggested_participants:
+                    suggested_participants[participant_id]['count'] += 1
                 else:
-                    suggested_participants[participant[constants.USER_ID]]['count'] += 1
+                    suggested_participants[participant_id]=participant
+                    suggested_participants[participant_id]['count'] = 1
 
-        # posortowac suggested_participants
+        suggested_participants = suggested_participants.values()
 
         if not suggested_participants:
             self.error("Please hold on we are looking your friends.")
