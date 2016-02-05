@@ -72,10 +72,12 @@ class Dao:
         return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id):
-        return self.__db.grades.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id})
+        return self.__db.grades.find_one(
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id})
 
-    def get_participants(self, course_id, term_id):
-        return self.__db.participants.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id})
+    def get_participants(self, course_id, term_id, usos):
+        return self.__db.participants.find_one(
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos})
 
     def get_user_terms(self, user_id):
         terms = []
@@ -107,11 +109,6 @@ class Dao:
             return result
         else:
             return None
-
-    def get_suggested_friends(self, user_id):
-        for data in self.get_user_terms_and_courses(user_id):
-            term_id, course_id = str(data[0]), str(data[1])
-            print term_id, course_id
 
     def count(self, collection):
         return self.__db[collection].count()

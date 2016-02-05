@@ -12,14 +12,15 @@ from usosapi.mongo_dao import Dao
 from usosapi.usosutils.usosclient import UsosClient
 
 
-class UsosCrowler():
+class UsosCrowler:
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
         else:
             self.dao = dao
 
-    def append(self, data, usos_id, create_time, update_time):
+    @staticmethod
+    def append(data, usos_id, create_time, update_time):
         if not data:
             data = dict()
 
@@ -53,9 +54,9 @@ class UsosCrowler():
                     class_type[constants.CREATED_TIME] = recreate_time
                     class_type[constants.UPDATE_TIME] = recreate_time
                     inserts.append(class_type)
-                doc = self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
+                self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
                 logging.debug(
-                    "dictionary course classtypes for usos {0} inserted {1}".format(usos[constants.USOS_ID], doc))
+                    "dictionary course classtypes for usos {0} inserted.".format(usos[constants.USOS_ID]))
             else:
                 raise Exception(
                     'fail to recreate_dictionaries {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES,
@@ -155,15 +156,16 @@ class UsosCrowler():
         :return:
         '''
 
-        result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
-        result[constants.PARTICIPANTS] = participants
-        course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
-        result[constants.COURSE_ID] = course_doc[constants.ID]
-        term_doc = self.dao.get_term(term_id, usos[constants.USOS_ID])
-        result[constants.COURSE_ID] = course_id
-        result[constants.TERM_ID] = term_id
-        p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
-        logging.debug('participants inserted: {0}'.format(p_doc))
+        if not self.dao.get_participants(course_id, term_id, usos):
+            result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
+            result[constants.PARTICIPANTS] = participants
+            course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
+            result[constants.COURSE_ID] = course_doc[constants.ID]
+
+            result[constants.COURSE_ID] = course_id
+            result[constants.TERM_ID] = term_id
+            p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
+            logging.debug('participants inserted: {0}'.format(p_doc))
 
     @tornado.gen.coroutine
     def __build_units(self, crowl_time, units, usos):
@@ -187,7 +189,15 @@ class UsosCrowler():
 
     @tornado.gen.coroutine
     def __build_grades_participants_units(self, client, user_id, usos, crowl_time):
-        # grades and participants and units
+        '''
+            building grades and participants and units
+        :param client:
+        :param user_id:
+        :param usos:
+        :param crowl_time:
+        :return:
+        '''
+
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
 
