@@ -43,8 +43,9 @@ class LoginHandler(BaseHandler):
             self.render("login.html", **data)
 
 
-class GoogleOAuth2LoginHandler(tornado.web.RequestHandler,
-                               tornado.auth.GoogleOAuth2Mixin):
+class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
+
+    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         if self.get_argument('code', False):
@@ -54,9 +55,16 @@ class GoogleOAuth2LoginHandler(tornado.web.RequestHandler,
             user = yield self.oauth2_request(
                 "https://www.googleapis.com/oauth2/v1/userinfo",
                 access_token=access["access_token"])
-            # Save the user and access token with
-            # e.g. set_secure_cookie.
-            print user
+
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+                                   tornado.escape.json_encode(json_util.dumps(user)),
+                                   constants.COOKIE_EXPIRES_DAYS)
+            user['code'] = self.get_argument('code')
+
+            user_doc = yield motor.Op(self.db.users.insert, user)
+            logging.info("saved new user in database: {0}".format(user_doc))
+
+            self.redirect("/")
 
         else:
             yield self.authorize_redirect(
