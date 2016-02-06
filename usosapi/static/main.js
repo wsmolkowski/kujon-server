@@ -359,8 +359,26 @@ function fetchFriendsSuggestionsAndDraw(){
        });
 }
 
-function fetchUserInfoAndDraw() {
-    $.ajax({
+function fetchUserInfoAndDraw(user_id) {
+    if (typeof user_id != 'undefined'){
+        $.ajax({
+             type: 'GET',
+             url: deployUrl + '/api/users/' + user_id,
+             success:  function (data) {
+                data = JSON.parse(data);
+                if (data.status == 'success'){
+                    drawUserInfo(data.data);
+                } else {
+                    drawErrorMessage(data.message);
+                }
+             },
+             error: function (err) {
+                drawErrorMessage(err, baseContainer);
+            }
+        });
+    }
+    else {
+        $.ajax({
              type: 'GET',
              url: deployUrl + '/api/users',
              success:  function (data) {
@@ -374,7 +392,8 @@ function fetchUserInfoAndDraw() {
              error: function (err) {
                 drawErrorMessage(err, baseContainer);
             }
-       });
+        });
+    }
 }
 
 $( document ).ready(function() {
@@ -407,6 +426,6 @@ $( document ).ready(function() {
         fetchFriendsSuggestionsAndDraw();
     }
     else if (pathname.indexOf('/users') === 0){
-        fetchUserInfoAndDraw();
+        fetchUserInfoAndDraw(pathSplit[2]);
     }
 });
