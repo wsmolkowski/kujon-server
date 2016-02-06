@@ -1,15 +1,16 @@
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'
 
+import logging
+
 from bson.objectid import ObjectId
 from tornado.testing import AsyncTestCase, gen_test
 
 from usosapi import constants
 from usosapi.mongo_dao import Dao
-from usosapi.usosutils.usoscrowler import UsosCrowler
 from usosapi.usosutils.usosclient import UsosClient
+from usosapi.usosutils.usoscrowler import UsosCrowler
 
-import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -30,12 +31,19 @@ class CrowlerTest(AsyncTestCase):
         self.crowler.drop_collections()
         self.crowler.recreate_usos()
 
-        self.user = {"oauth_verifier": "16076406", "mobile_id": "123",
+        self.user = {"mobile_id": "123",
                 "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos": "UW",
                 "access_token_secret": "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"}
-        user_doc = self.dao.insert(constants.COLLECTION_USERS, self.user)
+        user_UW = self.dao.insert(constants.COLLECTION_USERS, self.user)
 
-        self.user_id = str(user_doc)
+        self.user_id_UW = str(user_UW)
+
+        self.user = {"mobile_id": "l1",
+                "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos": "PS",
+                "access_token_secret": "VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy"}
+        user_PS = self.dao.insert(constants.COLLECTION_USERS, self.user)
+
+        self.user_id_PS = str(user_PS)
 
     def tearDown(self):
         self.stop()
@@ -52,20 +60,20 @@ class CrowlerTest(AsyncTestCase):
     @gen_test(timeout=1000)
     def testInitialUserCrowler(self):
         # when
-        yield self.crowler.initial_user_crowl(ObjectId(self.user_id))
+        yield self.crowler.initial_user_crowl(ObjectId(self.user_id_PS))
+        yield self.crowler.initial_user_crowl(ObjectId(self.user_id_UW))
 
         # then
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_USERS))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_USERS))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_USOSINSTANCES))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_COURSES_CLASSTYPES))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_USERS_INFO))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_COURSES_EDITIONS))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_TERMS))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_COURSES))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_GRADES))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_CROWLLOG))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_PARTICIPANTS))
-        self.assertIsNotNone(self.dao.count(constants.COLLECTION_COURSES_UNITS))
+        #
+        self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_USOSINSTANCES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_EDITIONS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_GRADES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_CROWLLOG) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_PARTICIPANTS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
 
 

@@ -75,7 +75,7 @@ class UsosCrowler:
             if not doc:
                 self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
 
-    def __build_user_info(self, client, user_id, crowl_time):
+    def __build_user_info(self, client, user_id, user_usos_id, crowl_time, usos):
         '''
             fetches user info and inserts to database
         :param client:
@@ -83,10 +83,11 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-
-        result = client.user_info()
+        result = client.user_info(user_usos_id)
         result = self.append(result, None, crowl_time, crowl_time)
-        result[constants.USER_ID] = user_id
+        if user_id:
+            result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos[constants.USOS_ID]
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
@@ -106,7 +107,7 @@ class UsosCrowler:
         logging.debug('course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
 
     @tornado.gen.coroutine
-    def __build_terms(self, user_id, usos, crowl_time):
+    def __build_terms(self, client, user_id, usos, crowl_time):
         '''
             for each user unique term fetches usos data and inserts to database if not exists
         :param user_id:
@@ -145,7 +146,7 @@ class UsosCrowler:
             logging.debug('course for course_id: {0} inserted {1}'.format(course_id, c_doc))
 
     @tornado.gen.coroutine
-    def __build_participants(self, client, course_id, crowl_time, participants, term_id, usos):
+    def __build_participants(self, client, course_id, participants, crowl_time, term_id, usos):
         '''
             inserts participants to database
         :param course_id:
@@ -156,7 +157,6 @@ class UsosCrowler:
         :return: list of participants
         '''
 
-        participants = []
         if not self.dao.get_participants(course_id, term_id, usos):
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PARTICIPANTS] = participants
@@ -171,7 +171,7 @@ class UsosCrowler:
 
         raise tornado.gen.Return(participants)
 
-    def __build_user_infos(self, client, crowl_time, participants):
+    def __build_user_infos(self, client, crowl_time, participants, usos):
         '''
             build user info for participants from list
         :param client:
@@ -181,8 +181,8 @@ class UsosCrowler:
         '''
 
         for participant in participants:
-            if not self.dao.get_users_info_by_usos_id(participant['id']):
-                self.__build_user_info(client, None, crowl_time)
+            if not self.dao.get_users_info_by_usos_id(participant['id'], usos):
+                self.__build_user_info(client, None, participant['id'], crowl_time, usos)
                 logging.debug('Fetched user_info for participant with id: {0}'.format(participant['id']))
 
     @tornado.gen.coroutine
@@ -232,7 +232,7 @@ class UsosCrowler:
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
 
-            participants = yield self.__build_participants(client, course_id, crowl_time, participants, term_id, usos)
+            participants = yield self.__build_participants(client, course_id, participants, crowl_time, term_id, usos)
             for p in participants:
                 if p not in all_participants:
                     all_participants.append(p)
@@ -241,7 +241,7 @@ class UsosCrowler:
                 if unit not in all_units:
                     all_units.append(unit)
 
-        self.__build_user_infos(client, crowl_time, all_participants)
+        self.__build_user_infos(client, crowl_time, all_participants, usos)
         yield self.__build_units(crowl_time, all_units, usos)
 
     @log_execution_time
@@ -263,11 +263,11 @@ class UsosCrowler:
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
-            self.__build_user_info(client, user_id, crowl_time)
+            self.__build_user_info(client, user_id, None, crowl_time, usos)
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
-            yield self.__build_terms(user_id, usos, crowl_time)
+            yield self.__build_terms(client, user_id, usos, crowl_time)
 
             yield self.__build_courses(client, user_id, usos, crowl_time)
 
@@ -280,5 +280,5 @@ class UsosCrowler:
             logging.info('crowl log inserted with id {0}'.format(doc))
 
         except Exception, ex:
-            logging.exception("Exception while initial user usos crowler", ex)
+            logging.exception("Exception while initial user usos crowler", ex.message)
 

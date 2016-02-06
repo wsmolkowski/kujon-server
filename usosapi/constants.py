@@ -1,5 +1,5 @@
 USOS_ID = 'usos'
-USER_USOS_ID = 'usos_id'
+USER_USOS_ID = 'id'
 USER_ID = 'user_id'
 USERS_ID = '_id'
 MOBILE_ID = 'mobile_id'
