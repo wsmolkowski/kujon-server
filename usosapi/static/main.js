@@ -289,12 +289,11 @@ function drawFriendsSuggestionsTable(jsonData){
 
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Imię</th><th>Nazisko</th><th>User ID</th><th>Ilość zajęć razem</th><th></th></tr>'
+        html += '<tr><th>Imię i Nazwisko</th><th>USOS user ID</th><th>Ilość zajęć razem</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
-            html += '<td>' + jsonData[key]['first_name'] + '</td>'
-            html += '<td>' + jsonData[key]['last_name'] + '</td>'
+            html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
             html += '<td>' + jsonData[key]['user_id'] + '</td>'
             html += '<td>' + jsonData[key]['count'] + '</td>'
             html += '<td><a href="/api/friends/add/'+ jsonData[key]['user_id']  + '">Dodaj</a></td>'
@@ -308,9 +307,20 @@ function drawUserInfo(jsonData){
     $(baseContainer).empty();
 
     var html = '<table class="table table-hover">';
+    html += '<caption>Informacje z Kujona</caption>'
+    html += '<tr><th></th><th></th></tr>'
+    html += '<tbody>'
+    html += '<tr><td>Email</td><td>asdkajd@asdkasd.com</td></tr>'
+    html += '<tr><td>Zarejestrowany</td><td>NIE...</td></tr>'
+
+    html += '</tbody>'
+    html += '</table>'
+    html += '<table class="table table-hover">';
+
     html += '<caption>Informacje USOS o użytkowniku</caption>'
     html += '<tr><th></th><th></th></tr>'
     html += '<tbody>'
+
     html += '<tr><td>Imię</td><td>' + jsonData['first_name'] + '</td></tr>'
     html += '<tr><td>Nazwisko</td><td>' + jsonData['last_name'] + '</td></tr>'
     html += '<tr><td>Student number</td><td>' + jsonData['student_number'] + '</td></tr>'
@@ -352,7 +362,7 @@ function fetchFriendsSuggestionsAndDraw(){
 function fetchUserInfoAndDraw() {
     $.ajax({
              type: 'GET',
-             url: deployUrl + '/api/user',
+             url: deployUrl + '/api/users',
              success:  function (data) {
                 data = JSON.parse(data);
                 if (data.status == 'success'){
@@ -396,7 +406,7 @@ $( document ).ready(function() {
     else if (pathname.indexOf('/friends/suggestions') === 0){
         fetchFriendsSuggestionsAndDraw();
     }
-    else if (pathname.indexOf('/user') === 0){
+    else if (pathname.indexOf('/users') === 0){
         fetchUserInfoAndDraw();
     }
 });

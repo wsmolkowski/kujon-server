@@ -8,9 +8,14 @@ class MainHandler(BaseHandler):
         self.render("main.html", **self.template_data())
 
 
-class UserHandler(BaseHandler):
+class UsersHandler(BaseHandler):
     def get(self):
         self.render("school.html", **self.template_data())
+
+class UserHandlerByUserId(BaseHandler):
+    def get(self, usos_user_id):
+        data = self.template_data()
+        self.render("school.html", **data)
 
 
 class SchoolHandler(BaseHandler):
