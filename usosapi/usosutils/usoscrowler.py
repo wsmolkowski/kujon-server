@@ -11,8 +11,6 @@ from usosapi.helpers import log_execution_time
 from usosapi.mongo_dao import Dao
 from usosapi.usosutils.usosclient import UsosClient
 
-logging.getLogger().setLevel(logging.DEBUG)
-
 
 class UsosCrowler:
     def __init__(self, dao=None):
@@ -155,9 +153,10 @@ class UsosCrowler:
         :param participants:
         :param term_id:
         :param usos:
-        :return:
+        :return: list of participants
         '''
 
+        participants = []
         if not self.dao.get_participants(course_id, term_id, usos):
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PARTICIPANTS] = participants
@@ -167,14 +166,24 @@ class UsosCrowler:
             result[constants.COURSE_ID] = course_id
             result[constants.TERM_ID] = term_id
             p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
+
             logging.debug('participants inserted: {0}'.format(p_doc))
 
-            # for each participants call users_info
-            for particip in participants:
-                if not self.dao.get_users_info_by_usos_id(particip[constants.ID]):
-                    logging.debug('Fetching user_info for participant with id: {0}'.format(particip[constants.ID]))
-                    self.__build_user_info(client,None,crowl_time)
+        raise tornado.gen.Return(participants)
 
+    def __build_user_infos(self, client, crowl_time, participants):
+        '''
+            build user info for participants from list
+        :param client:
+        :param crowl_time:
+        :param participants:
+        :return:
+        '''
+
+        for participant in participants:
+            if not self.dao.get_users_info_by_usos_id(participant['id']):
+                self.__build_user_info(client, None, crowl_time)
+                logging.debug('Fetched user_info for participant with id: {0}'.format(participant['id']))
 
     @tornado.gen.coroutine
     def __build_units(self, crowl_time, units, usos):
@@ -206,7 +215,8 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-
+        all_participants = []
+        all_units = []
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
 
@@ -222,9 +232,17 @@ class UsosCrowler:
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
 
-            self.__build_participants(client, course_id, crowl_time, participants, term_id, usos)
+            participants = yield self.__build_participants(client, course_id, crowl_time, participants, term_id, usos)
+            for p in participants:
+                if p not in all_participants:
+                    all_participants.append(p)
 
-            yield self.__build_units(crowl_time, units, usos)
+            for unit in units:
+                if unit not in all_units:
+                    all_units.append(unit)
+
+        self.__build_user_infos(client, crowl_time, all_participants)
+        yield self.__build_units(crowl_time, all_units, usos)
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -262,15 +280,5 @@ class UsosCrowler:
             logging.info('crowl log inserted with id {0}'.format(doc))
 
         except Exception, ex:
-            logging.exception("Exception while initial user usos crowler", ex.message)
+            logging.exception("Exception while initial user usos crowler", ex)
 
-
-if __name__ == "__main__":
-    def test_main():
-        u = UsosCrowler()
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug(u"DEBUG MODE is ON")
-        u.initial_user_crowl(ObjectId("56b592adc4f9d22544ed1d57"))
-
-    from tornado.ioloop import IOLoop
-    IOLoop.current().run_sync(test_main)

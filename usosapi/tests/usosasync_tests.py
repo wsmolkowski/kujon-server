@@ -37,7 +37,7 @@ class UsosAsyncTest(AsyncTestCase):
     @gen_test
     def testGetUnitInfo(self):
         # assume
-        unit_id = "1000-612ARR" # FIXME
+        unit_id = "15099"
         base_url = "https://usosapps.uw.edu.pl/"
 
         # when
