@@ -106,7 +106,7 @@ class UsosCrowler:
         logging.debug('course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
 
     @tornado.gen.coroutine
-    def __build_terms(self, user_id, usos, crowl_time):
+    def __build_terms(self, client, user_id, usos, crowl_time):
         '''
             for each user unique term fetches usos data and inserts to database if not exists
         :param user_id:
@@ -115,17 +115,17 @@ class UsosCrowler:
         :return:
         '''
 
-        for term_id in self.dao.get_user_terms(user_id):
+        for term_id in client.get_user_terms(user_id):
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
+            result = client.get_term_info(usos[constants.URL], term_id)
 
-            result = yield usosasync.get_term_info(usos[constants.URL], term_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
             logging.debug('terms for term_id: {0} inserted {1}'.format(term_id, t_doc))
 
     @tornado.gen.coroutine
-    def __build_courses(self, user_id, usos, crowl_time):
+    def __build_courses(self, client, user_id, usos, crowl_time):
         '''
             for each user unique course fetches usos data and inserts to database if not exists
         :param user_id:
@@ -134,7 +134,7 @@ class UsosCrowler:
         :return:
         '''
 
-        for course_id in self.dao.get_user_courses(user_id):
+        for course_id in client.get_user_courses(user_id):
             if self.dao.get_course(course_id, usos[constants.USOS_ID]):
                 continue  # course already exists
 
@@ -145,7 +145,7 @@ class UsosCrowler:
             logging.debug('course for course_id: {0} inserted {1}'.format(course_id, c_doc))
 
     @tornado.gen.coroutine
-    def __build_participants(self, course_id, crowl_time, participants, term_id, usos):
+    def __build_participants(self, client, course_id, crowl_time, participants, term_id, usos):
         '''
             inserts participants to database
         :param course_id:
@@ -166,6 +166,13 @@ class UsosCrowler:
             result[constants.TERM_ID] = term_id
             p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
             logging.debug('participants inserted: {0}'.format(p_doc))
+
+            # for each participants call users_info
+            for particip in participants:
+                if not self.dao.get_users_info_by_usos_id(particip[constants.ID]):
+                    logging.debug('Fetching user_info for participant with id: {0}'.format(particip[constants.ID]))
+                    self.__build_user_info(client,None,crowl_time)
+
 
     @tornado.gen.coroutine
     def __build_units(self, crowl_time, units, usos):
@@ -213,7 +220,7 @@ class UsosCrowler:
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
 
-            self.__build_participants(course_id, crowl_time, participants, term_id, usos)
+            self.__build_participants(client, course_id, crowl_time, participants, term_id, usos)
 
             yield self.__build_units(crowl_time, units, usos)
 
@@ -240,11 +247,11 @@ class UsosCrowler:
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
-            yield self.__build_terms(user_id, usos, crowl_time)
+            self.__build_terms(client, user_id, usos, crowl_time)
 
-            yield self.__build_courses(user_id, usos, crowl_time)
+            self.__build_courses(client, user_id, usos, crowl_time)
 
-            yield self.__build_grades_participants_units(client, user_id, usos, crowl_time)
+            self.__build_grades_participants_units(client, user_id, usos, crowl_time)
 
             # crowl collection
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -253,9 +260,11 @@ class UsosCrowler:
             logging.info('crowl log inserted with id {0}'.format(doc))
 
         except Exception, ex:
-            logging.exception("Exception while initial user usos crowler", ex)
+            logging.exception("Exception while initial user usos crowler", ex.message)
 
 #
-# if __name__ == "__main__":
-#     u = UsosCrowler()
-#     u.initial_user_crowl(ObjectId("56b2fba4f296ff122ac4ab08"))
+if __name__ == "__main__":
+    u = UsosCrowler()
+    logging.getLogger().setLevel(logging.INFO)
+    logging.debug(u"DEBUG MODE is ON")
+    u.initial_user_crowl(ObjectId("56b57671f296ff324b53e03a"))

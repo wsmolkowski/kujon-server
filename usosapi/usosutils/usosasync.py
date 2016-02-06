@@ -1,4 +1,5 @@
 import json
+import urllib
 
 import tornado.gen
 import tornado.httpclient
@@ -78,10 +79,12 @@ def get_term_info(usos_base_url, term_id, validate_cert=False):
     tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
-    url = URL_TERM_INFO.format(usos_base_url, term_id)
+    url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
     request = build_request(url=url, validate_cert=validate_cert)
-
-    response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
+    try:
+        response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
+    except Exception, ex:
+        pass
     if response.code is not 200:
         raise tornado.web.HTTPError(response.code,
                                     "Error while fetching term_info for term_id: {0}. Response body: {1}".format

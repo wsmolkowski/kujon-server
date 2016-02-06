@@ -6,6 +6,15 @@ from usosapi import constants
 from usosapi.mixins.JSendMixin import JSendMixin
 
 
+class FriendsAddApi(BaseHandler, JSendMixin):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        user_doc, usos_doc = yield self.get_parameters()
+
+
+
 class FriendsSuggestionsApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -39,6 +48,10 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
                     suggested_participants[participant_id]['count'] = 1
 
         suggested_participants = suggested_participants.values()
+
+        # TODO: wywalic swojego uzytkownika
+        # TODO: dodac sortowanie
+        # TODO: dodac akcje
 
         if not suggested_participants:
             self.error("Please hold on we are looking your friends.")

@@ -289,7 +289,7 @@ function drawFriendsSuggestionsTable(jsonData){
 
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Imię</th><th>Nazisko</th><th>User ID</th><th>Ilość zajęć razem</th></tr>'
+        html += '<tr><th>Imię</th><th>Nazisko</th><th>User ID</th><th>Ilość zajęć razem</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
@@ -297,6 +297,7 @@ function drawFriendsSuggestionsTable(jsonData){
             html += '<td>' + jsonData[key]['last_name'] + '</td>'
             html += '<td>' + jsonData[key]['user_id'] + '</td>'
             html += '<td>' + jsonData[key]['count'] + '</td>'
+            html += '<td><a href="/api/friends/add/'+ jsonData[key]['user_id']  + '">Dodaj</a></td>'
             html += '</tr>'
         }
         html += '</tbody></table>';

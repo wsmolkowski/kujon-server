@@ -1,6 +1,6 @@
 from handlers.handlers_api_courses import CourseHandlerApi
 from handlers.handlers_api_courses import CoursesEditionsApi
-from handlers.handlers_api_friends import FriendsSuggestionsApi
+from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsAddApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserApi
@@ -55,4 +55,7 @@ HANDLERS = [
     (r"/api/terms/([^/]+)", TermApi),
 
     (r"/api/friends/suggestions", FriendsSuggestionsApi),
+    (r"/api/friends/add/([^/]+)/([^/]+)", FriendsAddApi),
+
+
 ]

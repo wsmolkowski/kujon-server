@@ -50,6 +50,9 @@ class Dao:
     def get_users_info(self, user_id):
         return self.__db.users_info.find_one({constants.USER_ID: user_id})
 
+    def get_users_info_by_usos_id(self, usos_id):
+        return self.__db.users_info.find_one({constants.ID: usos_id})
+
     def get_courses_editions(self, user_id):
         return self.__db.courses_editions.find_one({constants.USER_ID: user_id})
 
