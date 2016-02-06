@@ -11,6 +11,8 @@ from usosapi.helpers import log_execution_time
 from usosapi.mongo_dao import Dao
 from usosapi.usosutils.usosclient import UsosClient
 
+logging.getLogger().setLevel(logging.DEBUG)
+
 
 class UsosCrowler:
     def __init__(self, dao=None):
@@ -134,7 +136,7 @@ class UsosCrowler:
         :return:
         '''
 
-        for course_id in client.get_user_courses(user_id):
+        for course_id in self.dao.get_user_courses(user_id):
             if self.dao.get_course(course_id, usos[constants.USOS_ID]):
                 continue  # course already exists
 
@@ -265,6 +267,6 @@ class UsosCrowler:
 #
 if __name__ == "__main__":
     u = UsosCrowler()
-    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.DEBUG)
     logging.debug(u"DEBUG MODE is ON")
     u.initial_user_crowl(ObjectId("56b57671f296ff324b53e03a"))
