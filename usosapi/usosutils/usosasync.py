@@ -2,6 +2,7 @@ import json
 import urllib
 
 import tornado.gen
+import tornado.web
 import tornado.httpclient
 
 from usosapi import constants
@@ -20,7 +21,8 @@ def build_request(url, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_courses_classtypes(usos_base_url, validate_cert=False):
-    tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+    if settings.PROXY_URL and settings.PROXY_PORT:
+        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
     url = URI_COURSES_CLASSTYPES.format(usos_base_url)
@@ -36,7 +38,8 @@ def get_courses_classtypes(usos_base_url, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_courses_units(usos_base_url, unit_id, validate_cert=False):
-    tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+    if settings.PROXY_URL and settings.PROXY_PORT:
+        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
     url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
@@ -56,7 +59,8 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_course_info(usos_base_url, course_id, validate_cert=False):
-    tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+    if settings.PROXY_URL and settings.PROXY_PORT:
+        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
     url = URL_COURSE_INFO.format(usos_base_url, course_id)
@@ -76,15 +80,17 @@ def get_course_info(usos_base_url, course_id, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_term_info(usos_base_url, term_id, validate_cert=False):
-    tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+    if settings.PROXY_URL and settings.PROXY_PORT:
+        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT))
+
+
     url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
     request = build_request(url=url, validate_cert=validate_cert)
-    try:
-        response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
-    except Exception, ex:
-        pass
+
+    response = yield tornado.gen.Task(tornado.httpclient.AsyncHTTPClient().fetch, request)
+
     if response.code is not 200:
         raise tornado.web.HTTPError(response.code,
                                     "Error while fetching term_info for term_id: {0}. Response body: {1}".format

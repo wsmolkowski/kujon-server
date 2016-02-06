@@ -6,6 +6,9 @@ from handlers_api_user_tests import ApiUserTest
 from handlers_api_terms_tests import ApiTermsTest
 from usoscrowler_tests import CrowlerTest
 from usosclient_tests import ClientTest
+from usosasync_tests import UsosAsyncTest
+
+
 def build_suite():
 
     test_suite = unittest.TestSuite()
@@ -16,6 +19,7 @@ def build_suite():
     #test_suite.addTest(unittest.makeSuite(ApiTermsTest))
     test_suite.addTest(unittest.makeSuite(CrowlerTest))
     test_suite.addTest(unittest.makeSuite(ClientTest))
+    test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
 
     return test_suite
 

@@ -108,7 +108,7 @@ class UsosCrowler:
         logging.debug('course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
 
     @tornado.gen.coroutine
-    def __build_terms(self, client, user_id, usos, crowl_time):
+    def __build_terms(self, user_id, usos, crowl_time):
         '''
             for each user unique term fetches usos data and inserts to database if not exists
         :param user_id:
@@ -117,10 +117,10 @@ class UsosCrowler:
         :return:
         '''
 
-        for term_id in client.get_user_terms(user_id):
+        for term_id in self.dao.get_user_terms(user_id):
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
-            result = client.get_term_info(usos[constants.URL], term_id)
+            result = yield usosasync.get_term_info(usos[constants.URL], term_id)
 
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
@@ -249,11 +249,11 @@ class UsosCrowler:
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
-            self.__build_terms(client, user_id, usos, crowl_time)
+            yield self.__build_terms(user_id, usos, crowl_time)
 
-            self.__build_courses(client, user_id, usos, crowl_time)
+            yield self.__build_courses(client, user_id, usos, crowl_time)
 
-            self.__build_grades_participants_units(client, user_id, usos, crowl_time)
+            yield self.__build_grades_participants_units(client, user_id, usos, crowl_time)
 
             # crowl collection
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -264,9 +264,13 @@ class UsosCrowler:
         except Exception, ex:
             logging.exception("Exception while initial user usos crowler", ex.message)
 
-#
+
 if __name__ == "__main__":
-    u = UsosCrowler()
-    logging.getLogger().setLevel(logging.DEBUG)
-    logging.debug(u"DEBUG MODE is ON")
-    u.initial_user_crowl(ObjectId("56b57671f296ff324b53e03a"))
+    def test_main():
+        u = UsosCrowler()
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug(u"DEBUG MODE is ON")
+        u.initial_user_crowl(ObjectId("56b592adc4f9d22544ed1d57"))
+
+    from tornado.ioloop import IOLoop
+    IOLoop.current().run_sync(test_main)
