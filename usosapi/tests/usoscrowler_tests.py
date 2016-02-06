@@ -9,6 +9,9 @@ from usosapi.mongo_dao import Dao
 from usosapi.usosutils.usoscrowler import UsosCrowler
 from usosapi.usosutils.usosclient import UsosClient
 
+import logging
+logging.getLogger().setLevel(logging.DEBUG)
+
 
 class CrowlerTest(AsyncTestCase):
     def setUp(self):
