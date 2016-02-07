@@ -1,16 +1,16 @@
 import logging
 from datetime import datetime
 
-import oauth2 as oauth
 import motor
-import tornado.web
-import tornado.gen
+import oauth2 as oauth
 import tornado.auth
+import tornado.gen
+import tornado.web
 from bson import json_util
 
-from usosapi import settings
 from handlers_api import BaseHandler
 from usosapi import constants
+from usosapi import settings
 
 
 class LoginHandler(BaseHandler):
@@ -44,7 +44,6 @@ class LoginHandler(BaseHandler):
 
 
 class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -59,12 +58,27 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user)),
                                    constants.COOKIE_EXPIRES_DAYS)
-            user['code'] = self.get_argument('code')
 
-            user_doc = yield motor.Op(self.db.users.insert, user)
-            logging.info("saved new user in database: {0}".format(user_doc))
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                {'id': user['id'], constants.USER_TYPE: 'google'},
+                ('id', constants.USOS_PAIRED))
 
-            self.redirect("/")
+            if not user_doc:
+                user['code'] = self.get_argument('code')
+                user[constants.USER_TYPE] = 'google'
+                user[constants.USOS_PAIRED] = False
+                user[constants.USER_CREATION] = datetime.now()
+                user[constants.USOS_URL] = None
+
+                user_doc = yield motor.Op(self.db.users.insert, user)
+                logging.debug("saved new user in database: {0}".format(user_doc))
+
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
+                                                                              ('id', constants.USOS_PAIRED))
+            if user_doc[constants.USOS_PAIRED]:
+                self.redirect("/")
+            else:
+                self.redirect("/authentication/create")
 
         else:
             yield self.authorize_redirect(
@@ -82,30 +96,31 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        usoses = yield self.db.usosinstances.find().to_list(length=100)
+        usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
         data = self.template_data()
         data['usoses'] = usoses
 
         self.render("create.html", **data)
 
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
-        mobile_id = self.get_argument(constants.MOBILE_ID).strip()
+        #mobile_id = self.get_argument(constants.MOBILE_ID).strip()
         usos_url = self.get_argument("usos").strip()
 
-        usos_doc = yield self.db.usosinstances.find_one({constants.URL: usos_url})
+        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
 
-        # try to find user in db
-        user = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id, constants.USOS_ID: usos_doc[
-            constants.USOS_ID]})
-        if user:
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
+
+        if user_doc[constants.USOS_URL]:
             usoses = yield self.db.usosinstances.find().to_list(length=100)
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "mobile_id / username: {0} already exists".format(mobile_id)
+            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
 
             self.render("create.html", **data)
@@ -114,7 +129,7 @@ class CreateUserHandler(BaseHandler):
                 constants.CONSUMER_SECRET])
 
             request_token_url = "{0}services/oauth/request_token?oauth_callback={1}?{2}".format(
-                usos_doc[constants.URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
+                usos_doc[constants.USOS_URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
 
             client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)
@@ -127,15 +142,16 @@ class CreateUserHandler(BaseHandler):
             access_token_key = request_token.key
             access_token_secret = request_token.secret
 
-            result = dict()
-            result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            result[constants.MOBILE_ID] = mobile_id
-            result[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-            result[constants.ACCESS_TOKEN_KEY] = access_token_key
-            result[constants.CREATED_TIME] = datetime.now()
+            update = user_doc
+            update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+            update[constants.USOS_URL] = usos_url
+            #update[constants.MOBILE_ID] = mobile_id
+            update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
+            update[constants.ACCESS_TOKEN_KEY] = access_token_key
+            update[constants.UPDATE_TIME] = datetime.now()
 
-            user_doc = yield motor.Op(self.db.users.insert, result)
-            logging.info("saved new user in database: {0}".format(user_doc))
+            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, update)
+            logging.debug("updated user with usos base info: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
             url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
@@ -143,19 +159,20 @@ class CreateUserHandler(BaseHandler):
 
 
 class VerifyHandler(BaseHandler):
+    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
-        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_KEY: oauth_token_key})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
         data = self.template_data()
 
         if user_doc:
-            usos_doc = yield self.db.usosinstances.find_one({constants.USOS_ID: user_doc[
-                constants.USOS_ID]})
+            usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
+                constants.USOS_URL]})
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
@@ -163,22 +180,20 @@ class VerifyHandler(BaseHandler):
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
                 constants.CONSUMER_SECRET])
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-            access_token_url = usos_doc[constants.URL] + 'services/oauth/access_token'
+            access_token_url = usos_doc[constants.USOS_URL] + 'services/oauth/access_token'
             esp, content = client.request(access_token_url, "GET")
 
             updated_user = dict()
             try:
                 access_token = self.get_token(content)
 
-                updated_user[constants.USOS_ID] = user_doc[constants.USOS_ID]
-                updated_user[constants.MOBILE_ID] = user_doc[constants.MOBILE_ID]
-                updated_user[constants.USOS_ID] = user_doc[constants.USOS_ID]
+                updated_user = user_doc
                 updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
                 updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
-                updated_user[constants.CREATED_TIME] = datetime.now()
+                updated_user[constants.UPDATE_TIME] = datetime.now()
                 updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
-                user_doc_updated = yield self.db.users.update({constants.ID: user_doc[constants.ID]}, updated_user)
+                user_doc_updated = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, updated_user)
 
                 data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
@@ -190,8 +205,8 @@ class VerifyHandler(BaseHandler):
 
             except KeyError:
                 data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
-                        updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
-                            constants.ACCESS_TOKEN_KEY])
+                    updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
+                        constants.ACCESS_TOKEN_KEY])
 
             self.render("login.html", **data)
         else:
@@ -200,3 +215,11 @@ class VerifyHandler(BaseHandler):
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
                 oauth_token_key, oauth_verifier)
             self.render("/authorization/create", **data)
+
+
+class RegisterHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = self.template_data()
+        self.render("register.html", **data)

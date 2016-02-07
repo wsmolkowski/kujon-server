@@ -1,80 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
-
-    <title>Starter Template for Bootstrap</title>
-
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-          integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-
-
-    <!-- Custom styles for this template -->
-    <link href="{{ static_url("main.css") }}" rel="stylesheet">
-
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
-
-  <body>
-
+{% extends "base.html" %}
+{% block main %}
+<div>
     <div class="container">
 
-      <form class="form-inline" action="/authentication/create" method="post">
-        <div class="form-group">
-          {% module xsrf_form_html() %}
-          <h2 class="form-signin-heading">Create user</h2>
+        <form class="form-horizontal" action="/authentication/create" method="post">
+            {% module xsrf_form_html() %}
 
-          <label for="mobile_id">Enter mobile_id or password:</label>
-          <input type="text" name="mobile_id" id="mobile_id" class="form-control" placeholder="mobile_id" required autofocus>
-          <br>
-          <label for="usos">Select your USOS localization: </label>
+            <!--
+            <div class="form-group">
+                <label for="mobile_id" class="col-sm-2 control-label">Mobile ID</label>
+                <div class="col-sm-10">
+                    <input type="text" name="mobile_id" id="mobile_id" class="form-control" placeholder="mobile_id" required
+                       autofocus>
+                </div>
+            </div>
+            -->
+            <div class="form-group">
+                <label for="usos-id" class="col-sm-2 control-label">USOS registration</label>
+                <div class="col-sm-10">
+                    <select id="usos-id" name="usos" class="form-control" autofocus>
+                    {% for usos in usoses %}
+                        <option value="{{usos['url']}}">{{usos['name']}}</option>
+                    {% end %}
+                </select>
+                </div>
+            </div>
 
-          <select id="usos" name="usos" class="form-control">
-            {% for usos in usoses %}
-            <option value="{{usos['url']}}">{{usos['name']}}</option>
-            {% end %}
-          </select>
-          <br>
-          <input type="hidden" name="next" value="/" />
-          <button class="btn btn-default btn-primary" type="submit">Create user</button>
-        </div>
-      </form>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
 
-      {% try %}
+                <input type="hidden" name="next" value="/"/>
+                <button class="btn btn-default btn-primary" type="submit">Register</button>
+                </div>
+            </div>
+        </form>
+
+        {% try %}
         {% if alert_message %}
-          <div class="alert alert-warning alert-danger form-signin fade in" role="alert">
+        <div class="alert alert-warning alert-danger form-signin fade in" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-              <span aria-hidden="true">×</span></button>
+                <span aria-hidden="true">×</span></button>
             <strong>Holy guacamole!</strong>
             {{ alert_message }}
-          </div>
+        </div>
         {% end %}
-      {% except %}
-      {% end %}
+        {% except %}
+        {% end %}
 
     </div> <!-- /container -->
-
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
-
-  <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
-            integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-  </body>
-</html>
+</div>
+{% end %}

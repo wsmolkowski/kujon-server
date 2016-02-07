@@ -15,9 +15,13 @@ ACCESS_TOKEN_KEY = 'access_token_key'
 ACCESS_TOKEN_SECRET = 'access_token_secret'
 OAUTH_VERIFIER = 'oauth_verifier'
 
-URL = 'url'
+USOS_URL = 'url'
 CONSUMER_KEY = 'consumer_key'
 CONSUMER_SECRET = 'consumer_secret'
+
+USER_TYPE = 'user_type'
+USER_CREATION = 'user_creation'
+USOS_PAIRED = 'usos_paired'
 
 USER_PRESENT_KEYS = (MOBILE_ID, USOS_ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
 USER_SECURE_COOKIE = "USER_SECURE_COOKIE"

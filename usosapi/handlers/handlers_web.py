@@ -114,3 +114,10 @@ class SettingsHandler(BaseHandler):
     def get(self):
         data = self.template_data()
         self.render("settings.html", **data)
+
+
+class RegulationsHandler(BaseHandler):
+    @tornado.web.removeslash
+    def get(self):
+        data = self.template_data()
+        self.render("regulations.html", **data)

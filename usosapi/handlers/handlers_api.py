@@ -2,14 +2,15 @@ import urlparse
 
 import httplib2
 import oauth2 as oauth
-import tornado.web
+from tornado.web import RequestHandler
+import tornado.gen
 from bson import json_util
 from httplib2 import socks
 
 from usosapi import constants, settings
 
 
-class BaseHandler(tornado.web.RequestHandler):
+class BaseHandler(RequestHandler):
     @property
     def oauth_parameters(self):
         return {

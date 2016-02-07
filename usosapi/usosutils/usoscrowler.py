@@ -47,7 +47,7 @@ class UsosCrowler:
                     constants.COLLECTION_COURSES_CLASSTYPES,
                     usos[constants.USOS_ID]))
             inserts = []
-            class_types = yield usosasync.get_courses_classtypes(usos[constants.URL])
+            class_types = yield usosasync.get_courses_classtypes(usos[constants.USOS_URL])
             if len(class_types) > 0:
                 for class_type in class_types.values():
                     class_type[constants.USOS_ID] = usos[constants.USOS_ID]
@@ -119,7 +119,7 @@ class UsosCrowler:
         for term_id in self.dao.get_user_terms(user_id):
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
-            result = yield usosasync.get_term_info(usos[constants.URL], term_id)
+            result = yield usosasync.get_term_info(usos[constants.USOS_URL], term_id)
 
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
@@ -139,7 +139,7 @@ class UsosCrowler:
             if self.dao.get_course(course_id, usos[constants.USOS_ID]):
                 continue  # course already exists
 
-            result = yield usosasync.get_course_info(usos[constants.URL], course_id)
+            result = yield usosasync.get_course_info(usos[constants.USOS_URL], course_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
@@ -199,7 +199,7 @@ class UsosCrowler:
             if self.dao.get_courses_units(unit_id, usos[constants.USOS_ID]):
                 continue  # units already exists
 
-            result = yield usosasync.get_courses_units(usos[constants.URL], unit_id)
+            result = yield usosasync.get_courses_units(usos[constants.USOS_URL], unit_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
@@ -259,7 +259,7 @@ class UsosCrowler:
 
         usos = self.dao.get_usos(user[constants.USOS_ID])
 
-        client = UsosClient(usos[constants.URL], usos[constants.CONSUMER_KEY],
+        client = UsosClient(usos[constants.USOS_URL], usos[constants.CONSUMER_KEY],
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:

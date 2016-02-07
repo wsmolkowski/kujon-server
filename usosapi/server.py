@@ -12,11 +12,11 @@ from handlers_list import HANDLERS
 from usosutils.usosqueue import UsosQueue
 
 define('debug', default=settings.DEBUG)
-# define('port', default=settings.PORT)
+define('port', default=settings.PORT)
 define('ssl', default=settings.SSL)
 define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=settings.COOKIE_SECRET)
-define('autoreload', default=settings.AUTORELOAD_ENABLED)
+#define('autoreload', default=settings.AUTORELOAD_ENABLED)
 
 
 class Application(tornado.web.Application):
@@ -68,7 +68,6 @@ def prepare_environment():
     uc = UsosCrowler()
     if settings.CLEAN_DB:
         uc.drop_collections()
-    if settings.UPDATE_DICTIONARIES:
         uc.recreate_usos()
         uc.recreate_dictionaries()
 
@@ -84,7 +83,7 @@ def main():
     prepare_environment()
 
     application = Application()
-    application.listen(settings.PORT)
+    application.listen(options.port)
     logging.info(settings.DEPLOY_URL)
 
     IOLoop.instance().add_callback(application.crowler.queue_watcher)
