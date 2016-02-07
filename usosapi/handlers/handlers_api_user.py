@@ -7,7 +7,6 @@ from usosapi.mixins.JSendMixin import JSendMixin
 
 LIMIT_FIELDS = ('first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'photo_urls', 'student_programmes')
 
-
 class UsersInfoByIdApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
