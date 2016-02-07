@@ -10,7 +10,7 @@ COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 LOGIN_URL = "/authentication/login"
 STATIC_PATH = os.path.join(ROOT_PATH, 'static')
 TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
-AUTORELOAD_ENABLED = False
+#AUTORELOAD_ENABLED = False
 GZIP = True
 
 # site
@@ -25,12 +25,11 @@ MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 
 CLEAN_DB = False
-UPDATE_DICTIONARIES = False
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
-PROXY_URL = None    #
-PROXY_PORT = None   #
+PROXY_URL = None    # "web-proxy.houston.hp.com"  #
+PROXY_PORT = None   #8088  #
 
-GOOGLE_CLIENT_ID = ""
-GOOGLE_CLIENT_SECRET = ""
+GOOGLE_CLIENT_ID = "245488701889-dfhvfuf9br6u6t9476gt0l5ngkvacota.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "Pl3jCVQO55nZMhxKXHNWivZp"
 

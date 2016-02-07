@@ -11,7 +11,8 @@ class FriendsAddApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
+        self.success(parameters)
 
 
 
@@ -20,11 +21,11 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
         courses = {}
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
+            {constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         for term in course_doc['course_editions']:
             for course in course_doc['course_editions'][term]:
@@ -34,7 +35,7 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
         for course in courses:
             course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one(
                 {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                 constants.USOS_ID: usos_doc[constants.USOS_ID]})
+                 constants.USOS_ID: parameters[constants.USOS_ID]})
 
             if not course_participants:
                 continue

@@ -9,7 +9,7 @@ class ScheduleApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        #parameters = yield self.get_parameters()
 
         terms = []
         terms_doc = []

@@ -55,13 +55,9 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 "https://www.googleapis.com/oauth2/v1/userinfo",
                 access_token=access["access_token"])
 
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user)),
-                                   constants.COOKIE_EXPIRES_DAYS)
-
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'id': user['id'], constants.USER_TYPE: 'google'},
-                ('id', constants.USOS_PAIRED))
+                ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET))
 
             if not user_doc:
                 user['code'] = self.get_argument('code')
@@ -74,8 +70,15 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
-                                                                              ('id', constants.USOS_PAIRED))
-            if user_doc[constants.USOS_PAIRED]:
+                                                                              ('id', constants.USOS_URL,
+                                                                               constants.ACCESS_TOKEN_KEY,
+                                                                               constants.ACCESS_TOKEN_SECRET))
+
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
+                                   constants.COOKIE_EXPIRES_DAYS)
+
+            if user_doc[constants.USOS_URL]:
                 self.redirect("/")
             else:
                 self.redirect("/authentication/create")
@@ -110,7 +113,7 @@ class CreateUserHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
-        #mobile_id = self.get_argument(constants.MOBILE_ID).strip()
+        # mobile_id = self.get_argument(constants.MOBILE_ID).strip()
         usos_url = self.get_argument("usos").strip()
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
@@ -145,7 +148,7 @@ class CreateUserHandler(BaseHandler):
             update = user_doc
             update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
             update[constants.USOS_URL] = usos_url
-            #update[constants.MOBILE_ID] = mobile_id
+            # update[constants.MOBILE_ID] = mobile_id
             update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
             update[constants.ACCESS_TOKEN_KEY] = access_token_key
             update[constants.UPDATE_TIME] = datetime.now()
@@ -188,12 +191,14 @@ class VerifyHandler(BaseHandler):
                 access_token = self.get_token(content)
 
                 updated_user = user_doc
+                updated_user[constants.USOS_PAIRED] = True
                 updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
                 updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
                 updated_user[constants.UPDATE_TIME] = datetime.now()
                 updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
-                user_doc_updated = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, updated_user)
+                user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
+                    {constants.ID: user_doc[constants.ID]}, updated_user)
 
                 data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)

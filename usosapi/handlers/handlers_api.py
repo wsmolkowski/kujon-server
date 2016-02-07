@@ -43,9 +43,11 @@ class BaseHandler(RequestHandler):
         if not user_doc:
             raise tornado.web.HTTPError(500, "Request not authenticated")
 
-        usos_doc = yield self.get_usos(user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(user_doc[constants.USOS_URL])
+        usos_doc.pop(constants.ID)
+        user_doc.update(usos_doc)
 
-        raise tornado.gen.Return((user_doc, usos_doc))
+        raise tornado.gen.Return(user_doc)
 
     def get_current_user(self):
         cookie = self.get_secure_cookie(constants.USER_SECURE_COOKIE)
@@ -90,10 +92,10 @@ class BaseHandler(RequestHandler):
         raise tornado.gen.Return(usoses)
 
     @tornado.gen.coroutine
-    def get_usos(self, usos):
+    def get_usos(self, usos_url):
         usoses = yield self.get_usoses()
 
         for u in usoses:
-            if u[constants.USOS_ID] == usos:
+            if u['url'] == usos_url:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)

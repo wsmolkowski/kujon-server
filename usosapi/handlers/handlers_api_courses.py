@@ -11,10 +11,10 @@ class CourseHandlerApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self, course_id):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                     constants.USOS_ID: user_doc[constants.USOS_ID]},
+                                                     constants.USOS_ID: parameters[constants.USOS_ID]},
                                                                           ('course_id', 'description', 'name'))
 
         if not course_doc:
@@ -28,10 +28,10 @@ class CoursesEditionsApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(user_doc[constants.USER_ID])},
+            {constants.USER_ID: ObjectId(parameters[constants.ID])},
             ('course_editions', )
         )
 

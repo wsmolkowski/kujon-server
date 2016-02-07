@@ -11,9 +11,9 @@ class GradesForUserApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
         grades = []
-        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])},
+        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.ID])},
                                                            ('grades', 'term_id', 'course_id', 'course_name'))
         while (yield cursor.fetch_next):
             grades_for_course_and_term = cursor.next_object()
@@ -49,9 +49,9 @@ class GradesForCourseAndTermApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
-        pipeline = {constants.USER_ID: ObjectId(user_doc[constants.USER_ID]), constants.COURSE_ID: course_id,
+        pipeline = {constants.USER_ID: ObjectId(parameters[constants.ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id}
         limit_fields = ('course_name', 'course_id', 'grades')
 
