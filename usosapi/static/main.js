@@ -303,6 +303,23 @@ function drawFriendsSuggestionsTable(jsonData){
     $(baseContainer).html(html);
 }
 
+function drawFriendsTable(jsonData){
+
+    $(baseContainer).empty();
+     var html = '<table class="table table-hover">';
+        html += '<tr><th>Imię i Nazwisko</th><th>USOS user ID</th><th></th></tr>'
+        html += '<tbody>'
+        for(var key in jsonData) {
+            html += '<tr>'
+            html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
+            html += '<td>' + jsonData[key]['user_id'] + '</td>'
+            html += '<td><a href="/api/friends/remove/'+ jsonData[key]['friend_id']  + '">Usuń</a></td>'
+            html += '</tr>'
+        }
+        html += '</tbody></table>';
+    $(baseContainer).html(html);
+}
+
 function drawUserInfo(jsonData){
     $(baseContainer).empty();
 
@@ -348,6 +365,26 @@ function fetchFriendsSuggestionsAndDraw(){
              data = JSON.parse(data);
                  if (data.status == 'success'){
                     drawFriendsSuggestionsTable(data.data);
+                 }
+                 else {
+                    drawErrorMessage(data.message);
+                 }
+            },
+                error: function (err) {
+                    drawErrorMessage(err, baseContainer);
+                }
+       });
+}
+
+function fetchFriendsAndDraw(){
+
+       $.ajax({
+             type: 'GET',
+             url: deployUrl + '/api/friends',
+             success:  function (data) {
+             data = JSON.parse(data);
+                 if (data.status == 'success'){
+                    drawFriendsTable(data.data);
                  }
                  else {
                     drawErrorMessage(data.message);
@@ -424,6 +461,9 @@ $( document ).ready(function() {
     }
     else if (pathname.indexOf('/friends/suggestions') === 0){
         fetchFriendsSuggestionsAndDraw();
+    }
+    else if (pathname.indexOf('/friends') === 0){
+        fetchFriendsAndDraw();
     }
     else if (pathname.indexOf('/users') === 0){
         fetchUserInfoAndDraw(pathSplit[2]);

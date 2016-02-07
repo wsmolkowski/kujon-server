@@ -5,6 +5,15 @@ from datetime import datetime
 from functools import wraps
 
 
+
+def in_dictlist((key, value), my_dictlist):
+    '''*args and **kwargs are the parameters that are supplied to our original function'''
+    for this in my_dictlist:
+        if this[key] == value:
+            return this
+    return {}
+
+
 def log_execution_time(intercepted_function):
     @wraps(intercepted_function)
     def timer(*args, **kwargs):

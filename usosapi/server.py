@@ -12,7 +12,7 @@ from handlers_list import HANDLERS
 from usosutils.usosqueue import UsosQueue
 
 define('debug', default=settings.DEBUG)
-# define('port', default=settings.PORT)
+define('port', default=settings.PORT)
 define('ssl', default=settings.SSL)
 define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=settings.COOKIE_SECRET)
