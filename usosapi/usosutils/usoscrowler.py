@@ -75,7 +75,7 @@ class UsosCrowler:
             if not doc:
                 self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
 
-    def __build_user_info(self, client, user_id, user_usos_id, crowl_time, usos):
+    def __build_user_info(self, client, user_id, user_info_id, crowl_time, usos):
         '''
             fetches user info and inserts to database
         :param client:
@@ -83,7 +83,7 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-        result = client.user_info(user_usos_id)
+        result = client.user_info(user_info_id)
         result = self.append(result, None, crowl_time, crowl_time)
         if user_id:
             result[constants.USER_ID] = user_id

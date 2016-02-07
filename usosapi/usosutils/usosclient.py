@@ -37,9 +37,9 @@ class UsosClient:
             return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None
 
-    def user_info(self, user_usos_id):
-        if user_usos_id:
-            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO_BY_USER_ID.format(user_usos_id)))
+    def user_info(self, user_info_id):
+        if user_info_id:
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO_BY_USER_ID.format(user_info_id)))
         else:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
         if int(code['status']):
