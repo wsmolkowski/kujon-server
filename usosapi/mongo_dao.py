@@ -115,3 +115,6 @@ class Dao:
 
     def count(self, collection):
         return self.__db[collection].count()
+
+    def get_friends(self, user_id):
+        return self.__db[constants.COLLECTION_FRIENDS].find(ObjectId(user_id))
