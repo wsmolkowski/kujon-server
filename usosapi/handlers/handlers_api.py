@@ -2,10 +2,10 @@ import urlparse
 
 import httplib2
 import oauth2 as oauth
-from tornado.web import RequestHandler
 import tornado.gen
 from bson import json_util
 from httplib2 import socks
+from tornado.web import RequestHandler
 
 from usosapi import constants, settings
 
@@ -42,10 +42,6 @@ class BaseHandler(RequestHandler):
 
         if not user_doc:
             raise tornado.web.HTTPError(500, "Request not authenticated")
-
-        usos_doc = yield self.get_usos(user_doc[constants.USOS_URL])
-        usos_doc.pop(constants.ID)
-        user_doc.update(usos_doc)
 
         raise tornado.gen.Return(user_doc)
 

@@ -12,15 +12,14 @@ class FriendsAddApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self, user_to_add_info_id):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
-        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),
-                                                                            constants.USOS_ID: usos_doc[constants.USOS_ID],
+        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[constants.ID]),
                                                                             constants.FRIEND_ID: user_to_add_info_id})
         if not friend_doc:
             result = {}
-            result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            result[constants.USER_ID] = ObjectId(user_doc[constants.USER_ID])
+            result[constants.USOS_ID] = parameters[constants.USOS_ID]
+            result[constants.USER_ID] = ObjectId(parameters[constants.ID])
             result[constants.FRIEND_ID] = str(user_to_add_info_id)
             friend_doc = self.db[constants.COLLECTION_FRIENDS].insert(result)
 
@@ -33,10 +32,9 @@ class FriendsRemoveApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self, user_to_remove_info_id):
 
-        user_doc, usos_doc = yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
-        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(user_doc[constants.USER_ID]),
-                                                                            constants.USOS_ID: usos_doc[constants.USOS_ID],
+        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[constants.ID]),
                                                                             constants.FRIEND_ID: user_to_remove_info_id})
         if friend_doc:
             self.redirect("/friends?removed={0}".format(user_to_remove_info_id))
@@ -50,59 +48,59 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
-        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
-
+        parameters = yield self.get_parameters()
+        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         courses = {}
-        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
-
-        for term in course_doc['course_editions']:
-            for course in course_doc['course_editions'][term]:
-                courses[course[constants.COURSE_ID]] = course
-
         suggested_participants = {}
-        for course in courses:
-            course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one(
-                {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                 constants.USOS_ID: usos_doc[constants.USOS_ID]})
 
-            if not course_participants:
-                continue
+        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.USER_ID: ObjectId(parameters[constants.ID])})
+        if course_doc:
+            for term in course_doc['course_editions']:
+                for course in course_doc['course_editions'][term]:
+                    courses[course[constants.COURSE_ID]] = course
 
-            # TODO: change to metod in dao??
-            friends_added = []
-            cursor = self.db[constants.COLLECTION_FRIENDS].find()
-            while (yield cursor.fetch_next):
-                friends_added.append(cursor.next_object())
+            for course in courses:
+                course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one(
+                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                     constants.USOS_ID: parameters[constants.USOS_ID]})
 
-            for participant in course_participants[constants.PARTICIPANTS]:
-                participant_id = participant[constants.USER_ID]
-
-                # checking if participant is not current logged user
-                if int(user_info[constants.USER_INFO_ID]) == participant_id:
+                if not course_participants:
                     continue
 
-                # checking if participant is allready added
-                poz = usosapi.helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
-                if poz:
-                    continue
+                # TODO: change to metod in dao??
+                friends_added = []
+                cursor = self.db[constants.COLLECTION_FRIENDS].find()
+                while (yield cursor.fetch_next):
+                    friends_added.append(cursor.next_object())
 
-                # count how many courses have together
-                if participant_id in suggested_participants:
-                    suggested_participants[participant_id]['count'] += 1
-                else:
-                    suggested_participants[participant_id]=participant
-                    suggested_participants[participant_id]['count'] = 1
+                for participant in course_participants[constants.PARTICIPANTS]:
+                    participant_id = participant[constants.USER_ID]
 
-        suggested_participants = suggested_participants.values()
+                    # checking if participant is not current logged user
+                    if int(user_info[constants.USER_INFO_ID]) == participant_id:
+                        continue
 
-        # TODO: add sort by column id
-        # TODO: show message on add friends
+                    # checking if participant is allready added
+                    poz = usosapi.helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
+                    if poz:
+                        continue
+
+                    # count how many courses have together
+                    if participant_id in suggested_participants:
+                        suggested_participants[participant_id]['count'] += 1
+                    else:
+                        suggested_participants[participant_id]=participant
+                        suggested_participants[participant_id]['count'] = 1
+
+            suggested_participants = suggested_participants.values()
+
+            # TODO: add sort by column id
+            # TODO: show message on add friends
 
         if not suggested_participants:
-            self.error("Please hold on we are looking your friends sugestions.")
+            self.error("Please hold on we are looking your friends sugestions..")
         else:
             self.success(suggested_participants)
 
@@ -112,13 +110,18 @@ class FriendsApi(BaseHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
 
-        user_doc, usos_doc = yield self.get_parameters()
-        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(user_doc[constants.USER_ID])})
-
+        parameters = yield self.get_parameters()
 
         friends = []
-        cursor = self.db[constants.COLLECTION_FRIENDS].find()
-        while (yield cursor.fetch_next):
-            friends.append(cursor.next_object())
+        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
+        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
+                    {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
+                                'as': 'users_info'}}]
 
-        self.success(friends)
+        cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
+        if cursor:
+            while (yield cursor.fetch_next):
+                friends.append(cursor.next_object())
+            self.success(friends)
+        else:
+            self.error("Please hold on we are looking your friends..")

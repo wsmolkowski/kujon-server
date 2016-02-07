@@ -36,6 +36,6 @@ class CoursesEditionsApi(BaseHandler, JSendMixin):
         )
 
         if not course_doc:
-            self.fail("Please hold on we are looking your courses.")
+            self.error("Please hold on we are looking your courses.")
         else:
             self.success(course_doc)

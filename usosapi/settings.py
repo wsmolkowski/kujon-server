@@ -30,6 +30,6 @@ CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
 PROXY_URL = None    #
 PROXY_PORT = None   #
 
-GOOGLE_CLIENT_ID = ""
-GOOGLE_CLIENT_SECRET = ""
+GOOGLE_CLIENT_ID = "245488701889-dfhvfuf9br6u6t9476gt0l5ngkvacota.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "Pl3jCVQO55nZMhxKXHNWivZp"
 

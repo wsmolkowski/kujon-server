@@ -57,7 +57,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'id': user['id'], constants.USER_TYPE: 'google'},
-                ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET))
+                ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID))
 
             if not user_doc:
                 user['code'] = self.get_argument('code')
@@ -72,8 +72,8 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
                                                                               ('id', constants.USOS_URL,
                                                                                constants.ACCESS_TOKEN_KEY,
-                                                                               constants.ACCESS_TOKEN_SECRET))
-
+                                                                               constants.ACCESS_TOKEN_SECRET,
+                                                                               constants.USOS_ID))
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
@@ -128,8 +128,7 @@ class CreateUserHandler(BaseHandler):
 
             self.render("create.html", **data)
         else:
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
-                constants.CONSUMER_SECRET])
+            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
             request_token_url = "{0}services/oauth/request_token?oauth_callback={1}?{2}".format(
                 usos_doc[constants.USOS_URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
@@ -203,19 +202,15 @@ class VerifyHandler(BaseHandler):
                 data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
 
-                # fetch user again to get actual id
-                user_id = yield self.db.users.find_one({}, {constants.ACCESS_TOKEN_KEY: oauth_token_key})
-
-                self.crowler.put_user(user_id[constants.ID])
+                self.crowler.put_user(updated_user[constants.ID])
 
             except KeyError:
                 data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                         constants.ACCESS_TOKEN_KEY])
 
-            self.render("login.html", **data)
+            self.render("main.html", **data)
         else:
-
             data[
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
                 oauth_token_key, oauth_verifier)

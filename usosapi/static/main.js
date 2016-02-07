@@ -289,12 +289,11 @@ function drawFriendsSuggestionsTable(jsonData){
 
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Imię i Nazwisko</th><th>USOS user ID</th><th>Ilość zajęć razem</th><th></th></tr>'
+        html += '<tr><th>Imię i Nazwisko</th><th>Ilość wspólnych razem</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
             html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
-            html += '<td>' + jsonData[key]['user_id'] + '</td>'
             html += '<td>' + jsonData[key]['count'] + '</td>'
             html += '<td><a href="/api/friends/add/'+ jsonData[key]['user_id']  + '">Dodaj</a></td>'
             html += '</tr>'
@@ -307,12 +306,11 @@ function drawFriendsTable(jsonData){
 
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Imię i Nazwisko</th><th>USOS user ID</th><th></th></tr>'
+        html += '<tr><th>Imię i Nazwisko</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
-            html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
-            html += '<td>' + jsonData[key]['user_id'] + '</td>'
+            html += '<td><a href=/users/'+ jsonData[key]['friend_id'] + '>' + jsonData[key]['users_info'][0]['first_name'] + ' ' + jsonData[key]['users_info'][0]['last_name'] + '</td>'
             html += '<td><a href="/api/friends/remove/'+ jsonData[key]['friend_id']  + '">Usuń</a></td>'
             html += '</tr>'
         }
@@ -322,35 +320,33 @@ function drawFriendsTable(jsonData){
 
 function drawUserInfo(jsonData){
     $(baseContainer).empty();
-
     var html = '<table class="table table-hover">';
-    html += '<caption>Informacje z Kujona</caption>'
-    html += '<tr><th></th><th></th></tr>'
+    html += '<caption>Konto w Kujonie</caption>'
     html += '<tbody>'
-    html += '<tr><td>Email</td><td>asdkajd@asdkasd.com</td></tr>'
-    html += '<tr><td>Zarejestrowany</td><td>NIE...</td></tr>'
+    debugger;
+    if (typeof jsonData[0]['email'] != 'undefined'){
+        html += '<tr><td>Imię i Nazwisko</td><td>' +jsonData[0]['given_name'] + ' ' + jsonData[0]['family_name'] + '</td></tr>'
+        html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td></tr>'
+        html += '<tr><td></td><td><img src="' + jsonData[0]['picture'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    }
+    else {
+        html += '<tr><td>Brak konta</td><td><a href="/xxxx/">Zaproś</a></td></tr>'
+    }
+    html += '</tbody></table>';
 
-    html += '</tbody>'
-    html += '</table>'
     html += '<table class="table table-hover">';
-
-    html += '<caption>Informacje USOS o użytkowniku</caption>'
-    html += '<tr><th></th><th></th></tr>'
+    html += '<caption>Konto w USOSie</caption>'
     html += '<tbody>'
+    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData[1]['first_name'] + ' ' + jsonData[1]['last_name'] + '</td></tr>'
+    html += '<tr><td>Student number</td><td>' + jsonData[1]['student_number'] + '</td></tr>'
+    html += '<tr><td>Email</td><td>' + jsonData[1]['email'] + '</td></tr>'
 
-    html += '<tr><td>Imię</td><td>' + jsonData['first_name'] + '</td></tr>'
-    html += '<tr><td>Nazwisko</td><td>' + jsonData['last_name'] + '</td></tr>'
-    html += '<tr><td>Student number</td><td>' + jsonData['student_number'] + '</td></tr>'
-    html += '<tr><td>Email</td><td>' + jsonData['email'] + '</td></tr>'
-
-    $.each(jsonData['student_programmes'], function(key, value){
+    $.each(jsonData[1]['student_programmes'], function(key, value){
             for(var i=1; i< 2; i++) {
                 html += '<tr><td>Program</td><td>' + value['programme']['id'] + ' (' + value['id'] + ') - ' + value['programme']['description']['pl']+ '</td></tr>'
             }
     });
-
-    html += '<tr><td></td><td></td></tr>'
-    html += '<tr><td></td><td><img src="' + jsonData['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    html += '<tr><td></td><td><img src="' + jsonData[1]['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
     html += '</tbody></table>';
 
     $(baseContainer).html(html);
