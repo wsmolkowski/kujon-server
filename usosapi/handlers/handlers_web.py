@@ -76,6 +76,14 @@ class TermsWebHandler(BaseHandler):
         data = self.template_data()
         self.render("school.html", **data)
 
+class ScheduleWebHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = self.template_data()
+        self.render("school.html", **data)
 
 
 class FriendsHandler(BaseHandler):

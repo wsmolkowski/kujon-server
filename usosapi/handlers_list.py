@@ -2,6 +2,7 @@ from handlers.handlers_api_courses import CourseHandlerApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsAddApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
+from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoapi, UsersInfoByIdApi
 from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler, GoogleOAuth2LoginHandler
@@ -12,6 +13,7 @@ from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import FriendsSuggestionsHandler
 from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import MainHandler, UsersHandler, UserHandlerByUserId
+from handlers.handlers_web import ScheduleWebHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler
 from handlers.handlers_web import TermsWebHandler, TermWebHandler
@@ -28,6 +30,7 @@ HANDLERS = [
     (r"/school/courses/([^/]+)", CourseInfoWebHandler),
     (r"/school/terms", TermsWebHandler),
     (r"/school/terms/([^/]+)", TermWebHandler),
+    (r"/school/schedule", ScheduleWebHandler),
 
     (r"/chat", ChatHandler),
     (r"/chatsocket", ChatSocketHandler),
@@ -53,6 +56,7 @@ HANDLERS = [
     (r"/api/terms/([^/]+)", TermApi),
     (r"/api/friends/suggestions", FriendsSuggestionsApi),
     (r"/api/friends/add/([^/]+)/([^/]+)", FriendsAddApi),
+    (r"/api/schedule", ScheduleApi),
 
 
 ]
