@@ -1,28 +1,63 @@
 var baseContainer = '#base-container-id';
 var htmlHelper = new HtmlHelper();
 
-function post(path, params, method) {
-    method = method || "post"; // Set method to post by default if not specified.
+function friends_add(user_id) {
+    $.ajax({
+        type: "POST",
+        url: '/api/friends/add/' + user_id,
+        success:  function (data) {
+            if (data.status == 'success'){
+                location.reload();
+            } else {
+                drawErrorMessage(data.message);
+            }
+        },
+        error: function (err) {
+            drawErrorMessage(err);
+        }
+      });
+}
 
-    // The rest of this code assumes you are not using a library.
-    // It can be made less wordy if you use one.
+function friends_remove(user_id) {
+    $.ajax({
+        type: "POST",
+        url: '/api/friends/remove/' + user_id,
+        success:  function (data) {
+            if (data.status == 'success'){
+                location.reload();
+            } else {
+                drawErrorMessage(data.message);
+            }
+        },
+        error: function (err) {
+            drawErrorMessage(err);
+        }
+      });
+}
+
+function post(path, params, method) {
+    method = method || "post";
+
     var form = document.createElement("form");
+
+    //Move the submit function to another variable
+    //so that it doesn't get overwritten.
+    form._submit_function_ = form.submit;
+
     form.setAttribute("method", method);
     form.setAttribute("action", path);
 
     for(var key in params) {
-        if(params.hasOwnProperty(key)) {
-            var hiddenField = document.createElement("input");
-            hiddenField.setAttribute("type", "hidden");
-            hiddenField.setAttribute("name", key);
-            hiddenField.setAttribute("value", params[key]);
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", key);
+        hiddenField.setAttribute("value", params[key]);
 
-            form.appendChild(hiddenField);
-         }
+        form.appendChild(hiddenField);
     }
 
     document.body.appendChild(form);
-    form.submit();
+    form._submit_function_(); //Call the renamed function.
 }
 
 function drawErrorMessage(data) {
@@ -319,7 +354,7 @@ function drawFriendsSuggestionsTable(jsonData){
             html += '<tr>'
             html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
             html += '<td>' + jsonData[key]['count'] + '</td>'
-            html += '<td><button class="btn btn-primary" onclick="post(\'/api/friends/add/' + jsonData[key]['user_id'] + '\');">Dodaj</button></td>'
+            html += '<td><button class="btn btn-primary" onclick="friends_add(' + jsonData[key]['user_id'] + ');">Dodaj</button></td>'
             html += '</tr>'
         }
         html += '</tbody></table>';
@@ -335,7 +370,7 @@ function drawFriendsTable(jsonData){
         for(var key in jsonData) {
             html += '<tr>'
             html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
-            html += '<td><button class="btn btn-primary btn-danger" onclick="post(\'/api/friends/remove/' + jsonData[key]['user_id'] + '\');">Usuń</button></td>'
+            html += '<td><button class="btn btn-primary btn-danger" onclick="friends_remove(' + jsonData[key]['user_id'] + ');">Usuń</button></td>'
             html += '</tr>'
         }
         html += '</tbody></table>';
