@@ -56,5 +56,6 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
+        self.set_header("Content-Type", "application/json")
         self.write(json_util.dumps(data))
         self.finish()
