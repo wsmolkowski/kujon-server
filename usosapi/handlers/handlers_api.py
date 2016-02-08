@@ -42,8 +42,8 @@ class BaseHandler(RequestHandler, JSendMixin):
                                                      constants.ACCESS_TOKEN_KEY: ats})
 
         if not user_doc:
-            #raise tornado.web.HTTPError(500, "Request not authenticated")
-            self.redirect(settings.LOGIN_URL, **self.template_data())
+            raise tornado.web.HTTPError(500, "Request not authenticated")
+            #self.error(message='Request not authenticated', code=501)
 
         raise tornado.gen.Return(user_doc)
 
