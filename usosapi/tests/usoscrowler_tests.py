@@ -32,7 +32,7 @@ class CrowlerTest(AsyncTestCase):
         self.crowler.recreate_usos()
 
         self.user = {"mobile_id": "123",
-                "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos": "UW",
+                "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos_id": "UW",
                 "access_token_secret": "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"}
         user = self.dao.insert(constants.COLLECTION_USERS, self.user)
 
@@ -72,7 +72,7 @@ class CrowlerTest(AsyncTestCase):
     def testInitialUserCrowlerPS(self):
         # assume
         user = {"mobile_id": "l1",
-                "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos": "PS",
+                "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos_id": "PS",
                 "access_token_secret": "VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy"}
         user = self.dao.insert(constants.COLLECTION_USERS, user)
 

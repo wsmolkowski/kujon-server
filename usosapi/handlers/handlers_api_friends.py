@@ -39,7 +39,7 @@ class FriendsRemoveApi(BaseHandler, JSendMixin):
         if friend_doc:
             self.redirect("/friends?removed={0}".format(user_to_remove_info_id))
         else:
-            self.redirect("/friends?failed_removed={0}".format(user_to_remove_info_id))
+            self.redirect("/friends")
 
 
 
