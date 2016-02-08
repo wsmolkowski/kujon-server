@@ -168,11 +168,13 @@ class VerifyHandler(BaseHandler):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
+
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
-        data = self.template_data()
+        template_data = self.template_data()
 
         if user_doc:
+
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
 
@@ -199,22 +201,31 @@ class VerifyHandler(BaseHandler):
                 user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                     {constants.ID: user_doc[constants.ID]}, updated_user)
 
-                data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
+                template_data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
 
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']},
+                                                                              ('id', constants.USOS_URL,
+                                                                               constants.ACCESS_TOKEN_KEY,
+                                                                               constants.ACCESS_TOKEN_SECRET,
+                                                                               constants.USOS_ID))
+                self.clear_cookie(constants.USER_SECURE_COOKIE)
+                self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
+                                   constants.COOKIE_EXPIRES_DAYS)
                 self.crowler.put_user(updated_user[constants.ID])
 
             except KeyError:
-                data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
+                template_data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                         constants.ACCESS_TOKEN_KEY])
 
-            self.render("main.html", **data)
+            self.render("main.html", **template_data)
         else:
-            data[
+            template_data[
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
                 oauth_token_key, oauth_verifier)
-            self.render("/authorization/create", **data)
+            self.render("/authorization/create", **template_data)
 
 
 class RegisterHandler(BaseHandler):
