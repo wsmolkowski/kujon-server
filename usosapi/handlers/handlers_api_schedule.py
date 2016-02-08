@@ -1,10 +1,9 @@
 import tornado.web
 
 from handlers_api import BaseHandler
-from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class ScheduleApi(BaseHandler, JSendMixin):
+class ScheduleApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
