@@ -12,6 +12,13 @@ class GradesForUserApi(BaseHandler):
 
         parameters = yield self.get_parameters()
         grades = []
+
+        classtypes = {}
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+        while (yield cursor.fetch_next):
+            ct = cursor.next_object()
+            classtypes[ct['id']] = ct['name']['pl']
+
         cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.ID])},
                                                            ('grades', 'term_id', 'course_id', 'course_name'))
         while (yield cursor.fetch_next):
@@ -29,6 +36,7 @@ class GradesForUserApi(BaseHandler):
                 for elem in u:
                     unit_id = elem['unit_id']
                     elem.pop('unit_id')
+                    elem['classtype_id'] = classtypes[(elem['classtype_id'])]
                     units[unit_id] = elem
             if len(units) > 0:
                 grades_for_course_and_term['grades']['course_units'] = units
@@ -54,6 +62,12 @@ class GradesForCourseAndTermApi(BaseHandler):
                     constants.TERM_ID: term_id}
         limit_fields = ('course_name', 'course_id', 'grades')
 
+        classtypes = {}
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+        while (yield cursor.fetch_next):
+            ct = cursor.next_object()
+            classtypes[ct['id']] = ct['name']['pl']
+
         grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline, limit_fields)
         units = {}
         if grades and len(grades) > 0:
@@ -67,6 +81,7 @@ class GradesForCourseAndTermApi(BaseHandler):
                 for elem in u:
                     unit_id = elem['unit_id']
                     elem.pop('unit_id')
+                    elem['classtype_id'] = classtypes[(elem['classtype_id'])]
                     units[unit_id] = elem
             if len(units) > 0:
                 grades['grades']['course_units'] = units

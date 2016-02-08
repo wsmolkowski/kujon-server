@@ -35,30 +35,6 @@ function friends_remove(user_id) {
       });
 }
 
-function post(path, params, method) {
-    method = method || "post";
-
-    var form = document.createElement("form");
-
-    //Move the submit function to another variable
-    //so that it doesn't get overwritten.
-    form._submit_function_ = form.submit;
-
-    form.setAttribute("method", method);
-    form.setAttribute("action", path);
-
-    for(var key in params) {
-        var hiddenField = document.createElement("input");
-        hiddenField.setAttribute("type", "hidden");
-        hiddenField.setAttribute("name", key);
-        hiddenField.setAttribute("value", params[key]);
-
-        form.appendChild(hiddenField);
-    }
-
-    document.body.appendChild(form);
-    form._submit_function_(); //Call the renamed function.
-}
 
 function drawErrorMessage(data) {
     $(baseContainer).empty();
@@ -83,7 +59,7 @@ function drawCoursesTable(jsonData) {
                 html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
                 html += '<td><a href=/school/courses/'+ jsonData['course_editions'][term][course]['course_id']+ '>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
-                html += '<a href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
+                html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
                 html += '</tr>';
             }
