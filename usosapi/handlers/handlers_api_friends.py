@@ -99,7 +99,7 @@ class FriendsSuggestionsApi(BaseHandler):
                     poz = usosapi.helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
                     if poz:
                         continue
-
+                    del participant[constants.USER_INFO_ID]
                     # count how many courses have together
                     if participant_id in suggested_participants:
                         suggested_participants[participant_id]['count'] += 1
@@ -125,6 +125,7 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friends = []
+        friends_returned = []
         # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
         pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
@@ -134,6 +135,16 @@ class FriendsApi(BaseHandler):
         if cursor:
             while (yield cursor.fetch_next):
                 friends.append(cursor.next_object())
-            self.success(friends)
+
+            for elem in friends:
+                new_elem = {}
+                new_elem['user_id'] = elem['friend_id']
+                user_info = elem['users_info'].pop()
+                new_elem['first_name'] = user_info['first_name']
+                new_elem['last_name'] = user_info['last_name']
+                new_elem['sex'] = user_info['sex']
+                friends_returned.append(new_elem)
+
+            self.success(friends_returned)
         else:
             self.error("Please hold on we are looking your friends..")

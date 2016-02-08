@@ -1,6 +1,30 @@
 var baseContainer = '#base-container-id';
 var htmlHelper = new HtmlHelper();
 
+function post(path, params, method) {
+    method = method || "post"; // Set method to post by default if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+    form.setAttribute("action", path);
+
+    for(var key in params) {
+        if(params.hasOwnProperty(key)) {
+            var hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", params[key]);
+
+            form.appendChild(hiddenField);
+         }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function drawErrorMessage(data) {
     $(baseContainer).empty();
     if ((typeof data) == 'string'){
@@ -96,7 +120,6 @@ function drawGradesTable(grades){
                     for (var unit in grades[key]['grades']['course_units_grades']) {
                         for (var pass in grades[key]['grades']['course_units_grades'][unit]) {
                             html += '<tr>'
-                            debugger;
                             html += '<td>' + grades[key]['grades']['course_units'][unit]['classtype_id'] + '</td>'
                             html += '<td>' + grades[key]['grades']['course_units_grades'][unit][pass]['value_symbol'] + '</td>'
                             html += '<td>' + grades[key]['grades']['course_units_grades'][unit][pass]['value_description']['pl'] + '</td>'
@@ -290,13 +313,13 @@ function drawFriendsSuggestionsTable(jsonData){
 
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Imię i Nazwisko</th><th>Ilość wspólnych razem</th><th></th></tr>'
+        html += '<tr><th>Imię i Nazwisko</th><th>Wspólnych zajęć</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
             html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
             html += '<td>' + jsonData[key]['count'] + '</td>'
-            html += '<td><a href="/api/friends/add/'+ jsonData[key]['user_id']  + '">Dodaj</a></td>'
+            html += '<td><button class="btn btn-primary" onclick="post(\'/api/friends/add/' + jsonData[key]['user_id'] + '\');">Dodaj</button></td>'
             html += '</tr>'
         }
         html += '</tbody></table>';
@@ -311,8 +334,8 @@ function drawFriendsTable(jsonData){
         html += '<tbody>'
         for(var key in jsonData) {
             html += '<tr>'
-            html += '<td><a href=/users/'+ jsonData[key]['friend_id'] + '>' + jsonData[key]['users_info'][0]['first_name'] + ' ' + jsonData[key]['users_info'][0]['last_name'] + '</td>'
-            html += '<td><a href="/api/friends/remove/'+ jsonData[key]['friend_id']  + '">Usuń</a></td>'
+            html += '<td><a href=/users/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
+            html += '<td><button class="btn btn-primary btn-danger" onclick="post(\'/api/friends/remove/' + jsonData[key]['user_id'] + '\');">Usuń</button></td>'
             html += '</tr>'
         }
         html += '</tbody></table>';
@@ -324,7 +347,6 @@ function drawUserInfo(jsonData){
     var html = '<table class="table table-hover">';
     html += '<caption>Konto w Kujonie</caption>'
     html += '<tbody>'
-    debugger;
     if (typeof jsonData[0]['email'] != 'undefined'){
         html += '<tr><td>Imię i Nazwisko</td><td>' +jsonData[0]['given_name'] + ' ' + jsonData[0]['family_name'] + '</td></tr>'
         html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td></tr>'
@@ -359,7 +381,6 @@ function fetchFriendsSuggestionsAndDraw(){
              type: 'GET',
              url: deployUrl + '/api/friends/suggestions',
              success:  function (data) {
-             data = JSON.parse(data);
                  if (data.status == 'success'){
                     drawFriendsSuggestionsTable(data.data);
                  }
@@ -374,12 +395,10 @@ function fetchFriendsSuggestionsAndDraw(){
 }
 
 function fetchFriendsAndDraw(){
-
        $.ajax({
              type: 'GET',
              url: deployUrl + '/api/friends',
              success:  function (data) {
-             data = JSON.parse(data);
                  if (data.status == 'success'){
                     drawFriendsTable(data.data);
                  }
@@ -399,7 +418,6 @@ function fetchUserInfoAndDraw(user_id) {
              type: 'GET',
              url: deployUrl + '/api/users/' + user_id,
              success:  function (data) {
-                data = JSON.parse(data);
                 if (data.status == 'success'){
                     drawUserInfo(data.data);
                 } else {
@@ -416,7 +434,6 @@ function fetchUserInfoAndDraw(user_id) {
              type: 'GET',
              url: deployUrl + '/api/users',
              success:  function (data) {
-                data = JSON.parse(data);
                 if (data.status == 'success'){
                     drawUserInfo(data.data);
                 } else {
