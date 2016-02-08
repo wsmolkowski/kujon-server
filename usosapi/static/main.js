@@ -97,7 +97,6 @@ function fetchCursesAndDraw(){
       type: 'GET',
       url: deployUrl + '/api/courseseditions',
       success:  function (data) {
-            data = JSON.parse(data);
             if (data.status == 'success'){
                 drawCoursesTable(data.data);
             } else {
@@ -237,7 +236,6 @@ function fetchGradesAndDraw(courseId, termId){
             type: 'GET',
             url: deployUrl + '/api/grades/course/' + courseId + '/' + termId,
             success:  function (data) {
-                data = JSON.parse(data);
                 if (data.status == 'success'){
                     drawGradeTable(data.data);
                 } else {
@@ -312,7 +310,6 @@ function fetchTermsAndDraw(termId){
            type: 'GET',
            url: deployUrl + '/api/terms/'+ termId,
            success:  function (data) {
-            data = JSON.parse(data);
             if (data.status == 'success'){
                 drawTermTable(data.data);
             } else {
@@ -328,7 +325,6 @@ function fetchTermsAndDraw(termId){
            type: 'GET',
            url: deployUrl + '/api/terms',
            success:  function (data) {
-           data = JSON.parse(data);
             if (data.status == 'success'){
                 drawTermsTable(data.data);
             } else {
