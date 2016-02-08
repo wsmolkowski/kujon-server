@@ -96,6 +96,7 @@ function drawGradesTable(grades){
                     for (var unit in grades[key]['grades']['course_units_grades']) {
                         for (var pass in grades[key]['grades']['course_units_grades'][unit]) {
                             html += '<tr>'
+                            debugger;
                             html += '<td>' + grades[key]['grades']['course_units'][unit]['classtype_id'] + '</td>'
                             html += '<td>' + grades[key]['grades']['course_units_grades'][unit][pass]['value_symbol'] + '</td>'
                             html += '<td>' + grades[key]['grades']['course_units_grades'][unit][pass]['value_description']['pl'] + '</td>'
