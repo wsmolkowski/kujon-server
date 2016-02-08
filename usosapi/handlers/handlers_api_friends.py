@@ -10,34 +10,37 @@ from usosapi.mixins.JSendMixin import JSendMixin
 class FriendsAddApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, user_to_add_info_id):
+    def get(self, user_info_id):
 
         parameters = yield self.get_parameters()
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[constants.ID]),
-                                                                            constants.FRIEND_ID: user_to_add_info_id})
+                                                                           constants.FRIEND_ID: user_info_id})
         if not friend_doc:
             result = {}
             result[constants.USOS_ID] = parameters[constants.USOS_ID]
             result[constants.USER_ID] = ObjectId(parameters[constants.ID])
-            result[constants.FRIEND_ID] = str(user_to_add_info_id)
+            result[constants.FRIEND_ID] = str(user_info_id)
             friend_doc = self.db[constants.COLLECTION_FRIENDS].insert(result)
 
         if friend_doc:
-            self.redirect("/friends/suggestions?added={0}".format(user_to_add_info_id))
+            self.redirect("/friends/suggestions?added={0}".format(user_info_id))
 
 
 class FriendsRemoveApi(BaseHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, user_to_remove_info_id):
+    def get(self, user_info_id):
 
         parameters = yield self.get_parameters()
 
-        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[constants.ID]),
-                                                                            constants.FRIEND_ID: user_to_remove_info_id})
+        friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[constants.ID]),
+                                                                           constants.FRIEND_ID: user_info_id})
+        if not friend_in_db:
+            friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[constants.ID]),
+                                                                            constants.FRIEND_ID: user_info_id})
         if friend_doc:
-            self.redirect("/friends?removed={0}".format(user_to_remove_info_id))
+            self.redirect("/friends?removed={0}".format(user_info_id))
         else:
             self.redirect("/friends")
 
