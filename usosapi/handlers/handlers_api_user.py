@@ -3,11 +3,10 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
-from usosapi.mixins.JSendMixin import JSendMixin
 
 LIMIT_FIELDS = ('first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'photo_urls', 'student_programmes')
 
-class UsersInfoByIdApi(BaseHandler, JSendMixin):
+class UsersInfoByIdApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_info_id):
@@ -30,7 +29,7 @@ class UsersInfoByIdApi(BaseHandler, JSendMixin):
             self.success(result)
 
 
-class UserInfoapi(BaseHandler, JSendMixin):
+class UserInfoapi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):

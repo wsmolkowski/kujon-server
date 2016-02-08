@@ -6,11 +6,12 @@ import tornado.gen
 from bson import json_util
 from httplib2 import socks
 from tornado.web import RequestHandler
+from usosapi.mixins.JSendMixin import JSendMixin
 
 from usosapi import constants, settings
 
 
-class BaseHandler(RequestHandler):
+class BaseHandler(RequestHandler, JSendMixin):
     @property
     def oauth_parameters(self):
         return {
@@ -36,12 +37,13 @@ class BaseHandler(RequestHandler):
             atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
-            user_doc = yield self.db.users.find_one({constants.MOBILE_ID: mobile_id,
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MOBILE_ID: mobile_id,
                                                      constants.ACCESS_TOKEN_SECRET: atk,
                                                      constants.ACCESS_TOKEN_KEY: ats})
 
         if not user_doc:
-            raise tornado.web.HTTPError(500, "Request not authenticated")
+            #raise tornado.web.HTTPError(500, "Request not authenticated")
+            self.redirect(settings.LOGIN_URL, **self.template_data())
 
         raise tornado.gen.Return(user_doc)
 

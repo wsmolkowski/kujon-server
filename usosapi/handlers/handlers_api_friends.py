@@ -4,10 +4,9 @@ from bson.objectid import ObjectId
 import usosapi.helpers
 from handlers_api import BaseHandler
 from usosapi import constants
-from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class FriendsAddApi(BaseHandler, JSendMixin):
+class FriendsAddApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_to_add_info_id):
@@ -27,7 +26,7 @@ class FriendsAddApi(BaseHandler, JSendMixin):
             self.redirect("/friends/suggestions?added={0}".format(user_to_add_info_id))
 
 
-class FriendsRemoveApi(BaseHandler, JSendMixin):
+class FriendsRemoveApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_to_remove_info_id):
@@ -43,7 +42,7 @@ class FriendsRemoveApi(BaseHandler, JSendMixin):
 
 
 
-class FriendsSuggestionsApi(BaseHandler, JSendMixin):
+class FriendsSuggestionsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -105,7 +104,7 @@ class FriendsSuggestionsApi(BaseHandler, JSendMixin):
             self.success(suggested_participants)
 
 
-class FriendsApi(BaseHandler, JSendMixin):
+class FriendsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):

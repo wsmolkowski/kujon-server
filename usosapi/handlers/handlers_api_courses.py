@@ -3,10 +3,9 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from usosapi import constants
-from usosapi.mixins.JSendMixin import JSendMixin
 
 
-class CourseHandlerApi(BaseHandler, JSendMixin):
+class CourseHandlerApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id):
@@ -23,7 +22,7 @@ class CourseHandlerApi(BaseHandler, JSendMixin):
             self.success(course_doc)
 
 
-class CoursesEditionsApi(BaseHandler, JSendMixin):
+class CoursesEditionsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
