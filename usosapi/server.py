@@ -41,7 +41,7 @@ class Application(tornado.web.Application):
         _settings = dict(
             debug=options.debug,
             ssl=options.ssl,
-            xsrf_cookies=False,
+            xsrf_cookies=settings.XSRF_COOKIE,
             cookie_secret=options.cookie_secret,
             login_url=settings.LOGIN_URL,
             path=settings.ROOT_PATH,

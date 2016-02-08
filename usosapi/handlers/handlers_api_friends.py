@@ -6,7 +6,39 @@ from handlers_api import BaseHandler
 from usosapi import constants
 
 
-class FriendsAddApi(BaseHandler):
+class FriendsApi(BaseHandler):
+
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        parameters = yield self.get_parameters()
+
+        friends = []
+        friends_returned = []
+        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
+        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
+                    {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
+                                'as': 'users_info'}}]
+
+        cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
+        if cursor:
+            while (yield cursor.fetch_next):
+                friends.append(cursor.next_object())
+
+            for elem in friends:
+                new_elem = {}
+                new_elem['user_id'] = elem['friend_id']
+                user_info = elem['users_info'].pop()
+                new_elem['first_name'] = user_info['first_name']
+                new_elem['last_name'] = user_info['last_name']
+                new_elem['sex'] = user_info['sex']
+                friends_returned.append(new_elem)
+
+            self.success(friends_returned)
+        else:
+            self.error("Please hold on we are looking your friends..")
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self, user_info_id):
@@ -36,11 +68,9 @@ class FriendsAddApi(BaseHandler):
         else:
             self.fail(user_info_id)
 
-
-class FriendsRemoveApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def post(self, user_info_id):
+    def delete(self, user_info_id):
 
         parameters = yield self.get_parameters()
 
@@ -115,36 +145,3 @@ class FriendsSuggestionsApi(BaseHandler):
             self.error("Please hold on we are looking your friends sugestions..")
         else:
             self.success(suggested_participants)
-
-
-class FriendsApi(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-
-        parameters = yield self.get_parameters()
-
-        friends = []
-        friends_returned = []
-        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
-        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
-                    {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
-                                'as': 'users_info'}}]
-
-        cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
-        if cursor:
-            while (yield cursor.fetch_next):
-                friends.append(cursor.next_object())
-
-            for elem in friends:
-                new_elem = {}
-                new_elem['user_id'] = elem['friend_id']
-                user_info = elem['users_info'].pop()
-                new_elem['first_name'] = user_info['first_name']
-                new_elem['last_name'] = user_info['last_name']
-                new_elem['sex'] = user_info['sex']
-                friends_returned.append(new_elem)
-
-            self.success(friends_returned)
-        else:
-            self.error("Please hold on we are looking your friends..")

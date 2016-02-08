@@ -4,10 +4,10 @@ var htmlHelper = new HtmlHelper();
 function friends_add(user_id) {
     $.ajax({
         type: "POST",
-        url: '/api/friends/add/' + user_id,
+        url: '/api/friends/' + user_id,
         success:  function (data) {
             if (data.status == 'success'){
-                location.reload();
+                fetchFriendsSuggestionsAndDraw();
             } else {
                 drawErrorMessage(data.message);
             }
@@ -20,11 +20,11 @@ function friends_add(user_id) {
 
 function friends_remove(user_id) {
     $.ajax({
-        type: "POST",
-        url: '/api/friends/remove/' + user_id,
+        type: "DELETE",
+        url: '/api/friends/' + user_id,
         success:  function (data) {
             if (data.status == 'success'){
-                location.reload();
+                fetchFriendsAndDraw();
             } else {
                 drawErrorMessage(data.message);
             }
@@ -95,7 +95,7 @@ function drawCoursesTable(jsonData) {
 function fetchCursesAndDraw(){
     $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courseseditions',
+      url: deployUrl + '/api/courseseditions/',
       success:  function (data) {
             if (data.status == 'success'){
                 drawCoursesTable(data.data);
@@ -217,7 +217,6 @@ function fetchCurseInfo(courseId){
       type: 'GET',
       url: deployUrl + '/api/courses/' + courseId,
       success:  function (data) {
-            data = JSON.parse(data);
             if (data.status == 'success'){
                 drawCourseInfoTable(data.data);
             } else {
@@ -249,10 +248,8 @@ function fetchGradesAndDraw(courseId, termId){
      } else {
         $.ajax({
             type: 'GET',
-            url: deployUrl + '/api/grades',
+            url: deployUrl + '/api/grades/',
             success:  function (data) {
-                data = JSON.parse(data);
-
                 if (data.status == 'success'){
                     drawGradesTable(data.data);
                 } else {
@@ -323,7 +320,7 @@ function fetchTermsAndDraw(termId){
      } else {
         $.ajax({
            type: 'GET',
-           url: deployUrl + '/api/terms',
+           url: deployUrl + '/api/terms/',
            success:  function (data) {
             if (data.status == 'success'){
                 drawTermsTable(data.data);
@@ -410,7 +407,7 @@ function fetchFriendsSuggestionsAndDraw(){
 
        $.ajax({
              type: 'GET',
-             url: deployUrl + '/api/friends/suggestions',
+             url: deployUrl + '/api/friends/suggestions/',
              success:  function (data) {
                  if (data.status == 'success'){
                     drawFriendsSuggestionsTable(data.data);
@@ -428,7 +425,7 @@ function fetchFriendsSuggestionsAndDraw(){
 function fetchFriendsAndDraw(){
        $.ajax({
              type: 'GET',
-             url: deployUrl + '/api/friends',
+             url: deployUrl + '/api/friends/',
              success:  function (data) {
                  if (data.status == 'success'){
                     drawFriendsTable(data.data);
@@ -463,7 +460,7 @@ function fetchUserInfoAndDraw(user_id) {
     else {
         $.ajax({
              type: 'GET',
-             url: deployUrl + '/api/users',
+             url: deployUrl + '/api/users/',
              success:  function (data) {
                 if (data.status == 'success'){
                     drawUserInfo(data.data);
@@ -490,7 +487,7 @@ $( document ).ready(function() {
             fetchCurseInfo(pathSplit[3]);
         }
     }
-    else if (pathname.indexOf('/school/grades/course/') === 0){
+    else if (pathname.indexOf('/school/grades/course') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);
     }
     else if (pathname.indexOf('/school/grades') === 0){

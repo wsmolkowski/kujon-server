@@ -1,6 +1,6 @@
 from handlers.handlers_api_courses import CourseHandlerApi
 from handlers.handlers_api_courses import CoursesEditionsApi
-from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsAddApi, FriendsRemoveApi, FriendsApi
+from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
@@ -48,18 +48,24 @@ HANDLERS = [
     (r"/authentication/verify", VerifyHandler),
     (r"/authentication/google", GoogleOAuth2LoginHandler),
 
-    (r"/api/users", UserInfoapi),
+    (r"/api/users/", UserInfoapi),
     (r"/api/users/([^/]+)", UsersInfoByIdApi),
-    (r"/api/courseseditions", CoursesEditionsApi),
+
+    (r"/api/courseseditions/", CoursesEditionsApi),
+
     (r"/api/courses/([^/]+)", CourseHandlerApi),
+
     (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
-    (r"/api/grades", GradesForUserApi),
-    (r"/api/terms", TermsApi),
+    (r"/api/grades/", GradesForUserApi),
+
+    (r"/api/terms/", TermsApi),
     (r"/api/terms/([^/]+)", TermApi),
-    (r"/api/friends/suggestions", FriendsSuggestionsApi),
-    (r"/api/friends/add/([^/]+)", FriendsAddApi),
-    (r"/api/friends/remove/([^/]+)", FriendsRemoveApi),
-    (r"/api/friends", FriendsApi),
+
+    (r"/api/friends/suggestions/", FriendsSuggestionsApi),
+
+    (r"/api/friends/([^/]+)", FriendsApi),
+    (r"/api/friends/", FriendsApi),
+
     (r"/api/schedule", ScheduleApi),
 
 

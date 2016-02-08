@@ -5,7 +5,7 @@ ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 DEBUG = True
 PORT = 8888
 SSL = False
-XSRF_COOKIE = True
+XSRF_COOKIE = False
 COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 LOGIN_URL = "/authentication/login"
 STATIC_PATH = os.path.join(ROOT_PATH, 'static')
@@ -24,7 +24,7 @@ DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 
-CLEAN_DB = True
+CLEAN_DB = False
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
 PROXY_URL = None    #
