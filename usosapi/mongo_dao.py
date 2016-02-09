@@ -90,6 +90,12 @@ class Dao:
                 terms.append(term)
         return terms
 
+    def get_user_programmes(self, user_id):
+        programmes = []
+        data = self.__db[constants.COLLECTION_USERS_INFO].find_one({'user_id': ObjectId(user_id)})
+        programmes = data['student_programmes']
+        return programmes
+
     def get_user_courses(self, user_id):
         courses = []
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})

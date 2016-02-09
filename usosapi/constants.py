@@ -8,6 +8,7 @@ TERM_ID = 'term_id'
 ID = '_id'
 UNIT_ID = 'unit_id'
 FRIEND_ID = 'friend_id'
+PROGRAMME_ID = 'id'
 
 PARTICIPANTS = 'participants'
 CREATED_TIME = 'created_time'
@@ -46,3 +47,5 @@ COLLECTION_CROWLLOG = 'crowl_log'
 COLLECTION_PARTICIPANTS = 'courses_participants'
 COLLECTION_COURSES_UNITS = 'courses_units'
 COLLECTION_FRIENDS = 'friends'
+COLLECTION_PROGRAMMES = 'programmes'
+

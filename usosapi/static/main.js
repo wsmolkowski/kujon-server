@@ -277,6 +277,40 @@ function drawTermTable(jsonData){
     $(baseContainer).html(html);
 }
 
+function drawProgrammesTable(jsonData){
+    $(baseContainer).empty();
+     var html = '<table class="table table-hover">';
+        html += '<tr><th>Nazwa Programu</th><th>Numer</th><th>Poziom studiów</th><th>Tryb</th><th>Czas trwania</th></tr>'
+        html += '<tbody>'
+        for (key in jsonData) {
+            html += '<tr>'
+            html += '<td>' + jsonData[key]['name']['pl'] + '</td>'
+            html += '<td>' + jsonData[key]['id'] + '</td>'
+            html += '<td>' + jsonData[key]['level_of_studies']['pl'] + '</td>'
+            html += '<td>' + jsonData[key]['mode_of_studies']['pl'] + '</td>'
+            html += '<td>' + jsonData[key]['duration']['pl'] + '</td>'
+            html += '</tr>'
+        }
+        html += '</tbody></table>';
+    $(baseContainer).html(html);
+}
+
+function drawProgrammeTable(jsonData){
+    $(baseContainer).empty();
+     var html = '<table class="table table-hover">';
+        html += '<tr><th>Nazwa Programu</th><th>Numer</th><th>Poziom studiów</th><th>Tryb</th><th>Czas trwania</th></tr>'
+        html += '<tbody>'
+        html += '<tr>'
+        html += '<td>' + jsonData['name']['pl'] + '</td>'
+        html += '<td>' + jsonData['id'] + '</td>'
+        html += '<td>' + jsonData['level_of_studies']['pl'] + '</td>'
+        html += '<td>' + jsonData['mode_of_studies']['pl'] + '</td>'
+        html += '<td>' + jsonData['duration']['pl'] + '</td>'
+        html += '</tr>'
+        html += '</tbody></table>';
+    $(baseContainer).html(html);
+}
+
 function fetchTermsAndDraw(termId){
      if (typeof termId != 'undefined'){
         $.ajax({
@@ -309,8 +343,40 @@ function fetchTermsAndDraw(termId){
            }
         });
      };
+}
 
-
+function fetchProgrammesAndDraw(programmeId){
+     if (typeof programmeId != 'undefined'){
+        $.ajax({
+           type: 'GET',
+           url: deployUrl + '/api/programmes/'+ programmeId,
+           success:  function (data) {
+            if (data.status == 'success'){
+                drawProgrammeTable(data.data);
+            } else {
+                drawErrorMessage(data.message);
+            }
+           },
+           error: function (err) {
+            drawErrorMessage(err);
+           }
+        });
+     } else {
+        $.ajax({
+           type: 'GET',
+           url: deployUrl + '/api/programmes/',
+           success:  function (data) {
+            if (data.status == 'success'){
+                drawProgrammesTable(data.data);
+            } else {
+                drawErrorMessage(data.message);
+            }
+           },
+           error: function (err) {
+            drawErrorMessage(err);
+           }
+        });
+     };
 }
 
 function drawFriendsSuggestionsTable(jsonData){
@@ -352,9 +418,8 @@ function drawUserInfo(jsonData){
     html += '<caption>Konto w Kujonie</caption>'
     html += '<tbody>'
     if (typeof jsonData[0]['email'] != 'undefined'){
-        html += '<tr><td>Imię i Nazwisko</td><td>' +jsonData[0]['given_name'] + ' ' + jsonData[0]['family_name'] + '</td></tr>'
-        html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td></tr>'
-        html += '<tr><td></td><td><img src="' + jsonData[0]['picture'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+        html += '<tr><td>Imię i Nazwisko</td><td>' +jsonData[0]['given_name'] + ' ' + jsonData[0]['family_name'] + '</td><td><img src="' + jsonData[0]['picture'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+        html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td><td></td></tr>'
     }
     else {
         html += '<tr><td>Brak konta</td><td><a href="/xxxx/">Zaproś</a></td></tr>'
@@ -364,16 +429,16 @@ function drawUserInfo(jsonData){
     html += '<table class="table table-hover">';
     html += '<caption>Konto w USOSie</caption>'
     html += '<tbody>'
-    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData[1]['first_name'] + ' ' + jsonData[1]['last_name'] + '</td></tr>'
-    html += '<tr><td>Student number</td><td>' + jsonData[1]['student_number'] + '</td></tr>'
-    html += '<tr><td>Email</td><td>' + jsonData[1]['email'] + '</td></tr>'
+    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData[1]['first_name'] + ' ' + jsonData[1]['last_name'] + '</td><td><img src="' + jsonData[1]['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    html += '<tr><td>Student number</td><td>' + jsonData[1]['student_number'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Email</td><td>' + jsonData[1]['email'] + '</td></td><td></td></tr>'
 
     $.each(jsonData[1]['student_programmes'], function(key, value){
             for(var i=1; i< 2; i++) {
-                html += '<tr><td>Program</td><td>' + value['programme']['id'] + ' (' + value['id'] + ') - ' + value['programme']['description']['pl']+ '</td></tr>'
+                html += '<tr><td>Program</td><td>' + value['programme']['description']['pl']+ '</td><td><button class="btn btn-primary" onclick="location.href=\'/school/programmes/' + value['programme']['id'] + '\'">Zobacz</button></td></tr>'
+
             }
     });
-    html += '<tr><td></td><td><img src="' + jsonData[1]['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
     html += '</tbody></table>';
 
     $(baseContainer).html(html);
@@ -475,6 +540,14 @@ $( document ).ready(function() {
         }
         else if (pathSplit.length == 4) {
             fetchTermsAndDraw(pathSplit[3]);
+        }
+    }
+    else if (pathname.indexOf('/school/programmes') === 0){
+        if (pathSplit.length == 3){
+            fetchProgrammesAndDraw();
+        }
+        else if (pathSplit.length == 4) {
+            fetchProgrammesAndDraw(pathSplit[3]);
         }
     }
     else if (pathname.indexOf('/friends/suggestions') === 0){

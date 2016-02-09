@@ -12,6 +12,7 @@ URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields
 URI_COURSE_INFO = "services/courses/course?course_id={0}&fields=id|name|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
+URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
 
 
 class UsosClient:
@@ -46,6 +47,13 @@ class UsosClient:
             return json.loads(body)
         raise Exception("Error while fetching user info. Response code: {0} body: {1}".format(code, body))
 
+    def programme(self, programme_id):
+        if programme_id:
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_PROGRAMMES.format(programme_id)))
+            if int(code['status']):
+                return json.loads(body)
+        raise Exception("Error while fetching programmes. Response code: {0} body: {1}".format(code, body))
+
     def courseeditions_info(self):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSESEDITIONS_INFO))
         if int(code['status']):
@@ -73,3 +81,4 @@ class UsosClient:
         if int(code['status']):
             return json.loads(body)
         raise Exception("Error while fetching class_types. Response code: {0} body: {1}".format(code, body))
+

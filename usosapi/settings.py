@@ -10,7 +10,7 @@ COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 LOGIN_URL = "/authentication/login"
 STATIC_PATH = os.path.join(ROOT_PATH, 'static')
 TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
-#AUTORELOAD_ENABLED = False
+AUTORELOAD_ENABLED = False
 GZIP = True
 
 # site

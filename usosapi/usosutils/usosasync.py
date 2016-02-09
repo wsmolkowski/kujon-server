@@ -10,7 +10,7 @@ from usosapi import settings
 
 URL_COURSE_INFO = '{0}/services/courses/course?course_id={1}&fields=id|name|description'
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
-URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|classtype_id&unit_id={1}'
+URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
 

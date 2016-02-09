@@ -2,6 +2,7 @@ from handlers.handlers_api_courses import CourseHandlerApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
+from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoapi, UsersInfoByIdApi
@@ -14,6 +15,7 @@ from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import FriendsSuggestionsHandler
 from handlers.handlers_web import GradesWebHandler
 from handlers.handlers_web import MainHandler, UsersHandler, UserHandlerByUserId
+from handlers.handlers_web import ProgrammesWebHandler, ProgrammeWebHandler
 from handlers.handlers_web import ScheduleWebHandler
 from handlers.handlers_web import SchoolHandler
 from handlers.handlers_web import SettingsHandler, RegulationsHandler
@@ -32,6 +34,10 @@ HANDLERS = [
     (r"/school/terms", TermsWebHandler),
     (r"/school/terms/([^/]+)", TermWebHandler),
     (r"/school/schedule", ScheduleWebHandler),
+
+    (r"/school/programmes", ProgrammesWebHandler),
+    (r"/school/programmes/([^/]+)", ProgrammeWebHandler),
+
 
     (r"/chat", ChatHandler),
     (r"/chatsocket", ChatSocketHandler),
@@ -68,5 +74,8 @@ HANDLERS = [
 
     (r"/api/schedule", ScheduleApi),
 
+    (r"/api/programmes/", ProgrammesApi),
+    (r"/api/programmes/([^/]+)", ProgrammesByIdApi),
 
 ]
+

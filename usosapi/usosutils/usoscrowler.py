@@ -91,6 +91,16 @@ class UsosCrowler:
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
+    def __build_programmes(self, client, user_id, crowl_time, usos):
+
+        programmes = self.dao.get_user_programmes(user_id)
+        for prog in programmes:
+            result = client.programme(prog['programme'][constants.PROGRAMME_ID])
+            result = self.append(result, None, crowl_time, crowl_time)
+            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
+            logging.debug('programme for prog: {0} inserted: {1}'.format(prog['id'], prog_doc))
+
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
         '''
             fetches curseseditions and inserts to database
@@ -264,6 +274,8 @@ class UsosCrowler:
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
             self.__build_user_info(client, user_id, None, crowl_time, usos)
+
+            self.__build_programmes(client, user_id, crowl_time, usos)
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
