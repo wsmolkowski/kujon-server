@@ -8,8 +8,8 @@ from usosapi import settings
 
 URI_USER_INFO =            "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
 URI_USER_INFO_BY_USER_ID = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted&user_id={0}"
-URI_COURSESEDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-URI_COURSE_INFO = "services/courses/course?course_id={0}&fields=id|name|description"
+URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
+URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids|lecturers|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
@@ -63,13 +63,13 @@ class UsosClient:
             raise Exception("Error while fetching groups. Response code: {0} body: {1}".format(code, body))
 
     def courseeditions_info(self):
-        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSESEDITIONS_INFO))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_EDITIONS_INFO))
         if int(code['status']):
             return json.loads(body)
         raise Exception("Error while fetching courseeditions_info. Response code: {0} body: {1}".format(code, body))
 
-    def course_info(self, course_id):
-        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_INFO.format(course_id)))
+    def course_edition(self, course_id, term_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO.format(course_id, term_id)))
         if int(code['status']):
             return json.loads(body)
         raise Exception(

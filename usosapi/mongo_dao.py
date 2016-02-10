@@ -74,8 +74,8 @@ class Dao:
     def get_term(self, term_id, usos_id):
         return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_course(self, course_id, usos_id):
-        return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
+    def get_course_edition(self, usos_id, course_id, term_id):
+        return self.__db.course_edition.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id):
         return self.__db.grades.find_one(
@@ -100,14 +100,14 @@ class Dao:
         return programmes
 
     def get_user_courses(self, user_id):
-        courses = []
+        course_edition = []
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
 
         for term_data in data['course_editions'].values():
             for term in term_data:
-                if term['course_id'] not in courses:
-                    courses.append(term['course_id'])
-        return courses
+                if term['course_id'] not in course_edition:
+                    course_edition.append({'course_id': term['course_id'], 'term_id': term['term_id']})
+        return course_edition
 
     def get_user_courses_editions(self, user_id):
         result = []

@@ -22,17 +22,6 @@ class UsosAsyncTest(AsyncTestCase):
         # then
         self.assertNotEqual(0, result)
 
-    @gen_test
-    def testGetCourseInfo(self):
-        # assume
-        course_id = "1000-612ARR"
-        base_url = "https://usosapps.uw.edu.pl/"
-
-        # when
-        result = yield usosasync.get_course_info(base_url, course_id)
-
-        # then
-        self.assertNotEqual(0, result)
 
     @gen_test
     def testGetUnitInfo(self):

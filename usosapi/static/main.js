@@ -57,7 +57,7 @@ function drawCoursesTable(jsonData) {
             for (var course in jsonData['course_editions'][term]) {
                 html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
                 html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
-                html += '<td><a href=/school/courses/'+ jsonData['course_editions'][term][course]['course_id']+ '>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href="/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+ encodeURIComponent(term) +'">' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
                 html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
@@ -92,7 +92,7 @@ function drawCourseInfoTable(jsonData){
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['course_id'] + '</td>'
-        html += '<td>' + jsonData['name']['pl'] + '</td>'
+        html += '<td>' + jsonData['course_name']['pl'] + '</td>'
         html += '<td>' + jsonData['description']['pl'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
@@ -188,10 +188,10 @@ function drawGradeTable(jsonData){
     $(baseContainer).html(html);
 }
 
-function fetchCurseInfo(courseId){
+function fetchCurseEdition(courseId, termId){
      $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courses/' + courseId,
+      url: deployUrl + '/api/courseedition/' + courseId + '/' + termId,
       success:  function (data) {
             if (data.status == 'success'){
                 drawCourseInfoTable(data.data);
@@ -517,16 +517,14 @@ function fetchUserInfoAndDraw(user_id) {
 }
 
 $( document ).ready(function() {
-
+    debugger;
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
     if (pathname.indexOf('/school/courses') === 0){
-        if (pathSplit.length == 3){
-            fetchCursesAndDraw();
-        }
-        else if (pathSplit.length == 4) {
-            fetchCurseInfo(pathSplit[3]);
-        }
+        fetchCursesAndDraw();
+    }
+    else if (pathname.indexOf('/school/courseedition') === 0){
+            fetchCurseEdition(pathSplit[3], pathSplit[4]);
     }
     else if (pathname.indexOf('/school/grades/course') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);

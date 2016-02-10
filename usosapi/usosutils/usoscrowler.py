@@ -146,15 +146,15 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-        for course_id in self.dao.get_user_courses(user_id):
-            if self.dao.get_course(course_id, usos[constants.USOS_ID]):
+        for course_edition in self.dao.get_user_courses(user_id):
+            if self.dao.get_course_edition(course_edition['course_id'], course_edition['term_id'], usos[constants.USOS_ID]):
                 continue  # course already exists
 
-            result = yield usosasync.get_course_info(usos[constants.USOS_URL], course_id)
+            result = client.course_edition(course_edition['course_id'], course_edition['term_id'])
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
-            c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-            logging.debug('course for course_id: {0} inserted {1}'.format(course_id, c_doc))
+            c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+            logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition['course_id'], course_edition['term_id'], c_doc))
 
     @tornado.gen.coroutine
     def __build_participants(self, client, course_id, participants, crowl_time, term_id, usos):
@@ -172,7 +172,7 @@ class UsosCrowler:
             result = []
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PARTICIPANTS] = participants
-            course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
+            course_doc = self.dao.get_course_edition(usos[constants.USOS_ID], course_id, term_id)
             result[constants.COURSE_ID] = course_doc[constants.ID]
             result[constants.COURSE_ID] = course_id
             result[constants.TERM_ID] = term_id
@@ -217,7 +217,7 @@ class UsosCrowler:
             logging.debug('unit {0} inserted {1}'.format(unit_id, u_doc))
 
     @tornado.gen.coroutine
-    def __build_groups_and_add_lectures(self, client, crowl_time, units, usos):
+    def __build_groups(self, client, crowl_time, units, usos):
         '''
             iterates over units and if does not exists in database fetches data from usos and inserts
         :param crowl_time:
@@ -225,7 +225,6 @@ class UsosCrowler:
         :param usos:
         :return:
         '''
-        all_lecturers = []
         for unit in units:
             result = client.groups(unit)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -234,12 +233,6 @@ class UsosCrowler:
                 continue
             grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
             logging.debug('group for unit: {0} inserted: {1}'.format(unit, grp_doc))
-            for lecturer in result['lecturers']:
-                if lecturer not in all_lecturers:
-                    all_lecturers.append(lecturer)
-                    logging.debug('lecturer: {0} found.'.format(unit, lecturer))
-        self.__build_user_infos(client, crowl_time, all_lecturers, usos)
-
 
     @tornado.gen.coroutine
     def __build_grades_participants_units_groups(self, client, user_id, usos, crowl_time):
@@ -259,7 +252,7 @@ class UsosCrowler:
             if self.dao.get_grades(course_id, term_id, user_id):
                 continue  # grades for course and term already exists
 
-            result = client.grades(course_id, term_id)
+            result = client.course_edition(course_id, term_id)
             participants = result.pop('participants')
             units = result.pop('course_units_ids')
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -279,7 +272,7 @@ class UsosCrowler:
 
         self.__build_user_infos(client, crowl_time, all_participants, usos)
         yield self.__build_units(crowl_time, all_units, usos)
-        self.__build_groups_and_add_lectures(client, crowl_time, all_units, usos)
+        self.__build_groups(client, crowl_time, all_units, usos)
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -308,7 +301,7 @@ class UsosCrowler:
 
             yield self.__build_terms(client, user_id, usos, crowl_time)
 
-            yield self.__build_courses(client, user_id, usos, crowl_time)
+            self.__build_courses(client, user_id, usos, crowl_time)
 
             yield self.__build_grades_participants_units_groups(client, user_id, usos, crowl_time)
 

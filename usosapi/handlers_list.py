@@ -1,4 +1,4 @@
-from handlers.handlers_api_courses import CourseHandlerApi
+from handlers.handlers_api_courses import CourseEditionApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
@@ -9,15 +9,15 @@ from handlers.handlers_api_user import UserInfoapi, UsersInfoByIdApi
 from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler
 from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
 from handlers.handlers_chat import ChatHandler, ChatSocketHandler
-from handlers.handlers_web import CourseInfoWebHandler
-from handlers.handlers_web import CoursesWebHandler
+from handlers.handlers_web import CourseEdition_WebHandler
+from handlers.handlers_web import Courses_WebHandler
 from handlers.handlers_web import FriendsHandler
 from handlers.handlers_web import FriendsSuggestionsHandler
-from handlers.handlers_web import GradesWebHandler
+from handlers.handlers_web import Grades_WebHandler
 from handlers.handlers_web import MainHandler, UsersHandler, UserHandlerByUserId
-from handlers.handlers_web import ProgrammesWebHandler, ProgrammeWebHandler
+from handlers.handlers_web import ProgrammesWebHandler, Programme_WebHandler
 from handlers.handlers_web import ScheduleWebHandler
-from handlers.handlers_web import SchoolHandler
+from handlers.handlers_web import School_Handler
 from handlers.handlers_web import SettingsHandler, RegulationsHandler
 from handlers.handlers_web import TermsWebHandler, TermWebHandler
 
@@ -27,17 +27,16 @@ HANDLERS = [
     (r"/users", UsersHandler),
     (r"/users/([^/]+)", UserHandlerByUserId),
 
-    (r"/school/grades", SchoolHandler),
-    (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
-    (r"/school/courses", CoursesWebHandler),
-    (r"/school/courses/([^/]+)", CourseInfoWebHandler),
+    (r"/school/grades", School_Handler),
+    (r"/school/grades/course/([^/]+)/([^/]+)", Grades_WebHandler),
+    (r"/school/courses", Courses_WebHandler),
+    (r"/school/courseedition/([^/]+)/([^/]+)", CourseEdition_WebHandler),
     (r"/school/terms", TermsWebHandler),
     (r"/school/terms/([^/]+)", TermWebHandler),
     (r"/school/schedule", ScheduleWebHandler),
 
     (r"/school/programmes", ProgrammesWebHandler),
-    (r"/school/programmes/([^/]+)", ProgrammeWebHandler),
-
+    (r"/school/programmes/([^/]+)", Programme_WebHandler),
 
     (r"/chat", ChatHandler),
     (r"/chatsocket", ChatSocketHandler),
@@ -58,8 +57,7 @@ HANDLERS = [
     (r"/api/users/([^/]+)", UsersInfoByIdApi),
 
     (r"/api/courseseditions/", CoursesEditionsApi),
-
-    (r"/api/courses/([^/]+)", CourseHandlerApi),
+    (r"/api/courseedition/([^/]+)/([^/]+)", CourseEditionApi),
 
     (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
     (r"/api/grades/", GradesForUserApi),

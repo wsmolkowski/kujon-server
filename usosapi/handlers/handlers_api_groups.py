@@ -4,28 +4,13 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
-LIMIT_FIELDS = ('name','mode_of_studies','level_of_studies','programme_id','duration')
+LIMIT_FIELDS = ('class_type_id', 'course_unit_id', 'term_id', 'lecturers')
 
 
-class ProgrammesByIdApi(BaseHandler):
+class GroupsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, programme_id):
-
-        parameters = yield self.get_parameters()
-
-        programme = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS)
-
-        if not programme:
-            self.error("Please hold on we are looking your programmes.")
-        else:
-            self.success(programme)
-
-
-class ProgrammesApi(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
+    def get(self, course):
 
         parameters = yield self.get_parameters()
 
