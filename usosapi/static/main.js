@@ -285,7 +285,7 @@ function drawProgrammesTable(jsonData){
         for (key in jsonData) {
             html += '<tr>'
             html += '<td>' + jsonData[key]['name']['pl'] + '</td>'
-            html += '<td>' + jsonData[key]['id'] + '</td>'
+            html += '<td>' + jsonData[key]['programme_id'] + '</td>'
             html += '<td>' + jsonData[key]['level_of_studies']['pl'] + '</td>'
             html += '<td>' + jsonData[key]['mode_of_studies']['pl'] + '</td>'
             html += '<td>' + jsonData[key]['duration']['pl'] + '</td>'
@@ -302,7 +302,7 @@ function drawProgrammeTable(jsonData){
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['name']['pl'] + '</td>'
-        html += '<td>' + jsonData['id'] + '</td>'
+        html += '<td>' + jsonData['programme_id'] + '</td>'
         html += '<td>' + jsonData['level_of_studies']['pl'] + '</td>'
         html += '<td>' + jsonData['mode_of_studies']['pl'] + '</td>'
         html += '<td>' + jsonData['duration']['pl'] + '</td>'

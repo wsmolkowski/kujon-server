@@ -59,6 +59,9 @@ class Dao:
     def get_courses_units(self, unit_id, usos_id):
         return self.__db.courses_units.find_one({constants.UNIT_ID: unit_id, constants.USOS_ID: usos_id})
 
+    def get_group(self, group_id, usos_id):
+        return self.__db.courses_units.find_one({constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
+
     def update(self, collection, key, key_value, document):
         return self.__db[collection].update({key: key_value}, document)
 

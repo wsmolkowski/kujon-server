@@ -95,9 +95,11 @@ class UsosCrowler:
 
         programmes = self.dao.get_user_programmes(user_id)
         for prog in programmes:
-            result = client.programme(prog['programme'][constants.PROGRAMME_ID])
+            result = client.programme(prog['programme']['id'])
             result = self.append(result, None, crowl_time, crowl_time)
             result[constants.USOS_ID] = usos[constants.USOS_ID]
+            result[constants.PROGRAMME_ID] = result.pop('id')
+
             prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
             logging.debug('programme for prog: {0} inserted: {1}'.format(prog['id'], prog_doc))
 
@@ -125,8 +127,8 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-
         for term_id in self.dao.get_user_terms(user_id):
+
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
             result = yield usosasync.get_term_info(usos[constants.USOS_URL], term_id)
@@ -144,7 +146,6 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-
         for course_id in self.dao.get_user_courses(user_id):
             if self.dao.get_course(course_id, usos[constants.USOS_ID]):
                 continue  # course already exists
@@ -166,13 +167,13 @@ class UsosCrowler:
         :param usos:
         :return: list of participants
         '''
-
-        if not self.dao.get_participants(course_id, term_id, usos):
+        result = self.dao.get_participants(course_id, term_id, usos)
+        if not result:
+            result = []
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PARTICIPANTS] = participants
             course_doc = self.dao.get_course(course_id, usos[constants.USOS_ID])
             result[constants.COURSE_ID] = course_doc[constants.ID]
-
             result[constants.COURSE_ID] = course_id
             result[constants.TERM_ID] = term_id
             p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
@@ -181,19 +182,19 @@ class UsosCrowler:
 
         raise tornado.gen.Return(participants)
 
-    def __build_user_infos(self, client, crowl_time, participants, usos):
+    def __build_user_infos(self, client, crowl_time, users, usos):
         '''
             build user info for participants from list
         :param client:
         :param crowl_time:
-        :param participants:
+        :param users:
         :return:
         '''
 
-        for participant in participants:
-            if not self.dao.get_users_info_by_usos_id(participant['id'], usos):
-                self.__build_user_info(client, None, participant['id'], crowl_time, usos)
-                logging.debug('Fetched user_info for participant with id: {0}'.format(participant['id']))
+        for user in users:
+            if not self.dao.get_users_info_by_usos_id(user['id'], usos):
+                self.__build_user_info(client, None, user['id'], crowl_time, usos)
+                logging.debug('Fetched user_info for user with id: {0}'.format(user['id']))
 
     @tornado.gen.coroutine
     def __build_units(self, crowl_time, units, usos):
@@ -213,10 +214,35 @@ class UsosCrowler:
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-            logging.debug('units inserted for: {0} inserted {1}'.format(unit_id, u_doc))
+            logging.debug('unit {0} inserted {1}'.format(unit_id, u_doc))
 
     @tornado.gen.coroutine
-    def __build_grades_participants_units(self, client, user_id, usos, crowl_time):
+    def __build_groups_and_add_lectures(self, client, crowl_time, units, usos):
+        '''
+            iterates over units and if does not exists in database fetches data from usos and inserts
+        :param crowl_time:
+        :param units:
+        :param usos:
+        :return:
+        '''
+        all_lecturers = []
+        for unit in units:
+            result = client.groups(unit)
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+            if 'message' in result:
+                logging.debug('failed fetching group for unit: {0}'.format(unit))
+                continue
+            grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
+            logging.debug('group for unit: {0} inserted: {1}'.format(unit, grp_doc))
+            for lecturer in result['lecturers']:
+                if lecturer not in all_lecturers:
+                    all_lecturers.append(lecturer)
+                    logging.debug('lecturer: {0} found.'.format(unit, lecturer))
+        self.__build_user_infos(client, crowl_time, all_lecturers, usos)
+
+
+    @tornado.gen.coroutine
+    def __build_grades_participants_units_groups(self, client, user_id, usos, crowl_time):
         '''
             building grades and participants and units
         :param client:
@@ -253,6 +279,7 @@ class UsosCrowler:
 
         self.__build_user_infos(client, crowl_time, all_participants, usos)
         yield self.__build_units(crowl_time, all_units, usos)
+        self.__build_groups_and_add_lectures(client, crowl_time, all_units, usos)
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -283,7 +310,7 @@ class UsosCrowler:
 
             yield self.__build_courses(client, user_id, usos, crowl_time)
 
-            yield self.__build_grades_participants_units(client, user_id, usos, crowl_time)
+            yield self.__build_grades_participants_units_groups(client, user_id, usos, crowl_time)
 
             # crowl collection
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -292,5 +319,5 @@ class UsosCrowler:
             logging.info('crowl log inserted with id {0}'.format(doc))
 
         except Exception, ex:
-            logging.exception("Exception while initial user usos crowler", ex.message)
+            logging.exception("Exception while initial user usos crowler")
 
