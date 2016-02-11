@@ -264,7 +264,7 @@ class UsosCrowler:
         self.__build_user_infos(client, crowl_time, all_participants, usos)
         self.__build_user_infos(client, crowl_time, all_lecturers, usos)
 
-        self.__build_units(crowl_time, all_units, usos)
+        self.__build_units(client, crowl_time, all_units, usos)
         self.__build_groups(client, crowl_time, all_units, usos)
 
     @log_execution_time
