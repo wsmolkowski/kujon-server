@@ -7,9 +7,9 @@ from bson import json_util
 from httplib2 import socks
 from tornado import httpclient
 from tornado.web import RequestHandler
-from usosapi.mixins.JSendMixin import JSendMixin
 
 from usosapi import constants, settings
+from usosapi.mixins.JSendMixin import JSendMixin
 
 
 class BaseHandler(RequestHandler, JSendMixin):
@@ -49,12 +49,12 @@ class BaseHandler(RequestHandler, JSendMixin):
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MOBILE_ID: mobile_id,
-                                                     constants.ACCESS_TOKEN_SECRET: atk,
-                                                     constants.ACCESS_TOKEN_KEY: ats})
+                                                                           constants.ACCESS_TOKEN_SECRET: atk,
+                                                                           constants.ACCESS_TOKEN_KEY: ats})
 
         if not user_doc:
             raise tornado.web.HTTPError(500, "Request not authenticated")
-            #self.error(message='Request not authenticated', code=501)
+            # self.error(message='Request not authenticated', code=501)
 
         raise tornado.gen.Return(user_doc)
 
@@ -82,12 +82,16 @@ class BaseHandler(RequestHandler, JSendMixin):
             return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
         return None
 
-    @staticmethod
-    def template_data():
+    def template_data(self):
+        usos_paired = False
+        user = self.get_current_user()
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
+
         return {
             'PROJECT_TITLE': settings.PROJECT_TITLE,
             'DEPLOY_URL': settings.DEPLOY_URL,
-            constants.NEXT_PAGE: "/"
+            'USOS_PAIRED': usos_paired,
         }
 
     @tornado.gen.coroutine

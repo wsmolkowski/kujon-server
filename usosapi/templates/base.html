@@ -16,68 +16,68 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
           integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
-
     <!-- Custom styles for this template -->
-    <link href="{{ static_url("main.css") }}" rel="stylesheet">
+    <link href="{{ static_url('main.css') }}" rel="stylesheet">
 
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
   </head>
   <body>
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-default navbar-fixed-top">
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-             {% if current_user %}
-              <li><a href="/users">Użytkownik</a></li>
-              <li><a href="/school/schedule">Plan Zajęć</a></li>
-              <li class="dropdown">
-                <a href="/school" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Szkoła <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="/school/courses">Przedmioty</a></li>
-                    <li><a href="/school/grades">Oceny</a></li>
-                    <li><a href="/school/terms">Semestry</a></li>
-                    <li><a href="/school/programmes">Programy</a></li>
-                    <li><a href="/school/lecturers">Belfrowie</a></li>
-                  </ul>
-             </li>
-              <li class="dropdown">
-                <a href="/friends" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Znajomi <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="/friends">Znajomi</a></li>
-                    <li><a href="/friends/suggestions">Szukaj znajomych</a></li>
-                  </ul>
-             </li>
-              <li><a href="/settings">Ustawienia</a></li>
+          <div id="navbar" class="navbar-collapse collapse">
+              <ul class="nav navbar-nav navbar-right">
+                  {% if current_user %}
+                  {% if USOS_PAIRED %}
+                  <li><a href="/users">Użytkownik</a></li>
+                  <li><a href="/school/schedule">Plan Zajęć</a></li>
+                  <li class="dropdown">
+                      <a href="/school" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                         aria-haspopup="true" aria-expanded="false">Szkoła <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="/school/courses">Przedmioty</a></li>
+                          <li><a href="/school/grades">Oceny</a></li>
+                          <li><a href="/school/terms">Semestry</a></li>
+                          <li><a href="/school/programmes">Programy</a></li>
+                          <li><a href="/school/lecturers">Belfrowie</a></li>
+                      </ul>
+                  </li>
+                  <li class="dropdown">
+                      <a href="/friends" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                         aria-haspopup="true" aria-expanded="false">Znajomi <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="/friends">Znajomi</a></li>
+                          <li><a href="/friends/suggestions">Szukaj znajomych</a></li>
+                      </ul>
+                  </li>
+                  <li><a href="/settings">Ustawienia</a></li>
+                  {% end %}
+                  {% if not USOS_PAIRED %}
+                  <li><a href="/authentication/create">Połącz z USOS</a></li>
+                  {% end %}
+                  <li><a href="/authentication/logout">Wyloguj</a></li>
+                  {% else %}
+                  <li class="dropdown">
+                      <a href="/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                         aria-haspopup="true" aria-expanded="false">Zaloguj <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="{{DEPLOY_URL}}/authentication/google">Przez Google</a></li>
+                      </ul>
+                  </li>
 
-              <li><a href="/authentication/logout">Wyloguj</a></li>
-             {% else %}
-              <li class="dropdown">
-                <a href="/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Zaloguj <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="{{DEPLOY_URL}}/authentication/google">Przez Google</a></li>
-                  </ul>
-             </li>
 
+                  <li><a href="/authentication/register">Rejestracja</a></li>
+                  {% end %}
+              </ul>
 
-              <li><a href="/authentication/register">Rejestracja</a></li>
-             {% end %}
-          </ul>
+              <a class="navbar-brand" href="{{DEPLOY_URL}}">{{PROJECT_TITLE}}</a>
 
-          <a class="navbar-brand" href="{{DEPLOY_URL}}">{{PROJECT_TITLE}}</a>
-
-        </div><!--/.nav-collapse -->
+          </div><!--/.nav-collapse -->
       </div>
-    </nav>
+  </nav>
 
-    <div class="container" id="base-container-id">
+  <div class="container" id="base-container-id">
 
-      {% block main %}
+  {% block main %}
 
       {% end %}
 
@@ -99,17 +99,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
             integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
-    <!--
-    <script src="{{ static_url("js.cookie-2.1.0.min.js") }}"></script>
-    -->
+
      <script>
          $(document).ready(function() {
             deployUrl = '{{DEPLOY_URL}}';
         });
     </script>
 
-    <script src="{{ static_url("HtmlHelper.js") }}"></script>
-    <script src="{{ static_url("main.js") }}"></script>
+    <script src="{{ static_url('main.js') }}"></script>
 
     {% block extra_js %}
 

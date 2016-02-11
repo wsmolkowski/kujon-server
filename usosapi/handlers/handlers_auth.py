@@ -12,6 +12,9 @@ from handlers_api import BaseHandler
 from usosapi import constants
 from usosapi import settings
 
+COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+                 constants.USOS_PAIRED)
+
 
 class LoginHandler(BaseHandler):
     def get(self):
@@ -23,11 +26,11 @@ class LoginHandler(BaseHandler):
     def post(self):
         access_token_key = self.get_argument("inputAccessTokenKey")
         access_token_secret = self.get_argument("inputAccessTokenSecret")
-        next_page = self.get_argument(constants.NEXT_PAGE, "/")
 
-        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: access_token_secret,
-                                                 constants.ACCESS_TOKEN_KEY: access_token_key},
-                                                constants.USER_PRESENT_KEYS)
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.ACCESS_TOKEN_SECRET: access_token_secret,
+             constants.ACCESS_TOKEN_KEY: access_token_key},
+            constants.USER_PRESENT_KEYS)
         if user_doc:
             user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
             user_doc.pop(constants.ID)
@@ -35,7 +38,7 @@ class LoginHandler(BaseHandler):
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
-            self.redirect(next_page)
+            self.redirect('/')
         else:
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key,
@@ -57,7 +60,8 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'id': user['id'], constants.USER_TYPE: 'google'},
-                ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID))
+                (
+                'id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID))
 
             if not user_doc:
                 user['code'] = self.get_argument('code')
@@ -70,10 +74,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
-                                                                              ('id', constants.USOS_URL,
-                                                                               constants.ACCESS_TOKEN_KEY,
-                                                                               constants.ACCESS_TOKEN_SECRET,
-                                                                               constants.USOS_ID))
+                                                                              COOKIE_FIELDS)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
@@ -168,7 +169,6 @@ class VerifyHandler(BaseHandler):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
-
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
         template_data = self.template_data()
@@ -205,16 +205,14 @@ class VerifyHandler(BaseHandler):
                     user_doc_updated)
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']},
-                                                                              ('id', constants.USOS_URL,
-                                                                               constants.ACCESS_TOKEN_KEY,
-                                                                               constants.ACCESS_TOKEN_SECRET,
-                                                                               constants.USOS_ID))
+                                                                              COOKIE_FIELDS)
                 self.clear_cookie(constants.USER_SECURE_COOKIE)
                 self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
-                self.crowler.put_user(updated_user[constants.ID])
+                                       tornado.escape.json_encode(json_util.dumps(user_doc)),
+                                       constants.COOKIE_EXPIRES_DAYS)
 
+                self.crowler.put_user(updated_user[constants.ID])
+                self.redirect('/')
             except KeyError:
                 template_data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
