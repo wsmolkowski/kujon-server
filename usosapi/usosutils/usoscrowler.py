@@ -99,6 +99,19 @@ class UsosCrowler:
                 photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
                 logging.debug('photo for user_id: {0} inserted {1}'.format(photo[constants.USER_ID], photo_doc))
 
+        # if users conducts some curses - fetch courses
+        if result['course_editions_conducted']:
+            for courseterm in result['course_editions_conducted']:
+                course_id, term_id = courseterm['id'].split('|')
+                course_doc = self.dao.get_course_edition(course_id, term_id, usos[constants.USOS_ID])
+                if course_doc:
+                    continue
+                else:
+                    course_result = client.course_edition(course_id, term_id, fetch_participants=False)
+                    course_result = self.append(course_result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                    course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
+                    logging.debug("course_edition for course_id: {0} term_id: {1} inserted: {2}".format(course_id, term_id, course_doc))
+
 
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
@@ -159,7 +172,7 @@ class UsosCrowler:
             if self.dao.get_course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], usos[constants.USOS_ID]):
                 continue  # course already exists
 
-            result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID])
+            result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], fetch_participants=True)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
@@ -236,7 +249,7 @@ class UsosCrowler:
             term_id, course_id = str(data[0]), str(data[1])
 
             # participants ane lectures
-            result = client.course_edition(course_id, term_id)
+            result = client.course_edition(course_id, term_id, fetch_participants=True)
             participants = result.pop('participants')
             lecturers = result.pop('lecturers')
             for p in participants:
@@ -258,7 +271,7 @@ class UsosCrowler:
 
             # grades
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.debug('grades for course_id:{0} and term_id: {1} inserted {2}'.format(course_id, term_id, g_doc))
+            logging.debug("grades for course_id: {0} and term_id: {1} inserted {2}".format(course_id, term_id, g_doc))
 
 
         self.__build_user_infos(client, crowl_time, all_participants, usos)
