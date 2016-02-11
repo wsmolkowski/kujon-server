@@ -12,6 +12,8 @@ FRIEND_ID = 'friend_id'
 PROGRAMME_ID = 'programme_id'
 
 PARTICIPANTS = 'participants'
+LECTURERS = 'lecturers'
+
 CREATED_TIME = 'created_time'
 UPDATE_TIME = 'update_time'
 ACCESS_TOKEN_KEY = 'access_token_key'

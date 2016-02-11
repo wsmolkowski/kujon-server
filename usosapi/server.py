@@ -16,7 +16,7 @@ define('port', default=settings.PORT)
 define('ssl', default=settings.SSL)
 define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=settings.COOKIE_SECRET)
-#define('autoreload', default=settings.AUTORELOAD_ENABLED)
+define('autoreload', default=settings.AUTORELOAD_DISABLED)
 
 
 class Application(tornado.web.Application):

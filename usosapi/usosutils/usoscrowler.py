@@ -210,7 +210,7 @@ class UsosCrowler:
             logging.debug('group for unit: {0} inserted: {1}'.format(unit, grp_doc))
 
     @tornado.gen.coroutine
-    def __build_grades_participants_units_groups(self, client, user_id, usos, crowl_time):
+    def __build_grades_participants_lecturers_units_groups(self, client, user_id, usos, crowl_time):
         '''
             building grades and participants and units
         :param client:
@@ -220,27 +220,40 @@ class UsosCrowler:
         :return:
         '''
         all_participants = []
+        all_lecturers = []
         all_units = []
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = str(data[0]), str(data[1])
 
-            if self.dao.get_grades(course_id, term_id, user_id):
-                continue  # grades for course and term already exists
-
+            # participants ane lectures
             result = client.course_edition(course_id, term_id)
             participants = result.pop('participants')
+            lecturers = result.pop('lecturers')
+            for p in participants:
+                if p not in all_participants:
+                    all_participants.append(p)
+            for l in lecturers:
+                if l not in all_lecturers:
+                    all_lecturers.append(l)
+
+            # units
             units = result.pop('course_units_ids')
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.USER_ID] = user_id
-
-            g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
-
+            if self.dao.get_grades(course_id, term_id, user_id):
+                continue  # grades for course and term already exists
             for unit in units:
                 if unit not in all_units:
                     all_units.append(unit)
 
+            # grades
+            g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
+            logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
+
+
         self.__build_user_infos(client, crowl_time, all_participants, usos)
+        self.__build_user_infos(client, crowl_time, all_lecturers, usos)
+
         yield self.__build_units(crowl_time, all_units, usos)
         self.__build_groups(client, crowl_time, all_units, usos)
 
@@ -273,7 +286,7 @@ class UsosCrowler:
 
             self.__build_courses(client, user_id, usos, crowl_time)
 
-            yield self.__build_grades_participants_units_groups(client, user_id, usos, crowl_time)
+            yield self.__build_grades_participants_lecturers_units_groups(client, user_id, usos, crowl_time)
 
             # crowl collection
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)

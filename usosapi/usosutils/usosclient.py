@@ -6,8 +6,7 @@ from httplib2 import socks
 
 from usosapi import settings
 
-URI_USER_INFO =            "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
-URI_USER_INFO_BY_USER_ID = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted&user_id={0}"
+URI_USER_INFO = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
 URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids|lecturers|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
@@ -41,7 +40,7 @@ class UsosClient:
 
     def user_info(self, user_info_id):
         if user_info_id:
-            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO_BY_USER_ID.format(user_info_id)))
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO + '&user_id='+user_info_id))
         else:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
         if int(code['status']):
