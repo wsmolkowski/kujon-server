@@ -433,7 +433,7 @@ function drawUserInfo(jsonData){
     var html = '<table class="table table-hover">';
     html += '<caption>Konto w Kujonie</caption>'
     html += '<tbody>'
-    if (typeof jsonData[0]['email'] != 'undefined'){
+    if (jsonData[0] != null){
         html += '<tr><td>Imię i Nazwisko</td><td>' +jsonData[0]['given_name'] + ' ' + jsonData[0]['family_name'] + '</td><td><img src="' + jsonData[0]['picture'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
         html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td><td></td></tr>'
     }
@@ -445,7 +445,10 @@ function drawUserInfo(jsonData){
     html += '<table class="table table-hover">';
     html += '<caption>Konto w USOSie</caption>'
     html += '<tbody>'
-    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData[1]['first_name'] + ' ' + jsonData[1]['last_name'] + '</td><td><img src="' + jsonData[1]['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData[1]['first_name'] + ' ' + jsonData[1]['last_name'] + '</td>'
+    if (jsonData['has_photo']) {
+        html += '<td><img src="' + jsonData[1]['photo_urls']['50x50'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    }
     html += '<tr><td>Student number</td><td>' + jsonData[1]['student_number'] + '</td></td><td></td></tr>'
     html += '<tr><td>Email</td><td>' + jsonData[1]['email'] + '</td></td><td></td></tr>'
 

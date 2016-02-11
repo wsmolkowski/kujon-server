@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
-LIMIT_FIELDS = ('first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'photo_urls', 'student_programmes')
+LIMIT_FIELDS = ('first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')
 
 class UsersInfoByIdApi(BaseHandler):
     @tornado.web.asynchronous
@@ -16,19 +16,15 @@ class UsersInfoByIdApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
-        if not user_info:
-            user = {}
-            self.error("Please hold on we are looking your USOS user information.")
-
-        else:
-            user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(user_info_id)})
-
+        if user_info:
+            user = yield self.db[constants.COLLECTION_USERS].find_one({'id': ObjectId(user_info[constants.ID])})
             result = []
             result.append(user)
             result.append(user_info)
-
             self.success(result)
-
+        else:
+            user = {}
+            self.error("Please hold on we are looking your USOS user information.")
 
 class UserInfoapi(BaseHandler):
     @tornado.web.asynchronous
