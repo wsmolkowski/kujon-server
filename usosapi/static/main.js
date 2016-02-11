@@ -1,5 +1,4 @@
 var baseContainer = '#base-container-id';
-var htmlHelper = new HtmlHelper();
 
 function friends_add(user_id) {
     $.ajax({

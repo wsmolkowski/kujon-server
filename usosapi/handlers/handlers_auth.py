@@ -60,8 +60,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'id': user['id'], constants.USER_TYPE: 'google'},
-                (
-                'id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID))
+                COOKIE_FIELDS)
 
             if not user_doc:
                 user['code'] = self.get_argument('code')
