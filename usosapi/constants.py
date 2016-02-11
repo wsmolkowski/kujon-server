@@ -51,4 +51,5 @@ COLLECTION_COURSES_UNITS = 'courses_units'
 COLLECTION_FRIENDS = 'friends'
 COLLECTION_PROGRAMMES = 'programmes'
 COLLECTION_GROUPS = 'groups'
+COLLECTION_PHOTOS = 'users_info_photos'
 

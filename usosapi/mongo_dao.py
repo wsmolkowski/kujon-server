@@ -56,8 +56,8 @@ class Dao:
     def get_courses_editions(self, user_id):
         return self.__db.courses_editions.find_one({constants.USER_ID: user_id})
 
-    def get_courses_units(self, unit_id, usos_id):
-        return self.__db.courses_units.find_one({constants.UNIT_ID: unit_id, constants.USOS_ID: usos_id})
+    def get_users_info_photo(self, user_id, usos_id):
+        return self.__db.users_info_photos.find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
 
     def get_group(self, group_id, usos_id):
         return self.__db.courses_units.find_one({constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})

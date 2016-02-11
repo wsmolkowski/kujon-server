@@ -12,11 +12,9 @@ URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
-
 def build_request(url, validate_cert=False):
     return HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert,
                        proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT)
-
 
 @tornado.gen.coroutine
 def get_courses_classtypes(usos_base_url, validate_cert=False):

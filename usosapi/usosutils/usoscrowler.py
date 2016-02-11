@@ -91,6 +91,15 @@ class UsosCrowler:
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
+        # if user has photo - download
+        if result['has_photo']:
+            if not self.dao.get_users_info_photo(result[constants.USER_INFO_ID], usos[constants.USOS_ID]):
+                photo = client.user_info_photo(result[constants.USER_INFO_ID])
+                photo = self.append(photo, usos[constants.USOS_ID], crowl_time, crowl_time)
+                photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
+                logging.debug('photo for user_id: {0} inserted {1}'.format(photo[constants.USER_ID], photo_doc))
+
+
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
         programmes = self.dao.get_user_programmes(user_id)
@@ -171,8 +180,9 @@ class UsosCrowler:
                 self.__build_user_info(client, None, user['id'], crowl_time, usos)
                 logging.debug('Fetched user_info for user with id: {0}'.format(user['id']))
 
+
     @tornado.gen.coroutine
-    def __build_units(self, crowl_time, units, usos):
+    def __build_units(self, client, crowl_time, units, usos):
         '''
             iterates over units and if does not exists in database fetches data from usos and inserts
         :param crowl_time:
@@ -185,7 +195,7 @@ class UsosCrowler:
             if self.dao.get_courses_units(unit_id, usos[constants.USOS_ID]):
                 continue  # units already exists
 
-            result = yield usosasync.get_courses_units(usos[constants.USOS_URL], unit_id)
+            result = client.units(unit_id)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
@@ -248,13 +258,13 @@ class UsosCrowler:
 
             # grades
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
+            logging.debug('grades for course_id:{0} and term_id: {1} inserted {2}'.format(course_id, term_id, g_doc))
 
 
         self.__build_user_infos(client, crowl_time, all_participants, usos)
         self.__build_user_infos(client, crowl_time, all_lecturers, usos)
 
-        yield self.__build_units(crowl_time, all_units, usos)
+        self.__build_units(crowl_time, all_units, usos)
         self.__build_groups(client, crowl_time, all_units, usos)
 
     @log_execution_time
