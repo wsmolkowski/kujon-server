@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
-LIMIT_FIELDS = ('first_name', 'last_name', 'titles', 'email_url', 'id', 'photo_urls', 'staff_status','room','office_hours','employment_positions','course_editions_conducted','interests','homepage_url')
+LIMIT_FIELDS = ('first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status','room','office_hours','employment_positions','course_editions_conducted','interests','homepage_url')
 
 class LecturersApi(BaseHandler):
     @tornado.web.asynchronous
@@ -66,7 +66,6 @@ class LecturerByIdApi(BaseHandler):
 
             # get email
             # if user_info['has_email'] == 'true':
-
 
             # change course_editions_conducted to list of courses
             course_editions = []

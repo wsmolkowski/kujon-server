@@ -1,3 +1,5 @@
+from base64 import b64decode
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -46,3 +48,15 @@ class UserInfoapi(BaseHandler):
             self.error("Please hold on we are looking your USOS/user information.")
         else:
             self.success(result)
+
+class UserInfoPhotoApi(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self, user_id):
+
+        parameters = yield self.get_parameters()
+
+        user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.USER_ID: user_id})
+        if user_photo:
+            self.set_header("Content-Type", "image/jpeg")
+            self.write(b64decode(user_photo['photo']))

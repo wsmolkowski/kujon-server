@@ -463,9 +463,14 @@ function drawLecturerTable(jsonData){
     html += '<caption>Konto w USOSie</caption>'
     html += '<tbody>'
     html += '<tr><td>Tytuł</td><td>' + jsonData['titles']['before'] + '</td></td><td></td></tr>'
-    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData['first_name'] + ' ' + jsonData['last_name'] + '</td><td><img src="" class="img-responsive" alt="Responsive image"></td></tr>'
-    html += '<tr><td>Pokój</td><td>' + jsonData['room']['number'] + '</td></td><td></td></tr>'
-    html += '<tr><td>Budynek</td><td>' + jsonData['room']['building_name']['pl'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData['first_name'] + ' ' + jsonData['last_name'] + '</td>'
+    if (jsonData['has_photo']) {
+        html += '<td><img height="100" width="100" src="/api/users_info_photos/' + jsonData['id'] + '" class="img-responsive" alt="Responsive image"></td></tr>'
+    }
+    if (jsonData['room']) {
+        html += '<tr><td>Pokój</td><td>' + jsonData['room']['number'] + '</td></td><td></td></tr>'
+        html += '<tr><td>Budynek</td><td>' + jsonData['room']['building_name']['pl'] + '</td></td><td></td></tr>'
+    }
     html += '<tr><td>Konsultacje</td><td>' + jsonData['office_hours']['pl'] + '</td></td><td></td></tr>'
     html += '<tr><td>Status</td><td>' + jsonData['staff_status'] + '</td></td><td></td></tr>'
     for(var key in jsonData['employment_positions']) {
