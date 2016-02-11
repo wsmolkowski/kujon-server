@@ -5,6 +5,7 @@ import oauth2 as oauth
 import tornado.gen
 from bson import json_util
 from httplib2 import socks
+from tornado import httpclient
 from tornado.web import RequestHandler
 from usosapi.mixins.JSendMixin import JSendMixin
 
@@ -12,6 +13,16 @@ from usosapi import constants, settings
 
 
 class BaseHandler(RequestHandler, JSendMixin):
+    def get_auth_http_client(self):
+
+        if settings.PROXY_URL and settings.PROXY_PORT:
+            tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                                         defaults=dict(proxy_host=settings.PROXY_URL,
+                                                                       proxy_port=settings.PROXY_PORT,
+                                                                       validate_cert=False))
+
+        return httpclient.AsyncHTTPClient()
+
     @property
     def oauth_parameters(self):
         return {
