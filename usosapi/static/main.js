@@ -57,7 +57,7 @@ function drawCoursesTable(jsonData) {
             for (var course in jsonData['course_editions'][term]) {
                 html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
                 html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
-                html += '<td><a href="/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+ encodeURIComponent(term) +'">' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id'] + '/'+ encodeURIComponent(term) +'>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
                 html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
@@ -109,7 +109,7 @@ function drawGradesTable(grades){
     for (var key in grades) {
                 html += '<tr>'
                 html += '<td><a href=/school/terms/' + encodeURIComponent(grades[key]['term_id']) + '>' + grades[key]['term_id'] + '</a></td>'
-                html += '<td><a href=/school/courses/' + grades[key]['course_id']+'>' + grades[key]['course_id'] + '</a></td>'
+                html += '<td><a href="/school/courseedition/' + grades[key]['course_id']+'/'+ encodeURIComponent(grades[key]['term_id']) + '">' + grades[key]['course_id'] + '</a></td>'
                 html += '<td>' + grades[key]['course_name']['pl'] + '</td>'
                 html += '<td><table class="table table-hover">'
 
@@ -517,7 +517,7 @@ function fetchUserInfoAndDraw(user_id) {
 }
 
 $( document ).ready(function() {
-    debugger;
+
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
     if (pathname.indexOf('/school/courses') === 0){

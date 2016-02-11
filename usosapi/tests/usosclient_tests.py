@@ -34,9 +34,10 @@ class ClientTest(unittest.TestCase):
     def testCourseInfo(self):
         # assume
         course_id = "1000-612ARR"
+        term_id = "2004/TZ"
 
         # when
-        response = self.client.course_edition(course_id)
+        response = self.client.course_edition(course_id, term_id)
 
         # then
         self.assertIsNotNone(0, len(response))

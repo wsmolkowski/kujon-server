@@ -105,7 +105,7 @@ class FriendsSuggestionsApi(BaseHandler):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_participants = yield self.db[constants.COLLECTION_PARTICIPANTS].find_one(
+                course_participants = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
                     {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
                      constants.USOS_ID: parameters[constants.USOS_ID]})
 

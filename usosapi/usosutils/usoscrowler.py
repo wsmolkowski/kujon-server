@@ -156,31 +156,6 @@ class UsosCrowler:
             c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
             logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition['course_id'], course_edition['term_id'], c_doc))
 
-    @tornado.gen.coroutine
-    def __build_participants(self, client, course_id, participants, crowl_time, term_id, usos):
-        '''
-            inserts participants to database
-        :param course_id:
-        :param crowl_time:
-        :param participants:
-        :param term_id:
-        :param usos:
-        :return: list of participants
-        '''
-        result = self.dao.get_participants(course_id, term_id, usos)
-        if not result:
-            result = []
-            result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.PARTICIPANTS] = participants
-            course_doc = self.dao.get_course_edition(usos[constants.USOS_ID], course_id, term_id)
-            result[constants.COURSE_ID] = course_doc[constants.ID]
-            result[constants.COURSE_ID] = course_id
-            result[constants.TERM_ID] = term_id
-            p_doc = self.dao.insert(constants.COLLECTION_PARTICIPANTS, result)
-
-            logging.debug('participants inserted: {0}'.format(p_doc))
-
-        raise tornado.gen.Return(participants)
 
     def __build_user_infos(self, client, crowl_time, users, usos):
         '''
@@ -260,11 +235,6 @@ class UsosCrowler:
 
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
             logging.debug('grades for term_id: {0} course_id:{1} inserted {2}'.format(term_id, course_id, g_doc))
-
-            participants = yield self.__build_participants(client, course_id, participants, crowl_time, term_id, usos)
-            for p in participants:
-                if p not in all_participants:
-                    all_participants.append(p)
 
             for unit in units:
                 if unit not in all_units:
