@@ -3,21 +3,21 @@ import tornado.web
 from handlers_api import BaseHandler
 
 
-class MainHandler(BaseHandler):
+class Main_WebHandler(BaseHandler):
     def get(self):
         self.render("main.html", **self.template_data())
 
 
-class UsersHandler(BaseHandler):
+class Users_WebHandler(BaseHandler):
     def get(self):
         self.render("school.html", **self.template_data())
 
-class UserHandlerByUserId(BaseHandler):
+class UserByUserId_WebHandler(BaseHandler):
     def get(self, usos_user_id):
         data = self.template_data()
         self.render("school.html", **data)
 
-class School_Handler(BaseHandler):
+class School_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -66,7 +66,7 @@ class Programme_WebHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class ProgrammesWebHandler(BaseHandler):
+class Programmes_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -75,7 +75,25 @@ class ProgrammesWebHandler(BaseHandler):
         data = self.template_data()
         self.render("school.html", **data)
 
-class TermWebHandler(BaseHandler):
+class Lecturers_WebHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = self.template_data()
+        self.render("school.html", **data)
+
+class Lecturer_WebHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self, user_id):
+        data = self.template_data()
+        self.render("school.html", **data)
+
+class Term_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -85,7 +103,7 @@ class TermWebHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class TermsWebHandler(BaseHandler):
+class Terms_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -94,17 +112,7 @@ class TermsWebHandler(BaseHandler):
         data = self.template_data()
         self.render("school.html", **data)
 
-class ScheduleWebHandler(BaseHandler):
-    @tornado.web.removeslash
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        data = self.template_data()
-        self.render("school.html", **data)
-
-
-class FriendsHandler(BaseHandler):
+class Schedule_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -114,7 +122,7 @@ class FriendsHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class FriendsSuggestionsHandler(BaseHandler):
+class Friends_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -124,7 +132,17 @@ class FriendsSuggestionsHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class SettingsHandler(BaseHandler):
+class FriendsSuggestions_WebHandler(BaseHandler):
+    @tornado.web.removeslash
+    @tornado.web.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        data = self.template_data()
+        self.render("school.html", **data)
+
+
+class Settings_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -134,7 +152,7 @@ class SettingsHandler(BaseHandler):
         self.render("settings.html", **data)
 
 
-class RegulationsHandler(BaseHandler):
+class Regulations_WebHandler(BaseHandler):
     @tornado.web.removeslash
     def get(self):
         data = self.template_data()

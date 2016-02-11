@@ -57,7 +57,7 @@ function drawCoursesTable(jsonData) {
             for (var course in jsonData['course_editions'][term]) {
                 html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
                 html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
-                html += '<td><a href="/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+ encodeURIComponent(term) +'">' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id'] + '/'+ encodeURIComponent(term) +'>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
                 html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
@@ -109,7 +109,7 @@ function drawGradesTable(grades){
     for (var key in grades) {
                 html += '<tr>'
                 html += '<td><a href=/school/terms/' + encodeURIComponent(grades[key]['term_id']) + '>' + grades[key]['term_id'] + '</a></td>'
-                html += '<td><a href=/school/courses/' + grades[key]['course_id']+'>' + grades[key]['course_id'] + '</a></td>'
+                html += '<td><a href="/school/courseedition/' + grades[key]['course_id']+'/'+ encodeURIComponent(grades[key]['term_id']) + '">' + grades[key]['course_id'] + '</a></td>'
                 html += '<td>' + grades[key]['course_name']['pl'] + '</td>'
                 html += '<td><table class="table table-hover">'
 
@@ -412,6 +412,22 @@ function drawFriendsTable(jsonData){
     $(baseContainer).html(html);
 }
 
+function drawLecturersTable(jsonData){
+
+    $(baseContainer).empty();
+     var html = '<table class="table table-hover">';
+        html += '<tr><th>Imię i Nazwisko Belfra</th><th></th></tr>'
+        html += '<tbody>'
+        for(var key in jsonData) {
+            html += '<tr>'
+            html += '<td><a href=/school/lecturers/'+ jsonData[key]['user_id'] + '>' + jsonData[key]['first_name'] + ' ' + jsonData[key]['last_name'] + '</td>'
+            html += '<td><button class="btn btn-primary btn-primary" onclick="location.href=\'/school/lecturers/' + jsonData[key]['user_id'] + '\'">Informacje</button></td>'
+            html += '</tr>'
+        }
+        html += '</tbody></table>';
+    $(baseContainer).html(html);
+}
+
 function drawUserInfo(jsonData){
     $(baseContainer).empty();
     var html = '<table class="table table-hover">';
@@ -434,11 +450,34 @@ function drawUserInfo(jsonData){
     html += '<tr><td>Email</td><td>' + jsonData[1]['email'] + '</td></td><td></td></tr>'
 
     $.each(jsonData[1]['student_programmes'], function(key, value){
-            for(var i=1; i< 2; i++) {
                 html += '<tr><td>Program</td><td>' + value['programme']['description']['pl']+ '</td><td><button class="btn btn-primary" onclick="location.href=\'/school/programmes/' + value['programme']['id'] + '\'">Zobacz</button></td></tr>'
-
-            }
     });
+    html += '</tbody></table>';
+
+    $(baseContainer).html(html);
+}
+
+function drawLecturerTable(jsonData){
+    $(baseContainer).empty();
+    var  html = '<table class="table table-hover">';
+    html += '<caption>Konto w USOSie</caption>'
+    html += '<tbody>'
+    html += '<tr><td>Tytuł</td><td>' + jsonData['titles']['before'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Imię i Nazwisko</td><td>' + jsonData['first_name'] + ' ' + jsonData['last_name'] + '</td><td><img src="" class="img-responsive" alt="Responsive image"></td></tr>'
+    html += '<tr><td>Pokój</td><td>' + jsonData['room']['number'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Budynek</td><td>' + jsonData['room']['building_name']['pl'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Konsultacje</td><td>' + jsonData['office_hours']['pl'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Status</td><td>' + jsonData['staff_status'] + '</td></td><td></td></tr>'
+    for(var key in jsonData['employment_positions']) {
+        html += '<tr><td>Zatrudnienie</td><td>' + jsonData['employment_positions'][key]['position']['name']['pl'] + ' w ' + jsonData['employment_positions'][key]['faculty']['name']['pl']  + '</td></td><td></td></tr>'
+    }
+    html += '<tr><td>Strona domowa</td><td><a href="' + jsonData['homepage_url'] + '">'+ jsonData['homepage_url']  +'</a></td></td><td></td></tr>'
+    html += '<tr><td>Zainteresowania</td><td>' + jsonData['interests']['pl'] + '</td></td><td></td></tr>'
+    html += '<tr><td>Koordynowane przedmioty</td><td>'
+    for (var key in jsonData['course_editions_conducted']){
+                html += jsonData['course_editions_conducted'][key]['id']+ '<br>'
+    }
+    html += '</td></tr>'
     html += '</tbody></table>';
 
     $(baseContainer).html(html);
@@ -481,6 +520,40 @@ function fetchFriendsAndDraw(){
        });
 }
 
+function fetchLecturersAndDraw(user_id){
+  if (typeof user_id != 'undefined'){
+        $.ajax({
+           type: 'GET',
+           url: deployUrl + '/api/lecturers/'+ user_id,
+           success:  function (data) {
+            if (data.status == 'success'){
+                drawLecturerTable(data.data);
+            } else {
+                drawErrorMessage(data.message);
+            }
+           },
+           error: function (err) {
+            drawErrorMessage(err);
+           }
+        });
+     } else {
+        $.ajax({
+           type: 'GET',
+           url: deployUrl + '/api/lecturers/',
+           success:  function (data) {
+            if (data.status == 'success'){
+                drawLecturersTable(data.data);
+            } else {
+                drawErrorMessage(data.message);
+            }
+           },
+           error: function (err) {
+            drawErrorMessage(err);
+           }
+        });
+     };
+}
+
 function fetchUserInfoAndDraw(user_id) {
     if (typeof user_id != 'undefined'){
         $.ajax({
@@ -517,7 +590,7 @@ function fetchUserInfoAndDraw(user_id) {
 }
 
 $( document ).ready(function() {
-    debugger;
+
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
     if (pathname.indexOf('/school/courses') === 0){
@@ -546,6 +619,14 @@ $( document ).ready(function() {
         }
         else if (pathSplit.length == 4) {
             fetchProgrammesAndDraw(pathSplit[3]);
+        }
+    }
+     else if (pathname.indexOf('/school/lecturers') === 0){
+        if (pathSplit.length == 3){
+            fetchLecturersAndDraw();
+        }
+        else if (pathSplit.length == 4) {
+            fetchLecturersAndDraw(pathSplit[3]);
         }
     }
     else if (pathname.indexOf('/friends/suggestions') === 0){

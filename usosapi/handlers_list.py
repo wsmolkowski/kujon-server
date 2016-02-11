@@ -2,6 +2,7 @@ from handlers.handlers_api_courses import CourseEditionApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
+from handlers.handlers_api_lecturers import LecturersApi, LecturerByIdApi
 from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
@@ -11,41 +12,45 @@ from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
 from handlers.handlers_chat import ChatHandler, ChatSocketHandler
 from handlers.handlers_web import CourseEdition_WebHandler
 from handlers.handlers_web import Courses_WebHandler
-from handlers.handlers_web import FriendsHandler
-from handlers.handlers_web import FriendsSuggestionsHandler
+from handlers.handlers_web import FriendsSuggestions_WebHandler
+from handlers.handlers_web import Friends_WebHandler
 from handlers.handlers_web import Grades_WebHandler
-from handlers.handlers_web import MainHandler, UsersHandler, UserHandlerByUserId
-from handlers.handlers_web import ProgrammesWebHandler, Programme_WebHandler
-from handlers.handlers_web import ScheduleWebHandler
-from handlers.handlers_web import School_Handler
-from handlers.handlers_web import SettingsHandler, RegulationsHandler
-from handlers.handlers_web import TermsWebHandler, TermWebHandler
+from handlers.handlers_web import Lecturers_WebHandler, Lecturer_WebHandler
+from handlers.handlers_web import Main_WebHandler, Users_WebHandler, UserByUserId_WebHandler
+from handlers.handlers_web import Programmes_WebHandler, Programme_WebHandler
+from handlers.handlers_web import Schedule_WebHandler
+from handlers.handlers_web import School_WebHandler
+from handlers.handlers_web import Settings_WebHandler, Regulations_WebHandler
+from handlers.handlers_web import Terms_WebHandler, Term_WebHandler
 
 HANDLERS = [
-    (r"/?", MainHandler),
+    (r"/?", Main_WebHandler),
 
-    (r"/users", UsersHandler),
-    (r"/users/([^/]+)", UserHandlerByUserId),
+    (r"/users", Users_WebHandler),
+    (r"/users/([^/]+)", UserByUserId_WebHandler),
 
-    (r"/school/grades", School_Handler),
+    (r"/school/grades", School_WebHandler),
     (r"/school/grades/course/([^/]+)/([^/]+)", Grades_WebHandler),
     (r"/school/courses", Courses_WebHandler),
     (r"/school/courseedition/([^/]+)/([^/]+)", CourseEdition_WebHandler),
-    (r"/school/terms", TermsWebHandler),
-    (r"/school/terms/([^/]+)", TermWebHandler),
-    (r"/school/schedule", ScheduleWebHandler),
+    (r"/school/terms", Terms_WebHandler),
+    (r"/school/terms/([^/]+)", Term_WebHandler),
+    (r"/school/schedule", Schedule_WebHandler),
 
-    (r"/school/programmes", ProgrammesWebHandler),
+    (r"/school/programmes", Programmes_WebHandler),
     (r"/school/programmes/([^/]+)", Programme_WebHandler),
+
+    (r"/school/lecturers", Lecturers_WebHandler),
+    (r"/school/lecturers/([^/]+)", Lecturer_WebHandler),
 
     (r"/chat", ChatHandler),
     (r"/chatsocket", ChatSocketHandler),
 
-    (r"/friends", FriendsHandler),
-    (r"/friends/suggestions", FriendsSuggestionsHandler),
+    (r"/friends", Friends_WebHandler),
+    (r"/friends/suggestions", FriendsSuggestions_WebHandler),
 
-    (r"/settings", SettingsHandler),
-    (r"/regulations", RegulationsHandler),
+    (r"/settings", Settings_WebHandler),
+    (r"/regulations", Regulations_WebHandler),
     (r"/authentication/register", RegisterHandler),
     (r"/authentication/login", LoginHandler),
     (r"/authentication/logout", LogoutHandler),
@@ -69,6 +74,9 @@ HANDLERS = [
 
     (r"/api/friends/([^/]+)", FriendsApi),
     (r"/api/friends/", FriendsApi),
+
+    (r"/api/lecturers/", LecturersApi),
+    (r"/api/lecturers/([^/]+)", LecturerByIdApi),
 
     (r"/api/schedule", ScheduleApi),
 

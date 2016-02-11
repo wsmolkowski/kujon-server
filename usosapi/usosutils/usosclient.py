@@ -1,4 +1,5 @@
 import json
+from base64 import b64encode
 
 import httplib2
 import oauth2 as oauth
@@ -6,14 +7,15 @@ from httplib2 import socks
 
 from usosapi import settings
 
-URI_USER_INFO =            "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted"
-URI_USER_INFO_BY_USER_ID = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|student_programmes|student_number|has_email|titles|has_photo|photo_urls|course_editions_conducted&user_id={0}"
+URI_USER_INFO = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
+URI_USER_INFO_PHOTO = "services/photos/photo?user_id={0}"
 URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids|lecturers|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
 URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|course_id|term_id|lecturers"
+URL_COURSES_UNITS = 'services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={0}'
 
 
 class UsosClient:
@@ -41,12 +43,20 @@ class UsosClient:
 
     def user_info(self, user_info_id):
         if user_info_id:
-            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO_BY_USER_ID.format(user_info_id)))
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO + '&user_id='+user_info_id))
         else:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
         if int(code['status']):
             return json.loads(body)
         raise Exception("Error while fetching user info. Response code: {0} body: {1}".format(code, body))
+
+    def user_info_photo(self, user_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO_PHOTO.format(user_id)))
+        if int(code['status']):
+            result = {'user_id': user_id,
+                      'photo': b64encode(body)}
+            return result
+        raise Exception("Error while fetching photo for user_id: {0}. Response code: {1} body: {2}".format(user_id, code, body))
 
     def programme(self, programme_id):
         if programme_id:
@@ -61,6 +71,13 @@ class UsosClient:
             return json.loads(body)
         else:
             raise Exception("Error while fetching groups. Response code: {0} body: {1}".format(code, body))
+
+    def units(self, unit_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URL_COURSES_UNITS.format(unit_id)))
+        if int(code['status']):
+            return json.loads(body)
+        else:
+            raise Exception("Error while fetching units. Response code: {0} body: {1}".format(code, body))
 
     def courseeditions_info(self):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_EDITIONS_INFO))
