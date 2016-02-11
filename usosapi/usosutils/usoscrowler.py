@@ -102,7 +102,7 @@ class UsosCrowler:
 
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
-        programmes = self.dao.get_user_programmes(user_id)
+        programmes = self.dao.get_user_programmes(user_id, usos[constants.USOS_ID])
         for prog in programmes:
             result = client.programme(prog['programme']['id'])
             result = self.append(result, None, crowl_time, crowl_time)
@@ -155,15 +155,15 @@ class UsosCrowler:
         :param crowl_time:
         :return:
         '''
-        for course_edition in self.dao.get_user_courses(user_id):
-            if self.dao.get_course_edition(course_edition['course_id'], course_edition['term_id'], usos[constants.USOS_ID]):
+        for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
+            if self.dao.get_course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], usos[constants.USOS_ID]):
                 continue  # course already exists
 
-            result = client.course_edition(course_edition['course_id'], course_edition['term_id'])
+            result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID])
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-            logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition['course_id'], course_edition['term_id'], c_doc))
+            logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
 
 
     def __build_user_infos(self, client, crowl_time, users, usos):
@@ -192,7 +192,7 @@ class UsosCrowler:
         '''
 
         for unit_id in units:
-            if self.dao.get_courses_units(unit_id, usos[constants.USOS_ID]):
+            if self.dao.get_units(unit_id, usos[constants.USOS_ID]):
                 continue  # units already exists
 
             result = client.units(unit_id)
@@ -250,7 +250,7 @@ class UsosCrowler:
             units = result.pop('course_units_ids')
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.USER_ID] = user_id
-            if self.dao.get_grades(course_id, term_id, user_id):
+            if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
                 continue  # grades for course and term already exists
             for unit in units:
                 if unit not in all_units:

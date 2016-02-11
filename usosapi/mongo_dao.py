@@ -53,14 +53,14 @@ class Dao:
     def get_users_info_by_usos_id(self, usos_user_id, usos):
         return self.__db.users_info.find_one({constants.ID: usos_user_id, constants.USOS_ID: usos[constants.USOS_ID]})
 
-    def get_courses_editions(self, user_id):
-        return self.__db.courses_editions.find_one({constants.USER_ID: user_id})
-
     def get_users_info_photo(self, user_id, usos_id):
         return self.__db.users_info_photos.find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
 
     def get_group(self, group_id, usos_id):
         return self.__db.courses_units.find_one({constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
+
+    def get_units(self, unit_it, usos_id):
+        return self.__db.courses_units.find_one({constants.UNIT_ID: unit_it, constants.USOS_ID: usos_id})
 
     def update(self, collection, key, key_value, document):
         return self.__db[collection].update({key: key_value}, document)
@@ -74,44 +74,44 @@ class Dao:
     def get_term(self, term_id, usos_id):
         return self.__db.terms.find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_course_edition(self, usos_id, course_id, term_id):
+    def get_course_edition(self, course_id, term_id, usos_id):
         return self.__db.course_edition.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_grades(self, course_id, term_id, user_id):
+    def get_grades(self, course_id, term_id, user_id, usos_id):
         return self.__db.grades.find_one(
-            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id})
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id, constants.USOS_ID: usos_id})
 
-    def get_participants(self, course_id, term_id, usos):
+    def get_participants(self, course_id, term_id, usos_id):
         return self.__db.participants.find_one(
-            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos})
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_user_terms(self, user_id):
         terms = []
-        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
         for term in data['course_editions'].keys():
             if term not in terms:
                 terms.append(term)
         return terms
 
-    def get_user_programmes(self, user_id):
+    def get_user_programmes(self, user_id, usos_id):
         programmes = []
-        data = self.__db[constants.COLLECTION_USERS_INFO].find_one({'user_id': ObjectId(user_id)})
+        data = self.__db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
         programmes = data['student_programmes']
         return programmes
 
-    def get_user_courses(self, user_id):
+    def get_user_courses(self, user_id, usos_id):
         course_edition = []
-        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id, constants.USOS_ID: usos_id})
 
         for term_data in data['course_editions'].values():
             for term in term_data:
-                if term['course_id'] not in course_edition:
-                    course_edition.append({'course_id': term['course_id'], 'term_id': term['term_id']})
+                if term[constants.COURSE_ID] not in course_edition:
+                    course_edition.append({constants.COURSE_ID: term[constants.COURSE_ID], constants.TERM_ID: term[constants.TERM_ID]})
         return course_edition
 
     def get_user_courses_editions(self, user_id):
         result = []
-        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({'user_id': user_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
         if data:
             for term_data in data['course_editions'].values():
                 for term in term_data:
