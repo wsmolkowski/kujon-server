@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
-LIMIT_FIELDS = ('course_id', 'description', 'course_name')
+LIMIT_FIELDS = ('course_id', 'course_name')
 
 
 class CourseEditionApi(BaseHandler):

@@ -87,12 +87,11 @@ function fetchCursesAndDraw(){
 function drawCourseInfoTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Numer przedmiotu</th><th>Nazwa przedmiotu</th><th>Opis</th><th></th></tr>'
+        html += '<tr><th>Numer przedmiotu</th><th>Nazwa przedmiotu</th><th></th></tr>'
         html += '<tbody>'
         html += '<tr>'
         html += '<td>' + jsonData['course_id'] + '</td>'
         html += '<td>' + jsonData['course_name']['pl'] + '</td>'
-        html += '<td>' + jsonData['description']['pl'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
     $(baseContainer).html(html);
