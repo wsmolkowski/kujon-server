@@ -1,3 +1,3 @@
-define(['static/js/router'], function() {
-    console.log(usosApi);
+define(['static/js/router.js'], function() {
+    console.log("startup.js startup");
 });

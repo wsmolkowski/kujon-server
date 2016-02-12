@@ -3,10 +3,17 @@ import os
 import settings
 import motor
 import tornado.ioloop
+import tornado.web
 from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line
 
 from usosweb.handlers import web, authorization
+
+
+class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
 class Application(tornado.web.Application):
@@ -20,7 +27,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", web.MainHandler),
-            (r"/api/user", web.UserHandler),
+            #(r"/static/(.*)", NoCacheStaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), "static")}),
             (r"/authentication/register", authorization.RegisterHandler),
             (r"/authentication/login", authorization.LoginHandler),
             (r"/authentication/logout", authorization.LogoutHandler),

@@ -10,7 +10,7 @@ from bson import json_util
 
 from base import BaseHandler
 from usosapi import constants
-from usosapi import settings
+from usosweb import settings
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)
