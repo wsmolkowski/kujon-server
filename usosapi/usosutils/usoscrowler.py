@@ -179,7 +179,7 @@ class UsosCrowler:
             logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
 
     @tornado.gen.coroutine
-    def __build_courses(self, client, user_id, usos, crowl_time):
+    def __build_courses(self, client, usos, crowl_time):
         '''
             for each user unique course fetches usos data and inserts to database if not exists
         :param user_id:
@@ -197,6 +197,27 @@ class UsosCrowler:
 
             c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
             logging.debug('course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
+
+
+    @tornado.gen.coroutine
+    def __build_faculties(self, client, usos, crowl_time):
+        '''
+            for each user unique course fetches usos data and inserts to database if not exists
+        :param user_id:
+        :param usos:
+        :param crowl_time:
+        :return:
+        '''
+        for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
+            if self.dao.get_faculty(faculty[constants.FAC_ID], usos[constants.USOS_ID]):
+                continue  # fac already exists
+
+            result = client.faculty(faculty[constants.FAC_ID])
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result[constants.FAC_ID] = faculty[constants.FAC_ID]
+
+            fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
+            logging.debug('faculty for fac_id: {0} inserted {1}'.format(faculty[constants.FAC_ID], fac_doc))
 
 
     def __build_user_infos(self, client, crowl_time, users, usos):
@@ -331,7 +352,9 @@ class UsosCrowler:
 
             yield self.__build_grades_participants_lecturers_units_groups(client, user_id, usos, crowl_time)
 
-            self.__build_courses(client, user_id, usos, crowl_time)
+            self.__build_courses(client, usos, crowl_time)
+
+            self.__build_faculties(client, usos, crowl_time)
 
             # crowl collection
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)

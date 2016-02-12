@@ -1,4 +1,4 @@
-from handlers.handlers_api_courses import CourseEditionApi
+from handlers.handlers_api_courses import CoursesApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
@@ -10,7 +10,7 @@ from handlers.handlers_api_user import UserInfoapi, UsersInfoByIdApi, UserInfoPh
 from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler
 from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
 from handlers.handlers_chat import ChatHandler, ChatSocketHandler
-from handlers.handlers_web import CourseEdition_WebHandler
+from handlers.handlers_web import Course_WebHandler
 from handlers.handlers_web import Courses_WebHandler
 from handlers.handlers_web import FriendsSuggestions_WebHandler
 from handlers.handlers_web import Friends_WebHandler
@@ -32,7 +32,7 @@ HANDLERS = [
     (r"/school/grades", School_WebHandler),
     (r"/school/grades/course/([^/]+)/([^/]+)", Grades_WebHandler),
     (r"/school/courses", Courses_WebHandler),
-    (r"/school/courseedition/([^/]+)/([^/]+)", CourseEdition_WebHandler),
+    (r"/school/courses/([^/]+)", Course_WebHandler),
     (r"/school/terms", Terms_WebHandler),
     (r"/school/terms/([^/]+)", Term_WebHandler),
     (r"/school/schedule", Schedule_WebHandler),
@@ -63,7 +63,7 @@ HANDLERS = [
     (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),
 
     (r"/api/courseseditions/", CoursesEditionsApi),
-    (r"/api/courseedition/([^/]+)/([^/]+)", CourseEditionApi),
+    (r"/api/courses/([^/]+)", CoursesApi),
 
     (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
     (r"/api/grades/", GradesForUserApi),

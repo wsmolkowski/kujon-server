@@ -10,6 +10,7 @@ UNIT_ID = 'unit_id'
 GROUP_ID = 'course_unit_id'
 FRIEND_ID = 'friend_id'
 PROGRAMME_ID = 'programme_id'
+FAC_ID = 'fac_id'
 
 PARTICIPANTS = 'participants'
 LECTURERS = 'lecturers'
@@ -52,4 +53,5 @@ COLLECTION_FRIENDS = 'friends'
 COLLECTION_PROGRAMMES = 'programmes'
 COLLECTION_GROUPS = 'groups'
 COLLECTION_PHOTOS = 'users_info_photos'
+COLLECTION_FACULTIES = 'faculties'
 
