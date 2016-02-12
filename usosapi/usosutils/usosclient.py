@@ -17,7 +17,7 @@ URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
 URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|course_id|term_id|lecturers"
 URL_COURSES_UNITS = 'services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={0}'
-
+URL_COURSE = 'services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
 
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
@@ -95,6 +95,13 @@ class UsosClient:
             return json.loads(body)
         raise Exception(
             "Error while fetching course_info {0}. Response code: {1} body: {2}".format(course_id, code, body))
+
+    def course(self, course_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URL_COURSE.format(course_id)))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception(
+            "Error while fetching course_id: {0}. Response code: {1} body: {2}".format(course_id, code, body))
 
     def grades(self, course_id, term_id):
         code, body = self.client.request(
