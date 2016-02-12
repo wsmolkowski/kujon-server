@@ -7,7 +7,7 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
         //pokaż kręcacz porządnie
         $('#page').html('Loading...');
         
-        require(['static/js/pages/'+hash], function(page) {
+        require(['lib/pages/'+hash], function(page) {
             page.render();  
             
             $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
