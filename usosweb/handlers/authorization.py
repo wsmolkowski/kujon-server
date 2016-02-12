@@ -8,9 +8,12 @@ import tornado.gen
 import tornado.web
 from bson import json_util
 
-from handlers_web import BaseHandler
+from base import BaseHandler
 from usosapi import constants
 from usosapi import settings
+
+COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+                 constants.USOS_PAIRED)
 
 
 class LoginHandler(BaseHandler):
@@ -23,19 +26,19 @@ class LoginHandler(BaseHandler):
     def post(self):
         access_token_key = self.get_argument("inputAccessTokenKey")
         access_token_secret = self.get_argument("inputAccessTokenSecret")
-        next_page = self.get_argument(constants.NEXT_PAGE, "/")
 
-        user_doc = yield self.db.users.find_one({constants.ACCESS_TOKEN_SECRET: access_token_secret,
-                                                 constants.ACCESS_TOKEN_KEY: access_token_key},
-                                                constants.USER_PRESENT_KEYS)
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.ACCESS_TOKEN_SECRET: access_token_secret,
+             constants.ACCESS_TOKEN_KEY: access_token_key},
+            constants.USER_PRESENT_KEYS)
         if user_doc:
             user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
             user_doc.pop(constants.ID)
 
-            self.set_secure_cookie(self.USER_SECURE_COOKIE,
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
-            self.redirect(next_page)
+            self.redirect('/')
         else:
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key,
@@ -49,7 +52,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri='http://localhost:8888/authentication/google',
+                redirect_uri=settings.DEPLOY_URL + '/authentication/google',
                 code=self.get_argument('code'))
             user = yield self.oauth2_request(
                 "https://www.googleapis.com/oauth2/v1/userinfo",
@@ -57,7 +60,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'id': user['id'], constants.USER_TYPE: 'google'},
-                ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID))
+                COOKIE_FIELDS)
 
             if not user_doc:
                 user['code'] = self.get_argument('code')
@@ -70,22 +73,16 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
-                                                                              ('id', constants.USOS_URL,
-                                                                               constants.ACCESS_TOKEN_KEY,
-                                                                               constants.ACCESS_TOKEN_SECRET,
-                                                                               constants.USOS_ID))
-            self.set_secure_cookie(self.USER_SECURE_COOKIE,
+                                                                              COOKIE_FIELDS)
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            if user_doc[constants.USOS_URL]:
-                self.redirect("/")
-            else:
-                self.redirect("/authentication/create")
+            self.redirect("/")
 
         else:
             yield self.authorize_redirect(
-                redirect_uri='http://localhost:8888/authentication/google',
+                redirect_uri=settings.DEPLOY_URL + '/authentication/google',
                 client_id=self.settings['google_oauth']['key'],
                 scope=['profile', 'email'],
                 response_type='code',
@@ -99,15 +96,6 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
-        data = self.template_data()
-        data['usoses'] = usoses
-
-        self.render("create.html", **data)
 
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -126,7 +114,7 @@ class CreateUserHandler(BaseHandler):
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
 
-            self.render("create.html", **data)
+            self.write_json(data)
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
@@ -168,7 +156,6 @@ class VerifyHandler(BaseHandler):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
-
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
         template_data = self.template_data()
@@ -205,27 +192,26 @@ class VerifyHandler(BaseHandler):
                     user_doc_updated)
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']},
-                                                                              ('id', constants.USOS_URL,
-                                                                               constants.ACCESS_TOKEN_KEY,
-                                                                               constants.ACCESS_TOKEN_SECRET,
-                                                                               constants.USOS_ID))
+                                                                              COOKIE_FIELDS)
                 self.clear_cookie(constants.USER_SECURE_COOKIE)
                 self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
-                self.crowler.put_user(updated_user[constants.ID])
+                                       tornado.escape.json_encode(json_util.dumps(user_doc)),
+                                       constants.COOKIE_EXPIRES_DAYS)
 
+                #self.crowler.put_user(updated_user[constants.ID])
+
+                self.redirect('/')
             except KeyError:
                 template_data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                         constants.ACCESS_TOKEN_KEY])
 
-            self.render("main.html", **template_data)
+            self.redirect("/")
         else:
             template_data[
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
                 oauth_token_key, oauth_verifier)
-            self.render("/authorization/create", **template_data)
+            self.render("#create", **template_data)
 
 
 class RegisterHandler(BaseHandler):

@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+{% block main %}
+<div>
+    <div class="container">
+
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox">Akceptuję <a href="/regulations" class="strong">regulamin </a> serwisu
+                oraz proszę o niezwłoczne rozpoczęcie świadczenia mi usług serwisu.
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox">Wyrażam zgodę na przetwarzanie moich danych osobowych przez
+                {{PROJECT_TITLE}} w celach związanych z funkcjonowaniem serwisu {{PROJECT_TITLE}} oraz
+                przekazywania mi informacji
+                marketingowych i reklamowych dotyczących serwisu {{PROJECT_TITLE}} i jego partnerów.
+            </label>
+        </div>
+
+        <button class="btn btn-primary btn-danger"
+                onclick="location.href = 'http://localhost:8888/authentication/google'">Rejestracja przez Google
+        </button>
+
+
+    </div> <!-- /container -->
+</div>
+{% end %}

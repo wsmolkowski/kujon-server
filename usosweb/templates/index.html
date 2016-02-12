@@ -4,8 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>USOS Web Browser</title>
+    <title>{{PROJECT_TITLE}}</title>
+
     <link href="{{ static_url('bower_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ static_url('css/main.css') }}" rel="stylesheet">
+
     <script type="text/javascript" src="{{ static_url('require.config.js') }}"></script>
     <!-- konfiguracja require -->
     <script type="text/javascript" data-main="static/js/startup"
@@ -14,29 +17,49 @@
 </head>
 
 <body>
-<nav class="navbar navbar-default">
-    <!-- nawigacja. podswietlanie jest teraz zrobione durno -->
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
-        <ul class="nav navbar-nav">
-            <li><a href="#home">Home <span class="sr-only">(current)</span></a></li>
-            {% if current_user %}
-            <li><a href="#user">User</a></li>
-            <li><a href="/authentication/logout">Logout</a></li>
-            <li><a href="#about">About</a></li>
-            {% else %}
-            <li class="dropdown">
-                <a href="/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                   aria-haspopup="true" aria-expanded="false">Zaloguj <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="/authentication/google">Przez Google</a></li>
-                </ul>
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#home">{{PROJECT_TITLE}}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                {% if current_user %}
+                <li><a href="#user">User</a></li>
+                <li><a href="#contact">Contact</a></li>
                 {% end %}
-        </ul>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if current_user %}
+                <li><a href="/authentication/logout">Wyloguj</a></li>
+                {% else %}
+                <li class="dropdown">
+                    <a href="/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">Zaloguj <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/authentication/google">Przez Google</a></li>
+                    </ul>
+                    {% end %}
+                <li><a href="#about">About</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
     </div>
 </nav>
 
 <!-- kontener na tresc -->
-<div id="page" class="container">Loading...</div>
+<div id="page" class="container">
+    {% block main %}
+    {% end %}
+
+</div>
 
 </body>
 

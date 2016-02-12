@@ -28,6 +28,10 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
     crossroads.addRoute('user', function() {
         setActiveLink('user');
     });
+
+    crossroads.addRoute('create', function() {
+        setActiveLink('create');
+    });
     
     crossroads.addRoute('about', function() {
         setActiveLink('about');

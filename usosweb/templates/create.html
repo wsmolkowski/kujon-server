@@ -1,0 +1,52 @@
+{% extends "index.html" %}
+{% block main %}
+<div>
+    <div class="container">
+
+        <form class="form-horizontal" action="/authentication/create" method="post">
+            {% module xsrf_form_html() %}
+
+            <!--
+            <div class="form-group">
+                <label for="mobile_id" class="col-sm-2 control-label">Mobile ID</label>
+                <div class="col-sm-10">
+                    <input type="text" name="mobile_id" id="mobile_id" class="form-control" placeholder="mobile_id" required
+                       autofocus>
+                </div>
+            </div>
+            -->
+            <div class="form-group">
+                <label for="usos-id" class="col-sm-2 control-label">Wybierz w USOS</label>
+                <div class="col-sm-4">
+                    <select id="usos-id" name="usos" class="form-control" autofocus>
+                    {% for usos in usoses %}
+                        <option value="{{usos['url']}}">{{usos['name']}}</option>
+                    {% end %}
+                </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+
+                <input type="hidden" name="next" value="/"/>
+                <button class="btn btn-default btn-primary" type="submit">Połącz</button>
+                </div>
+            </div>
+        </form>
+
+        {% try %}
+        {% if alert_message %}
+        <div class="alert alert-warning alert-danger form-signin fade in" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span></button>
+            <strong>Holy guacamole!</strong>
+            {{ alert_message }}
+        </div>
+        {% end %}
+        {% except %}
+        {% end %}
+
+    </div> <!-- /container -->
+</div>
+{% end %}
