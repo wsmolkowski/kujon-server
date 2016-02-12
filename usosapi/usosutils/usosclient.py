@@ -11,6 +11,7 @@ URI_USER_INFO = "services/users/user?fields=id|staff_status|first_name|last_name
 URI_USER_INFO_PHOTO = "services/photos/photo?user_id={0}"
 URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
 URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids|lecturers|description"
+URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|course_units_ids|lecturers|description"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
@@ -85,8 +86,11 @@ class UsosClient:
             return json.loads(body)
         raise Exception("Error while fetching courseeditions_info. Response code: {0} body: {1}".format(code, body))
 
-    def course_edition(self, course_id, term_id):
-        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO.format(course_id, term_id)))
+    def course_edition(self, course_id, term_id, fetch_participants):
+        if fetch_participants:
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO.format(course_id, term_id)))
+        else:
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS.format(course_id, term_id)))
         if int(code['status']):
             return json.loads(body)
         raise Exception(

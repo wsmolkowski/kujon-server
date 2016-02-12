@@ -37,7 +37,7 @@ class ClientTest(unittest.TestCase):
         term_id = "2004/TZ"
 
         # when
-        response = self.client.course_edition(course_id, term_id)
+        response = self.client.course_edition(course_id, term_id, fetch_participants=True)
 
         # then
         self.assertIsNotNone(0, len(response))

@@ -151,7 +151,7 @@ function drawGradeTable(jsonData){
         html += '<tr><th>Przedmiot</th><th>Numer przedmiotu</th></tr>'
         html += '<tbody>'
         html += '<tr>'
-        html += '<td><a href=/school/courses/' + jsonData['course_id'] + '>' + jsonData['course_name']['pl'] + '</a></td>'
+        html += '<td>' + jsonData['course_name']['pl'] + '</a></td>'
         html += '<td>' + jsonData['course_id'] + '</td>'
         html += '</tr>'
         html += '</tbody></table>';
@@ -482,7 +482,7 @@ function drawLecturerTable(jsonData){
     html += '<tr><td>Zainteresowania</td><td>' + jsonData['interests']['pl'] + '</td></td><td></td></tr>'
     html += '<tr><td>Koordynowane przedmioty</td><td>'
     for (var key in jsonData['course_editions_conducted']){
-                html += jsonData['course_editions_conducted'][key]['id']+ '<br>'
+                html += '<a href="/school/courseedition/' + jsonData['course_editions_conducted'][key]['course_id'] + '/' + jsonData['course_editions_conducted'][key]['term_id']+ '">' + jsonData['course_editions_conducted'][key]['course_name']['pl']+ '</a><br>'
     }
     html += '</td></tr>'
     html += '</tbody></table>';
