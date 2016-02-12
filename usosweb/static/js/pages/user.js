@@ -8,7 +8,7 @@ define(['jquery', 'handlebars', 'text!templates/user.html'], function($, Handleb
 
             $.ajax({
                 type: 'GET',
-                url: 'http://localhost:8888/api/user',
+                url: 'http://localhost:8881/api/users/',
                 success:  function (data) {
                     $('#page').html(template(data));
                 },

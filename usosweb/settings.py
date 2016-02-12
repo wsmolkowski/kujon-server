@@ -12,7 +12,7 @@ TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
 GZIP = True
 
 SITE_DOMAIN = 'localhost'
-PROJECT_TITLE = "USOS Web Browser"
+PROJECT_TITLE = "USOS Browser"
 PROJECT_DESCRIPTION = ""
 DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 
@@ -21,8 +21,8 @@ MONGODB_NAME = 'usos-test2'
 
 CLEAN_DB = False
 
-CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
-PROXY_URL = "web-proxy.houston.hp.com"    #
+CALLBACK_URL = None #"http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
+PROXY_URL = None   #
 PROXY_PORT = 8080   #
 
 GOOGLE_CLIENT_ID = "245488701889-dfhvfuf9br6u6t9476gt0l5ngkvacota.apps.googleusercontent.com"
