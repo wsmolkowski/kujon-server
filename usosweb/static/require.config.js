@@ -11,8 +11,9 @@ var require = {
         "handlebars":           "static/bower_components/handlebars/handlebars.min",
         "lib":                  "static/js/",
         "templates":            "static/templates/",
+        "main":                 "static/main",
     },
     shim: {
-        "bootstrap": { deps: ["jquery"] }
+        "bootstrap": { deps: ["jquery"] },
     }
 };

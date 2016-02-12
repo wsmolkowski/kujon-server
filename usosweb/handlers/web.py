@@ -17,4 +17,5 @@ class ApplicationConfigHandler(BaseHandler):
         config = {
             'USOS_API': settings.USOS_API
         }
+        self.set_header("Content-Type", "application/json")
         self.write_json(data=config)

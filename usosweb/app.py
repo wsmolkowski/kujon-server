@@ -28,6 +28,7 @@ class Application(tornado.web.Application):
         __handlers = [
             (r"/", web.MainHandler),
             #(r"/static/(.*)", NoCacheStaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), "static")}),
+            (r"/config", web.ApplicationConfigHandler),
             (r"/authentication/register", authorization.RegisterHandler),
             (r"/authentication/login", authorization.LoginHandler),
             (r"/authentication/logout", authorization.LogoutHandler),
