@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from usosapi import constants
 
-LIMIT_FIELDS = ('class_type_id', 'course_unit_id', 'term_id', 'lecturers')
+LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
 
 
 class GroupsApi(BaseHandler):

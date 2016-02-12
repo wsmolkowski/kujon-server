@@ -76,13 +76,7 @@ class UsosCrowler:
                 self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
 
     def __build_user_info(self, client, user_id, user_info_id, crowl_time, usos):
-        '''
-            fetches user info and inserts to database
-        :param client:
-        :param user_id:
-        :param crowl_time:
-        :return:
-        '''
+
         result = client.user_info(user_info_id)
         result = self.append(result, None, crowl_time, crowl_time)
         if user_id:
@@ -126,14 +120,7 @@ class UsosCrowler:
             logging.debug('programme for prog: {0} inserted: {1}'.format(prog['id'], prog_doc))
 
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
-        '''
-            fetches curseseditions and inserts to database
-        :param client:
-        :param crowl_time:
-        :param user_id:
-        :param usos:
-        :return:
-        '''
+
         result = client.courseeditions_info()
         result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
         result[constants.USER_ID] = user_id
@@ -142,13 +129,7 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_terms(self, client, user_id, usos, crowl_time):
-        '''
-            for each user unique term fetches usos data and inserts to database if not exists
-        :param user_id:
-        :param usos:
-        :param crowl_time:
-        :return:
-        '''
+
         for term_id in self.dao.get_user_terms(user_id):
 
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
@@ -161,13 +142,7 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crowl_time):
-        '''
-            for each user unique course fetches usos data and inserts to database if not exists
-        :param user_id:
-        :param usos:
-        :param crowl_time:
-        :return:
-        '''
+
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
             if self.dao.get_course(course_edition[constants.COURSE_ID], usos[constants.USOS_ID]):
                 continue  # course already exists
@@ -180,13 +155,7 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_courses(self, client, usos, crowl_time):
-        '''
-            for each user unique course fetches usos data and inserts to database if not exists
-        :param user_id:
-        :param usos:
-        :param crowl_time:
-        :return:
-        '''
+
         for course_edition in self.dao.get_course_edition_all(usos[constants.USOS_ID]):
             if self.dao.get_course(course_edition[constants.COURSE_ID], usos[constants.USOS_ID]):
                 continue  # course already exists
@@ -198,37 +167,21 @@ class UsosCrowler:
             c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
             logging.debug('course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
 
-
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
-        '''
-            for each user unique course fetches usos data and inserts to database if not exists
-        :param user_id:
-        :param usos:
-        :param crowl_time:
-        :return:
-        '''
         for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
-            if self.dao.get_faculty(faculty[constants.FAC_ID], usos[constants.USOS_ID]):
+            if self.dao.get_faculty(faculty, usos[constants.USOS_ID]):
                 continue  # fac already exists
 
-            result = client.faculty(faculty[constants.FAC_ID])
+            result = client.faculty(faculty)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.FAC_ID] = faculty[constants.FAC_ID]
+            result[constants.FACULTY_ID] = faculty
 
             fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
-            logging.debug('faculty for fac_id: {0} inserted {1}'.format(faculty[constants.FAC_ID], fac_doc))
+            logging.debug('faculty for fac_id: {0} inserted {1}'.format(faculty, fac_doc))
 
-
+    @tornado.gen.coroutine
     def __build_user_infos(self, client, crowl_time, users, usos):
-        '''
-            build user info for participants from list
-        :param client:
-        :param crowl_time:
-        :param users:
-        :return:
-        '''
-
         for user in users:
             if not self.dao.get_users_info_by_usos_id(user['id'], usos):
                 self.__build_user_info(client, None, user['id'], crowl_time, usos)
@@ -237,13 +190,6 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_units(self, client, crowl_time, units, usos):
-        '''
-            iterates over units and if does not exists in database fetches data from usos and inserts
-        :param crowl_time:
-        :param units:
-        :param usos:
-        :return:
-        '''
 
         for unit_id in units:
             if self.dao.get_units(unit_id, usos[constants.USOS_ID]):
@@ -257,13 +203,7 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_groups(self, client, crowl_time, units, usos):
-        '''
-            iterates over units and if does not exists in database fetches data from usos and inserts
-        :param crowl_time:
-        :param units:
-        :param usos:
-        :return:
-        '''
+
         for unit in units:
             result = client.groups(unit)
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -275,14 +215,7 @@ class UsosCrowler:
 
     @tornado.gen.coroutine
     def __build_grades_participants_lecturers_units_groups(self, client, user_id, usos, crowl_time):
-        '''
-            building grades and participants and units
-        :param client:
-        :param user_id:
-        :param usos:
-        :param crowl_time:
-        :return:
-        '''
+
         all_participants = []
         all_lecturers = []
         all_units = []
@@ -340,6 +273,8 @@ class UsosCrowler:
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
+
+
             self.__build_user_info(client, user_id, None, crowl_time, usos)
 
             self.__build_programmes(client, user_id, crowl_time, usos)

@@ -81,10 +81,13 @@ class Dao:
         return self.__db.course_edition.find({constants.USOS_ID: usos_id})
 
     def get_faculties_from_courses(self, usos_id):
-        return self.__db.courses.distinct(constants.FAC_ID, {constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}).distinct('fac_id')
+        # for faculty in faculties:
+        #         faculties.append(faculty)
+        # return faculties
 
     def get_faculty(self, fac_id, usos_id):
-        return self.__db.courses.find_one({constants.FAC_ID: fac_id, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id, constants.USOS_ID: usos_id})
 
     def get_course(self, course_id, usos_id):
         return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
@@ -137,5 +140,3 @@ class Dao:
     def count(self, collection):
         return self.__db[collection].count()
 
-    def get_friends(self, user_id):
-        return self.__db[constants.COLLECTION_FRIENDS].find(ObjectId(user_id))

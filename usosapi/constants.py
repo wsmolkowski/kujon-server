@@ -10,7 +10,7 @@ UNIT_ID = 'unit_id'
 GROUP_ID = 'course_unit_id'
 FRIEND_ID = 'friend_id'
 PROGRAMME_ID = 'programme_id'
-FAC_ID = 'fac_id'
+FACULTY_ID = 'fac_id'
 
 PARTICIPANTS = 'participants'
 LECTURERS = 'lecturers'
