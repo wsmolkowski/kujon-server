@@ -56,7 +56,7 @@ function drawCoursesTable(jsonData) {
             for (var course in jsonData['course_editions'][term]) {
                 html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
                 html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
-                html += '<td><a href=/school/courseedition/'+ jsonData['course_editions'][term][course]['course_id'] + '/'+ encodeURIComponent(term) +'>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
+                html += '<td><a href=/school/courses/'+ jsonData['course_editions'][term][course]['course_id'] +'>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
                 html += '<td>'
                 html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
                 html += '</td>'
@@ -87,12 +87,18 @@ function fetchCursesAndDraw(){
 function drawCourseInfoTable(jsonData){
     $(baseContainer).empty();
      var html = '<table class="table table-hover">';
-        html += '<tr><th>Numer przedmiotu</th><th>Nazwa przedmiotu</th><th></th></tr>'
+        html += '<caption>Informacje o przedmiocie</caption>'
         html += '<tbody>'
-        html += '<tr>'
-        html += '<td>' + jsonData['course_id'] + '</td>'
-        html += '<td>' + jsonData['course_name']['pl'] + '</td>'
-        html += '</tr>'
+        html += '<tr><td>Nazwa Przedmiotu</td><td>' + jsonData['name']['pl'] + '</td>'
+        html += '<tr><td>Kod</td><td>' + jsonData['course_id'] + '</td>'
+        html += '<tr><td>Język</td><td>' + jsonData['lang_id'] + '</td>'
+        html += '<tr><td>Jednostka</td><td>' + jsonData['fac_id'] + '</td>'
+        html += '<tr><td>Czy jest prowadzony</td><td>' + jsonData['is_currently_conducted'] + '</td>'
+        html += '<tr><td>Opis</td><td>' + jsonData['description']['pl'] + '</td>'
+        html += '<tr><td>Bibliografia</td><td>' + jsonData['bibliography']['pl'] + '</td>'
+        if (jsonData['assessment_criteria']) {
+            html += '<tr><td>Kryteria oceny</td><td>' + jsonData['assessment_criteria']['pl'] + '</td>'
+        }
         html += '</tbody></table>';
     $(baseContainer).html(html);
 }
@@ -107,7 +113,7 @@ function drawGradesTable(grades){
     for (var key in grades) {
                 html += '<tr>'
                 html += '<td><a href=/school/terms/' + encodeURIComponent(grades[key]['term_id']) + '>' + grades[key]['term_id'] + '</a></td>'
-                html += '<td><a href="/school/courseedition/' + grades[key]['course_id']+'/'+ encodeURIComponent(grades[key]['term_id']) + '">' + grades[key]['course_id'] + '</a></td>'
+                html += '<td><a href="/school/courses/' + grades[key]['course_id']+ '">' + grades[key]['course_id'] + '</a></td>'
                 html += '<td>' + grades[key]['course_name']['pl'] + '</td>'
                 html += '<td><table class="table table-hover">'
 
@@ -186,10 +192,10 @@ function drawGradeTable(jsonData){
     $(baseContainer).html(html);
 }
 
-function fetchCurseEdition(courseId, termId){
+function fetchCurseAndDraw(courseId, termId){
      $.ajax({
       type: 'GET',
-      url: deployUrl + '/api/courseedition/' + courseId + '/' + termId,
+      url: deployUrl + '/api/courses/' + courseId,
       success:  function (data) {
             if (data.status == 'success'){
                 drawCourseInfoTable(data.data);
@@ -481,7 +487,7 @@ function drawLecturerTable(jsonData){
     html += '<tr><td>Zainteresowania</td><td>' + jsonData['interests']['pl'] + '</td></td><td></td></tr>'
     html += '<tr><td>Koordynowane przedmioty</td><td>'
     for (var key in jsonData['course_editions_conducted']){
-                html += '<a href="/school/courseedition/' + jsonData['course_editions_conducted'][key]['course_id'] + '/' + jsonData['course_editions_conducted'][key]['term_id']+ '">' + jsonData['course_editions_conducted'][key]['course_name']['pl']+ '</a><br>'
+                html += '<a href="/school/courses/' + jsonData['course_editions_conducted'][key]['course_id'] +'">' + jsonData['course_editions_conducted'][key]['course_name']['pl']+ '</a><br>'
     }
     html += '</td></tr>'
     html += '</tbody></table>';
@@ -599,11 +605,11 @@ $( document ).ready(function() {
 
     var pathname = $(location).attr('pathname');
     var pathSplit = pathname.split('/');
-    if (pathname.indexOf('/school/courses') === 0){
-        fetchCursesAndDraw();
+    if (pathname.indexOf('/school/courses/') === 0){
+            fetchCurseAndDraw(pathSplit[3]);
     }
-    else if (pathname.indexOf('/school/courseedition') === 0){
-            fetchCurseEdition(pathSplit[3], pathSplit[4]);
+    else if (pathname.indexOf('/school/courses') === 0){
+        fetchCursesAndDraw();
     }
     else if (pathname.indexOf('/school/grades/course') === 0){
         fetchGradesAndDraw(pathSplit[4],pathSplit[5]);

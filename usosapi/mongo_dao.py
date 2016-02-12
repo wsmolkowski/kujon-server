@@ -77,6 +77,18 @@ class Dao:
     def get_course_edition(self, course_id, term_id, usos_id):
         return self.__db.course_edition.find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
+    def get_course_edition_all(self, usos_id):
+        return self.__db.course_edition.find({constants.USOS_ID: usos_id})
+
+    def get_faculties_from_courses(self, usos_id):
+        return self.__db.courses.distinct(constants.FAC_ID, {constants.USOS_ID: usos_id})
+
+    def get_faculty(self, fac_id, usos_id):
+        return self.__db.courses.find_one({constants.FAC_ID: fac_id, constants.USOS_ID: usos_id})
+
+    def get_course(self, course_id, usos_id):
+        return self.__db.courses.find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
+
     def get_grades(self, course_id, term_id, user_id, usos_id):
         return self.__db.grades.find_one(
             {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id, constants.USOS_ID: usos_id})

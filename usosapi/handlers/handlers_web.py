@@ -36,12 +36,12 @@ class Courses_WebHandler(BaseHandler):
         self.render("school.html", **data)
 
 
-class CourseEdition_WebHandler(BaseHandler):
+class Course_WebHandler(BaseHandler):
     @tornado.web.removeslash
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, course_id, term_id):
+    def get(self, course_id):
         data = self.template_data()
         self.render("school.html", **data)
 

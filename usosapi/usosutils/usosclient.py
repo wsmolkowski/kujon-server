@@ -16,8 +16,9 @@ URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
 URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|course_id|term_id|lecturers"
-URL_COURSES_UNITS = 'services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={0}'
-
+URI_COURSES_UNITS = 'services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={0}'
+URI_COURSE = 'services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
+URI_FACULTY = 'services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[200x200]'
 
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
@@ -74,7 +75,7 @@ class UsosClient:
             raise Exception("Error while fetching groups. Response code: {0} body: {1}".format(code, body))
 
     def units(self, unit_id):
-        code, body = self.client.request("{0}{1}".format(self.base_url, URL_COURSES_UNITS.format(unit_id)))
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_UNITS.format(unit_id)))
         if int(code['status']):
             return json.loads(body)
         else:
@@ -96,6 +97,13 @@ class UsosClient:
         raise Exception(
             "Error while fetching course_info {0}. Response code: {1} body: {2}".format(course_id, code, body))
 
+    def course(self, course_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE.format(course_id)))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception(
+            "Error while fetching course_id: {0}. Response code: {1} body: {2}".format(course_id, code, body))
+
     def grades(self, course_id, term_id):
         code, body = self.client.request(
             "{0}{1}".format(self.base_url, URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id)))
@@ -111,3 +119,8 @@ class UsosClient:
             return json.loads(body)
         raise Exception("Error while fetching class_types. Response code: {0} body: {1}".format(code, body))
 
+    def faculty(self, fac_id):
+        code, body = self.client.request("{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id)))
+        if int(code['status']):
+            return json.loads(body)
+        raise Exception("Error while fetching faculty: {0}. Response code: {1} body: {2}".format(fac_id, code, body))

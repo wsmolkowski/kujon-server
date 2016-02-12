@@ -66,6 +66,8 @@ class CrowlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_GRADES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_CROWLLOG) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
 
     @gen_test(timeout=1000)
     def testInitialUserCrowlerPS(self):
@@ -89,3 +91,5 @@ class CrowlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_GRADES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_CROWLLOG) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
