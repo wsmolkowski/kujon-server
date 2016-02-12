@@ -10,10 +10,11 @@ define(['jquery', 'handlebars', 'text!templates/user.html'], function($, Handleb
                 type: 'GET',
                 url: 'http://localhost:8881/api/users/',
                 success:  function (data) {
-                    $('#page').html(template(data));
+                    $('#page').html(template(data.data[0]));
                 },
                 error: function (err) {
                     console.log(err);
+                    console.log(err.responseText.toString());
                 }
             });
 
