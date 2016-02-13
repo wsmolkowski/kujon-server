@@ -9,16 +9,16 @@ from usosapi import settings
 
 URI_USER_INFO = "services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
 URI_USER_INFO_PHOTO = "services/photos/photo?user_id={0}"
-URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions"
-URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids|lecturers"
-URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|course_units_ids|lecturers"
+URI_COURSES_EDITIONS_INFO = "services/courses/user?active_terms_only=false&fields=course_editions[course_id|course_name|term_id|course_units_ids]"
+URI_COURSE_EDITION_INFO = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|coordinators|course_units_ids|lecturers"
+URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|coordinators|course_units_ids|lecturers"
 URI_GRADES_FOR_COURSE_AND_TERM = "services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = "services/courses/classtypes_index"
 URI_PROGRAMMES = "services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
-URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|course_id|term_id|lecturers"
-URI_COURSES_UNITS = 'services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={0}'
+URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|class_type|course_id|term_id"
+URI_COURSES_UNITS = 'services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}'
 URI_COURSE = 'services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
-URI_FACULTY = 'services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[200x200]'
+URI_FACULTY = 'services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]'
 
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):

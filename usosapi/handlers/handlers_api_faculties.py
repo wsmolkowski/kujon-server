@@ -4,6 +4,7 @@ from handlers_api import BaseHandler
 from usosapi import constants
 
 
+
 class FacultyByIdApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine

@@ -89,15 +89,15 @@ function drawCourseInfoTable(jsonData){
      var html = '<table class="table table-hover">';
         html += '<caption>Informacje o przedmiocie</caption>'
         html += '<tbody>'
-        html += '<tr><td>Nazwa Przedmiotu</td><td>' + jsonData['name']['pl'] + '</td>'
-        html += '<tr><td>Kod</td><td>' + jsonData['course_id'] + '</td>'
-        html += '<tr><td>Język</td><td>' + jsonData['lang_id'] + '</td>'
-        html += '<tr><td>Jednostka</td><td>' + jsonData['fac_id'] + '</td>'
-        html += '<tr><td>Czy jest prowadzony</td><td>' + jsonData['is_currently_conducted'] + '</td>'
-        html += '<tr><td>Opis</td><td>' + jsonData['description']['pl'] + '</td>'
-        html += '<tr><td>Bibliografia</td><td>' + jsonData['bibliography']['pl'] + '</td>'
+        html += '<tr><td>Nazwa Przedmiotu</td><td>' + jsonData['name']['pl'] + '</td><td></td>'
+        html += '<tr><td>Kod</td><td>' + jsonData['course_id'] + '</td><td></td>'
+        html += '<tr><td>Język</td><td>' + jsonData['lang_id'] + '</td><td></td>'
+        html += '<tr><td>Jednostka</td><td>' + jsonData['fac_id']['name']['pl'] + ', ' + jsonData['fac_id']['postal_address'] + ', ' + jsonData['fac_id']['homepage_url'] + '</td><td><img src="' + jsonData['fac_id']['logo_urls']['100x100'] + '" height=100 width=100 ></td>'
+        html += '<tr><td>Czy jest prowadzony</td><td>' + jsonData['is_currently_conducted'] + '</td><td></td>'
+        html += '<tr><td>Opis</td><td>' + jsonData['description']['pl'] + '</td><td></td>'
+        html += '<tr><td>Bibliografia</td><td>' + jsonData['bibliography']['pl'] + '</td><td></td>'
         if (jsonData['assessment_criteria']) {
-            html += '<tr><td>Kryteria oceny</td><td>' + jsonData['assessment_criteria']['pl'] + '</td>'
+            html += '<tr><td>Kryteria oceny</td><td>' + jsonData['assessment_criteria']['pl'] + '</td><td></td>'
         }
         html += '</tbody></table>';
     $(baseContainer).html(html);

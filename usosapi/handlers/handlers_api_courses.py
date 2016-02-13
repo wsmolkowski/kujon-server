@@ -26,6 +26,13 @@ class CoursesApi(BaseHandler):
             else:
                 course_doc['is_currently_conducted'] = 'NIE'
 
+            # change faculty_id to faculty name
+            LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls','name','postal_address','homepage_url','phone_numbers')
+            fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[constants.FACULTY_ID],
+                                        constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
+            course_doc.pop(constants.FACULTY_ID)
+            course_doc[constants.FACULTY_ID] = fac_doc
+
             self.success(course_doc)
 
 
