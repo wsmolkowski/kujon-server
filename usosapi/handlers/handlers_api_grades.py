@@ -13,6 +13,7 @@ class GradesForUserApi(BaseHandler):
         parameters = yield self.get_parameters()
         grades = []
 
+        # get class_types
         classtypes = {}
         cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
         while (yield cursor.fetch_next):

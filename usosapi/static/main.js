@@ -60,16 +60,17 @@ function drawCoursesTable(jsonData) {
         for (var year in jsonData) {
             html += '<div id="' + year +'" class="tab-pane fade">'
             html += '<table class="table table-hover">'
-            for (var term in jsonData[year]) {
-                for (var course in jsonData[year][term]) {
-                    html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData[year][term][course]['term_id'])+'>' + jsonData[year][term][course]['term_id'] + '</a>  </td>'
-                    html += '<td>' + jsonData[year][term][course]['course_id'] + '</td>'
-                    html += '<td><a href=/school/courses/'+ jsonData[year][term][course]['course_id'] +'>' + jsonData[year][term][course]['course_name']['pl']+ '</a></td>'
-                    html += '<td>'
-                    html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData[year][term][course]['course_id']+ '/'+encodeURIComponent(jsonData[year][term][course]['term_id'])+'>Oceny</a>'
-                    html += '</td>'
-                    html += '</tr>';
+            for (var course in jsonData[year]) {
+                html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData[year][course]['term_id'])+'>' + jsonData[year][course]['term_id'] + '</a>  </td>'
+                html += '<td>' + jsonData[year][course]['course_id'] + '</td>'
+                html += '<td><a href=/school/courses/'+ jsonData[year][course]['course_id'] +'>' + jsonData[year][course]['course_name']['pl']+ '</a></td>'
+                html += '<td><table class="table table-hover">'
+                for (var group in jsonData[year][course]['groups']) {
+                    html += '<td>' + jsonData[year][course]['groups'][group]['class_type_id']  +  ' Grupa nr ' + jsonData[year][course]['groups'][group]['group_number'] + '</td><tr>'
                 }
+                html += '</table></td>'
+                html += '<td><a class="btn btn-primary" href=/school/grades/course/'+ jsonData[year][course]['course_id']+ '/'+encodeURIComponent(jsonData[year][course]['term_id'])+'>Oceny</a></td>'
+                html += '</tr>';
             }
             html += '</tbody></table>';
             html += '</div>'

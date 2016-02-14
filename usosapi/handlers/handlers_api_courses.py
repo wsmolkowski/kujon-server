@@ -54,13 +54,43 @@ class CoursesEditionsApi(BaseHandler):
             self.error("Please hold on we are looking your courses.")
         else:
 
+            # get courses_classtypes
+            classtypes = {}
+            cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+            while (yield cursor.fetch_next):
+                ct = cursor.next_object()
+                classtypes[ct['id']] = ct['name']['pl']
+
+
             # group terms by academic years
             courses_new = {}
             for term in course_doc['course_editions']:
                 year = term[0:4]
                 if not year in courses_new:
                     courses_new[year] = []
-                    courses_new[year].append(course_doc['course_editions'][term])
-                else:
-                    courses_new[year].append(course_doc['course_editions'][term])
-            self.success(courses_new)
+                for course in course_doc['course_editions'][term]:
+                    courses_new[year].append(course)
+
+            # add groups to courses
+            courses_with_groups = {}
+            LIMIT_FIELDS_GROUPS = ('class_type_id','group_number','course_unit_id')
+            for year in courses_new:
+                if not year in courses_with_groups:
+                    courses_with_groups[year] = []
+                course_new = []
+                for course in courses_new[year]:
+                    cursor = self.db[constants.COLLECTION_GROUPS].find(
+                        { constants.COURSE_ID: course[constants.COURSE_ID],
+                          constants.TERM_ID: course[constants.TERM_ID],
+                          constants.USOS_ID: parameters[constants.USOS_ID]},
+                          LIMIT_FIELDS_GROUPS
+                        )
+                    course['groups'] = []
+                    while (yield cursor.fetch_next):
+                        group = cursor.next_object()
+                        group.pop("_id")
+                        group['class_type_id'] = classtypes[group['class_type_id']] # changing class_type_id to name
+                        course['groups'].append(group)
+                    courses_with_groups[year].append(course)
+
+            self.success(courses_with_groups)
