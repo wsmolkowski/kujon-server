@@ -53,4 +53,14 @@ class CoursesEditionsApi(BaseHandler):
         if not course_doc:
             self.error("Please hold on we are looking your courses.")
         else:
-            self.success(course_doc)
+
+            # group terms by academic years
+            courses_new = {}
+            for term in course_doc['course_editions']:
+                year = term[0:4]
+                if not year in courses_new:
+                    courses_new[year] = []
+                    courses_new[year].append(course_doc['course_editions'][term])
+                else:
+                    courses_new[year].append(course_doc['course_editions'][term])
+            self.success(courses_new)

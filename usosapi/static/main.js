@@ -49,21 +49,33 @@ function drawErrorMessage(data) {
 function drawCoursesTable(jsonData) {
     $(baseContainer).empty();
 
-    var html = '<table class="table table-hover">';
-        html += '<tr><th>Semestr</th><th>Nr kursu</th><th>Nazwa kursu</th><th></th></tr></tr>'
-        html += '<tbody>'
-        for (var term in jsonData['course_editions']) {
-            for (var course in jsonData['course_editions'][term]) {
-                html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>' + jsonData['course_editions'][term][course]['term_id'] + '</a>  </td>'
-                html += '<td>' + jsonData['course_editions'][term][course]['course_id'] + '</td>'
-                html += '<td><a href=/school/courses/'+ jsonData['course_editions'][term][course]['course_id'] +'>' + jsonData['course_editions'][term][course]['course_name']['pl']+ '</a></td>'
-                html += '<td>'
-                html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData['course_editions'][term][course]['course_id']+ '/'+encodeURIComponent(jsonData['course_editions'][term][course]['term_id'])+'>Oceny</a>'
-                html += '</td>'
-                html += '</tr>';
-            }
+    var html = '<h3>Przedmioty</h3>'
+        html += '<ul class="nav nav-tabs">'
+        for (var term in jsonData) {
+            html += '<li><a data-toggle="tab" href="#' + term + '">' + term + '</a></li>'
         }
-    html += '</tbody></table>';
+        html += '</ul>'
+        html += '<div class="tab-content">'
+
+        for (var year in jsonData) {
+            html += '<div id="' + year +'" class="tab-pane fade">'
+            html += '<table class="table table-hover">'
+            for (var term in jsonData[year]) {
+                for (var course in jsonData[year][term]) {
+                    html += '<td><a href=/school/terms/'+encodeURIComponent(jsonData[year][term][course]['term_id'])+'>' + jsonData[year][term][course]['term_id'] + '</a>  </td>'
+                    html += '<td>' + jsonData[year][term][course]['course_id'] + '</td>'
+                    html += '<td><a href=/school/courses/'+ jsonData[year][term][course]['course_id'] +'>' + jsonData[year][term][course]['course_name']['pl']+ '</a></td>'
+                    html += '<td>'
+                    html += '<a class="btn btn-primary" href=/school/grades/course/'+ jsonData[year][term][course]['course_id']+ '/'+encodeURIComponent(jsonData[year][term][course]['term_id'])+'>Oceny</a>'
+                    html += '</td>'
+                    html += '</tr>';
+                }
+            }
+            html += '</tbody></table>';
+            html += '</div>'
+
+        }
+
     $(baseContainer).html(html);
 }
 
@@ -86,7 +98,8 @@ function fetchCursesAndDraw(){
 
 function drawCourseInfoTable(jsonData){
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Przedmiot</h3>'
+        html += '<table class="table table-hover">';
         html += '<caption>Informacje o przedmiocie</caption>'
         html += '<tbody>'
         html += '<tr><td>Nazwa Przedmiotu</td><td>' + jsonData['name']['pl'] + '</td><td></td>'
@@ -107,14 +120,14 @@ function drawGradesTable(grades){
 
     $(baseContainer).empty();
 
-    var html = '<table class="table table-hover">';
-    html += '<tr><th>Semestr</th><th>Kurs</th><th>Nazwa kursu</th><th></th></tr>'
+    var html = '<h3>Oceny</h3>'
+    html += '<table class="table table-hover">'
+    html += '<tr><th>Semestr</th><th>Nazwa kursu</th><th></th></tr>'
     html += '<tbody>'
     for (var key in grades) {
                 html += '<tr>'
                 html += '<td><a href=/school/terms/' + encodeURIComponent(grades[key]['term_id']) + '>' + grades[key]['term_id'] + '</a></td>'
-                html += '<td><a href="/school/courses/' + grades[key]['course_id']+ '">' + grades[key]['course_id'] + '</a></td>'
-                html += '<td>' + grades[key]['course_name']['pl'] + '</td>'
+                html += '<td><a href="/school/courses/' + grades[key]['course_id']+ '">' + grades[key]['course_name']['pl'] + '</td>'
                 html += '<td><table class="table table-hover">'
 
                 var pom = grades[key]['grades']['course_grades']
@@ -152,7 +165,8 @@ function drawGradesTable(grades){
 
 function drawGradeTable(jsonData){
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Ocena</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Przedmiot</th><th>Numer przedmiotu</th></tr>'
         html += '<tbody>'
         html += '<tr>'
@@ -246,7 +260,8 @@ function fetchGradesAndDraw(courseId, termId){
 
 function drawTermsTable(jsonData){
     $(baseContainer).empty();
-    var html = '<table class="table table-hover">';
+    var html = '<h3>Semestry</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Nazwa Semestru</th><th>Numer</th><th>Początek</th><th>Koniec</th><th>Zakończenie</th></tr></tr>'
         html += '<tbody>'
         $.each(jsonData, function(key, value){
@@ -267,7 +282,8 @@ function drawTermsTable(jsonData){
 function drawTermTable(jsonData){
 
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Semestr</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Nazwa Semestru</th><th>Numer</th><th>Początek</th><th>Koniec</th><th>Zakończenie</th></tr>'
         html += '<tbody>'
         html += '<tr>'
@@ -283,7 +299,8 @@ function drawTermTable(jsonData){
 
 function drawProgrammesTable(jsonData){
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Programy</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Nazwa Programu</th><th>Numer</th><th>Poziom studiów</th><th>Tryb</th><th>Czas trwania</th></tr>'
         html += '<tbody>'
         for (key in jsonData) {
@@ -301,7 +318,8 @@ function drawProgrammesTable(jsonData){
 
 function drawProgrammeTable(jsonData){
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Program</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Nazwa Programu</th><th>Numer</th><th>Poziom studiów</th><th>Tryb</th><th>Czas trwania</th></tr>'
         html += '<tbody>'
         html += '<tr>'
@@ -386,7 +404,8 @@ function fetchProgrammesAndDraw(programmeId){
 function drawFriendsSuggestionsTable(jsonData){
 
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Szukaj znajomych</h3>'
+        html += '<table class="table table-hover">';
         html += '<tr><th>Imię i Nazwisko</th><th>Wspólnych zajęć</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
@@ -403,7 +422,8 @@ function drawFriendsSuggestionsTable(jsonData){
 function drawFriendsTable(jsonData){
 
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Znajomi</h3>'
+        html += '<table class="table table-hover">'
         html += '<tr><th>Imię i Nazwisko</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
@@ -419,7 +439,8 @@ function drawFriendsTable(jsonData){
 function drawLecturersTable(jsonData){
 
     $(baseContainer).empty();
-     var html = '<table class="table table-hover">';
+     var html = '<h3>Belfrowie</h3>'
+        html += '<table class="table table-hover">'
         html += '<tr><th>Imię i Nazwisko Belfra</th><th></th></tr>'
         html += '<tbody>'
         for(var key in jsonData) {
@@ -434,7 +455,8 @@ function drawLecturersTable(jsonData){
 
 function drawUserInfo(jsonData){
     $(baseContainer).empty();
-    var html = '<table class="table table-hover">';
+    var html = '<h3>Użytkownik</h3>'
+    html += '<table class="table table-hover">';
     html += '<caption>Konto w Kujonie</caption>'
     html += '<tbody>'
     if (jsonData[0] != null){
@@ -442,7 +464,7 @@ function drawUserInfo(jsonData){
         html += '<tr><td>Email</td><td>' + jsonData[0]['email'] + '</td><td></td></tr>'
     }
     else {
-        html += '<tr><td>Brak konta</td><td><a href="/xxxx/">Zaproś</a></td></tr>'
+        html += '<tr><td>Brak konta</td><td><button class="btn btn-primary" onclick="">Zaproś</button></td></tr>'
     }
     html += '</tbody></table>';
 
@@ -466,7 +488,8 @@ function drawUserInfo(jsonData){
 
 function drawLecturerTable(jsonData){
     $(baseContainer).empty();
-    var  html = '<table class="table table-hover">';
+    var html = '<h3>Belfer</h3>'
+    html += '<table class="table table-hover">'
     html += '<caption>Konto w USOSie</caption>'
     html += '<tbody>'
     html += '<tr><td>Tytuł</td><td>' + jsonData['titles']['before'] + '</td></td><td></td></tr>'
