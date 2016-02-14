@@ -19,6 +19,7 @@ URI_GROUPS = "services/groups/group?course_unit_id={0}&group_number=1&fields=cou
 URI_COURSES_UNITS = 'services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}'
 URI_COURSE = 'services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
 URI_FACULTY = 'services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]'
+URI_TT = 'services/tt/user?start={0}&days=7&fields=start_date|end_date|name'
 
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
@@ -66,6 +67,13 @@ class UsosClient:
             if int(code['status']):
                 return json.loads(body)
         raise Exception("Error while fetching programmes. Response code: {0} body: {1}".format(code, body))
+
+    def tt(self, start_date):
+        if start_date:
+            code, body = self.client.request("{0}{1}".format(self.base_url, URI_TT.format(start_date)))
+            if int(code['status']):
+                return json.loads(body)
+        raise Exception("Error while fetching time tables for date: {0}. Response code: {1} body: {2}".format(start_date, code, body))
 
     def groups(self, course_unit_id):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id)))

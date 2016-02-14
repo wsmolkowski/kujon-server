@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from datetime import timedelta, date
 
 import tornado.gen
 from bson.objectid import ObjectId
@@ -78,10 +79,9 @@ class UsosCrowler:
     def __build_user_info(self, client, user_id, user_info_id, crowl_time, usos):
 
         result = client.user_info(user_info_id)
-        result = self.append(result, None, crowl_time, crowl_time)
+        result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
         if user_id:
             result[constants.USER_ID] = user_id
-        result[constants.USOS_ID] = usos[constants.USOS_ID]
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
@@ -106,14 +106,30 @@ class UsosCrowler:
                     course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
                     logging.debug("course_edition for course_id: {0} term_id: {1} inserted: {2}".format(course_id, term_id, course_doc))
 
+    def __build_tt(self, client, user_id, crowl_time, usos, given_date):
+
+        tts = self.dao.get_user_tt(user_id, usos[constants.USOS_ID], given_date)
+        if tts:
+            for tt in tts:
+                pass
+                # TODO: sprawdzenie czy istnieja grypy
+                # w zaleznosci od typu:
+                # If type equals "classgroup":
+                # If type equals "meeting":
+                # If type equals "exam":
+        else:
+            result = client.tt(given_date)
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result[constants.USER_ID] = user_id
+            tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
+            logging.debug('time tables for date: {0} inserted: {1}'.format(given_date, tt_doc))
 
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
         programmes = self.dao.get_user_programmes(user_id, usos[constants.USOS_ID])
         for prog in programmes:
             result = client.programme(prog['programme']['id'])
-            result = self.append(result, None, crowl_time, crowl_time)
-            result[constants.USOS_ID] = usos[constants.USOS_ID]
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.PROGRAMME_ID] = result.pop('id')
 
             prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
@@ -276,6 +292,12 @@ class UsosCrowler:
 
 
             self.__build_user_info(client, user_id, None, crowl_time, usos)
+
+            # fetch tt for current and next week
+            today = date.today()
+            next_week = today + timedelta(days=7)
+            self.__build_tt(client, user_id, crowl_time, usos, today)
+            self.__build_tt(client, user_id, crowl_time, usos, next_week)
 
             self.__build_programmes(client, user_id, crowl_time, usos)
 

@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 import pymongo
 from bson.objectid import ObjectId
@@ -113,6 +114,16 @@ class Dao:
         data = self.__db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
         programmes = data['student_programmes']
         return programmes
+
+    def get_user_tt(self, user_id, usos_id, given_date):
+
+        monday_this_week = given_date - timedelta(days=given_date.weekday())
+
+        tt = self.__db[constants.COLLECTION_TT].find_one({constants.USER_ID: ObjectId(user_id),
+                                                            constants.USOS_ID: usos_id,
+                                                            constants.TT_START: str(monday_this_week)
+                                                            })
+        return tt
 
     def get_user_courses(self, user_id, usos_id):
         course_edition = []
