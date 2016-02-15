@@ -4,19 +4,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
         render: function() {
             var template = Handlebars.compile(tpl);
 
-            var config = main.getConfig();
-            console.log(config);
-
-            var request_url = config['USOS_API'] + '/api/users/';
-            console.log(request_url);
+            var request_url = main.getApiUrl('/api/users/');
 
             $.ajax({
-                beforeSend: function ( xhr ) {
-                    //xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.setRequestHeader('Access-Control-Request-Method', 'GET');
-                    xhr.setRequestHeader('Access-Control-Request-Headers', '*');
-                    xhr.withCredentials = true;
-                },
                 type: 'GET',
                 url: request_url,
                 success:  function (data) {
@@ -26,7 +16,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                     console.log(err);
                 }
             });
-
             //a tutaj możesz np. zapiąć listenery
         }
     }    
