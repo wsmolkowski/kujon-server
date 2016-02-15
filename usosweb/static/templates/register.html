@@ -1,0 +1,31 @@
+<div class="panel panel-default">
+  <div class="panel-body">
+     <div class="checkbox">
+            <label>
+                <input type="checkbox">Akceptuję <a href="/regulations" class="strong">regulamin </a> serwisu
+                oraz proszę o niezwłoczne rozpoczęcie świadczenia mi usług serwisu.
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox">Wyrażam zgodę na przetwarzanie moich danych osobowych przez
+                {{PROJECT_TITLE}} w celach związanych z funkcjonowaniem serwisu {{PROJECT_TITLE}} oraz
+                przekazywania mi informacji
+                marketingowych i reklamowych dotyczących serwisu {{PROJECT_TITLE}} i jego partnerów.
+            </label>
+        </div>
+
+        <label for="usos-id" class="col-sm-2 control-label">Wybierz w USOS</label>
+        <div class="col-sm-4">
+            <select id="usos-id" name="usos" class="form-control" autofocus>
+            {% for usos in usoses %}
+                <option value="{{usos['url']}}">{{usos['name']}}</option>
+            {% end %}
+        </select>
+        </div>
+
+        <button class="btn btn-primary btn-danger"
+                onclick="location.href = 'http://localhost:8888/authentication/google'">Rejestracja przez Google
+        </button>
+  </div>
+</div>
