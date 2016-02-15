@@ -33,8 +33,23 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 {% if current_user %}
-                <li><a href="#user">User</a></li>
-                <li><a href="#contact">Contact</a></li>
+                {% if USOS_PAIRED %}
+                <li><a href="#user">Użytkownik</a></li>
+                <li class="dropdown">
+                      <a class="dropdown-toggle" data-toggle="dropdown" role="button"
+                         aria-haspopup="true" aria-expanded="false">Szkoła <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="#courses">Przedmioty</a></li>
+                          <li><a href="#grades">Oceny</a></li>
+                          <li><a href="#terms">Semestry</a></li>
+                          <li><a href="#programmes">Programy</a></li>
+                          <li><a href="#lecturers">Belfrowie</a></li>
+                      </ul>
+                  </li>
+                {% end %}
+                {% if not USOS_PAIRED %}
+                <li><a href="#register">Zarejestruj w USOS</a></li>
+                {% end %}
                 {% end %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -56,8 +71,6 @@
 
 <!-- kontener na tresc -->
 <div id="page" class="container">
-    {% block main %}
-    {% end %}
 
 </div>
 

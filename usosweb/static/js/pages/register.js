@@ -1,22 +1,22 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/register.html'], function($, Handlebars, main, tpl) {
 'use strict';
     return {
         render: function() {
+        
             var template = Handlebars.compile(tpl);
-
-            var request_url = main.getApiUrl('/api/users/');
+            
+            var request_url = main.getApiUrl('/api/usoses');
 
             $.ajax({
                 type: 'GET',
                 url: request_url,
-                //dataType: 'jsonp',
                 xhrFields: {
                     withCredentials: true
                 },
                 crossDomain: true,
                 success:  function (data) {
                     if (data.status == 'success'){
-                        $('#page').html(template(data.data[0]));
+                        $('#page').html(template(data));
                     } else {
                         $('#page').html(data.message);
                     }
@@ -25,6 +25,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                     console.log(err);
                 }
             });
+            
             //a tutaj możesz np. zapiąć listenery
         }
     }    

@@ -32,7 +32,31 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
     crossroads.addRoute('create', function() {
         setActiveLink('create');
     });
-    
+
+    crossroads.addRoute('grades', function() {
+        setActiveLink('grades');
+    });
+
+    crossroads.addRoute('courses', function() {
+        setActiveLink('courses');
+    });
+
+    crossroads.addRoute('terms', function() {
+        setActiveLink('terms');
+    });
+
+    crossroads.addRoute('programmes', function() {
+        setActiveLink('programmes');
+    });
+
+    crossroads.addRoute('lecturers', function() {
+        setActiveLink('lecturers');
+    });
+
+    crossroads.addRoute('register', function() {
+        setActiveLink('register');
+    });
+
     crossroads.addRoute('about', function() {
         setActiveLink('about');
     });
