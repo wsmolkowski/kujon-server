@@ -1,3 +1,4 @@
+from handlers.handlers_api import UsosesApi
 from handlers.handlers_api_courses import CoursesApi
 from handlers.handlers_api_courses import CoursesEditionsApi
 from handlers.handlers_api_faculties import FacultyByIdApi
@@ -59,6 +60,7 @@ HANDLERS = [
     (r"/authentication/verify", VerifyHandler),
     (r"/authentication/google", GoogleOAuth2LoginHandler),
 
+    (r"/api/usoses", UsosesApi),
     (r"/api/users/", UserInfoapi),
     (r"/api/users/([^/]+)", UsersInfoByIdApi),
     (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),

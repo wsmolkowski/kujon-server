@@ -121,3 +121,15 @@ class BaseHandler(RequestHandler, JSendMixin):
             if u['url'] == usos_url:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
+
+
+class UsosesApi(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        #parameters = yield self.get_parameters()
+
+        data = yield self.get_usoses()
+
+        self.success(data)
