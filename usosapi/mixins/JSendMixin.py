@@ -1,7 +1,6 @@
 from usosapi import constants
 from bson import json_util
-
-from usosweb import settings as usosweb_settings
+import logging
 
 
 class JSendMixin(object):
@@ -58,7 +57,7 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
-        self.set_header("Access-Control-Allow-Origin", usosweb_settings.DEPLOY_URL)
+        logging.debug(data)
         self.set_header("Content-Type", "application/json")
         self.write(json_util.dumps(data))
         self.finish()

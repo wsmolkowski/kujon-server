@@ -10,9 +10,18 @@ from tornado.web import RequestHandler
 
 from usosapi import constants, settings
 from usosapi.mixins.JSendMixin import JSendMixin
+from usosweb import settings as usosweb_settings
 
 
 class BaseHandler(RequestHandler, JSendMixin):
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Origin", usosweb_settings.DEPLOY_URL)
+        self.set_header("Access-Control-Allow-Credentials", "true")
+        #self.set_header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+
+
     def get_auth_http_client(self):
 
         if settings.PROXY_URL and settings.PROXY_PORT:
@@ -79,7 +88,7 @@ class BaseHandler(RequestHandler, JSendMixin):
     @staticmethod
     def get_proxy():
         if settings.PROXY_PORT and settings.PROXY_URL:
-            return httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, settings.PROXY_URL, settings.PROXY_PORT)
+            return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT, proxy_rdns=False)
         return None
 
     def template_data(self):
