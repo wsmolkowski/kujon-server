@@ -1,4 +1,11 @@
 USOSINSTANCES = [
+    {'usos_id': 'DEMO',
+     'name': 'The University of Wachock - DEMO',
+     'url': 'http://usosapps.demo.usos.edu.pl/',
+     'consumer_key': 'b9MHLmXygtGDbcL5BCj3',
+     'consumer_secret': '4TQESZkkBMFCT2JgtnzAtD5XG6ACZjsEb5vTrDGM',
+     'contact': 'dsksysadm@adm.uw.edu.pl'
+     },
     {'usos_id': 'UW',
      'name': 'Uniwersyst Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
