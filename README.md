@@ -1,3 +1,3 @@
-# stara.io test
+# stara.io
 
 
