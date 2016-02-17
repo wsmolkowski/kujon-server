@@ -28,5 +28,5 @@ PROXY_PORT = 8080   #
 GOOGLE_CLIENT_ID = "245488701889-dfhvfuf9br6u6t9476gt0l5ngkvacota.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "Pl3jCVQO55nZMhxKXHNWivZp"
 
-USOS_API = 'localhost:8881'
+USOS_API = 'http://localhost:8881'
 

@@ -24,7 +24,7 @@ DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'usos-test2'
 
-CLEAN_DB = False
+CLEAN_DB = True
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)
 PROXY_URL = None    #

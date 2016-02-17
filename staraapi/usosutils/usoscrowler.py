@@ -86,7 +86,7 @@ class UsosCrowler:
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
         # if user has photo - download
-        if result['has_photo']:
+        if 'has_photo' in result:
             if not self.dao.get_users_info_photo(result[constants.USER_INFO_ID], usos[constants.USOS_ID]):
                 photo = client.user_info_photo(result[constants.USER_INFO_ID])
                 photo = self.append(photo, usos[constants.USOS_ID], crowl_time, crowl_time)
@@ -236,28 +236,30 @@ class UsosCrowler:
         all_lecturers = []
         all_units = []
         for data in self.dao.get_user_courses_editions(user_id):
-            term_id, course_id = str(data[0]), str(data[1])
+            term_id, course_id = data[0], data[1]
 
             # participants ane lectures
             result = client.course_edition(course_id, term_id, fetch_participants=True)
-            participants = result.pop('participants')
-            lecturers = result.pop('lecturers')
-            for p in participants:
-                if p not in all_participants:
-                    all_participants.append(p)
-            for l in lecturers:
-                if l not in all_lecturers:
-                    all_lecturers.append(l)
+            if 'participants' in result:
+                participants = result.pop('participants')
+                lecturers = result.pop('lecturers')
+                for p in participants:
+                    if p not in all_participants:
+                        all_participants.append(p)
+                for l in lecturers:
+                    if l not in all_lecturers:
+                        all_lecturers.append(l)
 
             # units
-            units = result.pop('course_units_ids')
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.USER_ID] = user_id
-            if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
-                continue  # grades for course and term already exists
-            for unit in units:
-                if unit not in all_units:
-                    all_units.append(unit)
+            if 'course_units_ids' in result:
+                units = result.pop('course_units_ids')
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.USER_ID] = user_id
+                if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
+                    continue  # grades for course and term already exists
+                for unit in units:
+                    if unit not in all_units:
+                        all_units.append(unit)
 
             # grades
             g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
