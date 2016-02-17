@@ -2,7 +2,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
 LIMIT_FIELDS = ('first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status','room','office_hours','employment_positions','course_editions_conducted','interests','homepage_url')
 
@@ -74,7 +74,7 @@ class LecturerByIdApi(BaseHandler):
                     course_id, term_id = courseterm['id'].split('|')
                     course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
                         {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
-                        constants.USOS_ID: parameters[constants.USOS_ID]})
+                         constants.USOS_ID: parameters[constants.USOS_ID]})
                     if course_doc:
                         course_editions.append(course_doc)
                     else:

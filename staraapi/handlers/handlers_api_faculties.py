@@ -1,8 +1,7 @@
 import tornado.web
 
 from handlers_api import BaseHandler
-from staraapi import constants
-
+from staracommon import constants
 
 
 class FacultyByIdApi(BaseHandler):
@@ -13,7 +12,8 @@ class FacultyByIdApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
-                                        constants.USOS_ID: parameters[constants.USOS_ID]})
+                                                                          constants.USOS_ID: parameters[
+                                                                              constants.USOS_ID]})
 
         if not fac_doc:
             self.fail("We could not find faculty with fac_id: {0}.".format(fac_id))

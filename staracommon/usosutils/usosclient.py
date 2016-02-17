@@ -40,7 +40,7 @@ class UsosClient:
 
     def user_info(self, user_info_id):
         if user_info_id:
-            code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO + '&user_id=' + user_info_id))
+            code, body = self.client.request("{0}{1}{2}{3}".format(self.base_url, URI_USER_INFO, '&user_id=', user_info_id))
         else:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_USER_INFO))
         if code['status'] == '200':

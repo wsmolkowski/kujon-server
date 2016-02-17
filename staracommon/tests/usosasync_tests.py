@@ -1,6 +1,6 @@
 from tornado.testing import AsyncTestCase, gen_test
 
-from staraapi.usosutils import usosasync
+from staracommon.usosutils import usosasync
 
 
 class UsosAsyncTest(AsyncTestCase):

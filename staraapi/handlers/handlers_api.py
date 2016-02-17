@@ -3,10 +3,10 @@ import urlparse
 import oauth2 as oauth
 import tornado.gen
 
-from staraapi import constants, settings
+from staraapi import settings
 from staraapi.mixins.JSendMixin import JSendMixin
+from staracommon import handlers, constants
 from staraweb import settings as staraweb_settings
-from staracommon import handlers
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):

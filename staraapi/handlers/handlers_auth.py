@@ -9,8 +9,8 @@ import tornado.web
 from bson import json_util
 
 from handlers_api import BaseHandler
-from staraapi import constants
 from staraapi import settings
+from staracommon import constants
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)

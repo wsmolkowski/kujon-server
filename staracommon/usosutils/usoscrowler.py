@@ -7,10 +7,10 @@ from bson.objectid import ObjectId
 
 import usosasync
 import usosinstances
-from staraapi import constants
 from staraapi.helpers import log_execution_time
-from staraapi.mongo_dao import Dao
-from staraapi.usosutils.usosclient import UsosClient
+from staracommon import constants
+from staracommon.mongo_dao import Dao
+from staracommon.usosutils.usosclient import UsosClient
 
 
 class UsosCrowler:
@@ -155,7 +155,7 @@ class UsosCrowler:
             logging.debug('no course_editions for user_id: {0}.'.format(user_id))
 
     @tornado.gen.coroutine
-    def __build_terms(self, client, user_id, usos, crowl_time):
+    def __build_terms(self, user_id, usos, crowl_time):
 
         for term_id in self.dao.get_user_terms(user_id):
 
@@ -180,9 +180,13 @@ class UsosCrowler:
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-                logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
+                logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[
+                                                                                                       constants.COURSE_ID], course_edition[
+                                                                                                       constants.TERM_ID], c_doc))
             else:
-                logging.debug('no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]))
+                logging.debug('no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[
+                                                                                              constants.COURSE_ID], course_edition[
+                                                                                              constants.TERM_ID]))
 
     @tornado.gen.coroutine
     def __build_courses(self, client, usos, crowl_time):
@@ -314,8 +318,6 @@ class UsosCrowler:
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
-
-
             self.__build_user_info(client, user_id, None, crowl_time, usos)
 
             # fetch tt for current and next week
@@ -328,7 +330,7 @@ class UsosCrowler:
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
-            yield self.__build_terms(client, user_id, usos, crowl_time)
+            yield self.__build_terms(user_id, usos, crowl_time)
 
             self.__build_course_edition(client, user_id, usos, crowl_time)
 

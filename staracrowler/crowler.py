@@ -1,39 +1,47 @@
 import time
+import logging
 
-import pymongo
-from tornado import gen, ioloop, queues
+from bson.objectid import ObjectId
+from tornado import gen
+from tornado.ioloop import IOLoop
 
-MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
-MONGODB_NAME = 'usos-test2'
-CONST_USOS_ID = 'usos'
+from staracommon.mongo_dao import Dao
+from staracommon.usosutils.usoscrowler import UsosCrowler
 
 SLEEP = 10
 
 
 @gen.coroutine
 def main():
-    queue = queues.Queue()
-    db = pymongo.Connection(MONGODB_URI)[MONGODB_NAME]
+    dao = Dao()
+    usos_crowler = UsosCrowler(dao=dao)
+
+    initial_processing = []
 
     @gen.coroutine
-    def crowl():
-        for user in db.users.find():
-            usos = db.usosinstances.find_one({CONST_USOS_ID: user[CONST_USOS_ID]})
+    def crowl_initial():
 
-            updater = USOSUpdater(usos['url'], usos['consumer_key'], usos['consumer_secret'], user['access_token_key'], user['access_token_secret'])
-            print user['mobile_id'], updater.request_user_info()
+        for user_id in dao.get_initial_users():
+            #user_id = ObjectId("56c438d7c4f9d21e9c2f4c17")
+            if user_id in initial_processing:
+                return
 
+            initial_processing.append(user_id)
+            logging.info("starting initial_user_crowl for {0}".format(user_id))
+            yield usos_crowler.initial_user_crowl(user_id)
+            logging.info("finished initial_user_crowl for {0}".format(user_id))
+
+            initial_processing.remove(user_id)
             time.sleep(SLEEP)
 
     @gen.coroutine
-    def worker():
+    def worker_initial():
         while True:
-            yield crowl()
+            yield crowl_initial()
 
-    worker()
+    worker_initial()
 
 if __name__ == '__main__':
-    import logging
     logging.basicConfig(level=logging.DEBUG)
-    io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(main)
+    #IOLoop.current().start()
+    IOLoop.current().run_sync(main)

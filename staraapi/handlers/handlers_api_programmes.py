@@ -2,7 +2,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
 LIMIT_FIELDS = ('name','mode_of_studies','level_of_studies','programme_id','duration')
 
@@ -29,7 +29,8 @@ class ProgrammesApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[
+                                                                                                             constants.ID])})
 
         programmes = []
         for program in user_info['student_programmes']:

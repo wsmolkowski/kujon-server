@@ -4,7 +4,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
 LIMIT_FIELDS = (
 'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')

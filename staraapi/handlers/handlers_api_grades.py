@@ -2,7 +2,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
 
 class GradesForUserApi(BaseHandler):
@@ -15,7 +15,8 @@ class GradesForUserApi(BaseHandler):
 
         # get class_types
         classtypes = {}
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
+            constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
@@ -64,7 +65,8 @@ class GradesForCourseAndTermApi(BaseHandler):
         limit_fields = ('course_name', 'course_id', 'grades')
 
         classtypes = {}
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
+            constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']

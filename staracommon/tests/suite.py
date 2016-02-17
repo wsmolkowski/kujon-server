@@ -1,9 +1,12 @@
 import unittest
 
-from usosclient_tests import ClientTest
+# from handlers_api_courses_tests import ApiCoursesTest
+# from handlers_api_grades_tests import ApiGradesTest
+# from handlers_api_user_tests import ApiUserTest
+# from handlers_api_terms_tests import ApiTermsTest
 from usoscrowler_tests import CrowlerTest
-
-from staracommon.tests.usosasync_tests import UsosAsyncTest
+from usosclient_tests import ClientTest
+from usosasync_tests import UsosAsyncTest
 
 
 def build_suite():

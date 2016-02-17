@@ -2,9 +2,10 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
-LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',constants.COURSE_ID, 'homepage_url','lang_id','learning_outcomes','description')
+LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
+                constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 
 
 class CoursesApi(BaseHandler):
@@ -15,7 +16,8 @@ class CoursesApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                        constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS)
+                                                                           constants.USOS_ID: parameters[
+                                                                               constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             self.fail("We could not find for you course with course_id: {0}.".format(course_id))
@@ -27,9 +29,12 @@ class CoursesApi(BaseHandler):
                 course_doc['is_currently_conducted'] = 'NIE'
 
             # change faculty_id to faculty name
-            LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls','name','postal_address','homepage_url','phone_numbers')
-            fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[constants.FACULTY_ID],
-                                        constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
+            LIMIT_FIELDS_FACULTY = (
+            constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
+            fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
+                constants.FACULTY_ID],
+                                                                              constants.USOS_ID: parameters[
+                                                                                  constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
 
@@ -56,7 +61,8 @@ class CoursesEditionsApi(BaseHandler):
 
             # get courses_classtypes
             classtypes = {}
-            cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+            cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
+                constants.USOS_ID]})
             while (yield cursor.fetch_next):
                 ct = cursor.next_object()
                 classtypes[ct['id']] = ct['name']['pl']
@@ -80,9 +86,9 @@ class CoursesEditionsApi(BaseHandler):
                 course_new = []
                 for course in courses_new[year]:
                     cursor = self.db[constants.COLLECTION_GROUPS].find(
-                        { constants.COURSE_ID: course[constants.COURSE_ID],
-                          constants.TERM_ID: course[constants.TERM_ID],
-                          constants.USOS_ID: parameters[constants.USOS_ID]},
+                        {constants.COURSE_ID: course[constants.COURSE_ID],
+                         constants.TERM_ID: course[constants.TERM_ID],
+                         constants.USOS_ID: parameters[constants.USOS_ID]},
                           LIMIT_FIELDS_GROUPS
                         )
                     course['groups'] = []

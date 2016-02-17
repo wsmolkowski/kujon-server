@@ -1,15 +1,15 @@
-MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
-MONGODB_NAME = 'db-for-tests'
-
 import logging
 
 from bson.objectid import ObjectId
 from tornado.testing import AsyncTestCase, gen_test
 
-from staraapi import constants
-from staraapi.mongo_dao import Dao
-from staraapi.usosutils.usosclient import UsosClient
-from staraapi.usosutils.usoscrowler import UsosCrowler
+from staracommon import constants
+from staracommon.mongo_dao import Dao
+from staracommon.usosutils.usosclient import UsosClient
+from staracommon.usosutils.usoscrowler import UsosCrowler
+
+MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
+MONGODB_NAME = 'db-for-tests'
 
 logging.getLogger().setLevel(logging.DEBUG)
 

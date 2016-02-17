@@ -2,7 +2,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
-from staraapi import constants
+from staracommon import constants
 
 
 class TermsApi(BaseHandler):

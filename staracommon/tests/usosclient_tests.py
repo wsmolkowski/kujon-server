@@ -1,6 +1,7 @@
 import unittest
 
-from staraapi.usosutils.usosclient import UsosClient
+from staracommon.usosutils.usosclient import UsosClient
+
 
 class ClientTest(unittest.TestCase):
     def setUp(self):

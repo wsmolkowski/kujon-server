@@ -1,6 +1,8 @@
-from staraapi import constants
-from bson import json_util
 import logging
+
+from bson import json_util
+
+from staracommon import constants
 
 
 class JSendMixin(object):

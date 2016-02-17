@@ -9,7 +9,7 @@ import tornado.web
 from bson import json_util
 
 from base import BaseHandler
-from staraapi import constants
+from staracommon import constants
 from staraweb import settings
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
@@ -109,7 +109,7 @@ class CreateUserHandler(BaseHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
         if user_doc[constants.USOS_URL]:
-            usoses = yield self.db.usosinstances.find().to_list(length=100)
+            usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
@@ -307,7 +307,8 @@ class VerifyHandler(BaseHandler):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            #self.crowler.put_user(updated_user[constants.ID])
+
+            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert({constants.USER_ID: user_doc[constants.ID]})
 
             self.redirect('/')
         else:

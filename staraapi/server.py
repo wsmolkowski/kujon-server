@@ -1,5 +1,6 @@
 import logging
 import sys
+
 import motor
 import tornado.ioloop
 import tornado.web
@@ -9,8 +10,6 @@ from tornado.options import define, options, parse_command_line
 
 import settings
 from handlers_list import HANDLERS
-from usosutils.usosqueue import UsosQueue
-
 from staracommon import settings as common_settings
 
 define('debug', default=settings.DEBUG)
@@ -21,14 +20,6 @@ define('cookie_secret', default=common_settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
-    _crowler = None
-
-    @property
-    def crowler(self):
-        if not self._crowler:
-            self._crowler = UsosQueue()
-        return self._crowler
-
     _db = None
 
     @property
@@ -60,11 +51,10 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
         self.db
-        self.crowler
 
 
 def prepare_environment():
-    from staraapi.usosutils.usoscrowler import UsosCrowler
+    from staracommon.usosutils.usoscrowler import UsosCrowler
 
     uc = UsosCrowler()
     if settings.CLEAN_DB:
@@ -81,13 +71,11 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug(u"DEBUG MODE is ON")
 
-
     # change encoding to utf-8
     reload(sys)  # Reload does the trick!
     sys.setdefaultencoding('utf-8')
     if sys.getdefaultencoding()!='utf-8':
         logging.error("zmien kodowanie na UTF8!")
-
 
     prepare_environment()
 
@@ -95,7 +83,6 @@ def main():
     application.listen(options.port)
     logging.info(settings.DEPLOY_URL)
 
-    IOLoop.instance().add_callback(application.crowler.queue_watcher)
     IOLoop.instance().start()
 
 if __name__ == "__main__":

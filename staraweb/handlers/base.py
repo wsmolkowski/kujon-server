@@ -1,10 +1,10 @@
 import urlparse
+
 import oauth2 as oauth
 from bson import json_util
 
-from staraapi import constants
+from staracommon import handlers, constants
 from staraweb import settings
-from staracommon import handlers
 
 
 class BaseHandler(handlers.CommonHandler):
@@ -13,10 +13,12 @@ class BaseHandler(handlers.CommonHandler):
         return self.application.db
 
     def template_data(self):
-        usos_paired = False
+
         user = self.get_current_user()
         if user and 'usos_paired' in user.keys():
             usos_paired = user['usos_paired']
+        else:
+            usos_paired = False
 
         return {
             'PROJECT_TITLE': settings.PROJECT_TITLE,

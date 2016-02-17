@@ -5,8 +5,7 @@ import tornado.gen
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient
 from tornado.web import HTTPError
 
-from staraapi import constants
-from staracommon import settings as common_settings
+from staracommon import settings as common_settings, constants
 
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
