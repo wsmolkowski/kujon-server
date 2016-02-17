@@ -233,6 +233,7 @@ class UsosCrowler:
             result = client.units(unit_id)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.UNIT_ID] = result.pop('id')
                 u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
                 logging.debug('unit {0} inserted {1}'.format(unit_id, u_doc))
             else:
