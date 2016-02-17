@@ -6,7 +6,9 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from staraapi import constants
 
-LIMIT_FIELDS = ('first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')
+LIMIT_FIELDS = (
+'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')
+
 
 class UsersInfoByIdApi(BaseHandler):
     @tornado.web.asynchronous
@@ -26,7 +28,8 @@ class UsersInfoByIdApi(BaseHandler):
             user = {}
             self.error("Please hold on we are looking your USOS user information.")
 
-class UserInfoapi(BaseHandler):
+
+class UserInfoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -34,7 +37,8 @@ class UserInfoapi(BaseHandler):
         parameters = yield self.get_parameters()
 
         user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(parameters[constants.ID])})
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[constants.ID])}, LIMIT_FIELDS)
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(parameters[constants.ID])}, LIMIT_FIELDS)
 
         result = []
         result.append(user)
@@ -45,11 +49,11 @@ class UserInfoapi(BaseHandler):
         else:
             self.success(result)
 
+
 class UserInfoPhotoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_id):
-
         parameters = yield self.get_parameters()
 
         user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.USER_ID: user_id})

@@ -8,7 +8,7 @@ from handlers.handlers_api_lecturers import LecturersApi, LecturerByIdApi
 from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
-from handlers.handlers_api_user import UserInfoapi, UsersInfoByIdApi, UserInfoPhotoApi
+from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler
 from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
 from handlers.handlers_chat import ChatHandler, ChatSocketHandler
@@ -61,7 +61,7 @@ HANDLERS = [
     (r"/authentication/google", GoogleOAuth2LoginHandler),
 
     (r"/api/usoses", UsosesApi),
-    (r"/api/users/", UserInfoapi),
+    (r"/api/users/", UserInfoApi),
     (r"/api/users/([^/]+)", UsersInfoByIdApi),
     (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),
 

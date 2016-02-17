@@ -10,14 +10,14 @@ from tornado.web import RequestHandler
 
 from staraapi import constants, settings
 from staraapi.mixins.JSendMixin import JSendMixin
-from staraweb import settings as usosweb_settings
+from staraweb import settings as staraweb_settings
 
 
 class BaseHandler(RequestHandler, JSendMixin):
 
     def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Origin", usosweb_settings.DEPLOY_URL)
+        #self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Origin", staraweb_settings.DEPLOY_URL)
         self.set_header("Access-Control-Allow-Credentials", "true")
         #self.set_header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
 
