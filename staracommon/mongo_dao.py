@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import pymongo
 from bson.objectid import ObjectId
@@ -154,7 +154,15 @@ class Dao:
     def count(self, collection):
         return self.__db[collection].count()
 
-    def get_initial_users(self):
+    def get_user_jobs(self, status):
         if constants.COLLECTION_JOBS_INITIAL_USER not in self.__db.collection_names():
             return []
-        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({}, (constants.USER_ID,))
+        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({constants.STATUS: status},
+                                                                      (constants.USER_ID,))
+
+    def update_user_job(self, job_id, status):
+        update = {"$set": {constants.STATUS: status, constants.UPDATE_TIME: datetime.now()}}
+
+        result = self.__db[constants.COLLECTION_JOBS_INITIAL_USER].update({constants.ID: job_id}, update)
+
+        logging.debug("update_user_job result {0}".format(result))

@@ -25,6 +25,10 @@ OAUTH_VERIFIER = 'oauth_verifier'
 USOS_URL = 'url'
 CONSUMER_KEY = 'consumer_key'
 CONSUMER_SECRET = 'consumer_secret'
+STATUS = 'status'
+
+JOB_START = 'job_start'
+JOB_END = 'job_end'
 
 USER_TYPE = 'user_type'
 USER_CREATION = 'user_creation'
@@ -59,3 +63,4 @@ COLLECTION_TT = 'tt'
 COLLECTION_JOBS_INITIAL_USER = 'jobs_initial_user'
 
 TIME_TABLE_DELTA = 7   # days
+

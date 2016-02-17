@@ -12,7 +12,7 @@ SLEEP = 10
 
 
 @gen.coroutine
-def main():
+def crowl():
     dao = Dao()
     usos_crowler = UsosCrowler(dao=dao)
 
@@ -21,16 +21,18 @@ def main():
     @gen.coroutine
     def crowl_initial():
 
-        for user_id in dao.get_initial_users():
-            if user_id in initial_processing:
+        for job_doc in dao.get_user_jobs(constants.JOB_START):
+            if job_doc in initial_processing:
                 return
 
-            initial_processing.append(user_id)
-            logging.info("starting initial_user_crowl for {0}".format(user_id[constants.USER_ID]))
-            yield usos_crowler.initial_user_crowl(user_id[constants.USER_ID])
-            logging.info("finished initial_user_crowl for {0}".format(user_id[constants.USER_ID]))
+            initial_processing.append(job_doc)
+            logging.info("starting initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
+            yield usos_crowler.initial_user_crowl(job_doc[constants.USER_ID])
 
-            initial_processing.remove(user_id)
+            dao.update_user_job(job_doc[constants.ID], constants.JOB_END)
+            initial_processing.remove(job_doc)
+            logging.info("finished initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
+
             time.sleep(SLEEP)
 
     @gen.coroutine
@@ -42,5 +44,6 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    #IOLoop.current().start()
-    IOLoop.current().run_sync(main)
+    ioLoop = IOLoop.instance()
+    ioLoop.add_callback(crowl)
+    ioLoop.start()

@@ -20,6 +20,6 @@ PROJECT_DESCRIPTION = ""
 DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 
 
-CLEAN_DB = True
+CLEAN_DB = False
 
 CALLBACK_URL = "http://{0}:{1}/authentication/verify".format(SITE_DOMAIN, PORT)

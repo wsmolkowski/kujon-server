@@ -307,8 +307,12 @@ class VerifyHandler(BaseHandler):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-
-            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert({constants.USER_ID: user_doc[constants.ID]})
+            job_doc = {
+                constants.USER_ID: user_doc[constants.ID],
+                constants.CREATED_TIME: datetime.now(),
+                constants.STATUS: constants.JOB_START,
+            }
+            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert(job_doc)
 
             self.redirect('/')
         else:

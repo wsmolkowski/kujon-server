@@ -39,7 +39,7 @@ class UsosAsync:
         url = URI_COURSES_CLASSTYPES.format(usos_base_url)
         request = self.build_request(url=url, validate_cert=validate_cert)
 
-        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        response = yield tornado.gen.Task(self.client.fetch, request)
         self.validate_response('courses_classtypes', response)
 
         raise tornado.gen.Return(json.loads(response.body))
@@ -49,7 +49,7 @@ class UsosAsync:
         url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
         request = self.build_request(url=url, validate_cert=validate_cert)
 
-        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        response = yield tornado.gen.Task(self.client.fetch, request)
         self.validate_response('courses_units', response)
 
         unit = json.loads(response.body)
@@ -62,7 +62,7 @@ class UsosAsync:
         url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
         request = self.build_request(url=url, validate_cert=validate_cert)
 
-        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        response = yield tornado.gen.Task(self.client.fetch, request)
 
         self.validate_response('term_info', response)
 
