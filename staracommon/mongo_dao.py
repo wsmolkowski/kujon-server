@@ -58,10 +58,12 @@ class Dao:
         return self.__db[constants.COLLECTION_PHOTOS].find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
 
     def get_group(self, group_id, usos_id):
-        return self.__db[constants.COLLECTION_COURSES_UNITS].find_one({constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_COURSES_UNITS].find_one(
+            {constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
 
     def get_units(self, unit_it, usos_id):
-        return self.__db[constants.COLLECTION_COURSES_UNITS].find_one({constants.UNIT_ID: unit_it, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_COURSES_UNITS].find_one(
+            {constants.UNIT_ID: unit_it, constants.USOS_ID: usos_id})
 
     def update(self, collection, key, key_value, document):
         return self.__db[collection].update({key: key_value}, document)
@@ -70,13 +72,15 @@ class Dao:
         return self.__db[collection].remove({key: key_value})
 
     def update_courses_editions(self, record_id, courses_editions):
-        return self.__db[constants.COLLECTION_COURSES_EDITIONS].update({constants.USER_ID: ObjectId(record_id)}, courses_editions)
+        return self.__db[constants.COLLECTION_COURSES_EDITIONS].update({constants.USER_ID: ObjectId(record_id)},
+                                                                       courses_editions)
 
     def get_term(self, term_id, usos_id):
         return self.__db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_course_edition(self, course_id, term_id, usos_id):
-        return self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_course_edition_all(self, usos_id):
         return self.__db[constants.COLLECTION_COURSES_EDITIONS].find({constants.USOS_ID: usos_id})
@@ -85,14 +89,17 @@ class Dao:
         return self.__db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}).distinct('fac_id')
 
     def get_faculty(self, fac_id, usos_id):
-        return self.__db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_FACULTIES].find_one(
+            {constants.FACULTY_ID: fac_id, constants.USOS_ID: usos_id})
 
     def get_course(self, course_id, usos_id):
-        return self.__db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
+        return self.__db[constants.COLLECTION_COURSES].find_one(
+            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id, usos_id):
         return self.__db[constants.COLLECTION_GRADES].find_one(
-            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id, constants.USOS_ID: usos_id})
+            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USER_ID: user_id,
+             constants.USOS_ID: usos_id})
 
     def get_user_terms(self, user_id):
         terms = []
@@ -104,7 +111,8 @@ class Dao:
 
     def get_user_programmes(self, user_id, usos_id):
         programmes = []
-        data = self.__db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
+        data = self.__db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
         programmes = data['student_programmes']
         return programmes
 
@@ -120,7 +128,8 @@ class Dao:
 
     def get_user_courses(self, user_id, usos_id):
         course_edition = []
-        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id, constants.USOS_ID: usos_id})
+        data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.USER_ID: user_id, constants.USOS_ID: usos_id})
 
         for term_data in data['course_editions'].values():
             for term in term_data:
@@ -148,5 +157,4 @@ class Dao:
     def get_initial_users(self):
         if constants.COLLECTION_JOBS_INITIAL_USER not in self.__db.collection_names():
             return []
-        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({}, (constants.USER_ID, ))
-
+        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({}, (constants.USER_ID,))
