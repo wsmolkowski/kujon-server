@@ -217,7 +217,7 @@ class VerifyHandler(BaseHandler):
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                         constants.ACCESS_TOKEN_KEY])
 
-            self.redirect('/')
+            # self.redirect('/')
         else:
             template_data[
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(

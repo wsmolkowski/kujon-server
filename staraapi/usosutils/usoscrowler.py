@@ -86,12 +86,15 @@ class UsosCrowler:
         logging.debug('user_info inserted: {0}'.format(ui_doc))
 
         # if user has photo - download
-        if result['has_photo']:
+        if 'has_photo' in result and result['has_photo']:
             if not self.dao.get_users_info_photo(result[constants.USER_INFO_ID], usos[constants.USOS_ID]):
                 photo = client.user_info_photo(result[constants.USER_INFO_ID])
-                photo = self.append(photo, usos[constants.USOS_ID], crowl_time, crowl_time)
-                photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
-                logging.debug('photo for user_id: {0} inserted {1}'.format(photo[constants.USER_ID], photo_doc))
+                if photo:
+                    photo = self.append(photo, usos[constants.USOS_ID], crowl_time, crowl_time)
+                    photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
+                    logging.debug('photo for user_id: {0} inserted {1}'.format(photo[constants.USER_ID], photo_doc))
+                else:
+                    logging.debug('no photo for user_id: {0}'.format(user_id))
 
         # if users conducts some curses - fetch courses
         if result['course_editions_conducted']:
@@ -119,29 +122,37 @@ class UsosCrowler:
                 # If type equals "exam":
         else:
             result = client.tt(given_date)
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.USER_ID] = user_id
-            tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
-            logging.debug('time tables for date: {0} inserted: {1}'.format(given_date, tt_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.USER_ID] = user_id
+                tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
+                logging.debug('time tables for date: {0} inserted: {1}'.format(given_date, tt_doc))
+            else:
+                logging.debug('no time tables for date: {0}'.format(given_date))
 
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
         programmes = self.dao.get_user_programmes(user_id, usos[constants.USOS_ID])
         for prog in programmes:
             result = client.programme(prog['programme']['id'])
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.PROGRAMME_ID] = result.pop('id')
-
-            prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-            logging.debug('programme for prog: {0} inserted: {1}'.format(prog['id'], prog_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.PROGRAMME_ID] = result.pop('id')
+                prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
+                logging.debug('programme for prog: {0} inserted: {1}'.format(prog['id'], prog_doc))
+            else:
+                logging.debug('no programme for prog: {0}.'.format(prog['id']))
 
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
 
         result = client.courseeditions_info()
-        result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-        result[constants.USER_ID] = user_id
-        ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.debug('course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
+        if result:
+            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+            result[constants.USER_ID] = user_id
+            ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
+            logging.debug('course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
+        else:
+            logging.debug('no course_editions for user_id: {0}.'.format(user_id))
 
     @tornado.gen.coroutine
     def __build_terms(self, client, user_id, usos, crowl_time):
@@ -151,10 +162,12 @@ class UsosCrowler:
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
             result = yield usosasync.get_term_info(usos[constants.USOS_URL], term_id)
-
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-            logging.debug('terms for term_id: {0} inserted {1}'.format(term_id, t_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
+                logging.debug('terms for term_id: {0} inserted {1}'.format(term_id, t_doc))
+            else:
+                logging.debug('no terms for term_id: {0}.'.format(term_id))
 
     @tornado.gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crowl_time):
@@ -164,10 +177,12 @@ class UsosCrowler:
                 continue  # course already exists
 
             result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], fetch_participants=True)
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-
-            c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-            logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+                logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
+            else:
+                logging.debug('no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]))
 
     @tornado.gen.coroutine
     def __build_courses(self, client, usos, crowl_time):
@@ -177,11 +192,13 @@ class UsosCrowler:
                 continue  # course already exists
 
             result = client.course(course_edition[constants.COURSE_ID])
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.COURSE_ID] = result.pop('id')
-
-            c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-            logging.debug('course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.COURSE_ID] = result.pop('id')
+                c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
+                logging.debug('course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
+            else:
+                logging.debug('no course for course_id: {0}.'.format(course_edition[constants.COURSE_ID]))
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
@@ -190,11 +207,13 @@ class UsosCrowler:
                 continue  # fac already exists
 
             result = client.faculty(faculty)
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.FACULTY_ID] = faculty
-
-            fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
-            logging.debug('faculty for fac_id: {0} inserted {1}'.format(faculty, fac_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.FACULTY_ID] = faculty
+                fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
+                logging.debug('faculty for fac_id: {0} inserted {1}'.format(faculty, fac_doc))
+            else:
+                logging.debug('no faculty for fac_id: {0}.'.format(faculty))
 
     @tornado.gen.coroutine
     def __build_user_infos(self, client, crowl_time, users, usos):
@@ -212,22 +231,25 @@ class UsosCrowler:
                 continue  # units already exists
 
             result = client.units(unit_id)
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-
-            u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-            logging.debug('unit {0} inserted {1}'.format(unit_id, u_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.UNIT_ID] = result.pop('id')
+                u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
+                logging.debug('unit {0} inserted {1}'.format(unit_id, u_doc))
+            else:
+                logging.debug('no unit {0}.'.format(unit_id))
 
     @tornado.gen.coroutine
     def __build_groups(self, client, crowl_time, units, usos):
 
         for unit in units:
             result = client.groups(unit)
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            if 'message' in result:
-                logging.debug('failed fetching group for unit: {0}'.format(unit))
-                continue
-            grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
-            logging.debug('group for unit: {0} inserted: {1}'.format(unit, grp_doc))
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
+                logging.debug('group for unit: {0} inserted: {1}'.format(unit, grp_doc))
+            else:
+                logging.debug('no group for unit: {0}'.format(unit))
 
     @tornado.gen.coroutine
     def __build_grades_participants_lecturers_units_groups(self, client, user_id, usos, crowl_time):
@@ -236,32 +258,35 @@ class UsosCrowler:
         all_lecturers = []
         all_units = []
         for data in self.dao.get_user_courses_editions(user_id):
-            term_id, course_id = str(data[0]), str(data[1])
+            term_id, course_id = data[0], data[1]
 
             # participants ane lectures
             result = client.course_edition(course_id, term_id, fetch_participants=True)
-            participants = result.pop('participants')
-            lecturers = result.pop('lecturers')
-            for p in participants:
-                if p not in all_participants:
-                    all_participants.append(p)
-            for l in lecturers:
-                if l not in all_lecturers:
-                    all_lecturers.append(l)
+            if result and 'participants' in result:
+                participants = result.pop('participants')
+                lecturers = result.pop('lecturers')
+                for p in participants:
+                    if p not in all_participants:
+                        all_participants.append(p)
+                for l in lecturers:
+                    if l not in all_lecturers:
+                        all_lecturers.append(l)
 
             # units
-            units = result.pop('course_units_ids')
-            result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-            result[constants.USER_ID] = user_id
-            if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
-                continue  # grades for course and term already exists
-            for unit in units:
-                if unit not in all_units:
-                    all_units.append(unit)
+            if result and 'course_units_ids' in result:
+                units = result.pop('course_units_ids')
+                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.USER_ID] = user_id
+                if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
+                    continue  # grades for course and term already exists
+                for unit in units:
+                    if unit not in all_units:
+                        all_units.append(unit)
 
             # grades
-            g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-            logging.debug("grades for course_id: {0} and term_id: {1} inserted {2}".format(course_id, term_id, g_doc))
+            if result:
+                g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
+                logging.debug("grades for course_id: {0} and term_id: {1} inserted {2}".format(course_id, term_id, g_doc))
 
 
         self.__build_user_infos(client, crowl_time, all_participants, usos)

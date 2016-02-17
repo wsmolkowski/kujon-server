@@ -2,14 +2,13 @@ import unittest
 
 from staraapi.usosutils.usosclient import UsosClient
 
-
 class ClientTest(unittest.TestCase):
     def setUp(self):
-        base_url = "https://usosapps.uw.edu.pl/"
-        access_token_key = "3ShYQv8LyvgeXthKJzmJ"
-        access_token_secret = "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"
-        consumer_key = "KBt6uWPWUekUzFtNTyY9"
-        consumer_secret = "Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG"
+        base_url = "https://usosapps.demo.usos.edu.pl/"
+        access_token_key = "HJTFn9hebBAhFsAckL6K"
+        access_token_secret = "7H8VnPPeKAndMP6nGHqrqA9QUStmeGFVwdAe5jmN"
+        consumer_key = "b9MHLmXygtGDbcL5BCj3"
+        consumer_secret = "4TQESZkkBMFCT2JgtnzAtD5XG6ACZjsEb5vTrDGM"
 
         self.client = UsosClient(base_url=base_url,
                                  consumer_key=consumer_key,

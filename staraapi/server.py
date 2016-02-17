@@ -1,5 +1,5 @@
 import logging
-
+import sys
 import motor
 import tornado.ioloop
 import tornado.web
@@ -79,6 +79,14 @@ def main():
     if options.debug:
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug(u"DEBUG MODE is ON")
+
+
+    # change encoding to utf-8
+    reload(sys)  # Reload does the trick!
+    sys.setdefaultencoding('utf-8')
+    if sys.getdefaultencoding()!='utf-8':
+        logging.error("zmien kodowanie na UTF8!")
+
 
     prepare_environment()
 
