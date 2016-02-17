@@ -12,67 +12,61 @@ URL_COURSES_UNITS = '{0}services/courses/unit?fields=id|course_name|course_id|te
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
 
-def build_request(url, validate_cert=False):
-    return HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert,
-                       proxy_host=common_settings.PROXY_URL, proxy_port=common_settings.PROXY_PORT)
+class UsosAsync:
+    def __init__(self):
+        self.client = self.build_client()
 
+    def build_client(self):
+        if common_settings.PROXY_URL and common_settings.PROXY_PORT:
+            tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                                         defaults=dict(proxy_host=common_settings.PROXY_URL,
+                                                                       proxy_port=common_settings.PROXY_PORT))
+        return AsyncHTTPClient()
 
-@tornado.gen.coroutine
-def get_courses_classtypes(usos_base_url, validate_cert=False):
-    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
-        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                                     defaults=dict(proxy_host=common_settings.PROXY_URL,
-                                                                   proxy_port=common_settings.PROXY_PORT))
-    url = URI_COURSES_CLASSTYPES.format(usos_base_url)
-    request = build_request(url=url, validate_cert=validate_cert)
+    @staticmethod
+    def build_request(url, validate_cert=False):
+        return HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert,
+                           proxy_host=common_settings.PROXY_URL, proxy_port=common_settings.PROXY_PORT)
 
-    response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
-    if response.code is not 200:
-        raise HTTPError(response.code, "Error while fetching courses_classtypes. Response body: {0}".format(
-            response.body))
+    @staticmethod
+    def validate_response(fetch_type, response):
+        if response.code is not 200:
+            raise HTTPError(response.code, "Error while fetching {0}. Response body: {1}".format(fetch_type,
+                                                                                                 response.body))
 
-    raise tornado.gen.Return(json.loads(response.body))
+    @tornado.gen.coroutine
+    def get_courses_classtypes(self, usos_base_url, validate_cert=False):
+        url = URI_COURSES_CLASSTYPES.format(usos_base_url)
+        request = self.build_request(url=url, validate_cert=validate_cert)
 
+        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        self.validate_response('courses_classtypes', response)
 
-@tornado.gen.coroutine
-def get_courses_units(usos_base_url, unit_id, validate_cert=False):
-    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
-        AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                  defaults=dict(proxy_host=common_settings.PROXY_URL,
-                                                proxy_port=common_settings.PROXY_PORT))
-    url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
-    request = build_request(url=url, validate_cert=validate_cert)
+        raise tornado.gen.Return(json.loads(response.body))
 
-    response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
-    if response.code is not 200:
-        raise HTTPError(response.code,
-                        "Error while fetching courses_units for: {0}. Response body: {1}".format(
-                            unit_id, response.body))
+    @tornado.gen.coroutine
+    def get_courses_units(self, usos_base_url, unit_id, validate_cert=False):
+        url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
+        request = self.build_request(url=url, validate_cert=validate_cert)
 
-    unit = json.loads(response.body)
-    unit[constants.UNIT_ID] = unit.pop('id')
+        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        self.validate_response('courses_units', response)
 
-    raise tornado.gen.Return(unit)
+        unit = json.loads(response.body)
+        unit[constants.UNIT_ID] = unit.pop('id')
 
+        raise tornado.gen.Return(unit)
 
-@tornado.gen.coroutine
-def get_term_info(usos_base_url, term_id, validate_cert=False):
-    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
-        AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                  defaults=dict(proxy_host=common_settings.PROXY_URL,
-                                                proxy_port=common_settings.PROXY_PORT))
+    @tornado.gen.coroutine
+    def get_term_info(self, usos_base_url, term_id, validate_cert=False):
+        url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
+        request = self.build_request(url=url, validate_cert=validate_cert)
 
-    url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
-    request = build_request(url=url, validate_cert=validate_cert)
+        response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
 
-    response = yield tornado.gen.Task(AsyncHTTPClient().fetch, request)
+        self.validate_response('term_info', response)
 
-    if response.code is not 200:
-        raise HTTPError(response.code,
-                        "Error while fetching term_info for term_id: {0}. Response body: {1}".format
-                        (term_id, response.body))
+        term = json.loads(response.body)
+        term[constants.TERM_ID] = term.pop('id')
 
-    term = json.loads(response.body)
-    term[constants.TERM_ID] = term.pop('id')
-
-    raise tornado.gen.Return(term)
+        raise tornado.gen.Return(term)

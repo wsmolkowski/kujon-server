@@ -20,8 +20,8 @@ class CrowlerTest(AsyncTestCase):
 
         self.dao = Dao(dburi=MONGODB_URI, dbname=MONGODB_NAME)
         self.crowler = UsosCrowler(dao=self.dao)
-        self.client = UsosClient("https://usosapps.demo.usos.edu.pl/", "b9MHLmXygtGDbcL5BCj3",
-                            "4TQESZkkBMFCT2JgtnzAtD5XG6ACZjsEb5vTrDGM",
+        self.client = UsosClient("https://usosapps.uw.edu.pl/", "KBt6uWPWUekUzFtNTyY9",
+                            "Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG",
                             "3ShYQv8LyvgeXthKJzmJ", "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y")
 
         self.beforeTest()
@@ -32,8 +32,8 @@ class CrowlerTest(AsyncTestCase):
         self.crowler.recreate_usos()
 
         self.user = {"mobile_id": "123",
-                "access_token_key": "HJTFn9hebBAhFsAckL6K", "usos_id": "DEMO",
-                "access_token_secret": "7H8VnPPeKAndMP6nGHqrqA9QUStmeGFVwdAe5jmN"}
+                "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos_id": "UW",
+                "access_token_secret": "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"}
         user = self.dao.insert(constants.COLLECTION_USERS, self.user)
 
         self.user_id = str(user)
@@ -56,7 +56,6 @@ class CrowlerTest(AsyncTestCase):
         yield self.crowler.initial_user_crowl(ObjectId(self.user_id))
 
         # then
-
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_USOSINSTANCES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
@@ -71,7 +70,6 @@ class CrowlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_GROUPS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_PROGRAMMES) > 0)
 
-
     @gen_test(timeout=1000)
     def testInitialUserCrowlerPS(self):
         # assume
@@ -84,7 +82,6 @@ class CrowlerTest(AsyncTestCase):
         yield self.crowler.initial_user_crowl(ObjectId(str(user)))
 
         # then
-
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_USOSINSTANCES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)

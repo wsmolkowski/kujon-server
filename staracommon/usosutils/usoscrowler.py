@@ -5,7 +5,7 @@ from datetime import timedelta, date
 import tornado.gen
 from bson.objectid import ObjectId
 
-import usosasync
+from staracommon.usosutils.usosasync import UsosAsync
 import usosinstances
 from staraapi.helpers import log_execution_time
 from staracommon import constants
@@ -19,6 +19,8 @@ class UsosCrowler:
             self.dao = Dao()
         else:
             self.dao = dao
+
+        self.usosAsync = UsosAsync()
 
     @staticmethod
     def append(data, usos_id, create_time, update_time):
@@ -48,7 +50,7 @@ class UsosCrowler:
                     constants.COLLECTION_COURSES_CLASSTYPES,
                     usos[constants.USOS_ID]))
             inserts = []
-            class_types = yield usosasync.get_courses_classtypes(usos[constants.USOS_URL])
+            class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
             if len(class_types) > 0:
                 for class_type in class_types.values():
                     class_type[constants.USOS_ID] = usos[constants.USOS_ID]
@@ -163,7 +165,7 @@ class UsosCrowler:
 
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue  # term already exists
-            result = yield usosasync.get_term_info(usos[constants.USOS_URL], term_id)
+            result = yield self.usosAsync.get_term_info(usos[constants.USOS_URL], term_id)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
