@@ -6,22 +6,24 @@ from tornado.httpclient import HTTPRequest, AsyncHTTPClient
 from tornado.web import HTTPError
 
 from staraapi import constants
-from staraapi import settings
+from staracommon import settings as common_settings
 
 URL_TERM_INFO = '{0}/services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}/services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
+
 def build_request(url, validate_cert=False):
     return HTTPRequest(url=url, method='GET', body=None, validate_cert=validate_cert,
-                       proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT)
+                       proxy_host=common_settings.PROXY_URL, proxy_port=common_settings.PROXY_PORT)
+
 
 @tornado.gen.coroutine
 def get_courses_classtypes(usos_base_url, validate_cert=False):
-    if settings.PROXY_URL and settings.PROXY_PORT:
+    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
         tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                                     defaults=dict(proxy_host=settings.PROXY_URL,
-                                                                   proxy_port=settings.PROXY_PORT))
+                                                     defaults=dict(proxy_host=common_settings.PROXY_URL,
+                                                                   proxy_port=common_settings.PROXY_PORT))
     url = URI_COURSES_CLASSTYPES.format(usos_base_url)
     request = build_request(url=url, validate_cert=validate_cert)
 
@@ -35,10 +37,10 @@ def get_courses_classtypes(usos_base_url, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_courses_units(usos_base_url, unit_id, validate_cert=False):
-    if settings.PROXY_URL and settings.PROXY_PORT:
+    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                  defaults=dict(proxy_host=settings.PROXY_URL,
-                                                proxy_port=settings.PROXY_PORT))
+                                  defaults=dict(proxy_host=common_settings.PROXY_URL,
+                                                proxy_port=common_settings.PROXY_PORT))
     url = URL_COURSES_UNITS.format(usos_base_url, unit_id)
     request = build_request(url=url, validate_cert=validate_cert)
 
@@ -56,10 +58,10 @@ def get_courses_units(usos_base_url, unit_id, validate_cert=False):
 
 @tornado.gen.coroutine
 def get_term_info(usos_base_url, term_id, validate_cert=False):
-    if settings.PROXY_URL and settings.PROXY_PORT:
+    if common_settings.PROXY_URL and common_settings.PROXY_PORT:
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                  defaults=dict(proxy_host=settings.PROXY_URL,
-                                                proxy_port=settings.PROXY_PORT))
+                                  defaults=dict(proxy_host=common_settings.PROXY_URL,
+                                                proxy_port=common_settings.PROXY_PORT))
 
     url = URL_TERM_INFO.format(usos_base_url, urllib.quote(term_id, safe=''))
     request = build_request(url=url, validate_cert=validate_cert)
