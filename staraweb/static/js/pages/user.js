@@ -9,7 +9,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
             $.ajax({
                 type: 'GET',
                 url: request_url,
-                //dataType: 'jsonp',
                 xhrFields: {
                     withCredentials: true
                 },
@@ -22,7 +21,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                     }
                 },
                 error: function (err) {
-                    console.log(err);
+                    $('#page').html(err);
                 }
             });
             //a tutaj możesz np. zapiąć listenery
