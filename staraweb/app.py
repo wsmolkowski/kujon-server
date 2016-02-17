@@ -8,6 +8,7 @@ from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line
 
 from staraweb.handlers import web, authorization
+from staracommon import settings as common_settings
 
 
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
@@ -21,8 +22,8 @@ class Application(tornado.web.Application):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(common_settings.MONGODB_URI)
+        return self._db[common_settings.MONGODB_NAME]
 
     def __init__(self):
         __handlers = [
@@ -41,10 +42,8 @@ class Application(tornado.web.Application):
             debug=True,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            cookie_secret='Pl3jCVQO55nZMhxKXHNWivZpPl3jCVQO55nZMhxKXHNWivZpPl3jCVQO55nZMhxKXHNWivZp',
-            google_oauth={'key': '245488701889-dfhvfuf9br6u6t9476gt0l5ngkvacota.apps.googleusercontent.com',
-                          'secret': 'Pl3jCVQO55nZMhxKXHNWivZp'}
-
+            cookie_secret=common_settings.COOKIE_SECRET,
+            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)

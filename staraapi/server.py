@@ -11,12 +11,13 @@ import settings
 from handlers_list import HANDLERS
 from usosutils.usosqueue import UsosQueue
 
+from staracommon import settings as common_settings
+
 define('debug', default=settings.DEBUG)
 define('port', default=settings.PORT)
 define('ssl', default=settings.SSL)
 define('xsrf_cookie', default=settings.XSRF_COOKIE)
-define('cookie_secret', default=settings.COOKIE_SECRET)
-define('autoreload', default=settings.AUTORELOAD_ENABLED)
+define('cookie_secret', default=common_settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
@@ -33,8 +34,8 @@ class Application(tornado.web.Application):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(common_settings.MONGODB_URI)
+        return self._db[common_settings.MONGODB_NAME]
 
     def __init__(self):
 
@@ -53,7 +54,7 @@ class Application(tornado.web.Application):
             site_root=settings.SITE_ROOT,
             template_path=settings.TEMPLATES_PATH,
             gzip=settings.GZIP,
-            google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET}
+            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)

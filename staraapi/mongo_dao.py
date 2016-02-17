@@ -5,7 +5,7 @@ import pymongo
 from bson.objectid import ObjectId
 
 import constants
-import settings
+from staracommon import settings
 
 
 class Dao:
