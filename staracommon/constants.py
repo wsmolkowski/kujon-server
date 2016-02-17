@@ -57,3 +57,5 @@ COLLECTION_PHOTOS = 'users_info_photos'
 COLLECTION_FACULTIES = 'faculties'
 COLLECTION_TT = 'tt'
 COLLECTION_JOBS_INITIAL_USER = 'jobs_initial_user'
+
+TIME_TABLE_DELTA = 7   # days

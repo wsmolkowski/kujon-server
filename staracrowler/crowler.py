@@ -1,10 +1,10 @@
 import time
 import logging
 
-from bson.objectid import ObjectId
 from tornado import gen
 from tornado.ioloop import IOLoop
 
+from staracommon import constants
 from staracommon.mongo_dao import Dao
 from staracommon.usosutils.usoscrowler import UsosCrowler
 
@@ -22,14 +22,13 @@ def main():
     def crowl_initial():
 
         for user_id in dao.get_initial_users():
-            #user_id = ObjectId("56c438d7c4f9d21e9c2f4c17")
             if user_id in initial_processing:
                 return
 
             initial_processing.append(user_id)
-            logging.info("starting initial_user_crowl for {0}".format(user_id))
-            yield usos_crowler.initial_user_crowl(user_id)
-            logging.info("finished initial_user_crowl for {0}".format(user_id))
+            logging.info("starting initial_user_crowl for {0}".format(user_id[constants.USER_ID]))
+            yield usos_crowler.initial_user_crowl(user_id[constants.USER_ID])
+            logging.info("finished initial_user_crowl for {0}".format(user_id[constants.USER_ID]))
 
             initial_processing.remove(user_id)
             time.sleep(SLEEP)
