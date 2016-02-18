@@ -15,7 +15,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                 crossDomain: true,
                 success:  function (data) {
                     if (data.status == 'success'){
-                        $('#page').html(template(data.data[0]));
+                        $('#page').html(template(data.data));
                     } else {
                         $('#page').html(data.message);
                     }

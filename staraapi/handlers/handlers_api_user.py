@@ -8,6 +8,7 @@ from staracommon import constants
 
 LIMIT_FIELDS = (
 'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')
+LIMIT_FIELDS_USER = ('email', 'user_creation', 'locale', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -36,18 +37,18 @@ class UserInfoApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(parameters[constants.ID])})
+        user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(parameters[constants.ID])},
+                                                                  LIMIT_FIELDS_USER)
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: ObjectId(parameters[constants.ID])}, LIMIT_FIELDS)
+        user_info['user_email'] = user_info.pop('email')
 
-        result = []
-        result.append(user)
-        result.append(user_info)
+        user.update(user_info)
 
         if not user:
             self.error("Please hold on we are looking your USOS/user information.")
         else:
-            self.success(result)
+            self.success(user)
 
 
 class UserInfoPhotoApi(BaseHandler):
