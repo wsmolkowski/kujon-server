@@ -1,5 +1,38 @@
 <div class="panel panel-default">
-  <div class="panel-body">
-    Hello, {{hello}}!
-  </div>
+    <div class="panel-body">
+        <table class="table table-hover">
+            <caption>Oceny</caption>
+            <thead>
+            <th>Semestr</th>
+            <th>Przedmiot</th>
+            <th>Opis</th>
+
+            </thead>
+            <tbody>
+
+            {{#data}}
+            <tr>
+                <td>{{term_id}}</td>
+                <td>{{course_id}}</td>
+                <td>{{course_name}}</td>
+                <td>
+                    <table class="table">
+                        <tbody>
+                        {{#course_grades}}
+                        <tr>
+                            <td>{{value_symbol}}</td>
+                            <td>{{exam_session_number}}</td>
+                            <td>{{exam_id}}</td>
+                            <td>{{value_description.pl}}</td>
+                        </tr>
+                        {{/course_grades}}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {{/data}}
+
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -1,19 +1,30 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/grades.html'], function($, Handlebars, main, tpl) {
 'use strict';
     return {
         render: function() {
         
             var template = Handlebars.compile(tpl);
             
-            //tutaj możesz zrobić np. wywołanie JSON
-            
-            var data = {
-                hello: 'Grades'
-            };
-            
-            $('#page').html(template(data));           
-            
-            //a tutaj możesz np. zapiąć listenery
+            var request_url = main.getApiUrl('/api/grades/');
+
+            $.ajax({
+                type: 'GET',
+                url: request_url,
+                xhrFields: {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                success:  function (data) {
+                    if (data.status == 'success'){
+                        $('#page').html(template(data));
+                    } else {
+                        $('#page').html(data.message);
+                    }
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
         }
     }    
 });

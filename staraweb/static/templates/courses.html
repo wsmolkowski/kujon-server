@@ -1,39 +1,47 @@
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  {{#data}}
-    <div class="panel panel-default">
-        <div class="panel-heading" role="tab" id="heading{{term}}">
-            <h4 class="panel-title">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{term_counter}}"
-                   aria-expanded="true" aria-controls="collapse{{term_counter}}">
-                    Semestr <strong>{{term}}</strong>
-                </a>
-            </h4>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            {{#data}}
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="heading{{term}}">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapse{{term_counter}}"
+                           aria-expanded="true" aria-controls="collapse{{term_counter}}">
+                            Semestr <strong>{{term}}</strong>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapse{{term_counter}}" class="panel-collapse collapse" role="tabpanel"
+                     aria-labelledby="heading{{term_counter}}">
+                    <div class="panel-body">
+                        <table class="table table-strip">
+                            <tbody>
+                            {{#term_data}}
+                            <tr>
+                                <td>{{course_id}}</td>
+                                <td>{{course_name.pl}}</td>
+                                <td>
+                                    <table class="table">
+                                        <tbody>
+                                        {{#groups}}
+                                        <tr>
+                                            <td>{{class_type_id}}</td>
+                                            <td>{{course_unit_id}}</td>
+                                            <td>{{group_number}}</td>
+                                        </tr>
+                                        {{/groups}}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            {{/term_data}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {{/data}}
         </div>
-    <div id="collapse{{term_counter}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{term_counter}}">
-      <div class="panel-body">
-          <table class="table table-strip">
-            <tbody>
-            {{#term_data}}
-                <tr>
-                    <td>{{course_id}}</td>
-                    <td>{{course_name.pl}}</td>
-                    <td>
-                        <table class="table"><tbody>
-                        {{#groups}}
-                        <tr>
-                            <td>{{class_type_id}}</td>
-                            <td>{{course_unit_id}}</td>
-                            <td>{{group_number}}</td>
-                        </tr>
-                        {{/groups}}
-                        </tbody></table>
-                    </td>
-                </tr>
-              {{/term_data}}
-            </tbody>
-            </table>
-      </div>
     </div>
-  </div>
-  {{/data}}
 </div>
