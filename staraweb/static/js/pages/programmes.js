@@ -1,10 +1,10 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/programmes.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/programmes.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
 'use strict';
     return {
         render: function() {
-        
             var template = Handlebars.compile(tpl);
-            
+            var templateError = Handlebars.compile(tplError);
+
             var request_url = main.getApiUrl('/api/programmes/');
 
             $.ajax({
@@ -18,11 +18,12 @@ define(['jquery', 'handlebars', 'main', 'text!templates/programmes.html'], funct
                     if (data.status == 'success'){
                         $('#page').html(template(data));
                     } else {
-                        $('#page').html(data.message);
+                        $('#page').html(templateError(data));
                     }
                 },
-                error: function (err) {
-                    console.log(err);
+                error: function(jqXHR, exception) {
+                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.responseText + ' exception: ' + exception};
+                    $('#page').html(templateError(msg));
                 }
             });
             

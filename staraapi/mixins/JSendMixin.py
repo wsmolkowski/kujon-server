@@ -24,7 +24,7 @@ class JSendMixin(object):
         :return:
         '''
 
-        self.__write_json({'status': 'success', 'data': utils.serialize(data)})
+        self.__write_json({'status': 'success', 'data': data})
 
     def fail(self, data):
         '''
@@ -56,6 +56,7 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
+        data = utils.serialize(data)
         logging.debug(data)
         self.set_header("Content-Type", "application/json")
         self.write(json_util.dumps(data))

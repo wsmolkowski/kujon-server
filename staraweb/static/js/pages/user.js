@@ -1,8 +1,9 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/user.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
 'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tpl);
+            var templateError = Handlebars.compile(tplError);
 
             var request_url = main.getApiUrl('/api/users/');
 
@@ -17,11 +18,12 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                     if (data.status == 'success'){
                         $('#page').html(template(data.data));
                     } else {
-                        $('#page').html(data.message);
+                        $('#page').html(templateError(data));
                     }
                 },
-                error: function (err) {
-                    $('#page').html(err);
+                error: function(jqXHR, exception) {
+                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.responseText + ' exception: ' + exception};
+                    $('#page').html(templateError(msg));
                 }
             });
             //a tutaj możesz np. zapiąć listenery
