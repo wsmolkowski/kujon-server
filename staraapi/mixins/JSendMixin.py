@@ -2,7 +2,7 @@ import logging
 
 from bson import json_util
 
-from staracommon import constants
+from staracommon import utils
 
 
 class JSendMixin(object):
@@ -24,10 +24,7 @@ class JSendMixin(object):
         :return:
         '''
 
-        if constants.ID in data:
-            data.pop(constants.ID)
-
-        self.__write_json({'status': 'success', 'data': data})
+        self.__write_json({'status': 'success', 'data': utils.serialize(data)})
 
     def fail(self, data):
         '''

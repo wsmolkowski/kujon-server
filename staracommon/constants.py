@@ -63,4 +63,4 @@ COLLECTION_TT = 'tt'
 COLLECTION_JOBS_INITIAL_USER = 'jobs_initial_user'
 
 TIME_TABLE_DELTA = 7   # days
-
+DATETIME_DISPLAY_FORMAT = '%Y-%m-%d %H:%M:%S'
