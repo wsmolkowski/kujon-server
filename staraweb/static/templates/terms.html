@@ -1,6 +1,27 @@
-
 <div class="panel panel-default">
-  <div class="panel-body">
-    Terms!
-  </div>
+    <div class="panel-body">
+        <table class="table table-hover">
+            <caption>Nauczyciele</caption>
+            <thead>
+            <th>Nazwa</th>
+            <th>Numer</th>
+            <th>Data początkowa</th>
+            <th>Data końcowa</th>
+            <th>Data zakończenia</th>
+            </thead>
+            <tbody>
+
+            {{#data}}
+            <tr>
+                <td>{{name.pl}}</td>
+                <td>{{term_id}}</td>
+                <td>{{start_date}}</td>
+                <td>{{end_date}}</td>
+                <td>{{finish_date}}</td>
+            </tr>
+            {{/data}}
+
+            </tbody>
+        </table>
+    </div>
 </div>

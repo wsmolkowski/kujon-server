@@ -4,7 +4,10 @@ from bson.objectid import ObjectId
 from handlers_api import BaseHandler
 from staracommon import constants
 
-LIMIT_FIELDS = ('first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status','room','office_hours','employment_positions','course_editions_conducted','interests','homepage_url')
+LIMIT_FIELDS = (
+'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
+'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
+
 
 class LecturersApi(BaseHandler):
     @tornado.web.asynchronous
@@ -35,7 +38,7 @@ class LecturersApi(BaseHandler):
                 for lecturer in course_doc[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
 
-                    lecturers_returned[lecturer_id]=lecturer
+                    lecturers_returned[lecturer_id] = lecturer
 
             lecturers_returned = lecturers_returned.values()
 
@@ -43,6 +46,7 @@ class LecturersApi(BaseHandler):
             self.error("Please hold on we are looking your lecturers..")
         else:
             self.success(lecturers_returned)
+
 
 class LecturerByIdApi(BaseHandler):
     @tornado.web.asynchronous

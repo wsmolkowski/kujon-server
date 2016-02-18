@@ -31,6 +31,7 @@ class TermsApi(BaseHandler):
         else:
             self.success(terms_doc)
 
+
 class TermApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
