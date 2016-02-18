@@ -33,7 +33,7 @@ def serialize_list(data):
             result.append(serialize_list(element))
         elif isinstance(element, dict):
             result.append(serialize_dictionary(element))
-        elif isinstance(element, datetime):
+        elif isinstance(element, datetime.datetime):
             result.append(element.strftime(constants.DATETIME_DISPLAY_FORMAT))
         elif isinstance(element, ObjectId):
             continue
