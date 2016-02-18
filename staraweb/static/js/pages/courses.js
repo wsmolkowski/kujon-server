@@ -1,4 +1,4 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/courses.html'], function($, Handlebars, main, tpl) {
 'use strict';
     return {
         render: function() {
@@ -16,7 +16,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html'], function($,
                 crossDomain: true,
                 success:  function (data) {
                     if (data.status == 'success'){
-                        $('#page').html(template(data.data));
+                        $('#page').html(template(data));
                     } else {
                         $('#page').html(data.message);
                     }
