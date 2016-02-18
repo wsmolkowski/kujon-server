@@ -5,11 +5,11 @@ from datetime import timedelta, date
 import tornado.gen
 from bson.objectid import ObjectId
 
-from staracommon.usosutils.usosasync import UsosAsync
 import usosinstances
-from staraapi.helpers import log_execution_time
 from staracommon import constants
+from staracommon.helpers import log_execution_time
 from staracommon.mongo_dao import Dao
+from staracommon.usosutils.usosasync import UsosAsync
 from staracommon.usosutils.usosclient import UsosClient
 
 

@@ -16,7 +16,8 @@ class UsosAsync:
     def __init__(self):
         self.client = self.build_client()
 
-    def build_client(self):
+    @staticmethod
+    def build_client():
         if common_settings.PROXY_URL and common_settings.PROXY_PORT:
             tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                                          defaults=dict(proxy_host=common_settings.PROXY_URL,

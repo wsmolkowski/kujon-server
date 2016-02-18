@@ -1,13 +1,11 @@
 import tornado.web
 from bson.objectid import ObjectId
 
-import staraapi.helpers
 from handlers_api import BaseHandler
-from staracommon import constants
+from staracommon import constants, helpers
 
 
 class FriendsApi(BaseHandler):
-
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -19,7 +17,7 @@ class FriendsApi(BaseHandler):
         # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
         pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
-                                'as': 'users_info'}}]
+                                 'as': 'users_info'}}]
 
         cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
         if cursor:
@@ -89,7 +87,6 @@ class FriendsApi(BaseHandler):
             self.fail(user_info_id)
 
 
-
 class FriendsSuggestionsApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -130,7 +127,7 @@ class FriendsSuggestionsApi(BaseHandler):
                         continue
 
                     # checking if participant is allready added
-                    poz = staraapi.helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
+                    poz = helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
                     if poz:
                         continue
                     del participant[constants.USER_INFO_ID]
@@ -138,7 +135,7 @@ class FriendsSuggestionsApi(BaseHandler):
                     if participant_id in suggested_participants:
                         suggested_participants[participant_id]['count'] += 1
                     else:
-                        suggested_participants[participant_id]=participant
+                        suggested_participants[participant_id] = participant
                         suggested_participants[participant_id]['count'] = 1
 
             suggested_participants = suggested_participants.values()

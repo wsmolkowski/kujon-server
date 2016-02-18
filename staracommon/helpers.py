@@ -5,7 +5,6 @@ from datetime import datetime
 from functools import wraps
 
 
-
 def in_dictlist((key, value), my_dictlist):
     '''*args and **kwargs are the parameters that are supplied to our original function'''
     for this in my_dictlist:
@@ -32,7 +31,7 @@ def log_execution_time(intercepted_function):
 
         execution_time = stop - start
         logging.debug('file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(
-                os.path.basename(filename), code_line, text, execution_time))
+            os.path.basename(filename), code_line, text, execution_time))
 
         return actual_result
 

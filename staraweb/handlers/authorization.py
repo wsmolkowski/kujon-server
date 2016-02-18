@@ -316,4 +316,4 @@ class VerifyHandler(BaseHandler):
 
             self.redirect('/')
         else:
-            self.redirect("/")
+            self.redirect('/')
