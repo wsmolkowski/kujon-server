@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parse_command_line()
     enable_pretty_logging()
 
-    app = Application()
-    app.listen(settings.PORT)
+    web = Application()
+    web.listen(settings.PORT)
     print settings.DEPLOY_URL
     tornado.ioloop.IOLoop.current().start()
