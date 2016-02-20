@@ -109,10 +109,9 @@ class Dao:
                 terms.append(term)
         return terms
 
-    def get_user_programmes(self, user_id, usos_id):
+    def get_user_programmes(self, usos_id):
         programmes = []
-        data = self.__db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
+        data = self.__db[constants.COLLECTION_USERS_INFO].find_one({constants.USOS_ID: usos_id})
         programmes = data['student_programmes']
         return programmes
 

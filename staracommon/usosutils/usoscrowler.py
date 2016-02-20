@@ -136,7 +136,7 @@ class UsosCrowler:
 
     def __build_programmes(self, client, user_id, crowl_time, usos):
 
-        programmes = self.dao.get_user_programmes(user_id, usos[constants.USOS_ID])
+        programmes = self.dao.get_user_programmes(usos[constants.USOS_ID])
         for programme in programmes:
             result = client.programme(programme['programme']['id'])
             if result:
