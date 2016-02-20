@@ -78,12 +78,20 @@ class Dao:
     def get_term(self, term_id, usos_id):
         return self.__db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_course_edition(self, course_id, term_id, usos_id):
+    def get_courses_editions(self, course_id, term_id, usos_id):
         return self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_course_edition_all(self, usos_id):
-        return self.__db[constants.COLLECTION_COURSES_EDITIONS].find({constants.USOS_ID: usos_id})
+    def get_course_edition(self, course_id, term_id, usos_id):
+        return self.__db[constants.COLLECTION_COURSE_EDITION].find_one(
+            {constants.COURSE_ID: course_id,
+             constants.TERM_ID: term_id,
+             constants.USOS_ID: usos_id})
+
+    def get_courses_editions(self, user_id, usos_id):
+        return self.__db[constants.COLLECTION_COURSES_EDITIONS].find(
+            {constants.USOS_ID: usos_id,
+             constants.USER_ID: user_id})
 
     def get_faculties_from_courses(self, usos_id):
         return self.__db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}).distinct('fac_id')
@@ -92,9 +100,18 @@ class Dao:
         return self.__db[constants.COLLECTION_FACULTIES].find_one(
             {constants.FACULTY_ID: fac_id, constants.USOS_ID: usos_id})
 
+    def find_notexisting_courses(self, course_id, usos_id):
+        return self.__db[constants.COLLECTION_COURSES].find_one(
+            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
+
     def get_course(self, course_id, usos_id):
         return self.__db[constants.COLLECTION_COURSES].find_one(
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
+
+    def get_courses(self, courses, usos_id):
+        return self.__db[constants.COLLECTION_COURSES].find(
+            {constants.COURSE_ID: {'$in': courses},
+             constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id, usos_id):
         return self.__db[constants.COLLECTION_GRADES].find_one(

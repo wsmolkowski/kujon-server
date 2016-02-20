@@ -98,7 +98,7 @@ class UsosCrowler:
                 else:
                     logging.debug('no photo for user_id: {0}'.format(user_id))
 
-        # if users conducts some curses - fetch courses
+        # if user conducts courses - fetch courses
         if result['course_editions_conducted']:
             for courseterm in result['course_editions_conducted']:
                 course_id, term_id = courseterm['id'].split('|')
@@ -197,21 +197,29 @@ class UsosCrowler:
                                                                                               constants.TERM_ID]))
 
     @tornado.gen.coroutine
-    def __build_courses(self, client, usos, crowl_time):
+    def __build_courses(self, client, user_id, usos, crowl_time):
 
-        for course_edition in self.dao.get_course_edition_all(usos[constants.USOS_ID]):
-            if self.dao.get_course(course_edition[constants.COURSE_ID], usos[constants.USOS_ID]):
-                continue  # course already exists
+        courses = [] # list courses to be fetched from usos
+        for course_edition in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
+            for term in course_edition['course_editions']:
+                for course in course_edition['course_editions'][term]:
+                    courses.append(course[constants.COURSE_ID])
 
-            result = client.course(course_edition[constants.COURSE_ID])
+        # get courses that exists in mongo and remove from list to fetch
+        for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
+            courses.remove(existing_course[constants.COURSE_ID])
+
+        # get the rest of courses on course list from usos
+        for course in courses:
+            result = client.course(course)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.COURSE_ID] = result.pop('id')
                 c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
                 logging.debug(
-                    'course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
+                    'course for course_id: {0} inserted {1}'.format(course, c_doc))
             else:
-                logging.debug('no course for course_id: {0}.'.format(course_edition[constants.COURSE_ID]))
+                logging.debug('no course for course_id: {0}.'.format(course))
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
@@ -345,7 +353,7 @@ class UsosCrowler:
 
             yield self.__build_grades_participants_lecturers_units_groups(client, user_id, usos, crowl_time)
 
-            self.__build_courses(client, usos, crowl_time)
+            self.__build_courses(client, user_id, usos, crowl_time)
 
             self.__build_faculties(client, usos, crowl_time)
 
