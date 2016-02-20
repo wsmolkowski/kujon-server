@@ -112,6 +112,7 @@ class UsosCrowler:
                     logging.debug(
                         "course_edition for course_id: {0} term_id: {1} inserted: {2}".format(course_id, term_id,
                                                                                               course_doc))
+        return result[constants.USER_INFO_ID]
 
     def __build_tt(self, client, user_id, crowl_time, usos, given_date):
 
@@ -134,18 +135,22 @@ class UsosCrowler:
             else:
                 logging.debug('no time tables for date: {0}'.format(given_date))
 
-    def __build_programmes(self, client, user_id, crowl_time, usos):
+    def __build_programmes(self, client, user_info_id, crowl_time, usos):
 
-        programmes = self.dao.get_user_programmes(usos[constants.USOS_ID])
+        programmes = self.dao.get_users_info_programmes(user_info_id, usos[constants.USOS_ID])
         for programme in programmes:
-            result = client.programme(programme['programme']['id'])
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-                result[constants.PROGRAMME_ID] = result.pop('id')
-                prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-                logging.debug('programme {0} inserted: {1}'.format(programme['id'], prog_doc))
+            # checing if program exists in mongo
+            if self.dao.get_programme(programme['programme']['id'], usos[constants.USOS_ID]):
+                continue
             else:
-                logging.debug('no programme: {0}.'.format(programme['id']))
+                result = client.programme(programme['programme']['id'])
+                if result:
+                    result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                    result[constants.PROGRAMME_ID] = result.pop('id')
+                    prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
+                    logging.debug('programme {0} inserted: {1}'.format(programme['id'], prog_doc))
+                else:
+                    logging.debug('no programme: {0}.'.format(programme['id']))
 
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
 
@@ -243,6 +248,9 @@ class UsosCrowler:
                 self.__build_user_info(client, None, user['id'], crowl_time, usos)
                 logging.debug('Fetched user_info for user with id: {0}'.format(user['id']))
 
+                # build programme for gven user
+                self.__build_programmes(client, user['id'], crowl_time,usos)
+
     @tornado.gen.coroutine
     def __build_units(self, client, crowl_time, units, usos):
 
@@ -334,7 +342,7 @@ class UsosCrowler:
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
-            self.__build_user_info(client, user_id, None, crowl_time, usos)
+            user_info_id = self.__build_user_info(client, user_id, None, crowl_time, usos)
 
             # fetch tt for current and next week
             today = date.today()
@@ -343,7 +351,7 @@ class UsosCrowler:
             self.__build_tt(client, user_id, crowl_time, usos, today)
             self.__build_tt(client, user_id, crowl_time, usos, next_week)
 
-            self.__build_programmes(client, user_id, crowl_time, usos)
+            self.__build_programmes(client, user_info_id, crowl_time, usos)
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
