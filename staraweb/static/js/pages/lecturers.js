@@ -17,6 +17,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                 success:  function (data) {
                     if (data.status == 'success'){
                         $('#page').html(template(data));
+
+                        bindListeners();
+
                     } else {
                         $('#page').html(templateError(data));
                     }
@@ -26,6 +29,13 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                     $('#page').html(templateError(msg));
                 }
             });
+
+            function bindListeners(){
+                $('.lecturer-row').bind( 'click', function(){
+                    alert({name:$(this).attr("lecturer-id")});
+                });
+            }
+
         }
     }    
 });

@@ -9,9 +9,9 @@ var require = {
         "jquery":               "static/bower_components/jquery/dist/jquery.min",
         "text":                 "static/bower_components/requirejs-text/text",
         "handlebars":           "static/bower_components/handlebars/handlebars.min",
-        "lib":                  "static/js/",
-        "templates":            "static/templates/",
+        "templates":            "static/templates",
         "main":                 "static/main",
+        "lib":                  "static/js",
     },
     shim: {
         "bootstrap": { deps: ["jquery"] },

@@ -1,21 +1,24 @@
 <div class="panel panel-default">
     <div class="panel-body">
+
         <table class="table table-hover">
-            <caption>Nauczyciele</caption>
+            <ol class="breadcrumb">
+                <li class="active"><a href="#lecturers">Nauczyciele</a></li>
+                <!--
+                <li><a href="#">Library</a></li>
+                -->
+            </ol>
+
             <thead>
             <th>Imie</th>
             <th>Nazwisko</th>
-            <th>User Id</th>
-            <th>Id</th>
             </thead>
             <tbody>
 
             {{#data}}
-            <tr>
+            <tr class="lecturer-row" data-id="{{user_id}}">
                 <td>{{first_name}}</td>
                 <td>{{last_name}}</td>
-                <td>{{user_id}}</td>
-                <td>{{id}}</td>
             </tr>
             {{/data}}
 
@@ -23,3 +26,12 @@
         </table>
     </div>
 </div>
+<!--
+<script>
+     $('.lecturer-row').click(function() {
+                //alert({name:$(this).attr("data-id")});
+                alert($(this).attr("data-id"));
+                //$('#details').html(detailsTemplate({name:$(this).attr("data-id")}));
+            });
+</script>
+-->
