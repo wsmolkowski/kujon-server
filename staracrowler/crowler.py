@@ -8,7 +8,7 @@ from staracommon import constants
 from staracommon.mongo_dao import Dao
 from staracommon.usosutils.usoscrowler import UsosCrowler
 
-SLEEP = 10
+SLEEP = 2
 
 
 @gen.coroutine
@@ -33,12 +33,11 @@ def crowl():
             initial_processing.remove(job_doc)
             logging.info("finished initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
 
-            time.sleep(SLEEP)
-
     @gen.coroutine
     def worker_initial():
         while True:
             yield crowl_initial()
+            time.sleep(SLEEP)
 
     worker_initial()
 
