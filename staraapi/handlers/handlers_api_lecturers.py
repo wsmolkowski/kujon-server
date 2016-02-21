@@ -38,7 +38,9 @@ class LecturersApi(BaseHandler):
                 for lecturer in course_doc[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
 
+                    lecturer.pop('id')
                     lecturers_returned[lecturer_id] = lecturer
+
 
             lecturers_returned = lecturers_returned.values()
 

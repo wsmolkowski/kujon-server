@@ -77,11 +77,8 @@ class CoursesEditionsApi(BaseHandler):
             terms.append(year)
 
         # add groups to courses
-        term_counter = -1       # web client tab navigation
-        results = []
+        courses = []
         for term in terms:
-            term_counter += 1
-            courses = []
             for course in term['term_data']:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
@@ -95,11 +92,8 @@ class CoursesEditionsApi(BaseHandler):
                     group['class_type_id'] = classtypes[group['class_type_id']]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
+                course['course_name'] = course['course_name']['pl']
+                del course['course_units_ids']
                 courses.append(course)
 
-            results.append({
-                'term': term['term'],
-                'term_counter': term_counter,
-                'term_data': courses
-            })
-        self.success(results)
+        self.success(courses)
