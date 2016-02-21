@@ -7,8 +7,8 @@ from handlers_api import BaseHandler
 from staracommon import constants
 
 LIMIT_FIELDS = (
-'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes')
-LIMIT_FIELDS_USER = ('email', 'user_creation', 'locale', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
+'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes', 'user_type')
+LIMIT_FIELDS_USER = ('email', 'user_creation', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -44,6 +44,24 @@ class UserInfoApi(BaseHandler):
         user_info['user_email'] = user_info.pop('email')
 
         user.update(user_info)
+
+        # remove unneccecary fields
+        user.pop('update_time')
+
+        # change student status value to name
+        if user['student_status'] == 0:
+            user['student_status'] = "brak"
+        if user['student_status'] == 1:
+            user['student_status'] = "nieaktywny student"
+        if user['student_status'] == 1:
+            user['student_status'] = "aktywny student"
+
+        # change description to only polish
+        for program in user['student_programmes']:
+            program['programme']['description'] = program['programme']['description']['pl']
+
+        # add school name
+        # TODO: add school name here
 
         if not user:
             self.error("Please hold on we are looking your USOS/user information.")

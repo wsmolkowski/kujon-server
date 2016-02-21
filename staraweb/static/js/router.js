@@ -16,7 +16,7 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
             //schowaj kręcacz (?)            
         });
     }
-    
+
     crossroads.addRoute('', function() {
         setActiveLink('home');
     });
