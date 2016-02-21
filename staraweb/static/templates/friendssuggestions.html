@@ -1,0 +1,23 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <table class="table table-hover">
+            <caption>Szukaj znajomych</caption>
+            <thead>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>User Id</th>
+                <th>Ilość wspólnych zajęć</th>
+            </thead>
+            <tbody>
+            {{#data}}
+            <tr>
+                <td>{{first_name}}</td>
+                <td>{{last_name}}</td>
+                <td>{{user_id}}</td>
+                <td>{{count}}</td>
+            </tr>
+            {{/data}}
+            </tbody>
+        </table>
+    </div>
+</div>
