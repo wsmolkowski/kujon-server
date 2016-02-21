@@ -1,5 +1,5 @@
 import httplib2
-import socks
+import httplib2.socks
 import datetime
 from bson.objectid import ObjectId
 

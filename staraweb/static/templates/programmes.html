@@ -3,6 +3,7 @@
         <table class="table table-hover">
             <caption>Programy nauczania</caption>
             <thead>
+            <th>Id</th>
             <th>Nazwa</th>
             <th>Numer</th>
             <th>Poziom</th>
@@ -13,11 +14,12 @@
 
             {{#data}}
             <tr>
-                <td>{{name.pl}}</td>
-                <td>{{programme_id}}</td>
-                <td>{{level_of_studies.pl}}</td>
-                <td>{{mode_of_studies.pl}}</td>
-                <td>{{duration.pl}}</td>
+                <td>{{id}}</td>
+                <td>{{programme.description.pl}}</td>
+                <td>{{programme.id}}</td>
+                <td>{{programme.level_of_studies.pl}}</td>
+                <td>{{programme.mode_of_studies.pl}}</td>
+                <td>{{programme.duration.pl}}</td>
             </tr>
             {{/data}}
 

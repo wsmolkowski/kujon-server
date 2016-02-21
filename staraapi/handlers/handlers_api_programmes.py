@@ -29,14 +29,15 @@ class ProgrammesApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.ID])})
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         programmes = []
         for program in user_info['student_programmes']:
-            program_id = program['programme']['id']
-            result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: program_id}, LIMIT_FIELDS)
-            programmes.append(result)
+            result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: program['programme']['id']}, LIMIT_FIELDS)
+            program['programme']['mode_of_studies']=result['mode_of_studies']
+            program['programme']['level_of_studies']=result['level_of_studies']
+            program['programme']['duration']=result['duration']
+            programmes.append(program)
 
         if not programmes:
             self.error("Please hold on we are looking your programmes.")

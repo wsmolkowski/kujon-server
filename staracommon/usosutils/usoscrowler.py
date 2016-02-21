@@ -98,7 +98,7 @@ class UsosCrowler:
                 else:
                     logging.debug('no photo for user_id: {0}'.format(user_id))
 
-        # if users conducts some curses - fetch courses
+        # if user conducts courses - fetch courses
         if result['course_editions_conducted']:
             for courseterm in result['course_editions_conducted']:
                 course_id, term_id = courseterm['id'].split('|')
@@ -112,6 +112,7 @@ class UsosCrowler:
                     logging.debug(
                         "course_edition for course_id: {0} term_id: {1} inserted: {2}".format(course_id, term_id,
                                                                                               course_doc))
+        return result[constants.USER_INFO_ID]
 
     def __build_tt(self, client, user_id, crowl_time, usos, given_date):
 
@@ -134,18 +135,22 @@ class UsosCrowler:
             else:
                 logging.debug('no time tables for date: {0}'.format(given_date))
 
-    def __build_programmes(self, client, user_id, crowl_time, usos):
+    def __build_programmes(self, client, user_info_id, crowl_time, usos):
 
-        programmes = self.dao.get_user_programmes(user_id, usos[constants.USOS_ID])
+        programmes = self.dao.get_users_info_programmes(user_info_id, usos[constants.USOS_ID])
         for programme in programmes:
-            result = client.programme(programme['programme']['id'])
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-                result[constants.PROGRAMME_ID] = result.pop('id')
-                prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-                logging.debug('programme {0} inserted: {1}'.format(programme['id'], prog_doc))
+            # checing if program exists in mongo
+            if self.dao.get_programme(programme['programme']['id'], usos[constants.USOS_ID]):
+                continue
             else:
-                logging.debug('no programme: {0}.'.format(programme['id']))
+                result = client.programme(programme['programme']['id'])
+                if result:
+                    result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                    result[constants.PROGRAMME_ID] = result.pop('id')
+                    prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
+                    logging.debug('programme {0} inserted: {1}'.format(programme['id'], prog_doc))
+                else:
+                    logging.debug('no programme: {0}.'.format(programme['id']))
 
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
 
@@ -197,21 +202,29 @@ class UsosCrowler:
                                                                                               constants.TERM_ID]))
 
     @tornado.gen.coroutine
-    def __build_courses(self, client, usos, crowl_time):
+    def __build_courses(self, client, user_id, usos, crowl_time):
 
-        for course_edition in self.dao.get_course_edition_all(usos[constants.USOS_ID]):
-            if self.dao.get_course(course_edition[constants.COURSE_ID], usos[constants.USOS_ID]):
-                continue  # course already exists
+        courses = [] # list courses to be fetched from usos
+        for course_edition in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
+            for term in course_edition['course_editions']:
+                for course in course_edition['course_editions'][term]:
+                    courses.append(course[constants.COURSE_ID])
 
-            result = client.course(course_edition[constants.COURSE_ID])
+        # get courses that exists in mongo and remove from list to fetch
+        for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
+            courses.remove(existing_course[constants.COURSE_ID])
+
+        # get the rest of courses on course list from usos
+        for course in courses:
+            result = client.course(course)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.COURSE_ID] = result.pop('id')
                 c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
                 logging.debug(
-                    'course for course_id: {0} inserted {1}'.format(course_edition[constants.COURSE_ID], c_doc))
+                    'course for course_id: {0} inserted {1}'.format(course, c_doc))
             else:
-                logging.debug('no course for course_id: {0}.'.format(course_edition[constants.COURSE_ID]))
+                logging.debug('no course for course_id: {0}.'.format(course))
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
@@ -234,6 +247,9 @@ class UsosCrowler:
             if not self.dao.get_users_info_by_usos_id(user['id'], usos):
                 self.__build_user_info(client, None, user['id'], crowl_time, usos)
                 logging.debug('Fetched user_info for user with id: {0}'.format(user['id']))
+
+                # build programme for gven user
+                self.__build_programmes(client, user['id'], crowl_time,usos)
 
     @tornado.gen.coroutine
     def __build_units(self, client, crowl_time, units, usos):
@@ -326,7 +342,7 @@ class UsosCrowler:
                             usos[constants.CONSUMER_SECRET],
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         try:
-            self.__build_user_info(client, user_id, None, crowl_time, usos)
+            user_info_id = self.__build_user_info(client, user_id, None, crowl_time, usos)
 
             # fetch tt for current and next week
             today = date.today()
@@ -335,7 +351,7 @@ class UsosCrowler:
             self.__build_tt(client, user_id, crowl_time, usos, today)
             self.__build_tt(client, user_id, crowl_time, usos, next_week)
 
-            self.__build_programmes(client, user_id, crowl_time, usos)
+            self.__build_programmes(client, user_info_id, crowl_time, usos)
 
             self.__build_curseseditions(client, crowl_time, user_id, usos)
 
@@ -345,7 +361,7 @@ class UsosCrowler:
 
             yield self.__build_grades_participants_lecturers_units_groups(client, user_id, usos, crowl_time)
 
-            self.__build_courses(client, usos, crowl_time)
+            self.__build_courses(client, user_id, usos, crowl_time)
 
             self.__build_faculties(client, usos, crowl_time)
 
