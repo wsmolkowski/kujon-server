@@ -20,7 +20,6 @@ URI_COURSE = 'services/courses/course?course_id={0}&fields=id|name|homepage_url|
 URI_FACULTY = 'services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]'
 URI_TT = 'services/tt/user?start={0}&days=7&fields=start_date|end_date|name'
 
-
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
         self.base_url = base_url
@@ -53,46 +52,40 @@ class UsosClient:
             result = {'user_id': user_id,
                       'photo': b64encode(body)}
             return result
-        else:
-            logging.error(
-                "Error while fetching photo for user_id: {0}. Response code: {1} body: {2}".format(user_id, code, body))
+        raise Exception("Error while fetching photo for user_id: {0}. Response code: {1} body: {2}".format(user_id, code, body))
 
     def programme(self, programme_id):
         if programme_id:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_PROGRAMMES.format(programme_id)))
             if code['status'] == '200':
                 return json.loads(body)
-            else:
-                logging.error("Error while fetching programmes. Response code: {0} body: {1}".format(code, body))
+            raise Exception("Error while fetching programmes. Response code: {0} body: {1}".format(code, body))
 
     def tt(self, start_date):
         if start_date:
             code, body = self.client.request("{0}{1}".format(self.base_url, URI_TT.format(start_date)))
             if code['status'] == '200':
                 return json.loads(body)
-        logging.error(
-            "Error while fetching time tables for date: {0}. Response code: {1} body: {2}".format(start_date, code,
-                                                                                                  body))
+        raise Exception("Error while fetching time tables for date: {0}. Response code: {1} body: {2}".
+                        format(start_date, code, body))
 
     def groups(self, course_unit_id):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error("Error while fetching groups. Response code: {0} body: {1}".format(code, body))
+        raise Exception("Error while fetching groups. Response code: {0} body: {1}".format(code, body))
 
     def units(self, unit_id):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_UNITS.format(unit_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error("Error while fetching units. Response code: {0} body: {1}".format(code, body))
+        raise Exception("Error while fetching units. Response code: {0} body: {1}".format(code, body))
 
     def courseeditions_info(self):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_EDITIONS_INFO))
         if code['status'] == '200':
             return json.loads(body)
-        logging.error("Error while fetching courseeditions_info. Response code: {0} body: {1}".format(code, body))
+        raise Exception("Error while fetching courseeditions_info. Response code: {0} body: {1}".format(code, body))
 
     def course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
@@ -103,38 +96,30 @@ class UsosClient:
                 "{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS.format(course_id, term_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error(
-                "Error while fetching course_info {0}. Response code: {1} body: {2}".format(course_id, code, body))
+        raise Exception("Error while fetching course_info {0}. Response code: {1} body: {2}".format(course_id, code, body))
 
     def course(self, course_id):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSE.format(course_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error(
-                "Error while fetching course_id: {0}. Response code: {1} body: {2}".format(course_id, code, body))
+        raise Exception("Error while fetching course_id: {0}. Response code: {1} body: {2}".format(course_id, code, body))
 
     def grades(self, course_id, term_id):
         code, body = self.client.request(
             "{0}{1}".format(self.base_url, URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error(
-                "Error while fetching grades for term_id {0} and course_id {1}. Response code: {2} body: {3}".format(
+        raise Exception("Error while fetching grades for term_id {0} and course_id {1}. Response code: {2} body: {3}".format(
                     term_id, course_id, code, body))
 
     def class_types(self):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error("Error while fetching class_types. Response code: {0} body: {1}".format(code, body))
+        raise Exception("Error while fetching class_types. Response code: {0} body: {1}".format(code, body))
 
     def faculty(self, fac_id):
         code, body = self.client.request("{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id)))
         if code['status'] == '200':
             return json.loads(body)
-        else:
-            logging.error("Error while fetching faculty: {0}. Response code: {1} body: {2}".format(fac_id, code, body))
+        raise Exception("Error while fetching faculty: {0}. Response code: {1} body: {2}".format(fac_id, code, body))
