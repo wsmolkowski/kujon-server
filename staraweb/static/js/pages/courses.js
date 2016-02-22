@@ -5,25 +5,11 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            var request_url = main.getApiUrl('/api/courseseditions/');
-
-            $.ajax({
-                type: 'GET',
-                url: request_url,
-                xhrFields: {
-                    withCredentials: true
-                },
-                crossDomain: true,
-                success:  function (data) {
-                    if (data.status == 'success'){
-                        $('#page').html(template(data));
-                    } else {
-                        $('#page').html(templateError(data));
-                    }
-                },
-                error: function(jqXHR, exception) {
-                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.responseText + ' exception: ' + exception};
-                    $('#page').html(templateError(msg));
+            main.callCourseseditions(function(data){
+                if (data.status == 'success'){
+                    $('#page').html(template(data));
+                } else {
+                    $('#page').html(templateError(data));
                 }
             });
             

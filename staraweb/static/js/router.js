@@ -29,10 +29,6 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
         setActiveLink('user');
     });
 
-    crossroads.addRoute('create', function() {
-        setActiveLink('create');
-    });
-
     crossroads.addRoute('grades', function() {
         setActiveLink('grades');
     });

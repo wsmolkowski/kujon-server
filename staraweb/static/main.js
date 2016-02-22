@@ -50,13 +50,37 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             });
         };
 
-        function lecturerDetails(lecturerId, callback){
-            var request_url = buildApiUrl('/api/lecturers/') + lecturerId;
-            callAjaxGet(request_url, callback);
+        function usoses(callback){
+            callUsers(buildApiUrl('/api/usoses/'), callback);
+        };
+
+        function terms(callback){
+            callUsers(buildApiUrl('/api/users/'), callback);
+        };
+
+        function terms(callback){
+            callAjaxGet(buildApiUrl('/api/terms/'), callback);
+        };
+
+        function programmes(callback){
+            callAjaxGet(buildApiUrl('/api/programmes/'), callback);
+        };
+
+        function grades(callback){
+            callAjaxGet(buildApiUrl('/api/grades/'), callback);
+        };
+
+        function courseseditions(callback){
+            callAjaxGet(buildApiUrl('/api/courseseditions/'), callback);
         };
 
         function lecturers(callback){
             callAjaxGet(buildApiUrl('/api/lecturers/'), callback);
+        };
+
+        function lecturerDetails(lecturerId, callback){
+            var request_url = buildApiUrl('/api/lecturers/') + lecturerId;
+            callAjaxGet(request_url, callback);
         };
 
         return {
@@ -71,6 +95,24 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                     buildConfig();
                 }
                 return config['USOS_API'] + api;
+            },
+            callUsoses: function(callback){
+                usoses(callback);
+            },
+            callUsers: function(callback){
+                users(callback);
+            },
+            callTerms: function(callback){
+                terms(callback);
+            },
+            callProgrammes: function(callback){
+                programmes(callback);
+            },
+            callGrades: function(callback){
+                grades(callback);
+            },
+            callCourseseditions: function(callback){
+                courseseditions(callback);
             },
             callLecturers: function(callback){
                 lecturers(callback);
