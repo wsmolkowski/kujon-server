@@ -4,9 +4,9 @@
             <caption>Oceny</caption>
             <thead>
             <th>Semestr</th>
+            <th>Kod przedmiotu</th>
             <th>Przedmiot</th>
-            <th>Opis</th>
-
+            <th>Oceny</th>
             </thead>
             <tbody>
 
@@ -17,15 +17,21 @@
                 <td>{{course_name}}</td>
                 <td>
                     <table class="table">
+                        <thead>
+                            <th>Termin</th>
+                            <th>Rodzaj</th>
+                            <th>Ocena</th>
+                            <th>Słownie</th>
+                            </thead>
                         <tbody>
-                        {{#course_grades}}
+                        {{#grades}}
                         <tr>
-                            <td>{{value_symbol}}</td>
                             <td>{{exam_session_number}}</td>
-                            <td>{{exam_id}}</td>
-                            <td>{{value_description.pl}}</td>
+                            <td>{{class_type}}</td>
+                            <td>{{value_symbol}}</td>
+                            <td>{{value_description}}</td>
                         </tr>
-                        {{/course_grades}}
+                        {{/grades}}
                         </tbody>
                     </table>
                 </td>

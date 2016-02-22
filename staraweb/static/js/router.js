@@ -16,7 +16,7 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
             //schowaj kręcacz (?)            
         });
     }
-    
+
     crossroads.addRoute('', function() {
         setActiveLink('home');
     });
@@ -60,8 +60,16 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
     crossroads.addRoute('about', function() {
         setActiveLink('about');
     });
-    
-    function parseHash(newHash, oldHash) { 
+
+    crossroads.addRoute('friends', function() {
+        setActiveLink('friends');
+    });
+
+    crossroads.addRoute('friendssuggestions', function() {
+        setActiveLink('friendssuggestions');
+    });
+
+    function parseHash(newHash, oldHash) {
         crossroads.parse(newHash); 
     }
     

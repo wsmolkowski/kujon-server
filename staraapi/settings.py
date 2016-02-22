@@ -2,7 +2,7 @@ import os
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = True
+DEBUG = False
 PORT = 8881
 SSL = False
 XSRF_COOKIE = True

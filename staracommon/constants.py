@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 USOS_ID = 'usos_id'
 USER_INFO_ID = 'id'
 USER_ID = 'user_id'
@@ -41,7 +43,7 @@ OAUTH_TOKEN = "oauth_token"
 OAUTH_TOKEN_SECRET = 'oauth_token_secret'
 
 ALERT_MESSAGE = 'alert_message'
-
+GRADE_FINAL = 'Końcowa'
 
 COLLECTION_USERS = 'users'
 COLLECTION_USOSINSTANCES = 'usosinstances'
