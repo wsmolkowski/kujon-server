@@ -5,10 +5,16 @@
             <th></th><th></th>
             </thead>
             <tbody>
-                <tr><td>Imię i Nazwisko</td><td>{{name}} {{given_name}}</td><td><img src="{{picture}}" class="img-responsive" alt="Responsive image"></td></tr>
-                <tr><td>Konto</td><td>{{user_type}}</td><td></td></tr>
-                <tr><td>Email</td><td>{{email}}</td><td></td></tr>
-                <tr><td>Data utworzenia</td><td>{{user_creation}}</td><td></td></tr>
+                <tr><td>Imię i Nazwisko</td><td>{{first_name}} {{last_name}}</td></tr>
+                <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
+                <tr><td>Strona domowa</td><td>{{homepage_url}}</td></tr>
+
+                <tr><td>Prowadzone przedmioty</td><td>{{course_editions_conducted}}</td></tr>
+                <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
+                <tr><td>employment_positions</td><td>{{employment_positions}}</td></tr>
+                <tr><td>Pokój</td><td>{{room.building_id}} {{room.building_name.pl}}</td></tr>
+                <tr><td>Numer oraz Id</td><td>{{number}} {{id}}</td></tr>
+                <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>
             </tbody>
         </table>
 

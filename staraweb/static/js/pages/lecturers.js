@@ -1,8 +1,11 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html', 'text!templates/error.html'],
+    function($, Handlebars, main, tpl, tplDetails, tplError) {
 'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tpl);
+            var templateDetails = Handlebars.compile(tplDetails);
+
             var templateError = Handlebars.compile(tplError);
 
             var request_url = main.getApiUrl('/api/lecturers/');
@@ -31,10 +34,22 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
             });
 
             function bindListeners(){
-                $('.lecturer-row').bind( 'click', function(){
-                    alert({name:$(this).attr("lecturer-id")});
-                });
-            }
+
+                $('.panel-heading').bind( 'click', function(){
+                    //FIXME - do not call when content already loaded
+                    var lecturerId = $(this).attr("lecturer-id");
+                    main.callLecturerDetails(lecturerId, function(lecturerInfo){
+
+                        var idContent = '#lecturerDetails' + lecturerId;
+
+                        if (lecturerInfo.status == 'success'){
+                            $(idContent).html(templateDetails(lecturerInfo.data));
+                        } else {
+                            $(idContent).html(templateError(lecturerInfo));
+                        }
+                    });
+              })
+            };
 
         }
     }    
