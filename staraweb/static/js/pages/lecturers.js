@@ -10,31 +10,16 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
 
             var request_url = main.getApiUrl('/api/lecturers/');
 
-            $.ajax({
-                type: 'GET',
-                url: request_url,
-                xhrFields: {
-                    withCredentials: true
-                },
-                crossDomain: true,
-                success:  function (data) {
-                    if (data.status == 'success'){
-                        $('#page').html(template(data));
-
-                        bindListeners();
-
-                    } else {
-                        $('#page').html(templateError(data));
-                    }
-                },
-                error: function(jqXHR, exception) {
-                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.responseText + ' exception: ' + exception};
-                    $('#page').html(templateError(msg));
+            main.callLecturers(function(data){
+                if (data.status == 'success'){
+                    $('#page').html(template(data));
+                    bindListeners();
+                } else {
+                    $('#page').html(templateError(data));
                 }
             });
 
             function bindListeners(){
-
                 $('.panel-heading').bind( 'click', function(){
                     //FIXME - do not call when content already loaded
                     var lecturerId = $(this).attr("lecturer-id");

@@ -9,9 +9,18 @@
                 <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
                 <tr><td>Strona domowa</td><td>{{homepage_url}}</td></tr>
 
-                <tr><td>Prowadzone przedmioty</td><td>{{course_editions_conducted}}</td></tr>
+                <tr><td>Prowadzone przedmioty</td><td></td></tr>
+                {{#course_editions_conducted}}
+                <tr><td></td><td>{{course_name.pl}} {{term_id}} {{lecturers.user_id}} {{lecturers.id}} {{course_id}}</td></tr>
+                {{/course_editions_conducted}}
+
                 <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
-                <tr><td>employment_positions</td><td>{{employment_positions}}</td></tr>
+
+                <tr><td>Zatrudnienie</td><td></td></tr>
+                {{#employment_positions}}
+                <tr><td></td><td>{{position.id}} {{position.name.pl}}</td></tr>
+                {{/employment_positions}}
+
                 <tr><td>Pokój</td><td>{{room.building_id}} {{room.building_name.pl}}</td></tr>
                 <tr><td>Numer oraz Id</td><td>{{number}} {{id}}</td></tr>
                 <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>

@@ -55,6 +55,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             callAjaxGet(request_url, callback);
         };
 
+        function lecturers(callback){
+            callAjaxGet(buildApiUrl('/api/lecturers/'), callback);
+        };
+
         return {
             getConfig: function() {
                 if (!config){
@@ -66,8 +70,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                 if (!config){
                     buildConfig();
                 }
-                var url = config['USOS_API'] + api;
-                return url;
+                return config['USOS_API'] + api;
+            },
+            callLecturers: function(callback){
+                lecturers(callback);
             },
             callLecturerDetails: function(lecturerId, callback){
                 lecturerDetails(lecturerId, callback);
