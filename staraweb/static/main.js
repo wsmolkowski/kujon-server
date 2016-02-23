@@ -11,15 +11,20 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             $.ajax({
                     type: 'GET',
                     url: 'http://localhost:8888/config',
+                    xhrFields: {
+                      withCredentials: true
+                    },
                     success:  function (data) {
-                        updateConfig(data);
+                      updateConfig(data);
                     },
                     error: function(jqXHR, exception) {
-                        var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
-                        $('#page').html(templateError(msg));
+                      var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
+                      $('#page').html(templateError(msg));
                     }
                 });
         };
+
+        buildConfig();
 
         function buildApiUrl(api){
             if (!config){
@@ -87,12 +92,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                     buildConfig();
                 }
                 return config;
-            },
-            getApiUrl: function(api) {
-                if (!config){
-                    buildConfig();
-                }
-                return config['USOS_API'] + api;
             },
             callUsoses: function(callback){
                 usoses(callback);

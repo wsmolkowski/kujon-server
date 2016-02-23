@@ -2,7 +2,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/home.html'], function($,
 'use strict';
     return {
         render: function() {
-            var config = main.getConfig();
             var template = Handlebars.compile(tpl);
 
 

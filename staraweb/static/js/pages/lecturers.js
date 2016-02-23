@@ -8,8 +8,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
 
             var templateError = Handlebars.compile(tplError);
 
-            var request_url = main.getApiUrl('/api/lecturers/');
-
             main.callLecturers(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data));
