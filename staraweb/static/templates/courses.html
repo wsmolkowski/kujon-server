@@ -1,31 +1,22 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <table class="table table-hover">
-            <caption>Przedmioty</caption>
-            <thead>
-                <th>Semestr</th>
-                <th>Nr przedmiotu</th>
-                <th>Przedmiot</th>
-                <th>Grupy</th>
-            </thead>
-            <tbody>
+        <div class="panel-group" id="accordionCourses" role="tablist" aria-multiselectable="true">
             {{#data}}
-            <tr>
-                <td>{{term_id}}</td>
-                <td>{{course_id}}</td>
-                <td>{{course_name}}</td>
-                <td>
-                <table class="table table-hover">
-                {{#groups}}
-                    <tr><td>{{class_type_id}}</td></tr>
-                {{/groups}}
-                </table>
-                </td>
-                <td><button class="btn btn-primary" href="#course">Opis</button></td>
-                <td><button class="btn btn-primary" href="#grade">Oceny</button></td>
-            </tr>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="heading{{course_id}}" course-id="{{course_id}}">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordionCourses" href="#collapse{{course_id}}"
+                           aria-expanded="false" aria-controls="collapse{{course_id}}">
+                            {{course_name}} ({{course_id}}), {{term_id}}
+                        </a>
+                    </h3>
+                </div>
+                <div id="collapse{{course_id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{course_id}}">
+                    <div class="panel-body" id="courseDetails{{course_id}}">
+                    </div>
+                </div>
+            </div>
             {{/data}}
-            </tbody>
-        </table>
+        </div>
     </div>
 </div>

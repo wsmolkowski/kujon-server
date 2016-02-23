@@ -85,7 +85,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             var request_url = buildApiUrl('/api/lecturers/') + lecturerId;
             callAjaxGet(request_url, callback);
         };
-
+        function courseDetails(courseId, callback){
+            var request_url = buildApiUrl('/api/courses/') + courseId;
+            callAjaxGet(request_url, callback);
+        };
         return {
             getConfig: function() {
                 if (!config){
@@ -110,6 +113,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             },
             callCourseseditions: function(callback){
                 courseseditions(callback);
+            },
+            callCourseDetails: function(courseId, callback){
+                courseDetails(courseId, callback);
             },
             callLecturers: function(callback){
                 lecturers(callback);

@@ -43,7 +43,7 @@ class LecturersApi(BaseHandler):
 
 
             lecturers_returned = lecturers_returned.values()
-
+            lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
             self.error("Please hold on we are looking your lecturers..")
         else:

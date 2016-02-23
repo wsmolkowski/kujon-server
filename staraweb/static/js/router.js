@@ -65,6 +65,10 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
         setActiveLink('friendssuggestions');
     });
 
+    crossroads.addRoute('tt', function() {
+        setActiveLink('tt');
+    });
+
     function parseHash(newHash, oldHash) {
         crossroads.parse(newHash); 
     }
