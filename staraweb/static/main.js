@@ -11,7 +11,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             $.ajax({
                     type: 'GET',
                     url: 'http://localhost:8888/config',
-                    async: false,
                     success:  function (data) {
                         updateConfig(data);
                     },

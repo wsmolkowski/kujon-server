@@ -5,7 +5,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html', 'text!templa
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            main.callTerms(function(data){
+            main.callUsers(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data.data));
                 } else {
