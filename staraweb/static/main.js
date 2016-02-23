@@ -1,4 +1,3 @@
-
 define("main", ["jquery", "handlebars", "text!templates/error.html"], function($, Handlebars, tplError) {
         var templateError = Handlebars.compile(tplError);
 
@@ -16,9 +15,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                     success:  function (data) {
                         updateConfig(data);
                     },
-                    error: function (err) {
-
-                        console.log(err);
+                    error: function(jqXHR, exception) {
+                        var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
+                        $('#page').html(templateError(msg));
                     }
                 });
         };
@@ -51,11 +50,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
         };
 
         function usoses(callback){
-            callUsers(buildApiUrl('/api/usoses/'), callback);
+            callAjaxGet(buildApiUrl('/api/usoses'), callback);
         };
 
-        function terms(callback){
-            callUsers(buildApiUrl('/api/users/'), callback);
+        function users(callback){
+            callAjaxGet(buildApiUrl('/api/users/'), callback);
         };
 
         function terms(callback){

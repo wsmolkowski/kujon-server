@@ -11,14 +11,10 @@ from staraweb.handlers import web, authorization
 from staracommon import settings as common_settings
 
 
-class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
-    def set_extra_headers(self, path):
-        # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-
 class Application(tornado.web.Application):
+
     _db = None
+
     @property
     def db(self):
         if not self._db:
@@ -28,7 +24,6 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", web.MainHandler),
-            #(r"/static/(.*)", NoCacheStaticFileHandler, {"path": os.path.join(os.path.dirname(__file__), "static")}),
             (r"/config", web.ApplicationConfigHandler),
             (r"/authentication/register", authorization.RegisterHandler),
             (r"/authentication/login", authorization.LoginHandler),
