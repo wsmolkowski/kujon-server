@@ -10,7 +10,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/register.html','text!tem
                 if (data.status == 'success'){
                     $('#page').html(template(data));
                 } else {
-                    $('#page').html(templateError(data));
+                    $('#page').html(templateError({'message': data.data}));
                 }
             });
 

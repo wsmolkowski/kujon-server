@@ -19,7 +19,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friendssuggestions.html'
                     if (data.status == 'success'){
                         $('#page').html(template(data));
                     } else {
-                        $('#page').html(templateError(data));
+                        $('#page').html(templateError({'message': data.data}));
                     }
                 },
                 error: function(jqXHR, exception) {

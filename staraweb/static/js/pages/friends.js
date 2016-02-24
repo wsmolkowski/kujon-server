@@ -18,7 +18,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html', 'text!tem
                     if (data.status == 'success'){
                         $('#page').html(template(data));
                     } else {
-                        $('#page').html(templateError(data));
+                        $('#page').html(templateError({'message': data.data}));
                     }
                 },
                 error: function(jqXHR, exception) {
