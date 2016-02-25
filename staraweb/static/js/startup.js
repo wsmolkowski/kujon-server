@@ -1,3 +1,3 @@
-define(['static/js/router.js', 'main'], function(router, main) {
+define(['main', 'static/js/router.js'], function(main, router) {
     main.init();
 });
