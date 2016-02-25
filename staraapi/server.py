@@ -15,7 +15,6 @@ from staracommon import settings as common_settings
 define('debug', default=settings.DEBUG)
 define('port', default=settings.PORT)
 define('ssl', default=settings.SSL)
-define('xsrf_cookie', default=settings.XSRF_COOKIE)
 define('cookie_secret', default=common_settings.COOKIE_SECRET)
 
 
@@ -33,17 +32,10 @@ class Application(tornado.web.Application):
         _settings = dict(
             debug=options.debug,
             ssl=options.ssl,
-            xsrf_cookies=settings.XSRF_COOKIE,
             cookie_secret=options.cookie_secret,
-            login_url=settings.LOGIN_URL,
-            path=settings.ROOT_PATH,
-            static_path=settings.STATIC_PATH,
             site_url=settings.DEPLOY_URL,
-            site_title=settings.PROJECT_TITLE,
-            site_description=settings.PROJECT_DESCRIPTION,
             site_domain=settings.SITE_DOMAIN,
             site_root=settings.SITE_ROOT,
-            template_path=settings.TEMPLATES_PATH,
             gzip=settings.GZIP,
             google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET}
         )
