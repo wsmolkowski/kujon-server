@@ -39,6 +39,12 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
                 xhrFields: {
                     withCredentials: true
                 },
+                beforeSend: function(){
+                    $('#spinner').show();
+                },
+                complete: function(){
+                    $('#spinner').hide();
+                },
                 crossDomain: true,
                 success:  function (data) {
                     callback(data);

@@ -5,15 +5,16 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
         //console.log(hash);
         
         //pokaż kręcacz porządnie
-        $('#page').html('Loading...');
-        
+        $('#spinner').show();
+
         require(['lib/pages/'+hash], function(page) {
             page.render();  
             
             $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
             $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
             
-            //schowaj kręcacz (?)            
+            //schowaj kręcacz (?)
+            $('#spinner').hide();
         });
     }
 

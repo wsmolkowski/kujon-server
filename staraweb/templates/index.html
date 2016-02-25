@@ -7,6 +7,8 @@
     <title>{{PROJECT_TITLE}}</title>
 
     <link href="{{ static_url('bower_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ static_url('bower_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
+
     <link href="{{ static_url('css/main.css') }}" rel="stylesheet">
     <link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
 
@@ -63,6 +65,7 @@
                 {% end %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
+                <li id="spinner"><a class="fa fa-spinner fa-pulse"></a></li>
                 {% if current_user %}
                 <li><a href="/authentication/logout">Wyloguj</a></li>
                 {% else %}
