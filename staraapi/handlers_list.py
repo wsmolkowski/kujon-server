@@ -11,48 +11,8 @@ from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler
 from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
-from handlers.handlers_chat import ChatHandler, ChatSocketHandler
-from handlers.handlers_web import CourseWebHandler
-from handlers.handlers_web import CoursesWebHandler
-from handlers.handlers_web import FriendsSuggestionsWebHandler
-from handlers.handlers_web import FriendsWebHandler
-from handlers.handlers_web import GradesWebHandler
-from handlers.handlers_web import LecturersWebHandler, LecturerWebHandler
-from handlers.handlers_web import MainWebHandler, UsersWebHandler, UserByUserIdWebHandler
-from handlers.handlers_web import ProgrammesWebHandler, ProgrammeWebHandler
-from handlers.handlers_web import ScheduleWebHandler
-from handlers.handlers_web import SchoolWebHandler
-from handlers.handlers_web import SettingsWebHandler, RegulationsWebHandler
-from handlers.handlers_web import TermsWebHandler, TermWebHandler
 
 HANDLERS = [
-    (r"/?", MainWebHandler),
-
-    (r"/users", UsersWebHandler),
-    (r"/users/([^/]+)", UserByUserIdWebHandler),
-
-    (r"/school/grades", SchoolWebHandler),
-    (r"/school/grades/course/([^/]+)/([^/]+)", GradesWebHandler),
-    (r"/school/courses", CoursesWebHandler),
-    (r"/school/courses/([^/]+)", CourseWebHandler),
-    (r"/school/terms", TermsWebHandler),
-    (r"/school/terms/([^/]+)", TermWebHandler),
-    (r"/school/schedule", ScheduleWebHandler),
-
-    (r"/school/programmes", ProgrammesWebHandler),
-    (r"/school/programmes/([^/]+)", ProgrammeWebHandler),
-
-    (r"/school/lecturers", LecturersWebHandler),
-    (r"/school/lecturers/([^/]+)", LecturerWebHandler),
-
-    (r"/chat", ChatHandler),
-    (r"/chatsocket", ChatSocketHandler),
-
-    (r"/friends", FriendsWebHandler),
-    (r"/friends/suggestions", FriendsSuggestionsWebHandler),
-
-    (r"/settings", SettingsWebHandler),
-    (r"/regulations", RegulationsWebHandler),
     (r"/authentication/register", RegisterHandler),
     (r"/authentication/login", LoginHandler),
     (r"/authentication/logout", LogoutHandler),

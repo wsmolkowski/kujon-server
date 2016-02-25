@@ -3,11 +3,6 @@ import tornado.web
 from handlers_api import BaseHandler
 
 
-class MainWebHandler(BaseHandler):
-    def get(self):
-        self.render("main.html", **self.template_data())
-
-
 class UsersWebHandler(BaseHandler):
     def get(self):
         self.render("school.html", **self.template_data())

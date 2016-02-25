@@ -1,5 +1,12 @@
-<h1>Plan zajęć</h1>
-<div class="panel panel-default">
-  <div class="panel-body">
-  </div>
-</div>
+<table class="cal-week-box" style="width:100%">
+<thead><tr>
+<% _.each(days_name, function(name) { %>
+<td class="&lt;%= cal._getDayClass('week', start) %&gt;" data-toggle="tooltip" title="&lt;%= cal._getHolidayName(start) %&gt;"><%= name %>
+
+<small><%= start.getDate() %> <%= cal.locale['ms' + start.getMonth()] %></small>
+</td>
+<% start.setDate(start.getDate() + 1); %>
+<% }) %>
+</tr></thead>
+<tbody><tr><%= cal._week() %></tr></tbody>
+</table>
