@@ -10,7 +10,7 @@ var require = {
         "text":                 "static/bower_components/requirejs-text/text",
         "handlebars":           "static/bower_components/handlebars/handlebars.min",
         "templates":            "static/templates",
-        "main":                 "static/main",
+        "main":                 "static/js/main",
         "lib":                  "static/js",
     },
     shim: {

@@ -1,12 +1,15 @@
-define("main", ["jquery", "handlebars", "text!templates/error.html"], function($, Handlebars, tplError) {
+define("main", ["jquery", "handlebars", "text!templates/error.html",], function($, Handlebars, tplError)
+{
+        /* variables */
         var templateError = Handlebars.compile(tplError);
 
         var config;
 
         function updateConfig(data){
             config = data;
-        };
+        }
 
+        /* private methods */
         function buildConfig(){
             $.ajax({
                     type: 'GET',
@@ -24,13 +27,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                 });
         };
 
-        buildConfig();
-
         function buildApiUrl(api){
-            if (!config){
-                buildConfig();
-            };
-
             return config['USOS_API'] + api;
         };
 
@@ -85,16 +82,16 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             var request_url = buildApiUrl('/api/lecturers/') + lecturerId;
             callAjaxGet(request_url, callback);
         };
+
         function courseDetails(courseId, callback){
             var request_url = buildApiUrl('/api/courses/') + courseId;
             callAjaxGet(request_url, callback);
         };
+
+        /* public methods */
         return {
-            getConfig: function() {
-                if (!config){
-                    buildConfig();
-                }
-                return config;
+            init: function() {
+                buildConfig();
             },
             callUsoses: function(callback){
                 usoses(callback);

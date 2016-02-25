@@ -1,8 +1,10 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html', 'text!templates/error.html'],
     function($, Handlebars, main, tpl, tplDetails, tplError) {
-'use strict';
+    'use strict';
+
     return {
         render: function() {
+
             var template = Handlebars.compile(tpl);
             var templateDetails = Handlebars.compile(tplDetails);
 
