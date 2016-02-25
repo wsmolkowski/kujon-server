@@ -6,7 +6,11 @@
             <th>Semestr</th>
             <th>Kod przedmiotu</th>
             <th>Przedmiot</th>
-            <th>Oceny</th>
+
+            <th>Termin</th>
+            <th>Rodzaj</th>
+            <th>Ocena</th>
+            <th>Słownie</th>
             </thead>
             <tbody>
 
@@ -15,26 +19,24 @@
                 <td>{{term_id}}</td>
                 <td>{{course_id}}</td>
                 <td>{{course_name}}</td>
-                <td>
-                    <table class="table">
-                        <thead>
-                            <th>Termin</th>
-                            <th>Rodzaj</th>
-                            <th>Ocena</th>
-                            <th>Słownie</th>
-                            </thead>
-                        <tbody>
-                        {{#grades}}
-                        <tr>
-                            <td>{{exam_session_number}}</td>
-                            <td>{{class_type}}</td>
-                            <td>{{value_symbol}}</td>
-                            <td>{{value_description}}</td>
-                        </tr>
-                        {{/grades}}
-                        </tbody>
-                    </table>
-                </td>
+                {{#grades}}
+                {{#if @first}}
+                    <td>{{exam_session_number}}</td>
+                    <td>{{class_type}}</td>
+                    <td>{{value_symbol}}</td>
+                    <td>{{value_description}}</td>
+                {{else}}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>{{exam_session_number}}</td>
+                    <td>{{class_type}}</td>
+                    <td>{{value_symbol}}</td>
+                    <td>{{value_description}}</td>
+                </tr>
+                {{/if}}
+                {{/grades}}
             </tr>
             {{/data}}
 
