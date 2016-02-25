@@ -9,16 +9,8 @@ from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
-from handlers.handlers_auth import CreateUserHandler, LoginHandler, LogoutHandler, VerifyHandler
-from handlers.handlers_auth import GoogleOAuth2LoginHandler, RegisterHandler
 
 HANDLERS = [
-    (r"/authentication/register", RegisterHandler),
-    (r"/authentication/login", LoginHandler),
-    (r"/authentication/logout", LogoutHandler),
-    (r"/authentication/create", CreateUserHandler),
-    (r"/authentication/verify", VerifyHandler),
-    (r"/authentication/google", GoogleOAuth2LoginHandler),
 
     (r"/api/usoses", UsosesApi),
     (r"/api/users/", UserInfoApi),
