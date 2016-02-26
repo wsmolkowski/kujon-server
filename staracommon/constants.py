@@ -1,4 +1,5 @@
 # coding=UTF-8
+ENCODING="UTF=8"
 
 USOS_ID = 'usos_id'
 USER_INFO_ID = 'id'
