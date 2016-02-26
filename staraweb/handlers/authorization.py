@@ -214,6 +214,15 @@ class VerifyHandler(BaseHandler):
             self.render("#create", **template_data)
 
 
+class ValidateHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        user = self.get_current_user()
+        self.write_json()
+
+
 class RegisterHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -231,7 +240,7 @@ class RegisterHandler(BaseHandler):
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
 
-            self.render("create.html", **data)
+            self.write(data)
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 

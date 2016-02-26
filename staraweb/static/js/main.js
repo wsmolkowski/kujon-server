@@ -18,7 +18,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
                       withCredentials: true
                     },
                     success:  function (data) {
-                      updateConfig(data);
+                      if (data.status == 'success'){
+                        updateConfig(data.data);
+                      } else {
+                        $('#page').html(templateError(data));
+                      }
                     },
                     error: function(jqXHR, exception) {
                       var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
@@ -28,7 +32,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
         };
 
         function buildApiUrl(api){
-            return config['USOS_API'] + api;
+            return config['API_URL'] + api;
         };
 
         function callAjaxGet(request_url, callback){
