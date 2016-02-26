@@ -76,7 +76,9 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
 
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
         while (yield cursor.fetch_next):
-            usoses.append(cursor.next_object())
+            usos=cursor.next_object()
+            usos['logo'] = settings.DEPLOY_URL + usos['logo']
+            usoses.append(usos)
 
         raise tornado.gen.Return(usoses)
 

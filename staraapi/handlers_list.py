@@ -9,8 +9,11 @@ from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.handlers_api_schedule import ScheduleApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
+from tornado.web import StaticFileHandler
 
 HANDLERS = [
+
+    (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
 
     (r"/api/usoses", UsosesApi),
     (r"/api/users/", UserInfoApi),
