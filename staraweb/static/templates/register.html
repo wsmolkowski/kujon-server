@@ -1,45 +1,25 @@
 <div class="panel panel-default">
-    <div class="panel-body">
-        <form class="form-horizontal" action="/authentication/create" method="post">
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox">Akceptuję <a href="/regulations" class="strong">regulamin </a>
-                            serwisu
-                            oraz proszę o niezwłoczne rozpoczęcie świadczenia mi usług serwisu.
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <div class="checkbox">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox">Wyrażam zgodę na przetwarzanie moich danych osobowych przez
-                                {{PROJECT_TITLE}} w celach związanych z funkcjonowaniem serwisu {{PROJECT_TITLE}} oraz
-                                przekazywania mi informacji
-                                marketingowych i reklamowych dotyczących serwisu {{PROJECT_TITLE}} i jego partnerów.
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <select id="usos-id" name="usos" class="form-control" autofocus>
-                        {{#data}}
-                        <option value="{{url}}">{{name}}</option>
-                        {{/data}}
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <button type="submit" class="btn btn-default">Rejestracja</button>
+
+    <div class="row">
+        {{#data}}
+        <form id="f{{usos_id}}" class="form-horizontal" action="/authentication/create" method="post">
+            <input type="hidden" name="usos" value="{{url}}">
+            <div class="col-sm-6 col-md-2">
+                <div class="thumbnail">
+                    <a href="#" onclick="document.getElementById('f{{usos_id}}').submit();"><img src="{{logo}}" alt="{{name}}" height="200" width="200">
+                        <div class="caption"><h5>{{name}}</h5></div>
+                    </a>
                 </div>
             </div>
         </form>
+        {{/data}}
+    </div>
+
+    <p class="panel-body" class="col-md-12 brd">
+        <p class="text-center">Akceptuję regulamin i Wyrażam zgodę na przetwarzanie moich danych
+                osobowych przez {{PROJECT_TITLE}} w celach związanych z funkcjonowaniem serwisu
+                {{PROJECT_TITLE}} oraz przekazywania mi informacji marketingowych i reklamowych dotyczących
+                serwisu {{PROJECT_TITLE}} i jego partnerów.
+        </p>
     </div>
 </div>

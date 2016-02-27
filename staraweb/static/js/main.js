@@ -102,6 +102,13 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
         return {
             init: function() {
                 buildConfig();
+
+                // {{#nl2br}} replace returns with <br>
+                Handlebars.registerHelper('nl2br', function(text) {
+                    text = Handlebars.Utils.escapeExpression(text);
+                    var nl2br = (text + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + '<br>' + '$2');
+                    return new Handlebars.SafeString(nl2br);
+                });
             },
             callUsoses: function(callback){
                 usoses(callback);
@@ -131,6 +138,5 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
                 lecturerDetails(lecturerId, callback);
             }
         };
-
 
 });

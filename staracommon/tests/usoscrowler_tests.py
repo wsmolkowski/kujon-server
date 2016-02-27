@@ -31,13 +31,6 @@ class CrowlerTest(AsyncTestCase):
         self.crowler.drop_collections()
         self.crowler.recreate_usos()
 
-        self.user = {"mobile_id": "123",
-                "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos_id": "UW",
-                "access_token_secret": "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"}
-        user = self.dao.insert(constants.COLLECTION_USERS, self.user)
-
-        self.user_id = str(user)
-
     def tearDown(self):
         self.stop()
 
@@ -51,9 +44,34 @@ class CrowlerTest(AsyncTestCase):
         self.assertNotEqual(0, result)
 
     @gen_test(timeout=1000)
-    def testInitialUserCrowlerUW(self):
+    def testInitCrowlerDEMO(self):
         # when
-        yield self.crowler.initial_user_crowl(ObjectId(self.user_id))
+        self.user = {"mobile_id": "demo1",
+                "access_token_key": "NQD7DMpcSn4RdKpD4gYf", "usos_id": "DEMO",
+                "access_token_secret": "KREqwN2sE27WwQuGDfHJrdDWjPWmNKAKuB2C3YR9"}
+
+        user = self.dao.insert(constants.COLLECTION_USERS, self.user)
+        yield self.crowler.initial_user_crowl(ObjectId(str(user)))
+
+        # then
+        self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_USOSINSTANCES) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_EDITIONS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_CROWLLOG) > 0)
+        self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
+
+
+    @gen_test(timeout=1000)
+    def testInitCrowlerUW(self):
+        # when
+        self.user = {"mobile_id": "uw1",
+                "access_token_key": "3ShYQv8LyvgeXthKJzmJ", "usos_id": "UW",
+                "access_token_secret": "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y"}
+        user = self.dao.insert(constants.COLLECTION_USERS, self.user)
+
+        yield self.crowler.initial_user_crowl(ObjectId(str(user)))
 
         # then
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
@@ -71,9 +89,9 @@ class CrowlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_PROGRAMMES) > 0)
 
     @gen_test(timeout=1000)
-    def testInitialUserCrowlerPS(self):
+    def testInitCrowlerPS(self):
         # assume
-        user = {"mobile_id": "l1",
+        user = {"mobile_id": "ps1",
                 "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos_id": "PS",
                 "access_token_secret": "VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy"}
         user = self.dao.insert(constants.COLLECTION_USERS, user)

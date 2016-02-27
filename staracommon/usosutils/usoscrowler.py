@@ -126,7 +126,11 @@ class UsosCrowler:
                 # If type equals "meeting":
                 # If type equals "exam":
         else:
-            result = client.tt(given_date)
+            result = None
+            try:
+                result = client.tt(given_date)
+            except Exception, ex:
+                logging.debug(ex.message)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.USER_ID] = user_id
@@ -184,19 +188,21 @@ class UsosCrowler:
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
             if self.dao.get_course(course_edition[constants.COURSE_ID], usos[constants.USOS_ID]):
                 continue  # course already exists
-
-            result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
-                                           fetch_participants=True)
+            result = None
+            try:
+                result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], fetch_participants=True)
+            except Exception, ex:
+                logging.debug(ex.message)
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-                logging.debug('course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[
+                logging.debug(u'course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[
                                                                                                        constants.COURSE_ID],
                                                                                                    course_edition[
                                                                                                        constants.TERM_ID],
                                                                                                    c_doc))
             else:
-                logging.debug('no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[
+                logging.debug(u'no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[
                                                                                               constants.COURSE_ID],
                                                                                           course_edition[
                                                                                               constants.TERM_ID]))
@@ -211,20 +217,22 @@ class UsosCrowler:
                     courses.append(course[constants.COURSE_ID])
 
         # get courses that exists in mongo and remove from list to fetch
-        for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
-            courses.remove(existing_course[constants.COURSE_ID])
+        if courses:
+            for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
+                courses.remove(existing_course[constants.COURSE_ID])
 
         # get the rest of courses on course list from usos
-        for course in courses:
-            result = client.course(course)
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-                result[constants.COURSE_ID] = result.pop('id')
-                c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-                logging.debug(
-                    'course for course_id: {0} inserted {1}'.format(course, c_doc))
-            else:
-                logging.debug('no course for course_id: {0}.'.format(course))
+        if courses:
+            for course in courses:
+                result = client.course(course)
+                if result:
+                    result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                    result[constants.COURSE_ID] = result.pop('id')
+                    c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
+                    logging.debug(
+                        u'course for course_id: {0} inserted {1}'.format(course, c_doc))
+                else:
+                    logging.debug(u'no course for course_id: {0}.'.format(course))
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
@@ -289,7 +297,11 @@ class UsosCrowler:
             term_id, course_id = data[0], data[1]
 
             # participants ane lectures
-            result = client.course_edition(course_id, term_id, fetch_participants=True)
+            result = None
+            try:
+                result = client.course_edition(course_id, term_id, fetch_participants=True)
+            except Exception, ex:
+                logging.debug(ex.message)
             if result and 'participants' in result:
                 participants = result.pop('participants')
                 lecturers = result.pop('lecturers')
