@@ -8,7 +8,7 @@ class ScheduleApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         terms = []
         terms_doc = []

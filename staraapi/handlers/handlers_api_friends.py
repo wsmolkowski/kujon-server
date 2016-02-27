@@ -12,7 +12,7 @@ class FriendsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         friends = []
         friends_returned = []
@@ -43,7 +43,7 @@ class FriendsApi(BaseHandler):
     @tornado.gen.coroutine
     def post(self, user_info_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                            constants.ID]),
@@ -74,7 +74,7 @@ class FriendsApi(BaseHandler):
     @tornado.gen.coroutine
     def delete(self, user_info_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                              constants.ID]),
@@ -94,10 +94,8 @@ class FriendsSuggestionsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
-        if not parameters['usos_paired']:
-            self.error("Podłącz swoje konto w USOS..")
-            return
+        parameters = yield self.get_parameters()
+
         user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         courses = {}

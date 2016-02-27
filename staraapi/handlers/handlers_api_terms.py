@@ -12,7 +12,7 @@ class TermsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         terms = []
         terms_doc = []
@@ -39,7 +39,7 @@ class TermApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, term_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
             {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]},

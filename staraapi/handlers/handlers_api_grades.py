@@ -12,7 +12,7 @@ class GradesForUserApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         grades = []
 
@@ -81,7 +81,7 @@ class GradesForCourseAndTermApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         pipeline = {constants.USER_ID: ObjectId(parameters[constants.ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id}

@@ -11,7 +11,7 @@ class FacultyByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, fac_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
                                                                           constants.USOS_ID: parameters[

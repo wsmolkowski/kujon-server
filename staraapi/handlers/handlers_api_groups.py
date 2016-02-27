@@ -14,7 +14,7 @@ class GroupsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                              constants.ID])})

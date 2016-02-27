@@ -16,7 +16,7 @@ class LecturersApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         courses = {}
         lecturers_returned = {}
@@ -56,7 +56,7 @@ class LecturerByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, user_info_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
