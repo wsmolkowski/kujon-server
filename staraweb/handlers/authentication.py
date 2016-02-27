@@ -56,26 +56,23 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 redirect_uri=settings.DEPLOY_URL + '/authentication/facebook',
                 client_id = self.settings['facebook_oauth']['key'],
                 client_secret = self.settings['facebook_oauth']['secret'],
-                code=self.get_argument('code'))
-
-            user = yield self.oauth2_request(
-                url="https://graph.facebook.com/me",
-                access_token=access["access_token"])
+                code=self.get_argument('code'),
+                extra_fields={'email','id'})
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'id': user['id'], constants.USER_TYPE: 'facebook'},
+                {'id': access['id'], constants.USER_TYPE: 'facebook'},
                 COOKIE_FIELDS)
 
             if not user_doc:
-                user[constants.USER_TYPE] = 'facebook'
-                user['name'] = access['name']
-                user['picture'] = access['picture']['data']['url']
-                user['email'] = ""
-                user[constants.USOS_PAIRED] = False
-                user[constants.USER_CREATION] = datetime.now()
-                user[constants.USOS_URL] = None
+                access[constants.USER_TYPE] = 'facebook'
+                access['name'] = access['name']
+                access['picture'] = access['picture']['data']['url']
+                access['email'] = ""
+                access[constants.USOS_PAIRED] = False
+                access[constants.USER_CREATION] = datetime.now()
+                access[constants.USOS_URL] = None
 
-                user_doc = yield motor.Op(self.db.users.insert, user)
+                user_doc = yield motor.Op(self.db.users.insert, access)
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},

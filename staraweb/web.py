@@ -7,7 +7,7 @@ import tornado.web
 from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line
 
-from staraweb.handlers import web, authorization
+from staraweb.handlers import web, authentication
 from staracommon import settings as common_settings
 
 
@@ -25,14 +25,14 @@ class Application(tornado.web.Application):
         __handlers = [
             (r"/", web.MainHandler),
             (r"/config", web.ApplicationConfigHandler),
-            (r"/authentication/validate", authorization.ValidateHandler),
-            (r"/authentication/register", authorization.RegisterHandler),
-            (r"/authentication/login", authorization.LoginHandler),
-            (r"/authentication/logout", authorization.LogoutHandler),
-            (r"/authentication/create", authorization.CreateUserHandler),
-            (r"/authentication/verify", authorization.VerifyHandler),
-            (r"/authentication/google", authorization.GoogleOAuth2LoginHandler),
-            (r"/authentication/facebook", authorization.FacebookOAuth2LoginHandler),
+            (r"/authentication/validate", authentication.ValidateHandler),
+            (r"/authentication/register", authentication.RegisterHandler),
+            (r"/authentication/login", authentication.LoginHandler),
+            (r"/authentication/logout", authentication.LogoutHandler),
+            (r"/authentication/create", authentication.CreateUserHandler),
+            (r"/authentication/verify", authentication.VerifyHandler),
+            (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
+            (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
 
         ]
 
