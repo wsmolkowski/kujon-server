@@ -9,7 +9,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/terms.html', 'text!templ
                 if (data.status == 'success'){
                     $('#page').html(template(data));
                 } else {
-                    $('#page').html(templateError({'message': data.data}));
+                    $('#page').html(templateError({'message': data.message}));
                 }
             });
             

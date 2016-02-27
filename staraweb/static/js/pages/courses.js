@@ -28,7 +28,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                         if (courseInfo.status == 'success'){
                             $(idContent).html(templateDetails(courseInfo.data));
                         } else {
-                            $(idContent).html(templateError({'message': courseInfo.data}));
+                            $(idContent).html(templateError({'message': courseInfo.message}));
                         }
                     });
               })

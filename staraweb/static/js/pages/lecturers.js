@@ -15,7 +15,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                     $('#page').html(template(data));
                     bindListeners();
                 } else {
-                    $('#page').html(templateError({'message': data.data}));
+                    $('#page').html(templateError({'message': data.message}));
                 }
             });
 
@@ -30,7 +30,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                         if (lecturerInfo.status == 'success'){
                             $(idContent).html(templateDetails(lecturerInfo.data));
                         } else {
-                            $(idContent).html(templateError({'message': lecturerInfo.data}));
+                            $(idContent).html(templateError({'message': lecturerInfo.message}));
                         }
                     });
               })
