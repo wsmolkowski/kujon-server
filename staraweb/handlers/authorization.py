@@ -10,6 +10,7 @@ from bson import json_util
 
 from base import BaseHandler
 from staracommon import constants
+from staracommon.usosutils import usosinstances
 from staraweb import settings
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
@@ -104,15 +105,15 @@ class CreateUserHandler(BaseHandler):
         # mobile_id = self.get_argument(constants.MOBILE_ID).strip()
         usos_url = self.get_argument("usos").strip()
 
-        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
+        usos_doc = match = next((l for l in usosinstances.USOSINSTANCES if l[constants.USOS_URL] == usos_url), None)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
         if user_doc[constants.USOS_URL]:
-            usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
+            # usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
-            data["usoses"] = usoses
+            # data["usoses"] = usoses
 
             self.write_json(data)
         else:
@@ -197,9 +198,6 @@ class VerifyHandler(BaseHandler):
                 self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                        tornado.escape.json_encode(json_util.dumps(user_doc)),
                                        constants.COOKIE_EXPIRES_DAYS)
-
-                #self.crowler.put_user(updated_user[constants.ID])
-
                 self.redirect('/')
             except KeyError:
                 template_data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(

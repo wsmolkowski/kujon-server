@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -15,7 +17,7 @@ class CoursesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
                                                                            constants.USOS_ID: parameters[
@@ -55,7 +57,7 @@ class CoursesEditionsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(parameters[constants.ID])},
@@ -63,7 +65,8 @@ class CoursesEditionsApi(BaseHandler):
         )
 
         if not course_doc:
-            self.error("Please hold on we are looking your courses.")
+            self.error("Poczekaj szukamy przedmiotów..")
+            return
 
         # get courses_classtypes
         classtypes = {}

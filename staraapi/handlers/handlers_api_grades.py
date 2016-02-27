@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -10,7 +12,8 @@ class GradesForUserApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
+
         grades = []
 
         # get class_types
@@ -68,7 +71,7 @@ class GradesForUserApi(BaseHandler):
                 grades.append(grades_for_course_and_term)
 
         if not grades:
-            self.error("Please hold on we are looking your grades.")
+            self.error("Poczekaj szukamy ocen..")
         else:
             self.success(grades)
 
@@ -78,7 +81,7 @@ class GradesForCourseAndTermApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         pipeline = {constants.USER_ID: ObjectId(parameters[constants.ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id}
@@ -113,8 +116,7 @@ class GradesForCourseAndTermApi(BaseHandler):
                 del grades['grades']['course_units_grades']
 
         if not grades:
-            self.error("We could not find grades for course_id: {0} term_id {1}.".format(course_id, term_id))
+            self.error("Nie ma ocen dla przedmiotu {0} i semestru {1}.".format(course_id, term_id))
         else:
-            # self.success(grades)
-            self.__write_json(pprint(grades))
+            self.success(grades)
 

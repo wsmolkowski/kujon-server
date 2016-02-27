@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -12,7 +14,7 @@ class GroupsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                              constants.ID])})
@@ -24,6 +26,6 @@ class GroupsApi(BaseHandler):
             programmes.append(result)
 
         if not programmes:
-            self.error("Please hold on we are looking your programmes.")
+            self.error("Poczekaj szukamy grup..")
         else:
             self.success(programmes)

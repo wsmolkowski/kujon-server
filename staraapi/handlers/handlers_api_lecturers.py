@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -14,8 +16,7 @@ class LecturersApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
+        parameters = yield self.get_parameters(usos_paired=True)
 
         courses = {}
         lecturers_returned = {}
@@ -45,7 +46,7 @@ class LecturersApi(BaseHandler):
             lecturers_returned = lecturers_returned.values()
             lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
-            self.error("Please hold on we are looking your lecturers..")
+            self.error("Poczekaj szukamy nauczycieli..")
         else:
             self.success(lecturers_returned)
 
@@ -55,11 +56,11 @@ class LecturerByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, user_info_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
-            self.error("Please hold on we are looking your USOS lecturer information.")
+            self.error("Poczekaj szukamy informacji o nauczycielu..")
         else:
 
             # change staff_status to dictionary
@@ -70,8 +71,6 @@ class LecturerByIdApi(BaseHandler):
             if user_info['staff_status'] == 0:
                 user_info['staff_status'] = 'Nieaktywny pracownik'
 
-            # get email
-            # if user_info['has_email'] == 'true':
 
             # change course_editions_conducted to list of courses
             course_editions = []

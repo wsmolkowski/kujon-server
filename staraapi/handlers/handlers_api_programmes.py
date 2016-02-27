@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -12,12 +14,12 @@ class ProgrammesByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, programme_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         programme = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS)
 
         if not programme:
-            self.error("Please hold on we are looking your programmes.")
+            self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
         else:
             self.success(programme)
 
@@ -27,9 +29,12 @@ class ProgrammesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
+
+        if not user_info:
+            self.error("Poczekaj szukamy danych o kursach użytkownika..")
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -40,6 +45,6 @@ class ProgrammesApi(BaseHandler):
             programmes.append(program)
 
         if not programmes:
-            self.error("Please hold on we are looking your programmes.")
+            self.error("Poczekaj szukamy kierunków...")
         else:
             self.success(programmes)

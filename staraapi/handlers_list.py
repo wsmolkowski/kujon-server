@@ -16,6 +16,7 @@ HANDLERS = [
     (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
 
     (r"/api/usoses", UsosesApi),
+
     (r"/api/users/", UserInfoApi),
     (r"/api/users/([^/]+)", UsersInfoByIdApi),
     (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),

@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -10,7 +12,7 @@ class FriendsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         friends = []
         friends_returned = []
@@ -35,13 +37,13 @@ class FriendsApi(BaseHandler):
 
             self.success(friends_returned)
         else:
-            self.error("Please hold on we are looking your friends..")
+            self.error("Poczekaj szukamy przyjaciół..")
 
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self, user_info_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                            constants.ID]),
@@ -72,7 +74,7 @@ class FriendsApi(BaseHandler):
     @tornado.gen.coroutine
     def delete(self, user_info_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
                                                                                                              constants.ID]),
@@ -92,7 +94,10 @@ class FriendsSuggestionsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
+        if not parameters['usos_paired']:
+            self.error("Podłącz swoje konto w USOS..")
+            return
         user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         courses = {}
@@ -143,6 +148,6 @@ class FriendsSuggestionsApi(BaseHandler):
             # TODO: show message on add friends
 
         if not suggested_participants:
-            self.error("Please hold on we are looking your friends sugestions..")
+            self.error("Poczekaj szukamy sugerowanych przyjaciół..")
         else:
             self.success(suggested_participants)

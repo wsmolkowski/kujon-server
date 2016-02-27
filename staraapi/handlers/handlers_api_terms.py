@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -10,7 +12,7 @@ class TermsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         terms = []
         terms_doc = []
@@ -27,7 +29,7 @@ class TermsApi(BaseHandler):
                     term_data[constants.TERM_ID] = term
                     terms_doc.append(term_data)
         if not terms_doc:
-            self.error("Please hold on we are looking your terms.")
+            self.error("Poczekaj szukamy semestrów..")
         else:
             self.success(terms_doc)
 
@@ -37,13 +39,13 @@ class TermApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, term_id):
 
-        parameters = yield self.get_parameters()
+        parameters = yield self.get_parameters(usos_paired=True)
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
             {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]},
             ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id'))
 
         if not term_doc:
-            self.error("We could not find term: {0}.".format(term_id))
+            self.error("Nie znaleźliźmy semestru: {0}..".format(term_id))
         else:
             self.success(term_doc)
