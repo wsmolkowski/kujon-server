@@ -47,6 +47,52 @@ class LoginHandler(BaseHandler):
                                                                                                  access_token_secret)
             self.render("login.html", **data)
 
+class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument('code', False):
+            access = yield self.get_authenticated_user(
+                redirect_uri=settings.DEPLOY_URL + '/authentication/facebook',
+                client_id = self.settings['facebook_oauth']['key'],
+                client_secret = self.settings['facebook_oauth']['secret'],
+                code=self.get_argument('code'))
+
+            user = yield self.oauth2_request(
+                url="https://graph.facebook.com/me",
+                access_token=access["access_token"])
+
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                {'id': user['id'], constants.USER_TYPE: 'facebook'},
+                COOKIE_FIELDS)
+
+            if not user_doc:
+                user[constants.USER_TYPE] = 'facebook'
+                user['name'] = access['name']
+                user['picture'] = access['picture']['data']['url']
+                user['email'] = ""
+                user[constants.USOS_PAIRED] = False
+                user[constants.USER_CREATION] = datetime.now()
+                user[constants.USOS_URL] = None
+
+                user_doc = yield motor.Op(self.db.users.insert, user)
+                logging.debug("saved new user in database: {0}".format(user_doc))
+
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
+                                                                              COOKIE_FIELDS)
+            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
+                                   constants.COOKIE_EXPIRES_DAYS)
+
+            self.redirect("/")
+        else:
+            yield self.authorize_redirect(
+                redirect_uri=settings.DEPLOY_URL + '/authentication/facebook',
+                client_id=self.settings['facebook_oauth']['key'],
+                scope=['public_profile', 'email', 'user_friends'],
+                response_type='code',
+                extra_params={'approval_prompt': 'auto'})
+
 
 class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.web.asynchronous

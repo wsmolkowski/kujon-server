@@ -32,6 +32,8 @@ class Application(tornado.web.Application):
             (r"/authentication/create", authorization.CreateUserHandler),
             (r"/authentication/verify", authorization.VerifyHandler),
             (r"/authentication/google", authorization.GoogleOAuth2LoginHandler),
+            (r"/authentication/facebook", authorization.FacebookOAuth2LoginHandler),
+
         ]
 
         __settings = dict(
@@ -39,7 +41,8 @@ class Application(tornado.web.Application):
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret=common_settings.COOKIE_SECRET,
-            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET}
+            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET},
+            facebook_oauth={'key': common_settings.FACEBOOK_CLIENT_ID, 'secret': common_settings.FACEBOOK_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)

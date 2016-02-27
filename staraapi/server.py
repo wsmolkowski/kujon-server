@@ -37,7 +37,8 @@ class Application(tornado.web.Application):
             site_domain=settings.SITE_DOMAIN,
             site_root=settings.SITE_ROOT,
             gzip=settings.GZIP,
-            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET}
+            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET},
+            facebook_oauth={'key': common_settings.FACEBOOK_CLIENT_ID, 'secret': common_settings.FACEBOOK_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
