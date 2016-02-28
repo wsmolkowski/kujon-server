@@ -4,3 +4,4 @@ motor
 httplib2
 oauth2
 pycurl
+pycrypto

@@ -3,6 +3,9 @@ import os
 import traceback
 from datetime import datetime
 from functools import wraps
+from Crypto.Cipher import DES3
+from Crypto.Cipher import AES
+from Crypto import Random
 
 
 def in_dictlist((key, value), my_dictlist):
@@ -37,3 +40,19 @@ def log_execution_time(intercepted_function):
 
     # return our inner function which will intercept the call
     return timer
+
+
+def encrypt(dictionary, keys=[]):
+    IV = Random.new().read(DES3.block_size)
+    KEY = Random.new().read(DES3.key_size[-1])
+    print IV, KEY
+
+    CIPHER = DES3.new(KEY, DES3.MODE_CBC, IV)
+
+    result = dict()
+    for key, value in dictionary.items():
+        if key not in keys:
+            result[key] = value
+        else:
+            result[key] = CIPHER.encrypt(value)
+    return result
