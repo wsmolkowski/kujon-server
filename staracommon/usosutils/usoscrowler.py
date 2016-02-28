@@ -278,7 +278,10 @@ class UsosCrowler:
     def __build_groups(self, client, crowl_time, units, usos):
 
         for unit in units:
-            result = client.groups(unit)
+            try:
+                result = client.groups(unit)
+            except Exception, ex:
+                logging.debug(u'exception during fetch unit: {0} : {1}'.format(unit, ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
