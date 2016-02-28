@@ -193,4 +193,4 @@ class Dao:
 
         result = self.__db[constants.COLLECTION_JOBS_INITIAL_USER].update({constants.ID: job_id}, update)
 
-        logging.debug("update_user_job result {0}".format(result))
+        logging.debug(u"update_user_job result {0}".format(result))
