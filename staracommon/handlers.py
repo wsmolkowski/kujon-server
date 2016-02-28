@@ -1,15 +1,14 @@
-from tornado.web import RequestHandler
-from tornado import httpclient
 from bson import json_util
+from tornado import httpclient
 from tornado.escape import json_decode
+from tornado.web import RequestHandler
 
+import constants
 import settings
 import utils
 
 
 class CommonHandler(RequestHandler):
-    USER_SECURE_COOKIE = 'USER_SECURE_COOKIE'
-
     def get_auth_http_client(self):
         if settings.PROXY_URL and settings.PROXY_PORT:
             httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
@@ -20,7 +19,7 @@ class CommonHandler(RequestHandler):
         return httpclient.AsyncHTTPClient()
 
     def get_current_user(self):
-        cookie = self.get_secure_cookie(self.USER_SECURE_COOKIE)
+        cookie = self.get_secure_cookie(constants.USER_SECURE_COOKIE)
         if cookie:
             cookie = json_decode(cookie)
             return json_util.loads(cookie)
