@@ -51,9 +51,13 @@ def prepare_environment():
 
     uc = UsosCrowler()
     if settings.CLEAN_DB:
-        uc.drop_collections()
-        uc.recreate_usos()
-        uc.recreate_dictionaries()
+        try:
+            uc.drop_collections()
+            uc.recreate_usos()
+            uc.recreate_dictionaries()
+        except Exception, ex:
+            logging.error("Problem during preparation env:".format(ex.message))
+            SystemExit()
 
 
 def main():
