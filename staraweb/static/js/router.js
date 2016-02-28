@@ -21,7 +21,12 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
     crossroads.addRoute('', function() {
         setActiveLink('home');
     });
-    
+
+    // "_=_" is added on callback from facebook - should be removed
+    crossroads.addRoute('_=_', function() {
+        setActiveLink('home');
+    });
+
     crossroads.addRoute('home', function() {
         setActiveLink('home');
     });
