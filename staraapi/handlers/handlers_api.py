@@ -42,7 +42,7 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MOBILE_ID: mobile_id,
                                                                            constants.ACCESS_TOKEN_SECRET: atk,
                                                                            constants.ACCESS_TOKEN_KEY: ats})
-        if not user_doc or user_doc['usos_paired']:
+        if not user_doc or not user_doc['usos_paired']:
             raise tornado.web.HTTPError(400, "Request not authenticated..")
 
         raise tornado.gen.Return(user_doc)
@@ -96,7 +96,8 @@ class UsosesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
+        # TODO: tutaj wylaczone jest sprawdzanie usera - czy na pewno tak ma zostac?
+        # parameters = yield self.get_parameters()
 
         data = yield self.get_usoses()
 

@@ -34,8 +34,11 @@ JOB_START = 'job_start'
 JOB_END = 'job_end'
 
 USER_TYPE = 'user_type'
-USER_CREATION = 'user_creation'
+USER_CREATED = 'user_created'
 USOS_PAIRED = 'usos_paired'
+USER_NAME = 'name'
+USER_EMAIL = 'email'
+USER_PICTURE = 'picture'
 
 USER_PRESENT_KEYS = (MOBILE_ID, USOS_ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
 USER_SECURE_COOKIE = "USER_SECURE_COOKIE"

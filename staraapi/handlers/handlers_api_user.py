@@ -10,7 +10,7 @@ from staracommon import constants
 
 LIMIT_FIELDS = (
 'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes', 'user_type')
-LIMIT_FIELDS_USER = ('email', 'user_creation', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
+LIMIT_FIELDS_USER = ('email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -37,7 +37,7 @@ class UserInfoApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(parameters[constants.ID])},
                                                                   LIMIT_FIELDS_USER)

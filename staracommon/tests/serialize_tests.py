@@ -13,7 +13,7 @@ class SerializationTest(unittest.TestCase):
                 u'picture': u'https://lh3.googleusercontent.com/-f7w-r4iF8DM/AAAAAAAAAAI/AAAAAAAALGo/GDUJeUaHtUo/photo.jpg',
                 u'update_time': datetime.datetime(2016, 2, 17, 18, 55, 2, 192000), u'last_name': u'Smo\u0142kowski',
                 u'student_status': 1, u'name': u'dzizes dzizes', u'locale': u'en', u'first_name': u'Wojciech',
-                u'id': u'1613', u'user_creation': datetime.datetime(2016, 2, 17, 18, 54, 36, 710000),
+                u'id': u'1613', u'user_created': datetime.datetime(2016, 2, 17, 18, 54, 36, 710000),
                 u'given_name': u'dzizes', u'student_programmes': [{u'id': u'1264', u'programme': {
                 u'description': {u'en': u'Vocational Studies in Computer Science',
                                  u'pl': u'Zawodowe Studia Informatyki, niestacjonarne (wieczorowe), pierwszego stopnia'},
@@ -31,7 +31,7 @@ class SerializationTest(unittest.TestCase):
             u'picture': u'https://lh3.googleusercontent.com/-f7w-r4iF8DM/AAAAAAAAAAI/AAAAAAAALGo/GDUJeUaHtUo/photo.jpg',
             u'update_time': '2016-02-17 18:55:02', u'last_name': u'Smo\u0142kowski', u'student_status': 1,
             u'name': u'dzizes dzizes', u'locale': u'en', u'first_name': u'Wojciech', u'email': u'dzizes451@gmail.com',
-            u'user_creation': '2016-02-17 18:54:36', u'given_name': u'dzizes', u'student_programmes': [{u'id': u'1264',
+            u'user_created': '2016-02-17 18:54:36', u'given_name': u'dzizes', u'student_programmes': [{u'id': u'1264',
                                                                                                         u'programme': {
                                                                                                             u'description': {
                                                                                                                 u'en': u'Vocational Studies in Computer Science',

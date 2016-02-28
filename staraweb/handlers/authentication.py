@@ -60,19 +60,20 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 extra_fields={'email','id'})
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'id': access['id'], constants.USER_TYPE: 'facebook'},
+                {'email': access['email']},
                 COOKIE_FIELDS)
 
             if not user_doc:
-                access[constants.USER_TYPE] = 'facebook'
-                access['name'] = access['name']
-                access['picture'] = access['picture']['data']['url']
-                access['email'] = ""
-                access[constants.USOS_PAIRED] = False
-                access[constants.USER_CREATION] = datetime.now()
-                access[constants.USOS_URL] = None
+                user={}
+                user[constants.USER_TYPE] = 'facebook'
+                user[constants.USER_NAME] = access['name']
+                user[constants.USER_PICTURE] = access['picture']['data']['url']
+                user[constants.USER_EMAIL] = access['email']
+                user[constants.USOS_PAIRED] = False
+                user[constants.USER_CREATED] = datetime.now()
+                user[constants.USOS_URL] = None
 
-                user_doc = yield motor.Op(self.db.users.insert, access)
+                user_doc = yield motor.Op(self.db.users.insert, user)
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
@@ -104,17 +105,20 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 access_token=access["access_token"])
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'id': user['id'], constants.USER_TYPE: 'google'},
+                {'email': user['email']},
                 COOKIE_FIELDS)
 
             if not user_doc:
-                user['code'] = self.get_argument('code')
-                user[constants.USER_TYPE] = 'google'
-                user[constants.USOS_PAIRED] = False
-                user[constants.USER_CREATION] = datetime.now()
-                user[constants.USOS_URL] = None
+                user2={}
+                user2[constants.USER_TYPE] = 'google'
+                user2[constants.USER_NAME] = user['name']
+                user2[constants.USER_PICTURE] = user['picture']
+                user2[constants.USER_EMAIL] = user['email']
+                user2[constants.USOS_PAIRED] = False
+                user2[constants.USER_CREATED] = datetime.now()
+                user2[constants.USOS_URL] = None
 
-                user_doc = yield motor.Op(self.db.users.insert, user)
+                user_doc = yield motor.Op(self.db.users.insert, user2)
                 logging.debug("saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
@@ -151,7 +155,7 @@ class CreateUserHandler(BaseHandler):
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']})
         if not user_doc:
             self.error("Użytkownik musi posiadać konto..")
             return
@@ -239,7 +243,7 @@ class VerifyHandler(BaseHandler):
                 template_data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
 
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']},
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']},
                                                                               COOKIE_FIELDS)
                 self.clear_cookie(constants.USER_SECURE_COOKIE)
                 self.set_secure_cookie(constants.USER_SECURE_COOKIE,
@@ -280,7 +284,7 @@ class RegisterHandler(BaseHandler):
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['_id']})
 
         if user_doc[constants.USOS_URL]:
             usoses = yield self.db.usosinstances.find().to_list(length=100)
@@ -330,7 +334,7 @@ class VerifyHandler(BaseHandler):
         oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']})
 
         if user_doc:
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
@@ -357,7 +361,7 @@ class VerifyHandler(BaseHandler):
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.ID: user_doc[constants.ID]}, updated_user)
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']},
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']},
                                                                           COOKIE_FIELDS)
             self.clear_cookie(constants.USER_SECURE_COOKIE)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
