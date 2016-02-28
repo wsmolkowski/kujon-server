@@ -57,17 +57,6 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-    def template_data(self):
-        usos_paired = False
-        user = self.get_current_user()
-        if user and constants.USOS_PAIRED in user.keys():
-            usos_paired = user[constants.USOS_PAIRED]
-
-        return {
-            'PROJECT_TITLE': settings.PROJECT_TITLE,
-            'DEPLOY_URL': settings.DEPLOY_URL,
-            'USOS_PAIRED': usos_paired,
-        }
 
     @tornado.gen.coroutine
     def get_usoses(self):

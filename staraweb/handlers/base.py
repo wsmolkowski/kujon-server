@@ -14,8 +14,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
     def template_data(self):
 
         user = self.get_current_user()
-        if user and 'usos_paired' in user.keys():
-            usos_paired = user['usos_paired']
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
         else:
             usos_paired = False
 
