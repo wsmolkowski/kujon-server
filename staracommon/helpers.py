@@ -3,6 +3,14 @@ import os
 import traceback
 from datetime import datetime
 from functools import wraps
+from Crypto.Cipher import AES
+from Crypto import Random
+from base64 import b64decode
+
+import settings
+
+IV = Random.new().read(AES.block_size)
+CIPHER = AES.new(settings.AES_KEY, AES.MODE_CFB, IV)
 
 
 def in_dictlist((key, value), my_dictlist):
@@ -37,3 +45,13 @@ def log_execution_time(intercepted_function):
 
     # return our inner function which will intercept the call
     return timer
+
+
+def encrypt(dictionary, keys=[]):
+    result = dict()
+    for key, value in dictionary.items():
+        if key not in keys:
+            result[key] = value
+        else:
+            result[key] = CIPHER.encrypt(value) #b64decode(
+    return result
