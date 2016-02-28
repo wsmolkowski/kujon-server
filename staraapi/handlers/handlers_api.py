@@ -6,19 +6,17 @@ import oauth2 as oauth
 import tornado.gen
 
 from staraapi import settings
-from staracommon.mixins.JSendMixin import JSendMixin
 from staracommon import handlers, constants
+from staracommon.mixins.JSendMixin import JSendMixin
 from staraweb import settings as staraweb_settings
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
-
     def set_default_headers(self):
-        #self.set_header("Access-Control-Allow-Origin", "*")
+        # self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Origin", staraweb_settings.DEPLOY_URL)
         self.set_header("Access-Control-Allow-Credentials", "true")
         self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
-
 
     @property
     def crowler(self):
@@ -57,18 +55,19 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
+    _usoses = []
 
     @tornado.gen.coroutine
     def get_usoses(self):
-        usoses = []
 
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
-        while (yield cursor.fetch_next):
-            usos=cursor.next_object()
-            usos['logo'] = settings.DEPLOY_URL + usos['logo']
-            usoses.append(usos)
+        if not self._usoses:
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+            while (yield cursor.fetch_next):
+                usos = cursor.next_object()
+                usos['logo'] = settings.DEPLOY_URL + usos['logo']
+                self._usoses.append(usos)
 
-        raise tornado.gen.Return(usoses)
+        raise tornado.gen.Return(self._usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, usos_url):
@@ -84,7 +83,6 @@ class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-
         # TODO: tutaj wylaczone jest sprawdzanie usera - czy na pewno tak ma zostac?
         # parameters = yield self.get_parameters()
 
