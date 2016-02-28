@@ -8,8 +8,8 @@ define(['jquery','crossroads', 'hasher', 'bootstrap'], function(jquery, crossroa
         $('#spinner').show();
 
         require(['lib/pages/'+hash], function(page) {
-            page.render();  
-            
+            page.render();
+
             $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
             $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
             
