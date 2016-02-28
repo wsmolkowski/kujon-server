@@ -74,7 +74,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, user)
-                logging.debug("saved new user in database: {0}".format(user_doc))
+                logging.debug(u'saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
                                                                               COOKIE_FIELDS)
@@ -119,7 +119,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 userToInsert[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, userToInsert)
-                logging.debug("saved new user in database: {0}".format(user_doc))
+                logging.debug(u"saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
                                                                               COOKIE_FIELDS)
@@ -193,7 +193,7 @@ class CreateUserHandler(BaseHandler):
             update[constants.UPDATE_TIME] = datetime.now()
 
             user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, update)
-            logging.debug("updated user with usos base info: {0}".format(user_doc))
+            logging.debug(u"updated user with usos base info: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
             url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
@@ -319,7 +319,7 @@ class RegisterHandler(BaseHandler):
             update[constants.UPDATE_TIME] = datetime.now()
 
             user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, update)
-            logging.debug("updated user with usos base info: {0}".format(user_doc))
+            logging.debug(u"updated user with usos base info: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
             url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)

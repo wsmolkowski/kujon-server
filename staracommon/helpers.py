@@ -30,7 +30,7 @@ def log_execution_time(intercepted_function):
         stop = datetime.now()
 
         execution_time = stop - start
-        logging.debug('file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(
+        logging.debug(u'file_name: {0} codeline: {1} function_name: {2} took: {3}'.format(
             os.path.basename(filename), code_line, text, execution_time))
 
         return actual_result
