@@ -18,5 +18,7 @@ class HelpersTest(unittest.TestCase):
         response = helpers.encrypt(usos, USOSES_DECRYP_KEYS)
 
         # then
-        print usos
         print response
+        for k in USOSES_DECRYP_KEYS:
+            print k, response[k], type(response[k])
+            self.assertTrue(isinstance(response[k], str))

@@ -5,10 +5,11 @@ from datetime import datetime
 from functools import wraps
 from Crypto.Cipher import AES
 from Crypto import Random
+from base64 import b64decode
 
 import settings
 
-IV = Random.new().read(AES.block_size) #Random.new().read(DES3.block_size)
+IV = Random.new().read(AES.block_size)
 CIPHER = AES.new(settings.AES_KEY, AES.MODE_CFB, IV)
 
 
@@ -52,5 +53,5 @@ def encrypt(dictionary, keys=[]):
         if key not in keys:
             result[key] = value
         else:
-            result[key] = CIPHER.encrypt(value)
+            result[key] = CIPHER.encrypt(value) #b64decode(
     return result
