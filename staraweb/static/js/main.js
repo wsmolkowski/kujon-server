@@ -1,4 +1,4 @@
-define("main", ["jquery", "handlebars", "text!templates/error.html",], function($, Handlebars, tplError)
+define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-cookie'], function($, Handlebars, tplError, jc)
 {
         /* variables */
         var templateError = Handlebars.compile(tplError);
@@ -98,6 +98,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
             callAjaxGet(request_url, callback);
         };
 
+        function cleanSecureCookie() {
+            $.cookie(config['USER_SECURE_COOKIE'], null);
+        };
+
         /* public methods */
         return {
             init: function() {
@@ -136,6 +140,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html",], function(
             },
             callLecturerDetails: function(lecturerId, callback){
                 lecturerDetails(lecturerId, callback);
+            },
+            cleanSecureCookie: function(){
+                cleanSecureCookie();
             }
         };
 

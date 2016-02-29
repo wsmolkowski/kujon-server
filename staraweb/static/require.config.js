@@ -9,6 +9,7 @@ var require = {
         "jquery":               "static/bower_components/jquery/dist/jquery.min",
         "text":                 "static/bower_components/requirejs-text/text",
         "handlebars":           "static/bower_components/handlebars/handlebars.min",
+        "jquery-cookie":        "static/bower_components/jquery-cookie/jquery.cookie",
         "templates":            "static/templates",
         "main":                 "static/js/main",
         "lib":                  "static/js",
