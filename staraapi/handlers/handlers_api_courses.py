@@ -27,7 +27,7 @@ class CoursesApi(BaseHandler):
             self.fail("We could not find for you course with course_id: {0}.".format(course_id))
         else:
             # change true to TAK
-            if course_doc['is_currently_conducted'] == True:
+            if course_doc['is_currently_conducted']:
                 course_doc['is_currently_conducted'] = 'TAK'
             else:
                 course_doc['is_currently_conducted'] = 'NIE'
@@ -42,12 +42,12 @@ class CoursesApi(BaseHandler):
                                                                              LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
-            course_doc['name']= course_doc['name']['pl']
-            course_doc['learning_outcomes']= course_doc['learning_outcomes']['pl']
-            course_doc['description']= course_doc['description']['pl']
-            course_doc['assessment_criteria']= course_doc['assessment_criteria']['pl']
-            course_doc['bibliography']= course_doc['bibliography']['pl']
-            course_doc['fac_id']['name']= course_doc['fac_id']['name']['pl']
+            course_doc['name'] = course_doc['name']['pl']
+            course_doc['learning_outcomes'] = course_doc['learning_outcomes']['pl']
+            course_doc['description'] = course_doc['description']['pl']
+            course_doc['assessment_criteria'] = course_doc['assessment_criteria']['pl']
+            course_doc['bibliography'] = course_doc['bibliography']['pl']
+            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
             self.success(course_doc)
 
@@ -78,7 +78,6 @@ class CoursesEditionsApi(BaseHandler):
 
         terms = []
         for term in course_doc['course_editions']:
-
             year = {
                 'term': term,
                 'term_data': course_doc['course_editions'][term]

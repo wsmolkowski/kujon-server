@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from handlers_api import BaseHandler
 from staracommon import constants
-import pprint
+
 
 class GradesForUserApi(BaseHandler):
     @tornado.web.asynchronous
@@ -14,17 +14,19 @@ class GradesForUserApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        grades = []
+        grades = list()
 
         # get class_types
-        classtypes = {}
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[constants.USOS_ID]})
+        classtypes = dict()
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
+            {constants.USOS_ID: parameters[constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
         cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.ID])},
-                            ('grades', constants.TERM_ID, constants.COURSE_ID, 'course_name')).sort([(constants.TERM_ID, -1)])
+                                                           ('grades', constants.TERM_ID, constants.COURSE_ID,
+                                                            'course_name')).sort([(constants.TERM_ID, -1)])
 
         while (yield cursor.fetch_next):
             grades_for_course_and_term = cursor.next_object()
@@ -51,7 +53,7 @@ class GradesForUserApi(BaseHandler):
                     units[unit_id] = elem
 
             new_grades = []
-            if len(units) > 0: # oceny czeciowe
+            if len(units) > 0:  # oceny czeciowe
                 grades_for_course_and_term['grades']['course_units'] = units
                 for egzam in grades_for_course_and_term['grades']['course_units_grades']:
                     for termin in grades_for_course_and_term['grades']['course_units_grades'][egzam]:
@@ -61,7 +63,7 @@ class GradesForUserApi(BaseHandler):
                         new_grades.append(elem)
                 grades_for_course_and_term['grades'] = new_grades
                 grades.append(grades_for_course_and_term)
-            else: # ocena koncowa bez czesciowych
+            else:  # ocena koncowa bez czesciowych
                 for egzam in grades_for_course_and_term['grades']['course_grades']:
                     elem = grades_for_course_and_term['grades']['course_grades'][egzam]
                     elem['value_description'] = elem['value_description']['pl']
@@ -119,4 +121,3 @@ class GradesForCourseAndTermApi(BaseHandler):
             self.error("Nie ma ocen dla przedmiotu {0} i semestru {1}.".format(course_id, term_id))
         else:
             self.success(grades)
-

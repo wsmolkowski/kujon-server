@@ -7,8 +7,8 @@ from handlers_api import BaseHandler
 from staracommon import constants
 
 LIMIT_FIELDS = (
-'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
-'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
+    'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
+    'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 
 
 class LecturersApi(BaseHandler):
@@ -42,7 +42,6 @@ class LecturersApi(BaseHandler):
                     lecturer.pop('id')
                     lecturers_returned[lecturer_id] = lecturer
 
-
             lecturers_returned = lecturers_returned.values()
             lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
@@ -70,7 +69,6 @@ class LecturerByIdApi(BaseHandler):
                 user_info['staff_status'] = 'Nauczyciel akademicki'
             if user_info['staff_status'] == 0:
                 user_info['staff_status'] = 'Nieaktywny pracownik'
-
 
             # change course_editions_conducted to list of courses
             course_editions = []

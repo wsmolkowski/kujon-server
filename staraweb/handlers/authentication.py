@@ -47,6 +47,7 @@ class LoginHandler(BaseHandler):
                                                                                                  access_token_secret)
             self.render("login.html", **data)
 
+
 class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -54,17 +55,17 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
                 redirect_uri=settings.DEPLOY_URL + '/authentication/facebook',
-                client_id = self.settings['facebook_oauth']['key'],
-                client_secret = self.settings['facebook_oauth']['secret'],
+                client_id=self.settings['facebook_oauth']['key'],
+                client_secret=self.settings['facebook_oauth']['secret'],
                 code=self.get_argument('code'),
-                extra_fields={'email','id'})
+                extra_fields={'email', 'id'})
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'email': access['email']},
                 COOKIE_FIELDS)
 
             if not user_doc:
-                user={}
+                user = dict()
                 user[constants.USER_TYPE] = 'facebook'
                 user[constants.USER_NAME] = access['name']
                 user[constants.USER_PICTURE] = access['picture']['data']['url']
@@ -109,7 +110,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 COOKIE_FIELDS)
 
             if not user_doc:
-                userToInsert={}
+                userToInsert = dict()
                 userToInsert[constants.USER_TYPE] = 'google'
                 userToInsert[constants.USER_NAME] = user['name']
                 userToInsert[constants.USER_PICTURE] = user['picture']
@@ -145,7 +146,6 @@ class LogoutHandler(BaseHandler):
 
 
 class CreateUserHandler(BaseHandler):
-
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -156,10 +156,11 @@ class CreateUserHandler(BaseHandler):
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
         usos_doc = self.aes.decrypt_usos(usos_doc)
 
-        #usos_doc[constants.CONSUMER_KEY] = usos_doc[constants.CONSUMER_KEY]
-        #usos_doc[constants.CONSUMER_SECRET] = usos_doc[constants.CONSUMER_SECRET]
+        # usos_doc[constants.CONSUMER_KEY] = usos_doc[constants.CONSUMER_KEY]
+        # usos_doc[constants.CONSUMER_SECRET] = usos_doc[constants.CONSUMER_SECRET]
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: self.get_current_user()[constants.ID]})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.ID: self.get_current_user()[constants.ID]})
         if not user_doc:
             self.error("Użytkownik musi posiadać konto..")
             return
@@ -224,7 +225,6 @@ class VerifyHandler(BaseHandler):
                 constants.USOS_URL]})
             usos_doc = self.aes.decrypt_usos(usos_doc)
 
-
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
             request_token.set_verifier(oauth_verifier)
@@ -258,7 +258,7 @@ class VerifyHandler(BaseHandler):
                                        tornado.escape.json_encode(json_util.dumps(user_doc)),
                                        constants.COOKIE_EXPIRES_DAYS)
 
-                #self.crowler.put_user(updated_user[constants.ID])
+                # self.crowler.put_user(updated_user[constants.ID])
 
                 self.redirect('/')
             except KeyError:
@@ -272,15 +272,6 @@ class VerifyHandler(BaseHandler):
                 constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
                 oauth_token_key, oauth_verifier)
             self.render("#create", **template_data)
-
-
-class ValidateHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-
-        user = self.get_current_user()
-        self.write_json()
 
 
 class RegisterHandler(BaseHandler):
@@ -349,7 +340,6 @@ class VerifyHandler(BaseHandler):
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
             usos_doc = self.aes.decrypt_usos(usos_doc)
-
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])

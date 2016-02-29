@@ -27,7 +27,7 @@ class FriendsApi(BaseHandler):
                 friends.append(cursor.next_object())
 
             for elem in friends:
-                new_elem = {}
+                new_elem = dict()
                 new_elem['user_id'] = elem['friend_id']
                 user_info = elem['users_info'].pop()
                 new_elem['first_name'] = user_info['first_name']
@@ -56,7 +56,7 @@ class FriendsApi(BaseHandler):
                                                                                      constants.USOS_ID]})
 
             if user_info:
-                result = {}
+                result = dict()
                 result[constants.USOS_ID] = parameters[constants.USOS_ID]
                 result[constants.USER_ID] = ObjectId(parameters[constants.ID])
                 result[constants.FRIEND_ID] = str(user_info_id)

@@ -6,7 +6,11 @@ from functools import wraps
 
 
 def in_dictlist((key, value), my_dictlist):
-    '''*args and **kwargs are the parameters that are supplied to our original function'''
+    """
+
+    :param my_dictlist:
+    :return:
+    """
     for this in my_dictlist:
         if this[key] == value:
             return this
@@ -16,8 +20,12 @@ def in_dictlist((key, value), my_dictlist):
 def log_execution_time(intercepted_function):
     @wraps(intercepted_function)
     def timer(*args, **kwargs):
-        '''*args and **kwargs are the parameters that are supplied to our original function'''
-        '''TODO: add settings parameter for setting on/off'''
+        """
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
         # get our actual function name
         stack = traceback.extract_stack()
         filename, code_line, func_name, text = stack[-2]

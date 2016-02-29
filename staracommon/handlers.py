@@ -10,7 +10,8 @@ from AESCipher import AESCipher
 
 
 class CommonHandler(RequestHandler):
-    def get_auth_http_client(self):
+    @staticmethod
+    def get_auth_http_client():
         if settings.PROXY_URL and settings.PROXY_PORT:
             httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                                  defaults=dict(proxy_host=settings.PROXY_URL,

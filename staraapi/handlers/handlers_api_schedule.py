@@ -1,7 +1,7 @@
-# coding=UTF-8
-
 import tornado.web
+
 from handlers_api import BaseHandler
+
 
 class ScheduleApi(BaseHandler):
     @tornado.web.asynchronous
@@ -10,11 +10,10 @@ class ScheduleApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        terms = []
-        terms_doc = []
+        terms = list()
+        terms_doc = list()
 
         if not terms_doc:
             self.error("Poczekaj szukamy harmonoramu..")
         else:
             self.success(terms_doc)
-

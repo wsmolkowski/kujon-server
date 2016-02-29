@@ -1,7 +1,4 @@
-from tests_base import TestBaseClassApp
-
 class ApiTermsTest(TestBaseClassApp):
-
     def testEmptyUserShouldReturn404(self):
         response = self.fetch('/api/terms/')
         self.assertEqual(response.code, 404)
@@ -14,7 +11,6 @@ class ApiTermsTest(TestBaseClassApp):
         self.assertTrue('Trymestr jesienny 2003/04' in response.body)
         self.assertEqual(response.code, 200)
 
-
     def testShouldNotGetTermForFakeParams(self):
         response = self.fetch('/api/terms/FAKE?user_id=FAKE&a=1&b=1&c=3&d=4')
         self.assertEqual(response.code, 400)
@@ -22,4 +18,3 @@ class ApiTermsTest(TestBaseClassApp):
         self.assertEqual(response.code, 400)
         response = self.fetch("/api/terms/FAKE?{0}".format(self.auth_uri))
         self.assertEqual(response.code, 400)
-

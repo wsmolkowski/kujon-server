@@ -9,5 +9,5 @@ SITE_ROOT = '/'
 
 DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 
-CLEAN_DB = True
+CLEAN_DB = False
 

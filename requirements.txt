@@ -1,5 +1,6 @@
 # mongodb 3.2+
 tornado
+pymongo
 motor
 httplib2
 oauth2

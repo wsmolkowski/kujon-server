@@ -9,8 +9,10 @@ from handlers_api import BaseHandler
 from staracommon import constants
 
 LIMIT_FIELDS = (
-'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes', 'user_type')
-LIMIT_FIELDS_USER = ('email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
+    'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',
+    'user_type')
+LIMIT_FIELDS_USER = (
+    'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -18,17 +20,16 @@ class UsersInfoByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, user_info_id):
 
-        parameters = yield self.get_parameters(usos_paired=True)
+        # parameters = yield self.get_parameters(usos_paired=True)
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
         if user_info:
             user = yield self.db[constants.COLLECTION_USERS].find_one({'id': ObjectId(user_info[constants.ID])})
-            result = []
+            result = list()
             result.append(user)
             result.append(user_info)
             self.success(result)
         else:
-            user = {}
             self.error("Please hold on we are looking your USOS user information.")
 
 
@@ -56,6 +57,7 @@ class UserInfoApi(BaseHandler):
         user.pop('update_time')
 
         # change student status value to name
+
         if user['student_status'] == 0:
             user['student_status'] = "brak"
         if user['student_status'] == 1:
@@ -80,7 +82,7 @@ class UserInfoPhotoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_id):
-        parameters = yield self.get_parameters(usos_paired=True)
+        # parameters = yield self.get_parameters(usos_paired=True)
 
         user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.USER_ID: user_id})
         if user_photo:
