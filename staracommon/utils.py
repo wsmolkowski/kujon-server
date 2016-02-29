@@ -1,7 +1,11 @@
 import httplib2
-import httplib2.socks
 import datetime
 from bson.objectid import ObjectId
+
+try:
+    import socks
+except:
+    from httplib2 import socks
 
 import settings
 import constants
