@@ -21,6 +21,7 @@ class Dao:
         else:
             self.__dbname = dbname
 
+        logging.debug("Connecting do MongoDB instance at uri:{0} dbname: {1}".format(self.__dburi, self.__dbname))
         self.__db = pymongo.Connection(self.__dburi)[self.__dbname]
 
     def drop_collection(self, collection):
