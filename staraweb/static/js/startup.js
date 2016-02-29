@@ -3,7 +3,8 @@ define(['main', 'static/js/router.js', 'jquery', 'jquery-cookie'], function(main
 
     $(document).ready(function(){
         $( window ).unload(function() {
-            main.cleanSecureCookie();
+            //main.cleanSecureCookie();
+
         });
     });
 
