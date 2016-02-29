@@ -13,10 +13,8 @@
     <link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
 
     <script type="text/javascript" src="{{ static_url('require.config.js') }}"></script>
-    <!-- BEGIN require -->
     <script type="text/javascript" data-main="{{ static_url('js/startup.js') }}"
             src="{{ static_url('bower_components/requirejs/require.js') }}"></script>
-    <!-- END require.js -->
 </head>
 
 <body>
@@ -51,6 +49,9 @@
                       </ul>
                 </li>
                 {% end %}
+                {% if not USOS_PAIRED %}
+                <li><a href="#register">Zarejestruj w USOS</a></li>
+                {% end %}
                 {% end %}
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -71,9 +72,9 @@
     </div>
 </nav>
 
-<!-- kontener na tresc -->
-<div id="page" class="container">
+<!-- pages -->
 
+<div id="page" class="container">
 </div>
 
 </body>
