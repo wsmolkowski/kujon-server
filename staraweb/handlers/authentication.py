@@ -154,12 +154,12 @@ class CreateUserHandler(BaseHandler):
         usos_url = self.get_argument("usos").strip()
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
-        usos_doc = self.aes.decrypt(usos_doc)
+        usos_doc = self.aes.decrypt_usos(usos_doc)
 
         #usos_doc[constants.CONSUMER_KEY] = usos_doc[constants.CONSUMER_KEY]
         #usos_doc[constants.CONSUMER_SECRET] = usos_doc[constants.CONSUMER_SECRET]
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: self.get_current_user()[constants.ID]})
         if not user_doc:
             self.error("Użytkownik musi posiadać konto..")
             return
@@ -222,7 +222,7 @@ class VerifyHandler(BaseHandler):
 
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
-            usos_doc = self.aes.decrypt(usos_doc)
+            usos_doc = self.aes.decrypt_usos(usos_doc)
 
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
@@ -291,7 +291,7 @@ class RegisterHandler(BaseHandler):
         usos_url = self.get_argument("usos").strip()
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
-        usos_doc = self.aes.decrypt(usos_doc)
+        usos_doc = self.aes.decrypt_usos(usos_doc)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['_id']})
 
@@ -348,7 +348,7 @@ class VerifyHandler(BaseHandler):
         if user_doc:
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
-            usos_doc = self.aes.decrypt(usos_doc)
+            usos_doc = self.aes.decrypt_usos(usos_doc)
 
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
