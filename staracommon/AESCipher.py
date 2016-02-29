@@ -28,6 +28,12 @@ class AESCipher(object):
                 dictionary[key] = self.encrypt(value)
         return dictionary
 
+    def encrypt_usoses(self, usoses):
+        result = []
+        for usos in usoses:
+            result.append(self.encrypt_usos(usos))
+        return result
+
     def decrypt(self, enc):
         enc = b64decode(enc)
         iv = enc[:AES.block_size]
@@ -41,6 +47,12 @@ class AESCipher(object):
             else:
                 dictionary[key] = self.decrypt(value)
         return dictionary
+
+    def decrypt_usoses(self, usoses):
+        result = []
+        for usos in usoses:
+            result.append(self.decrypt_usos(usos))
+        return result
 
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
