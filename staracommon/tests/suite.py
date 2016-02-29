@@ -4,6 +4,7 @@ from usoscrowler_tests import CrowlerTest
 from usosclient_tests import ClientTest
 from usosasync_tests import UsosAsyncTest
 from serialize_tests import SerializationTest
+from aescipher_tests import AESCipher
 
 
 def build_suite():
@@ -14,6 +15,7 @@ def build_suite():
     test_suite.addTest(unittest.makeSuite(ClientTest))
     test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
     test_suite.addTest(unittest.makeSuite(SerializationTest))
+    test_suite.addTest(unittest.makeSuite(AESCipher))
 
     return test_suite
 
