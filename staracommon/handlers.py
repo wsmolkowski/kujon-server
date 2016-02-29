@@ -6,6 +6,7 @@ from tornado.web import RequestHandler
 import constants
 import settings
 import utils
+from AESCipher import AESCipher
 
 
 class CommonHandler(RequestHandler):
@@ -30,3 +31,10 @@ class CommonHandler(RequestHandler):
         return {
             'proxy_info': utils.get_proxy(),
         }
+
+    _aes = None
+    @property
+    def aes(self):
+        if not self._aes:
+            self._aes = AESCipher()
+        return self._aes

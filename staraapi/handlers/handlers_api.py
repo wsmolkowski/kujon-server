@@ -64,6 +64,9 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
             while (yield cursor.fetch_next):
                 usos = cursor.next_object()
+
+                usos = self.aes.decrypt_usos(usos)
+
                 usos['logo'] = settings.DEPLOY_URL + usos['logo']
                 self._usoses.append(usos)
 

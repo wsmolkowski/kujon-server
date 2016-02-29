@@ -5,10 +5,12 @@ import pymongo
 from bson.objectid import ObjectId
 
 from staracommon import settings, constants
+from AESCipher import AESCipher
 
 
 class Dao:
     def __init__(self, dburi=None, dbname=None):
+        self.aes = AESCipher()
         if not dburi:
             self.__dburi = settings.MONGODB_URI
         else:
@@ -39,10 +41,12 @@ class Dao:
         return self.__db[collection].insert(document)
 
     def get_usos(self, usos_id):
-        return self.__db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
+        usos = self.__db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
+        return self.aes.decrypt_usos(usos)
 
     def get_usoses(self):
-        return self.__db[constants.COLLECTION_USOSINSTANCES].find()
+        usoses = self.__db[constants.COLLECTION_USOSINSTANCES].find()
+        return self.aes.decrypt_usoses(usoses)
 
     def get_user(self, user_id):
         return self.__db[constants.COLLECTION_USERS].find_one({"_id": user_id})

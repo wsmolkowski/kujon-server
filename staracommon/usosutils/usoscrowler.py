@@ -11,10 +11,13 @@ from staracommon.helpers import log_execution_time
 from staracommon.mongo_dao import Dao
 from staracommon.usosutils.usosasync import UsosAsync
 from staracommon.usosutils.usosclient import UsosClient
+from staracommon.AESCipher import AESCipher
 
 
 class UsosCrowler:
     def __init__(self, dao=None):
+        self.aes = AESCipher()
+
         if not dao:
             self.dao = Dao()
         else:
@@ -74,7 +77,7 @@ class UsosCrowler:
             logging.info('adding usos: {0} '.format(usos[constants.USOS_ID]))
             doc = self.dao.find_usos(usos[constants.USOS_ID])
             if not doc:
-                self.dao.insert(constants.COLLECTION_USOSINSTANCES, usos)
+                self.dao.insert(constants.COLLECTION_USOSINSTANCES, self.aes.encrypt_usos(usos))
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crowl_time, usos):
          if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):

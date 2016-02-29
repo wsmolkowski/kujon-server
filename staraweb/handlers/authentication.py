@@ -154,6 +154,10 @@ class CreateUserHandler(BaseHandler):
         usos_url = self.get_argument("usos").strip()
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
+        usos_doc = self.aes.decrypt(usos_doc)
+
+        #usos_doc[constants.CONSUMER_KEY] = usos_doc[constants.CONSUMER_KEY]
+        #usos_doc[constants.CONSUMER_SECRET] = usos_doc[constants.CONSUMER_SECRET]
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']})
         if not user_doc:
@@ -162,6 +166,8 @@ class CreateUserHandler(BaseHandler):
 
         if user_doc[constants.USOS_URL]:
             usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
+            usoses = self.aes.decrypt_usoses(usoses)
+
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
@@ -216,6 +222,8 @@ class VerifyHandler(BaseHandler):
 
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
+            usos_doc = self.aes.decrypt(usos_doc)
+
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
@@ -283,6 +291,7 @@ class RegisterHandler(BaseHandler):
         usos_url = self.get_argument("usos").strip()
 
         usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
+        usos_doc = self.aes.decrypt(usos_doc)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['_id']})
 
@@ -339,6 +348,8 @@ class VerifyHandler(BaseHandler):
         if user_doc:
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
                 constants.USOS_URL]})
+            usos_doc = self.aes.decrypt(usos_doc)
+
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
