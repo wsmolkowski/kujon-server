@@ -18,6 +18,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                       withCredentials: true
                     },
                     success:  function (data) {
+                      debugger;
                       if (data.status == 'success'){
                         updateConfig(data.data);
                       } else {
@@ -104,6 +105,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 
         /* public methods */
         return {
+
             init: function() {
                 buildConfig();
 
@@ -113,6 +115,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     var nl2br = (text + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + '<br>' + '$2');
                     return new Handlebars.SafeString(nl2br);
                 });
+            },
+
+            getConfig: function(){
+                debugger;
+                return config;
             },
             callUsoses: function(callback){
                 usoses(callback);
