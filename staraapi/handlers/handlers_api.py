@@ -86,7 +86,8 @@ class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        # TODO: tutaj wylaczone jest sprawdzanie usera - czy na pewno tak ma zostac?
+        # TODO: here user check switch off becaue it is not paired yet. maybe should be only check
+        # the user because it shoud be sign on using this method on mobile. should be check after mobi version ready.
         # parameters = yield self.get_parameters()
 
         data = yield self.get_usoses()
