@@ -1,9 +1,9 @@
 import urlparse
 import oauth2 as oauth
 
-from staraweb import settings
-from staracommon.mixins.JSendMixin import JSendMixin
-from staracommon import handlers, constants
+import settings
+from commons.mixins.JSendMixin import JSendMixin
+from commons import handlers, constants
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
