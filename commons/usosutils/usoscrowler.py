@@ -48,7 +48,7 @@ class UsosCrowler:
 
         self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
         for usos in self.dao.get_usoses():
-            logging.info(u'recreating dictionaries in collections {0} for {1}'.format(
+            logging.info(u"recreating dictionaries in collections {0} for {1}".format(
                     constants.COLLECTION_COURSES_CLASSTYPES,
                     usos[constants.USOS_ID]))
             inserts = []
@@ -61,9 +61,9 @@ class UsosCrowler:
                     inserts.append(class_type)
                 self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
                 logging.debug(
-                    u'dictionary course classtypes for usos {0} inserted.'.format(usos[constants.USOS_ID]))
+                    u"dictionary course classtypes for usos {0} inserted.".format(usos[constants.USOS_ID]))
             else:
-                raise Exception(u'fail to recreate_dictionaries {0} for {1}'.format(constants.COLLECTION_COURSES_CLASSTYPES,
+                raise Exception(u"fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                        usos[constants.USOS_ID]))
         raise tornado.gen.Return(True)
 
@@ -85,9 +85,9 @@ class UsosCrowler:
             if photo:
                 photo = self.append(photo, usos[constants.USOS_ID], crowl_time, crowl_time)
                 photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
-                logging.debug(u'photo for user_id: {0} inserted {1}'.format(photo[constants.USER_ID], photo_doc))
+                logging.debug(u"photo for user_id: {0} inserted {1}".format(photo[constants.USER_ID], photo_doc))
             else:
-                logging.debug(u'no photo for user_id: {0}'.format(user_id))
+                logging.debug(u"no photo for user_id: {0}".format(user_id))
 
     def __build_user_info(self, client, user_id, user_info_id, crowl_time, usos):
 
@@ -96,7 +96,7 @@ class UsosCrowler:
         if user_id:
             result[constants.USER_ID] = user_id
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.debug(u'user_info inserted: {0}'.format(ui_doc))
+        logging.debug(u"user_info inserted: {0}".format(ui_doc))
 
         # if user has photo - download
         if 'has_photo' in result and result['has_photo']:
@@ -119,7 +119,7 @@ class UsosCrowler:
                 course_result = self.append(course_result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
                 logging.debug(
-                    u'course_edition for course_id: {0} term_id: {1} inserted: {2}'.format(course_id, term_id,
+                    u"course_edition for course_id: {0} term_id: {1} inserted: {2}".format(course_id, term_id,
                                                                                            course_doc))
 
     def __build_tt(self, client, user_id, crowl_time, usos, given_date):
@@ -138,14 +138,14 @@ class UsosCrowler:
             try:
                 result = client.tt(given_date)
             except Exception, ex:
-                logging.debug(u'problem during tt fetch: {0}'.format(ex.message))
+                logging.debug(u"problem during tt fetch: {0}".format(ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.USER_ID] = user_id
                 tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
-                logging.debug(u'time tables for date: {0} inserted: {1}'.format(given_date, tt_doc))
+                logging.debug(u"time tables for date: {0} inserted: {1}".format(given_date, tt_doc))
             else:
-                logging.debug(u'no time tables for date: {0}'.format(given_date))
+                logging.debug(u"no time tables for date: {0}".format(given_date))
 
     def __build_programmes(self, client, user_info_id, crowl_time, usos):
 
@@ -160,9 +160,9 @@ class UsosCrowler:
                     result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                     result[constants.PROGRAMME_ID] = result.pop('id')
                     prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-                    logging.debug(u'programme {0} inserted: {1}'.format(programme['id'], prog_doc))
+                    logging.debug(u"programme {0} inserted: {1}".format(programme['id'], prog_doc))
                 else:
-                    logging.debug(u'no programme: {0}.'.format(programme['id']))
+                    logging.debug(u"no programme: {0}.".format(programme['id']))
 
     def __build_curseseditions(self, client, crowl_time, user_id, usos):
 
@@ -171,9 +171,9 @@ class UsosCrowler:
             result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.USER_ID] = user_id
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            logging.debug(u'course_editions for user_id: {0} inserted: {1}'.format(user_id, ce_doc))
+            logging.debug(u"course_editions for user_id: {0} inserted: {1}".format(user_id, ce_doc))
         else:
-            logging.debug(u'no course_editions for user_id: {0}'.format(user_id))
+            logging.debug(u"no course_editions for user_id: {0".format(user_id))
 
     @tornado.gen.coroutine
     def __build_terms(self, user_id, usos, crowl_time):
@@ -186,9 +186,9 @@ class UsosCrowler:
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-                logging.debug(u'terms for term_id: {0} inserted {1}'.format(term_id, t_doc))
+                logging.debug(u"terms for term_id: {0} inserted {1}".format(term_id, t_doc))
             else:
-                logging.debug(u'no terms for term_id: {0}.'.format(term_id))
+                logging.debug(u"no terms for term_id: {0}.".format(term_id))
 
     @tornado.gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crowl_time):
@@ -200,14 +200,14 @@ class UsosCrowler:
             try:
                 result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID], fetch_participants=True)
             except Exception, ex:
-                logging.debug(u'problem during course_edition fetch.'.format(ex.message))
+                logging.debug(u"problem during course_edition fetch.".format(ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-                logging.debug(u'course_edition for course_id: {0} term_id: {1} inserted {2}'.format(course_edition[
-                            constants.COURSE_ID], course_edition[constants.TERM_ID],c_doc))
+                logging.debug(u"course_edition for course_id: {0} term_id: {1} inserted {2}".format(course_edition[
+                            constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
             else:
-                logging.debug(u'no course_edition for course_id: {0} term_id: {1}.'.format(course_edition[
+                logging.debug(u"no course_edition for course_id: {0} term_id: {1}.".format(course_edition[
                             constants.COURSE_ID], course_edition[constants.TERM_ID]))
 
     @tornado.gen.coroutine
@@ -232,9 +232,9 @@ class UsosCrowler:
                     result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                     result[constants.COURSE_ID] = result.pop('id')
                     c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-                    logging.debug(u'course for course_id: {0} inserted {1}'.format(course, c_doc))
+                    logging.debug(u"course for course_id: {0} inserted {1}".format(course, c_doc))
                 else:
-                    logging.debug(u'no course for course_id: {0}.'.format(course))
+                    logging.debug(u"no course for course_id: {0}.".format(course))
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crowl_time):
@@ -247,16 +247,16 @@ class UsosCrowler:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.FACULTY_ID] = faculty
                 fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
-                logging.debug(u'faculty for fac_id: {0} inserted {1}'.format(faculty, fac_doc))
+                logging.debug(u"faculty for fac_id: {0} inserted {1}".format(faculty, fac_doc))
             else:
-                logging.debug(u'no faculty for fac_id: {0}.'.format(faculty))
+                logging.debug(u"no faculty for fac_id: {0}.".format(faculty))
 
     @tornado.gen.coroutine
     def __build_user_info_for_users(self, client, crowl_time, users, usos):
         for user in users:
             if not self.dao.get_users_info_by_usos_id(user['id'], usos):
                 self.__build_user_info(client, None, user['id'], crowl_time, usos)
-                logging.debug(u'Fetched user_info for user with id: {0}'.format(user['id']))
+                logging.debug(u"Fetched user_info for user with id: {0}".format(user['id']))
 
                 # build programme for gven user
                 self.__build_programmes(client, user['id'], crowl_time,usos)
@@ -273,9 +273,9 @@ class UsosCrowler:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 result[constants.UNIT_ID] = result.pop('id')
                 u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-                logging.debug(u'unit {0} inserted {1}'.format(unit_id, u_doc))
+                logging.debug(u"unit {0} inserted {1}.".format(unit_id, u_doc))
             else:
-                logging.debug(u'no unit {0}.'.format(unit_id))
+                logging.debug(u"no unit {0}.".format(unit_id))
 
     @tornado.gen.coroutine
     def __build_groups(self, client, crowl_time, units, usos):
@@ -284,13 +284,13 @@ class UsosCrowler:
             try:
                 result = client.groups(unit)
             except Exception, ex:
-                logging.debug(u'exception during fetch unit: {0} : {1}'.format(unit, ex.message))
+                logging.debug(u"exception during fetch unit: {0} : {1}".format(unit, ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
                 grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
-                logging.debug(u'group for unit: {0} inserted: {1}'.format(unit, grp_doc))
+                logging.debug(u"group for unit: {0} inserted: {1}".format(unit, grp_doc))
             else:
-                logging.debug(u'no group for unit: {0}'.format(unit))
+                logging.debug(u"no group for unit: {0}.".format(unit))
 
     @tornado.gen.coroutine
     def __build_grades_participants_lecturers_units_groups(self, client, user_id, usos, crowl_time):
@@ -306,7 +306,7 @@ class UsosCrowler:
             try:
                 result = client.course_edition(course_id, term_id, fetch_participants=True)
             except Exception, ex:
-                logging.debug(u'problem during course_edition fetch: {0}'.format(ex.message))
+                logging.debug(u"problem during course_edition fetch: {0}.".format(ex.message))
             if result and 'participants' in result:
                 participants = result.pop('participants')
                 lecturers = result.pop('lecturers')
@@ -332,7 +332,7 @@ class UsosCrowler:
             if result:
                 g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
                 logging.debug(
-                    u'grades for course_id: {0} and term_id: {1} inserted {2}'.format(course_id, term_id, g_doc))
+                    u"grades for course_id: {0} and term_id: {1} inserted {2}".format(course_id, term_id, g_doc))
 
         self.__build_user_info_for_users(client, crowl_time, all_participants, usos)
         self.__build_user_info_for_users(client, crowl_time, all_lecturers, usos)
@@ -350,7 +350,7 @@ class UsosCrowler:
 
         user = self.dao.get_user(user_id)
         if not user:
-            logging.error(u'could not crowl for usos data for unknown user with id: {0}'.format(user_id))
+            logging.error(u"Could not crowl for usos data for unknown user with id: {0}.".format(user_id))
             return
 
         usos = self.dao.get_usos(user[constants.USOS_ID])
@@ -386,7 +386,7 @@ class UsosCrowler:
             result = self.append(dict(), usos[constants.USOS_ID], crowl_time, crowl_time)
             result[constants.USER_ID] = user_id
             doc = self.dao.insert(constants.COLLECTION_CROWLLOG, result)
-            logging.info(u'crowl log inserted with id {0}'.format(doc))
+            logging.info(u"crowl log inserted with id {0}".format(doc))
 
         except Exception, ex:
-            logging.exception(u'Exception while initial user usos crowler: {0}'.format(ex.message))
+            logging.exception(u"Exception while initial user usos crowler: {0}".format(ex.message))

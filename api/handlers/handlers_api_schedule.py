@@ -14,6 +14,6 @@ class ScheduleApi(BaseHandler):
         terms_doc = list()
 
         if not terms_doc:
-            self.error("Poczekaj szukamy harmonoramu..")
+            self.error(u"Poczekaj szukamy harmonoramu..")
         else:
             self.success(terms_doc)

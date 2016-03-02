@@ -45,7 +45,7 @@ class LecturersApi(BaseHandler):
             lecturers_returned = lecturers_returned.values()
             lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
-            self.error("Poczekaj szukamy nauczycieli..")
+            self.error(u"Poczekaj szukamy nauczycieli..")
         else:
             self.success(lecturers_returned)
 
@@ -59,7 +59,7 @@ class LecturerByIdApi(BaseHandler):
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
-            self.error("Poczekaj szukamy informacji o nauczycielu..")
+            self.error(u"Poczekaj szukamy informacji o nauczycielu..")
         else:
 
             # change staff_status to dictionary

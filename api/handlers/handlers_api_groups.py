@@ -26,6 +26,6 @@ class GroupsApi(BaseHandler):
             programmes.append(result)
 
         if not programmes:
-            self.error("Poczekaj szukamy grup..")
+            self.error(u"Poczekaj szukamy grup..")
         else:
             self.success(programmes)

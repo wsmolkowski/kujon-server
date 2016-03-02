@@ -146,6 +146,6 @@ class FriendsSuggestionsApi(BaseHandler):
             # TODO: show message on add friends
 
         if not suggested_participants:
-            self.error("Poczekaj szukamy sugerowanych przyjaciół..")
+            self.error(u"Poczekaj szukamy sugerowanych przyjaciół..")
         else:
             self.success(suggested_participants)

@@ -29,7 +29,7 @@ class TermsApi(BaseHandler):
                     term_data[constants.TERM_ID] = term
                     terms_doc.append(term_data)
         if not terms_doc:
-            self.error("Poczekaj szukamy semestrów..")
+            self.error(u"Poczekaj szukamy semestrów..")
         else:
             self.success(terms_doc)
 

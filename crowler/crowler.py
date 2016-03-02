@@ -26,12 +26,12 @@ def crowl():
                 return
 
             initial_processing.append(job_doc)
-            logging.info("starting initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
+            logging.info(u"starting initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
             yield usos_crowler.initial_user_crowl(job_doc[constants.USER_ID])
 
             dao.update_user_job(job_doc[constants.ID], constants.JOB_END)
             initial_processing.remove(job_doc)
-            logging.info("finished initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
+            logging.info(u"finished initial_user_crowl for user {0}".format(job_doc[constants.USER_ID]))
 
     @gen.coroutine
     def worker_initial():

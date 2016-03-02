@@ -114,7 +114,7 @@ class Dao:
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
 
     def get_courses(self, courses, usos_id):
-        courses_comma_separated_string = u','.join(courses).encode(constants.ENCODING).strip()
+        courses_comma_separated_string = u",".join(courses).encode(constants.ENCODING).strip()
         return self.__db[constants.COLLECTION_COURSES].find(
             {constants.COURSE_ID: {'$in': [courses_comma_separated_string]},
              constants.USOS_ID: usos_id})

@@ -20,7 +20,7 @@ class ProgrammesByIdApi(BaseHandler):
                                                                             LIMIT_FIELDS)
 
         if not programme:
-            self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
+            self.error(u"Poczekaj szukamy kierunku: {0)".format(programme_id))
         else:
             self.success(programme)
 
@@ -36,7 +36,7 @@ class ProgrammesApi(BaseHandler):
             {constants.USER_ID: ObjectId(parameters[constants.ID])})
 
         if not user_info:
-            self.error("Poczekaj szukamy danych o kursach użytkownika..")
+            self.error(u"Poczekaj szukamy danych o kursach użytkownika..")
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -48,6 +48,6 @@ class ProgrammesApi(BaseHandler):
             programmes.append(program)
 
         if not programmes:
-            self.error("Poczekaj szukamy kierunków...")
+            self.error(u"Poczekaj szukamy kierunków...")
         else:
             self.success(programmes)

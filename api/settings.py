@@ -4,10 +4,10 @@ SSL = False
 GZIP = True
 
 # site
-SITE_DOMAIN = 'localhost'
-SITE_ROOT = '/'
+SITE_DOMAIN = u"localhost"
+SITE_ROOT = u"/"
 
-DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
+DEPLOY_URL = u"http://{0}:{1}".format(SITE_DOMAIN, PORT)
 
 CLEAN_DB = False
 

@@ -72,7 +72,7 @@ def main():
     reload(sys)  # Reload does the trick!
     sys.setdefaultencoding('utf-8')
     if sys.getdefaultencoding()!='utf-8':
-        logging.error(u"zmien kodowanie na UTF8!")
+        logging.error(u"Change encoding on UTF8!")
 
     prepare_environment()
 

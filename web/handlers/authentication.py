@@ -43,7 +43,7 @@ class LoginHandler(BaseHandler):
             self.redirect('/')
         else:
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "login authentication failed for {0} and {1}".format(access_token_key,
+            data[constants.ALERT_MESSAGE] = u"login authentication failed for {0} and {1}".format(access_token_key,
                                                                                                  access_token_secret)
             self.render("login.html", **data)
 
@@ -75,7 +75,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, user)
-                logging.debug(u'saved new user in database: {0}'.format(user_doc))
+                logging.debug(u"saved new user in database: {0}".format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
                                                                               COOKIE_FIELDS)
