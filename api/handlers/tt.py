@@ -15,6 +15,46 @@ class TTApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
+
+        # fixed values needed for development
+        result = list()
+        elem = dict()
+        today = date.today()
+        elem['start_time'] = str(today) + " " + "08:00:00"
+        elem['end_time'] = str(today) + " " + "09:00:00"
+        elem['name'] = u"SEM-MGR"
+        elem['type'] = "classgroup"
+        elem['course_id'] = "132"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Budynek dydaktyczny"
+        elem['room_number'] = "2030"
+        result.append(elem)
+        elem = dict()
+        elem['start_time'] = str(today) + " " + "09:00:00"
+        elem['end_time'] = str(today) + " " + "10:00:00"
+        elem['name'] = u"1000-2D97SR"
+        elem['type'] = "classgroup"
+        elem['course_id'] = "132"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Budynek nr 1313"
+        elem['room_number'] = "1067"
+        result.append(elem)
+        elem = dict()
+        elem['start_time'] = str(today) + " " + "12:00:00"
+        elem['end_time'] = str(today) + " " + "13:30:00"
+        elem['name'] = u"1000-2D97SR"
+        elem['type'] = "exam"
+        elem['course_id'] = "132"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Basen"
+        elem['room_number'] = "102"
+
+        result.append(elem)
+        self.success(result)
+        return
         #checking if date is correct
         try:
             given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
