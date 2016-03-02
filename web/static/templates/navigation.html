@@ -31,7 +31,9 @@
 
                 {{#if USOS_PAIRED}}
                 {{else}}
-                <li><a href="#register">Zarejestruj w USOS</a></li>
+                    {{#if USER_LOGGED}}
+                    <li><a href="#register">Zarejestruj w USOS</a></li>
+                    {{/if}}
                 {{/if}}
 
             </ul>
