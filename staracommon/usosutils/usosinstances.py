@@ -10,7 +10,7 @@ USOSINSTANCES = [
      'contact': 'dsksysadm@adm.uw.edu.pl'
      },
     {'usos_id': 'UW',
-     'name': 'Uniwersyst Warszawski',
+     'name': 'Uniwersytet Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
      'logo': '/static/UW.jpeg',
      'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
@@ -26,7 +26,7 @@ USOSINSTANCES = [
      'contact': 'd.walczyk@tu.kielce.pl'
      },
     {'usos_id': 'PWSZ',
-     'name': 'Panstwowa Wyższa Szkola Zawodowa w Elblągu',
+     'name': 'Państwowa Wyższa Szkoła Zawodowa w Elblągu',
      'url': 'https://usosapps.pwsz.elblag.pl/',
      'logo': '/static/PWSZ.jpeg',
      'consumer_key': '',

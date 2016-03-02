@@ -1,12 +1,19 @@
 <div class="panel panel-default">
 
+    <div>
+    <p class="panel-body" class="col-md-12 brd">
+        <p class="text-center">Aby móc pracować w kujonie - wybierz uczelnie na której masz konto w USOS, przekierujemy Cię abyś sie zalogował..
+        </p>
+        <br>
+    </div>
+
     <div class="row">
         {{#data}}
         <form id="f{{usos_id}}" class="form-horizontal" action="/authentication/create" method="post">
             <input type="hidden" name="usos" value="{{url}}">
             <div class="col-sm-6 col-md-2">
                 <div class="thumbnail">
-                    <a href="#" onclick="document.getElementById('f{{usos_id}}').submit();"><img src="{{logo}}" alt="{{name}}" height="200" width="200">
+                    <a href="#" onclick="document.getElementById('f{{usos_id}}').submit();"><img src="{{logo}}" alt="{{name}}" height="100" width="100">
                         <div class="caption"><h5>{{name}}</h5></div>
                     </a>
                 </div>
@@ -15,12 +22,4 @@
         {{/data}}
     </div>
 
-    <div>
-    <p class="panel-body" class="col-md-12 brd">
-        <p class="text-center">Akceptuję regulamin i Wyrażam zgodę na przetwarzanie moich danych
-                osobowych przez {{PROJECT_TITLE}} w celach związanych z funkcjonowaniem serwisu
-                {{PROJECT_TITLE}} oraz przekazywania mi informacji marketingowych i reklamowych dotyczących
-                serwisu {{PROJECT_TITLE}} i jego partnerów.
-        </p>
-    </div>
 </div>

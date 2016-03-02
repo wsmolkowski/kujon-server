@@ -3,7 +3,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         /* variables */
         var templateError = Handlebars.compile(tplError);
 
-        var config;
+        this.config;
 
         function updateConfig(data){
             config = data;
@@ -18,7 +18,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                       withCredentials: true
                     },
                     success:  function (data) {
-                      debugger;
                       if (data.status == 'success'){
                         updateConfig(data.data);
                       } else {
@@ -119,7 +118,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 
             getConfig: function(){
                 debugger;
-                return config;
+                return this.config;
             },
             callUsoses: function(callback){
                 usoses(callback);

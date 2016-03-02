@@ -11,7 +11,7 @@ TEMPLATES_PATH = os.path.join(ROOT_PATH, 'templates')
 GZIP = True
 
 SITE_DOMAIN = 'localhost'
-PROJECT_TITLE = "Stara.io"
+PROJECT_TITLE = "Kujon.io"
 PROJECT_DESCRIPTION = ""
 DEPLOY_URL = 'http://{0}:{1}'.format(SITE_DOMAIN, PORT)
 
