@@ -16,6 +16,8 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                 'aspectRatio': 2,
                 'nowIndicator': true,
                 'lang': 'pl',
+                'minTime': '07:00',
+                'maxTime': '21:00',
                 events: function(start, end, timezone, callback) {
 
                         $.ajax({

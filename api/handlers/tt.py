@@ -21,7 +21,7 @@ class TTApi(BaseHandler):
         elem = dict()
         today = date.today()
         elem['start_date'] = str(today) + " " + "08:00:00"
-        elem['end_date'] = str(today) + " " + "09:00:00"
+        elem['end_date'] = str(today) + " " + "10:00:00"
         elem['title'] = u"SEM-MGR"
         elem['id'] = "132"
         # elem['type'] = "classgroup"
@@ -31,8 +31,8 @@ class TTApi(BaseHandler):
         # elem['room_number'] = "2030"
         result.append(elem)
         elem = dict()
-        elem['start_date'] = str(today) + " " + "09:00:00"
-        elem['end_date'] = str(today) + " " + "10:00:00"
+        elem['start_date'] = str(today) + " " + "10:00:00"
+        elem['end_date'] = str(today) + " " + "11:00:00"
         elem['title'] = u"1000-2D97SR"
         elem['id'] = "132"
         # elem['type'] = "classgroup"
@@ -42,8 +42,8 @@ class TTApi(BaseHandler):
         # elem['room_number'] = "1067"
         result.append(elem)
         elem = dict()
-        elem['start_date'] = str(today) + " " + "12:00:00"
-        elem['end_date'] = str(today) + " " + "13:30:00"
+        elem['start_date'] = str(today) + " " + "13:00:00"
+        elem['end_date'] = str(today) + " " + "15:30:00"
         elem['title'] = u"1000-2D97SR"
         elem['id'] = "132"
         elem['type'] = "exam"
