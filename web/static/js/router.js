@@ -1,22 +1,34 @@
 define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery, main, crossroads, hasher) {
 'use strict';
 
+
     function setActiveLink(hash) {  
-        //console.log(hash);
-        
+        //console.log('hash: ' + hash + ' isUserLoggedIn: ' + main.isUserLoggedIn());
+
         //pokaż kręcacz porządnie
         $('#spinner').show();
 
         require(['lib/pages/'+hash], function(page) {
-            page.render();
+            if (hash == 'home' || hash == 'login'){
+                page.render();
+            } else {
+                if (main.isUserLoggedIn() == false){
+                    debugger;
+                    setActiveLink('login');
+                } else {
+                    debugger;
+                    page.render();
+                }
 
-            $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
-            $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
-            
+                $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+                $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
+            }
+
             //schowaj kręcacz (?)
             $('#spinner').hide();
         });
     }
+
 
     crossroads.addRoute('', function() {
         setActiveLink('home');
@@ -73,6 +85,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     crossroads.addRoute('tt', function() {
         setActiveLink('tt');
+    });
+
+    crossroads.addRoute('login', function() {
+        setActiveLink('login');
     });
 
     function parseHash(newHash, oldHash) {

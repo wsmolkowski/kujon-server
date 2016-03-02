@@ -10,6 +10,7 @@ LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACU
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
+LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 
 
 class CoursesApi(BaseHandler):
@@ -33,8 +34,6 @@ class CoursesApi(BaseHandler):
                 course_doc['is_currently_conducted'] = 'NIE'
 
             # change faculty_id to faculty name
-            LIMIT_FIELDS_FACULTY = (
-                constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
                 constants.FACULTY_ID],
                                                                               constants.USOS_ID: parameters[
@@ -69,14 +68,14 @@ class CoursesEditionsApi(BaseHandler):
             return
 
         # get courses_classtypes
-        classtypes = {}
+        classtypes = dict()
         cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
             constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        terms = []
+        terms = list()
         for term in course_doc['course_editions']:
             year = {
                 'term': term,
@@ -85,7 +84,7 @@ class CoursesEditionsApi(BaseHandler):
             terms.append(year)
 
         # add groups to courses
-        courses = []
+        courses = list()
         for term in terms:
             for course in term['term_data']:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
@@ -94,7 +93,7 @@ class CoursesEditionsApi(BaseHandler):
                      constants.USOS_ID: parameters[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
-                groups = []
+                groups = list()
                 while (yield cursor.fetch_next):
                     group = cursor.next_object()
                     group['class_type_id'] = classtypes[group['class_type_id']]  # changing class_type_id to name

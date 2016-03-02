@@ -173,7 +173,7 @@ class CreateUserHandler(BaseHandler):
             data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
             data["usoses"] = usoses
 
-            self.write_json(data)
+            self.success(data)
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
