@@ -1,4 +1,4 @@
-from tests_base import TestBaseClassApp
+from commons.tests.tests_base import TestBaseClassApp
 
 
 class ApiGradesTest(TestBaseClassApp):

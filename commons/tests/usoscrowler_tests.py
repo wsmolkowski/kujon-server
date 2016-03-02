@@ -47,8 +47,8 @@ class CrowlerTest(AsyncTestCase):
     def testInitCrowlerDEMO(self):
         # when
         self.user = {"mobile_id": "demo1",
-                "access_token_key": "ktNYxsVzmcy5wWFE69PW", "usos_id": "DEMO",
-                "access_token_secret": "F7qe9U6Ks7KuLPcJRJRj8XE9uYPSrYz2nV3hQscR"}
+                "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos_id": "DEMO",
+                "access_token_secret": "VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy"}
 
         user = self.dao.insert(constants.COLLECTION_USERS, self.user)
         yield self.crowler.initial_user_crowl(ObjectId(str(user)))

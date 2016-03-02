@@ -58,7 +58,10 @@ class GradesForUserApi(BaseHandler):
                 for egzam in grades_for_course_and_term['grades']['course_units_grades']:
                     for termin in grades_for_course_and_term['grades']['course_units_grades'][egzam]:
                         elem = grades_for_course_and_term['grades']['course_units_grades'][egzam][termin]
-                        elem['class_type'] = units[int(egzam)]['classtype_id']
+                        if int(egzam) in units:
+                            elem['class_type'] = units[int(egzam)]['classtype_id']
+                        else:
+                            elem['class_type'] = None
                         elem['value_description'] = elem['value_description']['pl']
                         new_grades.append(elem)
                 grades_for_course_and_term['grades'] = new_grades
