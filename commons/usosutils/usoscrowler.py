@@ -134,19 +134,20 @@ class UsosCrowler:
                 # If type equals "meeting":
                 # If type equals "exam":
         else:
-            result = None
             try:
                 result = client.tt(given_date)
+                tt = dict()
+                tt[constants.USOS_ID] = usos[constants.USOS_ID]
+                tt[constants.TT_STARTDATE] = str(given_date)
+                tt['tts'] = result
+                tt[constants.USER_ID] = user_id
+                tt_doc = self.dao.insert(constants.COLLECTION_TT,tt)
+                if result:
+                    logging.debug(u"time tables for date: {0} inserted: {1}".format(given_date, tt_doc))
+                else:
+                    logging.debug(u"no time tables for date: {0} inserted empty".format(given_date))
             except Exception, ex:
                 logging.debug(u"problem during tt fetch: {0}".format(ex.message))
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
-                result[constants.PROGRAMME_ID]
-                result[constants.USER_ID] = user_id
-                tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
-                logging.debug(u"time tables for date: {0} inserted: {1}".format(given_date, tt_doc))
-            else:
-                logging.debug(u"no time tables for date: {0}".format(given_date))
 
     def __build_programmes(self, client, user_info_id, crowl_time, usos):
 
