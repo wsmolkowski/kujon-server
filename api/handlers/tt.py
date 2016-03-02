@@ -20,37 +20,37 @@ class TTApi(BaseHandler):
         result = list()
         elem = dict()
         today = date.today()
-        elem['start_time'] = str(today) + " " + "08:00:00"
-        elem['end_time'] = str(today) + " " + "09:00:00"
-        elem['name'] = u"SEM-MGR"
-        elem['type'] = "classgroup"
-        elem['course_id'] = "132"
-        elem['course_name'] = "Projekowanie silni"
-        elem['group_number'] = 1
-        elem['building_name'] = "Budynek dydaktyczny"
-        elem['room_number'] = "2030"
+        elem['start_date'] = str(today) + " " + "08:00:00"
+        elem['end_date'] = str(today) + " " + "09:00:00"
+        elem['title'] = u"SEM-MGR"
+        elem['id'] = "132"
+        # elem['type'] = "classgroup"
+        # elem['course_name'] = "Projekowanie silni"
+        # elem['group_number'] = 1
+        # elem['building_name'] = "Budynek dydaktyczny"
+        # elem['room_number'] = "2030"
         result.append(elem)
         elem = dict()
-        elem['start_time'] = str(today) + " " + "09:00:00"
-        elem['end_time'] = str(today) + " " + "10:00:00"
-        elem['name'] = u"1000-2D97SR"
-        elem['type'] = "classgroup"
-        elem['course_id'] = "132"
-        elem['course_name'] = "Projekowanie silni"
-        elem['group_number'] = 1
-        elem['building_name'] = "Budynek nr 1313"
-        elem['room_number'] = "1067"
+        elem['start_date'] = str(today) + " " + "09:00:00"
+        elem['end_date'] = str(today) + " " + "10:00:00"
+        elem['title'] = u"1000-2D97SR"
+        elem['id'] = "132"
+        # elem['type'] = "classgroup"
+        # elem['course_name'] = "Projekowanie silni"
+        # elem['group_number'] = 1
+        # elem['building_name'] = "Budynek nr 1313"
+        # elem['room_number'] = "1067"
         result.append(elem)
         elem = dict()
-        elem['start_time'] = str(today) + " " + "12:00:00"
-        elem['end_time'] = str(today) + " " + "13:30:00"
-        elem['name'] = u"1000-2D97SR"
+        elem['start_date'] = str(today) + " " + "12:00:00"
+        elem['end_date'] = str(today) + " " + "13:30:00"
+        elem['title'] = u"1000-2D97SR"
+        elem['id'] = "132"
         elem['type'] = "exam"
-        elem['course_id'] = "132"
-        elem['course_name'] = "Projekowanie silni"
-        elem['group_number'] = 1
-        elem['building_name'] = "Basen"
-        elem['room_number'] = "102"
+        # elem['course_name'] = "Projekowanie silni"
+        # elem['group_number'] = 1
+        # elem['building_name'] = "Basen"
+        # elem['room_number'] = "102"
 
         result.append(elem)
         self.success(result)
