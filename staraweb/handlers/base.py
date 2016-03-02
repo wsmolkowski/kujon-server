@@ -24,7 +24,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             'DEPLOY_URL': settings.DEPLOY_URL,
             'API_URL': settings.USOS_API,
             'USOS_PAIRED': usos_paired,
-            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE
+            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
+            'USER_LOGGED': True if user else False
         }
 
     @staticmethod

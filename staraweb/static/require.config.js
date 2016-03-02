@@ -12,6 +12,7 @@ var require = {
         "jquery-cookie":        "static/bower_components/jquery-cookie/jquery.cookie",
         "templates":            "static/templates",
         "main":                 "static/js/main",
+        "navigation":           "static/js/pages/navigation",
         "lib":                  "static/js",
     },
     shim: {

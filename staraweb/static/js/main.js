@@ -10,7 +10,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         }
 
         /* private methods */
-        function buildConfig(){
+
+        function buildConfig(callback){
             $.ajax({
                     type: 'GET',
                     url: 'http://localhost:8888/config',
@@ -18,9 +19,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                       withCredentials: true
                     },
                     success:  function (data) {
-                      debugger;
                       if (data.status == 'success'){
                         updateConfig(data.data);
+                        if (callback){
+                            callback(data);
+                        }
                       } else {
                         $('#page').html(templateError(data));
                       }
@@ -31,6 +34,14 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     }
                 });
         };
+
+        function getConfig(callback){
+            if (! config){
+                buildConfig(callback);
+            } else {
+                callback(config);
+            }
+        }
 
         function buildApiUrl(api){
             return config['API_URL'] + api;
@@ -107,7 +118,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         return {
 
             init: function() {
-                buildConfig();
+                buildConfig(null);
 
                 // {{#nl2br}} replace returns with <br>
                 Handlebars.registerHelper('nl2br', function(text) {
@@ -116,10 +127,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     return new Handlebars.SafeString(nl2br);
                 });
             },
-
-            getConfig: function(){
-                debugger;
-                return config;
+            getConfig: function(callback){
+                getConfig(callback);
             },
             callUsoses: function(callback){
                 usoses(callback);

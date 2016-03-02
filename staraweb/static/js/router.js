@@ -1,6 +1,6 @@
-define(['jquery','main','crossroads', 'hasher', 'bootstrap'], function(jquery, main, crossroads, hasher) {
+define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery, main, crossroads, hasher) {
 'use strict';
-    
+
     function setActiveLink(hash) {  
         //console.log(hash);
         
@@ -78,9 +78,6 @@ define(['jquery','main','crossroads', 'hasher', 'bootstrap'], function(jquery, m
     function parseHash(newHash, oldHash) {
         crossroads.parse(newHash); 
     }
-    debugger;
-    var config = main.getConfig();
-    console.log(config);
 
     crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;
     hasher.initialized.add(parseHash);
