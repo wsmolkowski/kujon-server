@@ -20,11 +20,12 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             usos_paired = False
 
         return {
-            "PROJECT_TITLE": settings.PROJECT_TITLE,
-            "DEPLOY_URL": settings.DEPLOY_URL,
-            "API_URL": settings.USOS_API,
-            "USOS_PAIRED": usos_paired,
-            "USER_SECURE_COOKIE": constants.USER_SECURE_COOKIE
+            'PROJECT_TITLE': settings.PROJECT_TITLE,
+            'DEPLOY_URL': settings.DEPLOY_URL,
+            'API_URL': settings.USOS_API,
+            'USOS_PAIRED': usos_paired,
+            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
+            'USER_LOGGED': True if user else False
         }
 
     @staticmethod

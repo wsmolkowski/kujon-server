@@ -10,7 +10,7 @@ import constants
 class AESCipher(object):
     def __init__(self):
         self.usos_keys = [constants.CONSUMER_KEY, constants.CONSUMER_SECRET]
-        self.encoding = 'utf-8'
+        self.encoding = constants.ENCODING
         self.bs = 32
         self.key = hashlib.sha256(settings.COOKIE_SECRET).digest()
 

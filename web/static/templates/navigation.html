@@ -1,0 +1,55 @@
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#home">{{PROJECT_TITLE}}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                {{#if USER_LOGGED}}
+                <li><a href="#user">Użytkownik</a></li>
+                <li><a href="#tt">Plan zajęć</a></li>
+                <li class="dropdown">
+                      <a class="dropdown-toggle" data-toggle="dropdown" role="button"
+                         aria-haspopup="true" aria-expanded="false">Szkoła<span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                          <li><a href="#courses">Przedmioty</a></li>
+                          <li><a href="#grades">Oceny</a></li>
+                          <li><a href="#terms">Semestry</a></li>
+                          <li><a href="#programmes">Kierunki</a></li>
+                          <li><a href="#lecturers">Nauczyciele</a></li>
+                      </ul>
+                </li>
+                {{/if}}
+
+                {{#if USOS_PAIRED}}
+                {{else}}
+                <li><a href="#register">Zarejestruj w USOS</a></li>
+                {{/if}}
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li id="spinner"><a class="fa fa-spinner fa-pulse"></a></li>
+                {{#if USER_LOGGED }}
+                <li><a href="/authentication/logout">Wyloguj</a></li>
+                {{else}}
+                <li class="dropdown">
+                    <a href="/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">Zaloguj <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/authentication/google">Przez Google</a></li>
+                        <li><a href="/authentication/facebook">Przez Facebook</a></li>
+                    </ul>
+                </li>
+                {{/if}}
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
