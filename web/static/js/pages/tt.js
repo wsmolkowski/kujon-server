@@ -4,8 +4,6 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
         render: function() {
             var template = Handlebars.compile(tpl);
 
-            //tutaj możesz zrobić np. wywołanie JSON
-
             var data = {
                 hello: 'World'
             };
@@ -17,17 +15,21 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                 'firstDay': 1,
                 'aspectRatio': 2,
                 'nowIndicator': true,
+                'lang': 'pl',
                 events: function(start, end, timezone, callback) {
 
                         $.ajax({
                             url: 'http://localhost:8881/api/tt/' + start.format('Y-MM-DD'),
                             dataType: 'json',
+                            xhrFields: {
+                                withCredentials: true
+                            },
                             success: function(doc) {
                                 var events = [];
-                                $(doc).find('data').each(function() {
+                                $(doc.data).each(function() {
                                     events.push({
                                         title: $(this).attr('title'),
-                                        start: $(this).attr('start') // will be parsed
+                                        start: $(this).attr('start_date') // will be parsed
                                     });
                                 });
                                 callback(events);
@@ -35,8 +37,6 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                         });
                     }
             });
-
-            //a tutaj możesz np. zapiąć listenery, uruchomić subkomponenty jQuery itp.
         }
     }
 });
