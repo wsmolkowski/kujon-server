@@ -13,10 +13,8 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                 page.render();
             } else {
                 if (main.isUserLoggedIn() == false){
-                    debugger;
                     setActiveLink('login');
                 } else {
-                    debugger;
                     page.render();
                 }
 
