@@ -14,7 +14,7 @@ GROUP_ID = "course_unit_id"
 FRIEND_ID = "friend_id"
 PROGRAMME_ID = "programme_id"
 FACULTY_ID = "fac_id"
-TT_START = "start"
+TT_STARTDATE = "start_date"
 
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
@@ -68,5 +68,4 @@ COLLECTION_FACULTIES = "faculties"
 COLLECTION_TT = "tt"
 COLLECTION_JOBS_INITIAL_USER = "jobs_initial_user"
 
-TIME_TABLE_DELTA = 7   # days
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"

@@ -6,7 +6,7 @@ from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
 from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.handlers_api_lecturers import LecturersApi, LecturerByIdApi
 from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
-from handlers.handlers_api_schedule import ScheduleApi
+from handlers.handlers_api_tt import TTApi
 from handlers.handlers_api_terms import TermsApi, TermApi
 from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 from tornado.web import StaticFileHandler
@@ -38,7 +38,7 @@ HANDLERS = [
     (r"/api/lecturers/", LecturersApi),
     (r"/api/lecturers/([^/]+)", LecturerByIdApi),
 
-    (r"/api/schedule", ScheduleApi),
+    (r"/api/tt/([^/]+)", TTApi),
 
     (r"/api/programmes/", ProgrammesApi),
     (r"/api/programmes/([^/]+)", ProgrammesByIdApi),

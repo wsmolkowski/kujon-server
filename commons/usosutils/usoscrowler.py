@@ -141,6 +141,7 @@ class UsosCrowler:
                 logging.debug(u"problem during tt fetch: {0}".format(ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crowl_time, crowl_time)
+                result[constants.PROGRAMME_ID]
                 result[constants.USER_ID] = user_id
                 tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
                 logging.debug(u"time tables for date: {0} inserted: {1}".format(given_date, tt_doc))
@@ -363,10 +364,10 @@ class UsosCrowler:
 
             # fetch tt for current and next week
             today = date.today()
-            next_week = today + timedelta(days=constants.TIME_TABLE_DELTA)
-
-            self.__build_tt(client, user_id, crowl_time, usos, today)
-            self.__build_tt(client, user_id, crowl_time, usos, next_week)
+            monday = today - timedelta(days=(today.weekday()) % 7)
+            next_monday = monday + timedelta(days=7)
+            self.__build_tt(client, user_id, crowl_time, usos, monday)
+            self.__build_tt(client, user_id, crowl_time, usos, next_monday)
 
             self.__build_programmes(client, user_info_id, crowl_time, usos)
 
