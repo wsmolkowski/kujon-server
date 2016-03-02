@@ -110,10 +110,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(request_url, callback);
         };
 
-        function cleanSecureCookie() {
-            $.cookie(config['USER_SECURE_COOKIE'], null);
-        };
-
         /* public methods */
         return {
 
@@ -158,7 +154,14 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 lecturerDetails(lecturerId, callback);
             },
             cleanSecureCookie: function(){
-                cleanSecureCookie();
+                $.cookie(config['USER_SECURE_COOKIE'], null);
+            },
+            isUserLoggedIn: function(){
+                if (! $.cookie('USER_SECURE_COOKIE')){
+                    return false;
+                } else {
+                    return true;
+                }
             }
         };
 
