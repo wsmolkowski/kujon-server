@@ -5,7 +5,7 @@ from base64 import b64decode
 import tornado.web
 from bson.objectid import ObjectId
 
-from handlers_api import BaseHandler
+from base import BaseHandler
 from commons import constants
 from commons.usosutils import usosinstances
 

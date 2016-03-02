@@ -65,7 +65,7 @@ COLLECTION_PROGRAMMES = "programmes"
 COLLECTION_GROUPS = "groups"
 COLLECTION_PHOTOS = "users_info_photos"
 COLLECTION_FACULTIES = "faculties"
-COLLECTION_TT = "tt"
+COLLECTION_TT = "tts"
 COLLECTION_JOBS_INITIAL_USER = "jobs_initial_user"
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"

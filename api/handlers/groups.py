@@ -3,7 +3,7 @@
 import tornado.web
 from bson.objectid import ObjectId
 
-from handlers_api import BaseHandler
+from base import BaseHandler
 from commons import constants
 
 LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')

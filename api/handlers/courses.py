@@ -3,7 +3,7 @@
 import tornado.web
 from bson.objectid import ObjectId
 
-from handlers_api import BaseHandler
+from base import BaseHandler
 from commons import constants
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',

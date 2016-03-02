@@ -2,7 +2,7 @@
 
 import tornado.web
 
-from handlers_api import BaseHandler
+from base import BaseHandler
 from commons import constants
 
 

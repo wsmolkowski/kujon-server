@@ -1,14 +1,14 @@
-from handlers.handlers_api import UsosesApi
-from handlers.handlers_api_courses import CoursesApi
-from handlers.handlers_api_courses import CoursesEditionsApi
-from handlers.handlers_api_faculties import FacultyByIdApi
-from handlers.handlers_api_friends import FriendsSuggestionsApi, FriendsApi
-from handlers.handlers_api_grades import GradesForCourseAndTermApi, GradesForUserApi
-from handlers.handlers_api_lecturers import LecturersApi, LecturerByIdApi
-from handlers.handlers_api_programmes import ProgrammesApi, ProgrammesByIdApi
-from handlers.handlers_api_tt import TTApi
-from handlers.handlers_api_terms import TermsApi, TermApi
-from handlers.handlers_api_user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
+from handlers.base import UsosesApi
+from handlers.courses import CoursesApi
+from handlers.courses import CoursesEditionsApi
+from handlers.faculties import FacultyByIdApi
+from handlers.friends import FriendsSuggestionsApi, FriendsApi
+from handlers.grades import GradesForCourseAndTermApi, GradesForUserApi
+from handlers.lecturers import LecturersApi, LecturerByIdApi
+from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
+from handlers.tt import TTApi
+from handlers.terms import TermsApi, TermApi
+from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 from tornado.web import StaticFileHandler
 
 HANDLERS = [

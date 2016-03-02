@@ -3,7 +3,7 @@
 import tornado.web
 from bson.objectid import ObjectId
 from datetime import date, timedelta
-from handlers_api import BaseHandler
+from base import BaseHandler
 from commons import constants
 from commons.usosutils.usosclient import UsosClient
 from commons.usosutils import usosinstances
@@ -38,21 +38,28 @@ class TTApi(BaseHandler):
             # fetch TT from USOS
             client = UsosClient(base_url=usos['url'],
                      consumer_key=usos['consumer_key'],
-                     consumer_secret=usos['consumer_key'],
+                     consumer_secret=usos['consumer_secret'],
                      access_token_key=user_doc[constants.ACCESS_TOKEN_KEY],
                      access_token_secret=user_doc[constants.ACCESS_TOKEN_SECRET])
             try:
                 result = client.tt(monday)
-                if result:
-                    # insert TT to mongo
-                    result[constants.USOS_ID] = parameters[constants.USOS_ID]
-                    result[constants.USER_ID] = parameters[constants.ID]
-                    tt_doc = self.dao.insert(constants.COLLECTION_TT, result)
-                    self.success(tt_doc)
-                else:
-                    self.success(list())
-            except Exception, ex:
-                self.error(u"Bład podczas pobierania TT z USOS, try: YYYY-MM-DD".format(given_date))
 
+                # TODO: obsluga type of activity. Currently there are three possible values: classgroup, classgroup2, meeting or exam..
+
+                # insert TT to mongo
+                tt = dict()
+                tt[constants.USOS_ID] = parameters[constants.USOS_ID]
+                tt[constants.USER_ID] = parameters[constants.ID]
+                tt[constants.TT_STARTDATE] = str(monday)
+                if not result:
+                    result=list()
+                else:
+                    pass
+                    # TODO: add here fetch TT for next week, that if next week will be fetech user will get data from mongo
+                tt['tts'] = result
+                tt_doc = yield self.db[constants.COLLECTION_TT].insert(tt)
+                self.success(result)
+            except Exception, ex:
+                self.error(u"Bład podczas pobierania TT z USOS for {0}.".format(given_date))
         else:
-            self.success(tt_doc)
+            self.success(tt_doc['tts'])

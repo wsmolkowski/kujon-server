@@ -18,7 +18,7 @@ URI_GROUPS = u"services/groups/group?course_unit_id={0}&group_number=1&fields=co
 URI_COURSES_UNITS = u"services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}"
 URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement"
 URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]"
-URI_TT = u"services/tt/user?start={0}&days=7&fields=start_date|end_date|name"
+URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type"
 
 class UsosClient:
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
