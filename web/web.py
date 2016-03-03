@@ -36,7 +36,7 @@ class Application(tornado.web.Application):
 
         __settings = dict(
             debug=settings.DEBUG,
-            reload=settings.RELOAD,
+            #reload=settings.RELOAD,
             gzip=settings.GZIP,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
@@ -57,7 +57,4 @@ if __name__ == "__main__":
     web = Application()
     web.listen(settings.WEB_PORT)
     logging.info(settings.DEPLOY_WEB)
-
-    print settings.CALLBACK_URL
-
     tornado.ioloop.IOLoop.current().start()
