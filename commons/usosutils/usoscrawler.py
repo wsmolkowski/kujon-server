@@ -387,7 +387,7 @@ class UsosCrawler:
             # crawl collection
             result = self.append(dict(), usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
-            doc = self.dao.insert(constants.COLLECTION_crawlLOG, result)
+            doc = self.dao.insert(constants.COLLECTION_CRAWLLOG, result)
             logging.info(u"crawl log inserted with id {0}".format(doc))
 
         except Exception, ex:
