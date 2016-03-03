@@ -17,7 +17,7 @@ PROJECT_TITLE = "Kujon.io"
 
 DEBUG = True
 RELOAD = False
-CLEAN_DB = True
+CLEAN_DB = False
 GZIP = True
 
 SITE_DOMAIN = u"localhost"
