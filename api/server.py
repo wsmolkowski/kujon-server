@@ -9,8 +9,9 @@ from tornado.log import enable_pretty_logging
 from tornado.options import define, options, parse_command_line
 
 import settings
-from handlers_list import HANDLERS
 from commons import settings as common_settings
+from commons import constants
+from handlers_list import HANDLERS
 
 define('debug', default=settings.DEBUG)
 define('port', default=settings.PORT)
@@ -28,7 +29,6 @@ class Application(tornado.web.Application):
         return self._db[common_settings.MONGODB_NAME]
 
     def __init__(self):
-
         _settings = dict(
             debug=options.debug,
             ssl=options.ssl,
@@ -56,8 +56,8 @@ def prepare_environment():
             uc.recreate_usos()
             uc.recreate_dictionaries()
         except Exception, ex:
-            logging.error("Problem during preparation env:".format(ex.message))
-            SystemExit()
+            logging.exception(u"Problem during environment preparation: %s".format(ex.message))
+            sys.exit(-1)
 
 
 def main():
@@ -70,9 +70,9 @@ def main():
 
     # change encoding to utf-8
     reload(sys)  # Reload does the trick!
-    sys.setdefaultencoding('utf-8')
-    if sys.getdefaultencoding()!='utf-8':
-        logging.error(u"Change encoding on UTF8!")
+    sys.setdefaultencoding(constants.ENCODING)
+    if sys.getdefaultencoding() != constants.ENCODING:
+        logging.error(u"Could not change encoding to %s".format(constants.ENCODING))
 
     prepare_environment()
 
@@ -81,6 +81,7 @@ def main():
     logging.info(settings.DEPLOY_URL)
 
     IOLoop.instance().start()
+
 
 if __name__ == "__main__":
     main()
