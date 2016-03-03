@@ -33,7 +33,7 @@ class UsosAsync:
     def validate_response(fetch_type, response):
         if response.code is not 200:
             raise HTTPError(response.code, "Error while fetching {0}. Response body: {1}".format(fetch_type,
-                                                                                                 response.body))
+                                                                                                 response.error))
 
     @tornado.gen.coroutine
     def get_courses_classtypes(self, usos_base_url, validate_cert=False):
