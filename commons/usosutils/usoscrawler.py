@@ -16,13 +16,12 @@ from commons.AESCipher import AESCipher
 
 class UsosCrawler:
     def __init__(self, dao=None):
-        self.aes = AESCipher()
-
         if not dao:
             self.dao = Dao()
         else:
             self.dao = dao
 
+        self.aes = AESCipher()
         self.usosAsync = UsosAsync()
 
     @staticmethod
@@ -51,7 +50,7 @@ class UsosCrawler:
             logging.info(u"recreating dictionaries in collections {0} for {1}".format(
                     constants.COLLECTION_COURSES_CLASSTYPES,
                     usos[constants.USOS_ID]))
-            inserts = []
+            inserts = list()
             class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
             if len(class_types) > 0:
                 for class_type in class_types.values():
@@ -63,8 +62,8 @@ class UsosCrawler:
                 logging.debug(
                     u"dictionary course classtypes for usos {0} inserted.".format(usos[constants.USOS_ID]))
             else:
-                raise Exception(u"fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                       usos[constants.USOS_ID]))
+                raise Exception(u"fail to recreate_dictionaries {0} for {1}".format(
+                    constants.COLLECTION_COURSES_CLASSTYPES, usos[constants.USOS_ID]))
         raise tornado.gen.Return(True)
 
     def drop_collections(self):
@@ -80,7 +79,7 @@ class UsosCrawler:
                 self.dao.insert(constants.COLLECTION_USOSINSTANCES, self.aes.encrypt_usos(usos))
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
-         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
+        if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
             photo = client.user_info_photo(user_info_id)
             if photo:
                 photo = self.append(photo, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -215,7 +214,7 @@ class UsosCrawler:
     @tornado.gen.coroutine
     def __build_courses(self, client, user_id, usos, crawl_time):
 
-        courses = []
+        courses = list()
         for course_edition in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
             for term in course_edition['course_editions']:
                 for course in course_edition['course_editions'][term]:
@@ -286,7 +285,7 @@ class UsosCrawler:
             try:
                 result = client.groups(unit)
             except Exception, ex:
-                logging.debug(u"exception during fetch unit: {0} : {1}".format(unit, ex.message))
+                logging.exception(u"exception during fetch unit: {0} : {1}".format(unit, ex.message))
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
@@ -297,9 +296,9 @@ class UsosCrawler:
     @tornado.gen.coroutine
     def __build_grades_participants_lecturers_units_groups(self, client, user_id, usos, crawl_time):
 
-        all_participants = []
-        all_lecturers = []
-        all_units = []
+        all_participants = list()
+        all_lecturers = list()
+        all_units = list()
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = data[0], data[1]
 
@@ -308,7 +307,7 @@ class UsosCrawler:
             try:
                 result = client.course_edition(course_id, term_id, fetch_participants=True)
             except Exception, ex:
-                logging.debug(u"problem during course_edition fetch: {0}.".format(ex.message))
+                logging.exception(u"problem during course_edition fetch: {0}.".format(ex.message))
             if result and 'participants' in result:
                 participants = result.pop('participants')
                 lecturers = result.pop('lecturers')
@@ -387,6 +386,7 @@ class UsosCrawler:
             # crawl collection
             result = self.append(dict(), usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
+            result[constants.CRAWL_TYPE] = constants.CRAWL_TYPE_INITIAL
             doc = self.dao.insert(constants.COLLECTION_CRAWLLOG, result)
             logging.info(u"crawl log inserted with id {0}".format(doc))
 

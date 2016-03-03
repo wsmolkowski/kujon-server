@@ -4,7 +4,6 @@ ENCODING = "UTF-8"
 USOS_ID = "usos_id"
 USER_INFO_ID = "id"
 USER_ID = "user_id"
-USERS_ID = "_id"
 MOBILE_ID = "mobile_id"
 COURSE_ID = "course_id"
 TERM_ID = "term_id"
@@ -28,8 +27,8 @@ OAUTH_VERIFIER = "oauth_verifier"
 USOS_URL = "url"
 CONSUMER_KEY = "consumer_key"
 CONSUMER_SECRET = "consumer_secret"
-STATUS = "status"
 
+JOB_STATUS = "status"
 JOB_START = "job_start"
 JOB_END = "job_end"
 
@@ -69,3 +68,6 @@ COLLECTION_TT = "tts"
 COLLECTION_JOBS_INITIAL_USER = "jobs_initial_user"
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
+CRAWL_USER_UPDATE = 5   #   minutes after crawler updates user data
+CRAWL_TYPE = 'crawl_type'
+CRAWL_TYPE_INITIAL = 'initial'

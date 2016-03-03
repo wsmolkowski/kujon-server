@@ -11,7 +11,7 @@ import tornado.web
 from bson import json_util
 
 from base import BaseHandler
-from commons import constants, settings
+from commons import constants, settings, mongo_utils
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)
@@ -33,7 +33,7 @@ class LoginHandler(BaseHandler):
              constants.ACCESS_TOKEN_KEY: access_token_key},
             constants.USER_PRESENT_KEYS)
         if user_doc:
-            user_doc[constants.USER_ID] = str(user_doc[constants.USERS_ID])
+            user_doc[constants.USER_ID] = str(user_doc[constants.ID])
             user_doc.pop(constants.ID)
 
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
@@ -43,7 +43,7 @@ class LoginHandler(BaseHandler):
         else:
             data = self.template_data()
             data[constants.ALERT_MESSAGE] = u"login authentication failed for {0} and {1}".format(access_token_key,
-                                                                                                 access_token_secret)
+                                                                                                  access_token_secret)
             self.render("login.html", **data)
 
 
@@ -368,13 +368,10 @@ class VerifyHandler(BaseHandler):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            job_doc = {
-                constants.USER_ID: user_doc[constants.ID],
-                constants.CREATED_TIME: datetime.now(),
-                constants.STATUS: constants.JOB_START,
-            }
-            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert(job_doc)
+            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert(mongo_utils.user_job_insert(user_doc[constants.ID]))
 
             self.redirect('/')
         else:
             self.redirect('/')
+
+

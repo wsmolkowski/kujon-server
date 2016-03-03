@@ -4,8 +4,9 @@ from datetime import timedelta, datetime
 import pymongo
 from bson.objectid import ObjectId
 
-from commons import settings, constants
+import mongo_utils
 from AESCipher import AESCipher
+from commons import settings, constants
 
 
 class Dao:
@@ -32,8 +33,7 @@ class Dao:
         for collection in self.__db.collection_names():
             if 'system' in collection:
                 continue
-            logging.warn("Cleaning collection: {0}".format(collection))
-            self.__db.drop_collection(collection)
+            self.drop_collection(collection)
 
     def find_usos(self, usos_id):
         return self.__db.usosinstances.find_one({constants.USOS_ID: usos_id})
@@ -125,7 +125,7 @@ class Dao:
              constants.USOS_ID: usos_id})
 
     def get_user_terms(self, user_id):
-        terms = []
+        terms = list()
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
         for term in data['course_editions'].keys():
             if term not in terms:
@@ -156,7 +156,7 @@ class Dao:
         return tt
 
     def get_user_courses(self, user_id, usos_id):
-        course_edition = []
+        course_edition = list()
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(user_id),
              constants.USOS_ID: usos_id})
@@ -169,7 +169,7 @@ class Dao:
         return course_edition
 
     def get_user_courses_editions(self, user_id):
-        result = []
+        result = list()
         data = self.__db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(user_id)})
         if data:
@@ -187,13 +187,38 @@ class Dao:
 
     def get_user_jobs(self, status):
         if constants.COLLECTION_JOBS_INITIAL_USER not in self.__db.collection_names():
-            return []
-        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({constants.STATUS: status},
+            return list()
+
+        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find({constants.JOB_STATUS: status},
                                                                       (constants.USER_ID,))
 
     def update_user_job(self, job_id, status):
-        update = {"$set": {constants.STATUS: status, constants.UPDATE_TIME: datetime.now()}}
+        update = {"$set": {constants.JOB_STATUS: status, constants.UPDATE_TIME: datetime.now()}}
 
         result = self.__db[constants.COLLECTION_JOBS_INITIAL_USER].update({constants.ID: job_id}, update)
 
         logging.debug(u"update_user_job result {0}".format(result))
+
+    def insert_user_job(self, user_id):
+        return self.__db[constants.COLLECTION_JOBS_INITIAL_USER].insert(mongo_utils.user_job_insert(user_id))
+
+    def get_user_jobs_for_update(self):
+        """
+        finds jobs which run minutes ago - constants.CRAWL_USER_UPDATE
+        :return: list
+        """
+        if constants.COLLECTION_JOBS_INITIAL_USER not in self.__db.collection_names():
+            return list()
+
+        delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
+
+        docs = self.__db[constants.COLLECTION_JOBS_INITIAL_USER].find(
+            {constants.UPDATE_TIME: {'$gt': delta}, constants.UPDATE_TIME: {"$ne": None}}
+        ).sort(constants.UPDATE_TIME, pymongo.DESCENDING).limit(1)
+
+        result = list()
+        for doc in docs:
+            if doc[constants.JOB_STATUS] != constants.JOB_END:
+                continue
+            result.append(doc)
+        return result
