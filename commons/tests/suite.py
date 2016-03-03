@@ -1,6 +1,6 @@
 import unittest
 
-from usoscrowler_tests import CrowlerTest
+from usoscrawler_tests import CrawlerTest
 from usosclient_tests import ClientTest
 from usosasync_tests import UsosAsyncTest
 from serialize_tests import SerializationTest
@@ -11,7 +11,7 @@ def build_suite():
 
     test_suite = unittest.TestSuite()
 
-    test_suite.addTest(unittest.makeSuite(CrowlerTest))
+    test_suite.addTest(unittest.makeSuite(CrawlerTest))
     test_suite.addTest(unittest.makeSuite(ClientTest))
     test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
     test_suite.addTest(unittest.makeSuite(SerializationTest))

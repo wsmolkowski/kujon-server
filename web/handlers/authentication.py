@@ -257,7 +257,7 @@ class VerifyHandler(BaseHandler):
                                        tornado.escape.json_encode(json_util.dumps(user_doc)),
                                        constants.COOKIE_EXPIRES_DAYS)
 
-                # self.crowler.put_user(updated_user[constants.ID])
+                # self.crawler.put_user(updated_user[constants.ID])
 
                 self.redirect('/')
             except KeyError:

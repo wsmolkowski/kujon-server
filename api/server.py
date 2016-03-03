@@ -8,6 +8,7 @@ from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.options import define, options, parse_command_line
 
+from commons.usosutils.usoscrawler import UsosCrawler
 from commons import settings
 from commons import constants
 from handlers_list import HANDLERS
@@ -28,7 +29,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         _settings = dict(
             debug=settings.DEBUG,
-            reload=settings.RELOAD,
+            #reload=settings.RELOAD,
             gzip=settings.GZIP,
             cookie_secret=settings.COOKIE_SECRET,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
@@ -47,9 +48,7 @@ def prepare_environment():
     if sys.getdefaultencoding() != constants.ENCODING:
         logging.error(u"Could not change encoding to %s".format(constants.ENCODING))
 
-    from commons.usosutils.usoscrowler import UsosCrowler
-
-    uc = UsosCrowler()
+    uc = UsosCrawler()
     if settings.CLEAN_DB:
         try:
             uc.drop_collections()

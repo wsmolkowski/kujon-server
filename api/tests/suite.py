@@ -7,7 +7,7 @@ def build_suite():
 
     test_suite = unittest.TestSuite()
 
-    test_suite.addTest(unittest.makeSuite(CrowlerTest))
+    test_suite.addTest(unittest.makeSuite(CrawlerTest))
     test_suite.addTest(unittest.makeSuite(ClientTest))
     test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
 

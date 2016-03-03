@@ -54,6 +54,10 @@ if __name__ == "__main__":
     parse_command_line()
     enable_pretty_logging()
 
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug(u"DEBUG MODE is ON")
+
     web = Application()
     web.listen(settings.WEB_PORT)
     logging.info(settings.DEPLOY_WEB)

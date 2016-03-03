@@ -18,8 +18,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @property
-    def crowler(self):
-        return self.application.crowler
+    def crawler(self):
+        return self.application.crawler
 
     @property
     def db(self):
