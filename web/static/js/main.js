@@ -110,6 +110,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(request_url, callback);
         };
 
+        function TT(start, callback) {
+                var request_url = buildApiUrl('/api/tt/') + start;
+                callAjaxGet(request_url, callback);
+        };
+
         /* public methods */
         return {
 
@@ -162,7 +167,12 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 } else {
                     return true;
                 }
-            }
+            },
+            callTT: function(start, callback){
+                TT(start, callback);
+            },
+
+
         };
 
 });
