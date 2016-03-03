@@ -5,9 +5,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            var data;
-
-            $('#page').html(template(data));
+            $('#page').html(template());
 
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
