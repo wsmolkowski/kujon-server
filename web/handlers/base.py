@@ -1,9 +1,8 @@
 import urlparse
 import oauth2 as oauth
 
-import settings
 from commons.mixins.JSendMixin import JSendMixin
-from commons import handlers, constants
+from commons import handlers, constants, settings
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
@@ -21,8 +20,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
 
         return {
             'PROJECT_TITLE': settings.PROJECT_TITLE,
-            'DEPLOY_URL': settings.DEPLOY_URL,
-            'API_URL': settings.USOS_API,
+            'DEPLOY_URL': settings.DEPLOY_WEB,
+            'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
             'USER_LOGGED': True if user else False

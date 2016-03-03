@@ -12,3 +12,19 @@ GOOGLE_CLIENT_SECRET = "Pl3jCVQO55nZMhxKXHNWivZp"
 
 FACEBOOK_CLIENT_ID = "435328606663469"
 FACEBOOK_CLIENT_SECRET = "3f2e953dbfebc98a2ea2fc888266f1c4"
+
+PROJECT_TITLE = "Kujon.io"
+
+DEBUG = True
+RELOAD = False
+CLEAN_DB = True
+GZIP = True
+
+SITE_DOMAIN = u"localhost"
+API_PORT = 8881
+DEPLOY_API = u"http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
+
+WEB_PORT = 8888
+DEPLOY_WEB = u"http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
+
+CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)

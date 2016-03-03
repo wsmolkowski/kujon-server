@@ -8,15 +8,12 @@ from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.options import define, options, parse_command_line
 
-import settings
-from commons import settings as common_settings
+from commons import settings
 from commons import constants
 from handlers_list import HANDLERS
 
-define('debug', default=settings.DEBUG)
-define('port', default=settings.PORT)
-define('ssl', default=settings.SSL)
-define('cookie_secret', default=common_settings.COOKIE_SECRET)
+
+define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
@@ -25,20 +22,17 @@ class Application(tornado.web.Application):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(common_settings.MONGODB_URI)
-        return self._db[common_settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
+        return self._db[settings.MONGODB_NAME]
 
     def __init__(self):
         _settings = dict(
-            debug=options.debug,
-            ssl=options.ssl,
-            cookie_secret=options.cookie_secret,
-            site_url=settings.DEPLOY_URL,
-            site_domain=settings.SITE_DOMAIN,
-            site_root=settings.SITE_ROOT,
+            debug=settings.DEBUG,
+            reload=settings.RELOAD,
             gzip=settings.GZIP,
-            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET},
-            facebook_oauth={'key': common_settings.FACEBOOK_CLIENT_ID, 'secret': common_settings.FACEBOOK_CLIENT_SECRET}
+            cookie_secret=settings.COOKIE_SECRET,
+            google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
+            facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
@@ -47,6 +41,12 @@ class Application(tornado.web.Application):
 
 
 def prepare_environment():
+    # change encoding to utf-8
+    reload(sys)  # Reload does the trick!
+    sys.setdefaultencoding(constants.ENCODING)
+    if sys.getdefaultencoding() != constants.ENCODING:
+        logging.error(u"Could not change encoding to %s".format(constants.ENCODING))
+
     from commons.usosutils.usoscrowler import UsosCrowler
 
     uc = UsosCrowler()
@@ -64,21 +64,15 @@ def main():
     parse_command_line()
     enable_pretty_logging()
 
-    if options.debug:
+    if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug(u"DEBUG MODE is ON")
-
-    # change encoding to utf-8
-    reload(sys)  # Reload does the trick!
-    sys.setdefaultencoding(constants.ENCODING)
-    if sys.getdefaultencoding() != constants.ENCODING:
-        logging.error(u"Could not change encoding to %s".format(constants.ENCODING))
 
     prepare_environment()
 
     application = Application()
-    application.listen(options.port)
-    logging.info(settings.DEPLOY_URL)
+    application.listen(settings.API_PORT)
+    logging.info(settings.DEPLOY_API)
 
     IOLoop.instance().start()
 

@@ -1,6 +1,6 @@
 import os
+import logging
 
-import settings
 import motor
 import tornado.ioloop
 import tornado.web
@@ -8,7 +8,7 @@ from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line
 
 from handlers import web, authentication
-from commons import settings as common_settings
+from commons import settings
 
 
 class Application(tornado.web.Application):
@@ -18,8 +18,8 @@ class Application(tornado.web.Application):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(common_settings.MONGODB_URI)
-        return self._db[common_settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
+        return self._db[settings.MONGODB_NAME]
 
     def __init__(self):
         __handlers = [
@@ -32,16 +32,17 @@ class Application(tornado.web.Application):
             (r"/authentication/verify", authentication.VerifyHandler),
             (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
             (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
-
         ]
 
         __settings = dict(
-            debug=True,
+            debug=settings.DEBUG,
+            reload=settings.RELOAD,
+            gzip=settings.GZIP,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            cookie_secret=common_settings.COOKIE_SECRET,
-            google_oauth={'key': common_settings.GOOGLE_CLIENT_ID, 'secret': common_settings.GOOGLE_CLIENT_SECRET},
-            facebook_oauth={'key': common_settings.FACEBOOK_CLIENT_ID, 'secret': common_settings.FACEBOOK_CLIENT_SECRET}
+            cookie_secret=settings.COOKIE_SECRET,
+            google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
+            facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET}
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)
@@ -54,6 +55,9 @@ if __name__ == "__main__":
     enable_pretty_logging()
 
     web = Application()
-    web.listen(settings.PORT)
-    print settings.DEPLOY_URL
+    web.listen(settings.WEB_PORT)
+    logging.info(settings.DEPLOY_WEB)
+
+    print settings.CALLBACK_URL
+
     tornado.ioloop.IOLoop.current().start()
