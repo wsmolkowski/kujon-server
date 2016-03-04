@@ -13,7 +13,6 @@ from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 from commons.AESCipher import AESCipher
 
-
 class UsosCrawler:
     def __init__(self, dao=None):
         if not dao:
@@ -84,6 +83,7 @@ class UsosCrawler:
             if photo:
                 photo = self.append(photo, usos[constants.USOS_ID], crawl_time, crawl_time)
                 photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
+                return photo_doc
                 logging.debug(u"photo for user_id: {0} inserted {1}".format(photo[constants.USER_ID], photo_doc))
             else:
                 logging.debug(u"no photo for user_id: {0}".format(user_id))
@@ -94,12 +94,14 @@ class UsosCrawler:
         result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
         if user_id:
             result[constants.USER_ID] = user_id
-        ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.debug(u"user_info inserted: {0}".format(ui_doc))
 
         # if user has photo - download
         if 'has_photo' in result and result['has_photo']:
-            self.__build_user_info_photo(client, user_id, result[constants.USER_INFO_ID], crawl_time, usos)
+            result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.USER_INFO_ID], crawl_time, usos)
+
+        ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
+        logging.debug(u"user_info inserted: {0}".format(ui_doc))
+
 
         # if user conducts courses - fetch courses
         if result['course_editions_conducted']:

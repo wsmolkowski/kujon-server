@@ -81,10 +81,10 @@ class UserInfoApi(BaseHandler):
 class UserInfoPhotoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, user_id):
+    def get(self, photo_id):
         # parameters = yield self.get_parameters(usos_paired=True)
 
-        user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.USER_ID: user_id})
+        user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
         if user_photo:
             self.set_header("Content-Type", "image/jpeg")
             self.write(b64decode(user_photo['photo']))

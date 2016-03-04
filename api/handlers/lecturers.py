@@ -62,6 +62,10 @@ class LecturerByIdApi(BaseHandler):
             self.error(u"Poczekaj szukamy informacji o nauczycielu..")
         else:
 
+            # change ObjectId to str for photo
+            if user_info['has_photo']:
+                user_info['has_photo'] = str(user_info['has_photo'])
+
             # change staff_status to dictionary
             if user_info['staff_status'] == 1:
                 user_info['staff_status'] = 'Pracownik'

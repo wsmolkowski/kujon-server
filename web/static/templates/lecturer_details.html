@@ -3,7 +3,7 @@
     <tr>
         <td width="85%">
             <table class="table table-strip table-responsive">
-            <tr><td>Tytuł</td><td>{{titles.before}}</td>
+            <tr><td>Tytuł</td><td>{{titles.before}}{{DEPLOY_URL}}</td>
                 <td></td>
             </tr>
             <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
@@ -21,7 +21,7 @@
             {{/course_editions_conducted}}
             </table>
         <td width="15%" valign="top" align="center">
-            {{#if has_photo}}<img src="http://localhost:8881/api/users_info_photos/{{id}}" height="150">{{/if}}
+            {{#if has_photo}}<img src="{{DEPLOY_URL}}/api/users_info_photos/{{has_photo}}" height="150">{{/if}}
         </td>
     </tr>
     </tbody>
