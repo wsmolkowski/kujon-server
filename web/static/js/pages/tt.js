@@ -1,4 +1,4 @@
-define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html', 'text!templates/error.html', 'qtip'], function($, Handlebars, main, fullcalendar, tpl, tplError, qtip) {
+define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html', 'text!templates/error.html', 'fullcalendarpl'], function($, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
 'use strict';
     return {
         render: function() {
@@ -10,6 +10,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
                 'firstDay': 1,
+                lang: 'pl',
                 'aspectRatio': 2,
                 'nowIndicator': true,
                 'lang': 'pl',
@@ -40,19 +41,14 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                 },
                 'timeFormat': 'H:mm',
                 'axisFormat': 'H:mm',
-                 eventRender: function(event, element) {
-                    var description = "<b>sala</b>: " + event.room_number + "<br>"
-                    description += "<b>budynek</b>: " + event.building_name + "<br>"
-                    description += "<b>grupa</b>: " + event.group_number + "<br>"
-                    description += "<b>typ</b>: " + event.type + "<br>"
-                    element.qtip({
-                        content: description,
-                        position: {
-                            my: 'top left',  // Position my top left...
-                            at: 'center right', // at the bottom right of...
-                        }
-                    });
-                 }
+                'columnFormat': 'ddd DD/MM',
+                'eventRender': function(event, element) {
+                    var description = "sala: " + event.room_number + "<br>"
+                    description += "budynek: " + event.building_name + "<br>"
+                    description += "grupa: " + event.group_number + "<br>"
+                    description += "typ: " + event.type
+                    element.tooltip({title: description, html: true, container: "body", placement: 'right'});
+                }
             });
         }
     }
