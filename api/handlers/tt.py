@@ -76,9 +76,9 @@ class TTApi(BaseHandler):
                                  constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
             # fetch TT from USOS
-            client = UsosClient(base_url=usos['url'],
-                     consumer_key=usos['consumer_key'],
-                     consumer_secret=usos['consumer_secret'],
+            client = UsosClient(base_url=usos[constants.USOS_URL],
+                     consumer_key=usos[constants.CONSUMER_KEY],
+                     consumer_secret=usos[constants.CONSUMER_SECRET],
                      access_token_key=user_doc[constants.ACCESS_TOKEN_KEY],
                      access_token_secret=user_doc[constants.ACCESS_TOKEN_SECRET])
             try:
@@ -94,8 +94,8 @@ class TTApi(BaseHandler):
                 if not result:
                     result=list()
                 else:
+                    # insert a call for crawl here for next_monday variable for TT only
                     pass
-                    # TODO: add here fetch TT for next week, that if next week will be fetech user will get data from mongo
                 tt['tts'] = result
                 tt_doc = yield self.db[constants.COLLECTION_TT].insert(tt)
                 self.success(result)

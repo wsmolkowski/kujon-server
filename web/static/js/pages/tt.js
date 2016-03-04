@@ -23,7 +23,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                                 var events = [];
                                 $(data.data).each(function() {
                                     events.push({
-                                        title: $(this).attr('title'),// will be parsed
+                                        title: $(this).attr('title'),
                                         start: $(this).attr('start_date'),
                                         end: $(this).attr('end_date'),
                                         room_number: $(this).attr('room_number'),

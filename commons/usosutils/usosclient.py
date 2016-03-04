@@ -96,7 +96,6 @@ class UsosClient:
     def course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
             request = u"{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO.format(course_id, term_id))
-
         else:
             request = u"{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS.format(course_id, term_id))
         code, body = self.client.request(request)
