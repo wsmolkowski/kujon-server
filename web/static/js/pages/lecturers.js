@@ -33,7 +33,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                             $(idContent).html(templateError({'message': lecturerInfo.message}));
                         }
                     });
-              })
+                })
             };
 
         }

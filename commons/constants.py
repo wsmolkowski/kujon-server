@@ -68,6 +68,6 @@ COLLECTION_TT = "tts"
 COLLECTION_JOBS_INITIAL_USER = "jobs_initial_user"
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
-CRAWL_USER_UPDATE = 5   #   minutes after crawler updates user data
+CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
 CRAWL_TYPE = 'crawl_type'
 CRAWL_TYPE_INITIAL = 'initial'

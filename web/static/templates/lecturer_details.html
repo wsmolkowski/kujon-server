@@ -1,18 +1,28 @@
-<table class="table table-strip table-responsive">
+<table>
     <tbody>
-        <tr><td>Tytuł</td><td>{{titles.before}}</td></tr>
-        <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
-        <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>
-        <tr><td>Pokój</td><td>{{room.building_id}} - {{room.building_name.pl}}</td></tr>
-        <tr><td>Strona domowa</td><td><a href="{{homepage_url}}">{{homepage_url}}</a></td></tr>
-        <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
-        <tr><td>Zatrudnienie</td><td></td></tr>
-        {{#employment_positions}}
-        <tr><td></td><td>{{position.name.pl}} w {{faculty.name.pl}}</td></tr>
-        {{/employment_positions}}
-        <tr><td>Prowadzone przedmioty</td><td></td></tr>
-        {{#course_editions_conducted}}
-        <tr><td></td><td>{{course_name.pl}} {{term_id}} {{lecturers.user_id}} {{lecturers.id}} {{course_id}}</td></tr>
-        {{/course_editions_conducted}}
+    <tr>
+        <td width="85%">
+            <table class="table table-strip table-responsive">
+            <tr><td>Tytuł</td><td>{{titles.before}}</td>
+                <td></td>
+            </tr>
+            <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
+            <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>
+            <tr><td>Pokój</td><td>{{room.building_id}} - {{room.building_name.pl}}</td></tr>
+            <tr><td>Strona domowa</td><td><a href="{{homepage_url}}">{{homepage_url}}</a></td></tr>
+            <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
+            <tr><td>Zatrudnienie</td><td></td></tr>
+            {{#employment_positions}}
+            <tr><td></td><td>{{position.name.pl}} w {{faculty.name.pl}}</td></tr>
+            {{/employment_positions}}
+            <tr><td>Prowadzone przedmioty</td></tr>
+            {{#course_editions_conducted}}
+            <tr><td></td><td>{{course_name.pl}} {{term_id}} {{lecturers.user_id}} {{lecturers.id}} {{course_id}}</td></tr>
+            {{/course_editions_conducted}}
+            </table>
+        <td width="15%" valign="top" align="center">
+            {{#if has_photo}}<img src="{{DEPLOY_URL}}/api/users_info_photos/{{id}}" height="150">{{/if}}
+        </td>
+    </tr>
     </tbody>
 </table>
