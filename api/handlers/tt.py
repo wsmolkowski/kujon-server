@@ -22,35 +22,35 @@ class TTApi(BaseHandler):
         today = date.today()
         elem['start_date'] = str(today) + " " + "08:00:00"
         elem['end_date'] = str(today) + " " + "10:00:00"
-        elem['title'] = u"SEM-MGR"
+        elem['title'] = u"Projekowanie silni"
         elem['id'] = "132"
-        # elem['type'] = "classgroup"
-        # elem['course_name'] = "Projekowanie silni"
-        # elem['group_number'] = 1
-        # elem['building_name'] = "Budynek dydaktyczny"
-        # elem['room_number'] = "2030"
+        elem['type'] = "classgroup"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Budynek dydaktyczny"
+        elem['room_number'] = "2030"
         result.append(elem)
         elem = dict()
         elem['start_date'] = str(today) + " " + "10:00:00"
         elem['end_date'] = str(today) + " " + "11:00:00"
-        elem['title'] = u"1000-2D97SR"
+        elem['title'] = u"Seminarium Magisterskie"
         elem['id'] = "132"
-        # elem['type'] = "classgroup"
-        # elem['course_name'] = "Projekowanie silni"
-        # elem['group_number'] = 1
-        # elem['building_name'] = "Budynek nr 1313"
-        # elem['room_number'] = "1067"
+        elem['type'] = "classgroup"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Budynek nr 1313"
+        elem['room_number'] = "1067"
         result.append(elem)
         elem = dict()
         elem['start_date'] = str(today) + " " + "13:00:00"
         elem['end_date'] = str(today) + " " + "15:30:00"
-        elem['title'] = u"1000-2D97SR"
+        elem['title'] = u"Systemy rozproszone"
         elem['id'] = "132"
         elem['type'] = "exam"
-        # elem['course_name'] = "Projekowanie silni"
-        # elem['group_number'] = 1
-        # elem['building_name'] = "Basen"
-        # elem['room_number'] = "102"
+        elem['course_name'] = "Projekowanie silni"
+        elem['group_number'] = 1
+        elem['building_name'] = "Basen"
+        elem['room_number'] = "102"
 
         result.append(elem)
         self.success(result)

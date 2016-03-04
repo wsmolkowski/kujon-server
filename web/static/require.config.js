@@ -12,6 +12,7 @@ var require = {
         "jquery-cookie":        "static/bower_components/jquery-cookie/jquery.cookie",
         "fullcalendar":         "static/bower_components/fullcalendar/fullcalendar.min",
         "moment":               "static/bower_components/moment/moment.min",
+        "qtip":                 "static/bower_components/qtip/jquery.qtip.min",
         "templates":            "static/templates",
         "main":                 "static/js/main",
         "navigation":           "static/js/pages/navigation",
