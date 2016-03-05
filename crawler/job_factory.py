@@ -1,24 +1,22 @@
 from datetime import datetime
 
-import constants
+from commons import constants
 
 
-def user_job(user_id):
+def user_job(user_id, job_type):
     return {
         constants.USER_ID: user_id,
         constants.CREATED_TIME: datetime.now(),
         constants.UPDATE_TIME: None,
+        constants.JOB_MESSAGE: None,
         constants.JOB_STATUS: constants.JOB_PENDING,
+        constants.JOB_TYPE: job_type
     }
 
 
 def initial_user_job(user_id):
-    job = user_job(user_id)
-    job[constants.JOB_TYPE] = 'initial_user_crawl'
-    return job
+    return user_job(user_id, 'initial_user_crawl')
 
 
 def update_user_job(user_id):
-    job = user_job(user_id)
-    job[constants.JOB_TYPE] = 'update_user_crawl'
-    return job
+    return user_job(user_id, 'update_user_crawl')

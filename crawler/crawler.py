@@ -5,8 +5,9 @@ import motor
 from tornado import queues, gen, ioloop
 from tornado.log import enable_pretty_logging
 
-from commons import settings, constants, mongo_utils
+from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
+from crawler import job_factory
 
 QUEUE_MAXSIZE = 100
 SLEEP = 1
@@ -34,7 +35,7 @@ class MongoDbQueue(object):
         while (yield cursor.fetch_next):
             job = cursor.next_object()
             new_job = self._db[constants.COLLECTION_JOBS_QUEUE].insert(
-                mongo_utils.update_user_job(job[constants.USER_ID]))
+                job_factory.update_user_job(job[constants.USER_ID]))
             logging.debug('created new job with type: {0}'.format(new_job))
 
         # create jobs and put into queue
@@ -47,10 +48,11 @@ class MongoDbQueue(object):
             yield self._queue.put(job)
 
     @gen.coroutine
-    def update_job(self, job, status, message=''):
+    def update_job(self, job, status, message=None):
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
-        job[constants.JOB_MESSAGE] = message
+        if message:
+            job[constants.JOB_MESSAGE] = message
         update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.ID: job[constants.ID]}, job)
 
         logging.debug('updated job: {0} with status: {1} resulted in: {2}'.format(job[constants.ID], status, update))

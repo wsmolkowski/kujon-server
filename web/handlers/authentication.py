@@ -11,7 +11,8 @@ import tornado.web
 from bson import json_util
 
 from base import BaseHandler
-from commons import constants, settings, mongo_utils
+from commons import constants, settings
+from crawler import job_factory
 
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)
@@ -369,7 +370,7 @@ class VerifyHandler(BaseHandler):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.db[constants.COLLECTION_JOBS_QUEUE].insert(mongo_utils.initial_user_job(user_doc[constants.ID]))
+            self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.ID]))
 
             self.redirect('/')
         else:

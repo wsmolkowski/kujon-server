@@ -1,10 +1,8 @@
 import logging
-from datetime import timedelta, datetime
 
 import pymongo
 from bson.objectid import ObjectId
 
-import mongo_utils
 from AESCipher import AESCipher
 from commons import settings, constants
 
