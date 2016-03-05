@@ -59,11 +59,11 @@ class UserInfoApi(BaseHandler):
 
         # change student status value to name
         if user['student_status'] == 0:
-            user['student_status'] = u"brak"
+            user['student_status'] = "brak"
         elif user['student_status'] == 1:
-            user['student_status'] = u"nieaktywny student"
+            user['student_status'] = "nieaktywny student"
         elif user['student_status'] == 2:
-            user['student_status'] = u"aktywny student"
+            user['student_status'] = "aktywny student"
 
         # change description to only polish
         for program in user['student_programmes']:
@@ -83,10 +83,12 @@ class UserInfoPhotoApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, photo_id):
 
+        parameters = yield self.get_parameters()
+
         try:
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
             if user_photo:
                 self.set_header("Content-Type", "image/jpeg")
                 self.write(b64decode(user_photo['photo']))
-        except Exception:
+        except Exception, ex:
             self.error(u"Niepoprawny numer zdjęcia..")
