@@ -149,19 +149,16 @@ class CreateUserHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
-        # mobile_id = self.get_argument(constants.MOBILE_ID).strip()
+
         usos_url = self.get_argument("usos").strip()
 
-        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
-        usos_doc = self.aes.decrypt_usos(usos_doc)
-
-        # usos_doc[constants.CONSUMER_KEY] = usos_doc[constants.CONSUMER_KEY]
-        # usos_doc[constants.CONSUMER_SECRET] = usos_doc[constants.CONSUMER_SECRET]
+        usos_doc = yield self.get_usos(usos_url)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.ID: self.get_current_user()[constants.ID]})
+
         if not user_doc:
-            self.error("Użytkownik musi posiadać konto..")
+            self.error("Użytkownik musi posiadać konto.")
             return
 
         if user_doc[constants.USOS_URL]:
