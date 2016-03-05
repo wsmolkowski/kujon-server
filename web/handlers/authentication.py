@@ -152,7 +152,7 @@ class CreateUserHandler(BaseHandler):
 
         usos_url = self.get_argument("usos").strip()
 
-        usos_doc = yield self.get_usos(usos_url)
+        usos_doc = yield self.get_usos(constants.USOS_URL, usos_url)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.ID: self.get_current_user()[constants.ID]})

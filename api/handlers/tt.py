@@ -13,7 +13,7 @@ class TTApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, given_date):
 
-        yield self.get_parameters()
+        parameters = yield self.get_parameters()
 
 
         # fixed values needed for development
@@ -67,7 +67,7 @@ class TTApi(BaseHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                                 {constants.ID: ObjectId(parameters[constants.ID])})
         # get usosdata for
-        usos = next((usos for usos in usosinstances.USOSINSTANCES if usos[constants.USOS_ID] == parameters[constants.USOS_ID]), None)
+        usos = self.get_usos(constants.USOS_ID, parameters[constants.USOS_ID])
 
 
         # fetch TT from mongo

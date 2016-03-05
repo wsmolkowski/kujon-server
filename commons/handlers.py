@@ -59,10 +59,10 @@ class CommonHandler(RequestHandler):
         raise tornado.gen.Return(self._usoses)
 
     @tornado.gen.coroutine
-    def get_usos(self, usos_url):
+    def get_usos(self, key, value):
         usoses = yield self.get_usoses()
 
         for u in usoses:
-            if u['url'] == usos_url:
+            if u[key] == value:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
