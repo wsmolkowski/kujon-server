@@ -45,7 +45,7 @@ class LecturersApi(BaseHandler):
             lecturers_returned = lecturers_returned.values()
             lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
-            self.error(u"Poczekaj szukamy nauczycieli..")
+            self.error("Poczekaj szukamy nauczycieli.")
         else:
             self.success(lecturers_returned)
 
@@ -59,32 +59,32 @@ class LecturerByIdApi(BaseHandler):
 
         user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
-            self.error(u"Poczekaj szukamy informacji o nauczycielu..")
-        else:
+            self.error("Poczekaj szukamy informacji o nauczycielu.")
 
-            # change ObjectId to str for photo
-            if user_info['has_photo']:
-                user_info['has_photo'] = str(user_info['has_photo'])
 
-            # change staff_status to dictionary
-            if user_info['staff_status'] == 1:
-                user_info['staff_status'] = 'Pracownik'
-            if user_info['staff_status'] == 2:
-                user_info['staff_status'] = 'Nauczyciel akademicki'
-            if user_info['staff_status'] == 0:
-                user_info['staff_status'] = 'Nieaktywny pracownik'
+        # change ObjectId to str for photo
+        if user_info['has_photo']:
+            user_info['has_photo'] = str(user_info['has_photo'])
 
-            # change course_editions_conducted to list of courses
-            course_editions = []
-            if user_info['course_editions_conducted']:
-                for courseterm in user_info['course_editions_conducted']:
-                    course_id, term_id = courseterm['id'].split('|')
-                    course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-                        {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
-                         constants.USOS_ID: parameters[constants.USOS_ID]})
-                    if course_doc:
-                        course_editions.append(course_doc)
-                    else:
-                        course_editions.append("Dont have data for course and term..")
-                user_info['course_editions_conducted'] = course_editions
-            self.success(user_info)
+        # change staff_status to dictionary
+        if user_info['staff_status'] == 1:
+            user_info['staff_status'] = 'Pracownik'
+        if user_info['staff_status'] == 2:
+            user_info['staff_status'] = 'Nauczyciel akademicki'
+        if user_info['staff_status'] == 0:
+            user_info['staff_status'] = 'Nieaktywny pracownik'
+
+        # change course_editions_conducted to list of courses
+        course_editions = []
+        if user_info['course_editions_conducted']:
+            for courseterm in user_info['course_editions_conducted']:
+                course_id, term_id = courseterm['id'].split('|')
+                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
+                     constants.USOS_ID: parameters[constants.USOS_ID]})
+                if course_doc:
+                    course_editions.append(course_doc)
+                else:
+                    course_editions.append("Dont have data for course and term..")
+            user_info['course_editions_conducted'] = course_editions
+        self.success(user_info)

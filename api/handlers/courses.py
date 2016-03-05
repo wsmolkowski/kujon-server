@@ -13,6 +13,7 @@ LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 
 
+
 class CoursesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -25,7 +26,7 @@ class CoursesApi(BaseHandler):
                                                                                constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            self.fail("We could not find for you course with course_id: {0}.".format(course_id))
+            self.fail("Nie znaleźliśmy kursu: {0}.".format(course_id))
         else:
             # change true to TAK
             if course_doc['is_currently_conducted']:
@@ -64,7 +65,7 @@ class CoursesEditionsApi(BaseHandler):
         )
 
         if not course_doc:
-            self.error("Poczekaj szukamy przedmiotów..")
+            self.error("Poczekaj szukamy przedmiotów.")
             return
 
         # get courses_classtypes

@@ -17,6 +17,6 @@ class FacultyByIdApi(BaseHandler):
                                                                           constants.USOS_ID: parameters[
                                                                               constants.USOS_ID]})
         if not fac_doc:
-            self.fail(u"Poczekaj nie możemy znaleźć jednostki: {0}..".format(fac_id))
+            self.fail("Nie możemy znaleźć jednostki: {0}.".format(fac_id))
         else:
             self.success(fac_doc)

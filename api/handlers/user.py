@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import logging
 from base64 import b64decode
 
 import tornado.web
@@ -31,7 +32,7 @@ class UsersInfoByIdApi(BaseHandler):
             result.append(user_info)
             self.success(result)
         else:
-            self.error(u"Please hold on we are looking your USOS user information.")
+            self.error('Please hold on we are looking your USOS user information.')
 
 
 class UserInfoApi(BaseHandler):
@@ -47,8 +48,7 @@ class UserInfoApi(BaseHandler):
             {constants.USER_ID: ObjectId(parameters[constants.ID])}, LIMIT_FIELDS)
 
         if not user_info:
-            self.error(u"Poczekaj szukamy informacji o użytkowniku..")
-            return
+            self.error('Poczekaj szukamy informacji o użytkowniku..')
 
         user_info['user_email'] = user_info.pop('email')
 
@@ -59,11 +59,11 @@ class UserInfoApi(BaseHandler):
 
         # change student status value to name
         if user['student_status'] == 0:
-            user['student_status'] = u"brak"
+            user['student_status'] = u'brak'
         elif user['student_status'] == 1:
-            user['student_status'] = u"nieaktywny student"
+            user['student_status'] = u'nieaktywny student'
         elif user['student_status'] == 2:
-            user['student_status'] = u"aktywny student"
+            user['student_status'] = u'aktywny student'
 
         # change description to only polish
         for program in user['student_programmes']:
@@ -73,7 +73,7 @@ class UserInfoApi(BaseHandler):
         user['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if usos[constants.USOS_ID] == user[constants.USOS_ID]), None)
 
         if not user:
-            self.error(u"Poczekaj szukamy informacji o użytkowniku..")
+            self.error('Poczekaj szukamy informacji o użytkowniku.')
         else:
             self.success(user)
 
@@ -83,12 +83,13 @@ class UserInfoPhotoApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, photo_id):
 
-        parameters = yield self.get_parameters()
+        yield self.get_parameters()
 
         try:
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
-            if user_photo:
-                self.set_header("Content-Type", "image/jpeg")
-                self.write(b64decode(user_photo['photo']))
+            self.set_header('Content-Type', 'image/jpeg')
+            self.write(b64decode(user_photo['photo']))
+            
         except Exception, ex:
-            self.error(u"Niepoprawny numer zdjęcia..")
+            logging.exception('Exception while getting user photo: {0}'.format(ex.message))
+            self.error('Niepoprawny numer zdjęcia.')

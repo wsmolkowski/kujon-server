@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from base import BaseHandler
 from commons import constants
 
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 
 class TermsApi(BaseHandler):
     @tornado.web.asynchronous
@@ -29,7 +30,7 @@ class TermsApi(BaseHandler):
                     term_data[constants.TERM_ID] = term
                     terms_doc.append(term_data)
         if not terms_doc:
-            self.error(u"Poczekaj szukamy semestrów..")
+            self.error("Poczekaj szukamy semestrów.")
         else:
             self.success(terms_doc)
 
@@ -42,10 +43,9 @@ class TermApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]},
-            ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id'))
+            {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
 
         if not term_doc:
-            self.error("Nie znaleźliźmy semestru: {0}..".format(term_id))
+            self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
         else:
             self.success(term_doc)

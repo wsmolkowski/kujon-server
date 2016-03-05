@@ -3,7 +3,7 @@ import logging
 
 from bson import json_util
 
-from commons import utils
+from commons import utils, settings
 
 
 class JSendMixin(object):
@@ -34,6 +34,8 @@ class JSendMixin(object):
         :param data:
         :return:
         '''
+        if data:
+            data = unicode(data, settings.UNICODE)
 
         self.__write_json({'status': 'fail', 'data': data})
 
@@ -49,7 +51,7 @@ class JSendMixin(object):
 
         result = {'status': 'error', 'message': message}
         if data:
-            result['data'] = data
+            result['data'] = unicode(data, settings.UNICODE)
 
         if code:
             result['code'] = code

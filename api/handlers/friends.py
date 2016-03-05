@@ -37,7 +37,7 @@ class FriendsApi(BaseHandler):
 
             self.success(friends_returned)
         else:
-            self.error("Poczekaj szukamy przyjaciół..")
+            self.error("Poczekaj szukamy przyjaciół.")
 
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -143,9 +143,7 @@ class FriendsSuggestionsApi(BaseHandler):
 
             suggested_participants = suggested_participants.values()
 
-            # TODO: show message on add friends
-
         if not suggested_participants:
-            self.error(u"Poczekaj szukamy sugerowanych przyjaciół..")
+            self.error("Poczekaj szukamy sugerowanych przyjaciół.")
         else:
             self.success(suggested_participants)

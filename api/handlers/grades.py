@@ -121,6 +121,6 @@ class GradesForCourseAndTermApi(BaseHandler):
                 del grades['grades']['course_units_grades']
 
         if not grades:
-            self.error(u"Nie ma ocen dla przedmiotu {0} i semestru {1}.".format(course_id, term_id))
+            self.error("Nie ma ocen dla przedmiotu {0} i semestru {1}.".format(course_id, term_id))
         else:
             self.success(grades)

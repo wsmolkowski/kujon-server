@@ -13,7 +13,7 @@ class TTApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, given_date):
 
-        parameters = yield self.get_parameters()
+        yield self.get_parameters()
 
 
         # fixed values needed for development
