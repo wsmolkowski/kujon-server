@@ -82,9 +82,11 @@ class UserInfoPhotoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, photo_id):
-        # parameters = yield self.get_parameters(usos_paired=True)
 
-        user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
+        try:
+            user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
+        except Exception:
+            self.error(u"Niepoprawny numer zdjęcia..")
         if user_photo:
             self.set_header("Content-Type", "image/jpeg")
             self.write(b64decode(user_photo['photo']))
