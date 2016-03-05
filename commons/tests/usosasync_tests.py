@@ -23,7 +23,6 @@ class UsosAsyncTest(AsyncTestCase):
         # then
         self.assertNotEqual(0, result)
 
-
     @gen_test(timeout=100)
     def testGetUnitInfo(self):
         # assume
@@ -35,7 +34,6 @@ class UsosAsyncTest(AsyncTestCase):
 
         # then
         self.assertNotEqual(0, result)
-
 
     @gen_test(timeout=100)
     def testGetClassTypes(self):
