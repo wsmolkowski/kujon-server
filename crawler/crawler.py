@@ -7,7 +7,7 @@ from tornado.log import enable_pretty_logging
 
 from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
-from crawler import job_factory
+import job_factory
 
 QUEUE_MAXSIZE = 100
 SLEEP = 1
@@ -34,7 +34,7 @@ class MongoDbQueue(object):
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            new_job = self._db[constants.COLLECTION_JOBS_QUEUE].insert(
+            new_job = yield self._db[constants.COLLECTION_JOBS_QUEUE].insert(
                 job_factory.update_user_job(job[constants.USER_ID]))
             logging.debug('created new job with type: {0}'.format(new_job))
 
