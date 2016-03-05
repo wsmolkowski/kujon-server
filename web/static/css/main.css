@@ -3,6 +3,6 @@ body {
     padding-top: 70px;
 }
 
-lecturer_photo {
-   height="150";
+lecturer_photo img {
+   height: "150";
 }

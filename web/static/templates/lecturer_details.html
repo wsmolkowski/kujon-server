@@ -21,8 +21,12 @@
             {{/course_editions_conducted}}
             </table>
         <td>
-            {{#if has_photo}}<img src="{{API_URL}}/api/users_info_photos/{{has_photo}}" class="lecturer_photo">{{/if}}
+        {{#if has_photo}}
+        <div class="lecturer_photo">
+            <img src="{{API_URL}}/api/users_info_photos/{{has_photo}}" >
+        </div>
         </td>
+        {{/if}}
     </tr>
     </tbody>
 </table>
