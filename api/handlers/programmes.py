@@ -33,7 +33,7 @@ class ProgrammesApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])})
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
 
         if not user_info:
             self.error("Poczekaj szukamy danych o kursach użytkownika.")

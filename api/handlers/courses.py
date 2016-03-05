@@ -60,7 +60,7 @@ class CoursesEditionsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])},
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
             ('course_editions',)
         )
 

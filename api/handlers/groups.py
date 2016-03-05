@@ -17,7 +17,7 @@ class GroupsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.ID])})
+                                                                                                             constants.MONGO_ID])})
 
         programmes = []
         for program in user_info['student_programmes']:

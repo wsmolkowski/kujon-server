@@ -22,7 +22,7 @@ class LecturersApi(BaseHandler):
         lecturers_returned = {}
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])})
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
         if course_doc:
             for term in course_doc['course_editions']:
                 for course in course_doc['course_editions'][term]:
@@ -57,7 +57,7 @@ class LecturerByIdApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
+        user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
             self.error("Poczekaj szukamy informacji o nauczycielu.")
 

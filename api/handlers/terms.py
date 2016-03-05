@@ -18,7 +18,7 @@ class TermsApi(BaseHandler):
         terms = []
         terms_doc = []
         courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])})
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
 
         if courses_editions_doc:
             for term in courses_editions_doc['course_editions']:

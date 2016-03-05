@@ -54,7 +54,7 @@ class Dao:
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
 
     def get_users_info_by_usos_id(self, usos_user_id, usos):
-        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: usos_user_id, constants.USOS_ID: usos[
+        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.MONGO_ID: usos_user_id, constants.USOS_ID: usos[
             constants.USOS_ID]})
 
     def get_users_info_photo(self, user_id, usos_id):
@@ -93,8 +93,7 @@ class Dao:
 
     def get_courses_editions(self, user_id, usos_id):
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find(
-            {constants.USOS_ID: usos_id,
-             constants.USER_ID: user_id})
+            {constants.USOS_ID: usos_id, constants.USER_ID: user_id})
 
     def get_faculties_from_courses(self, usos_id):
         return self._db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}).distinct(constants.FACULTY_ID)
@@ -114,8 +113,7 @@ class Dao:
     def get_courses(self, courses, usos_id):
         courses_comma_separated_string = u",".join(courses).encode(constants.ENCODING).strip()
         return self._db[constants.COLLECTION_COURSES].find(
-            {constants.COURSE_ID: {'$in': [courses_comma_separated_string]},
-             constants.USOS_ID: usos_id})
+            {constants.COURSE_ID: {'$in': [courses_comma_separated_string]}, constants.USOS_ID: usos_id})
 
     def get_grades(self, course_id, term_id, user_id, usos_id):
         return self._db[constants.COLLECTION_GRADES].find_one(
@@ -138,7 +136,7 @@ class Dao:
     def get_users_info_programmes(self, user_info_id, usos_id):
         programmes = []
         data = self._db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_INFO_ID: user_info_id,
+            {constants.ID: user_info_id,
              constants.USOS_ID: usos_id})
         if data:
             programmes = data['student_programmes']
@@ -156,8 +154,7 @@ class Dao:
     def get_user_courses(self, user_id, usos_id):
         course_edition = list()
         data = self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(user_id),
-             constants.USOS_ID: usos_id})
+            {constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
 
         for term_data in data['course_editions'].values():
             for term in term_data:
@@ -183,3 +180,24 @@ class Dao:
     def count(self, collection):
         return self._db[collection].count()
 
+    def user_info_exists(self, user_id):
+        if self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id}):
+            return True
+        return False
+
+    def courses_conducted(self, user_id):
+        course_editions_conducted = self._db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: user_id}, ('course_editions_conducted',))
+        if course_editions_conducted:
+            return course_editions_conducted['course_editions_conducted']
+        return list()
+
+    def user_info_id(self, user_id):
+        id = self._db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: user_id}, (constants.MONGO_ID,))
+        return id[constants.MONGO_ID]
+
+    def curseseditions_exists(self, user_id):
+        if self._db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id}):
+            return True
+        return False

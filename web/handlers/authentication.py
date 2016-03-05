@@ -34,8 +34,8 @@ class LoginHandler(BaseHandler):
              constants.ACCESS_TOKEN_KEY: access_token_key},
             constants.USER_PRESENT_KEYS)
         if user_doc:
-            user_doc[constants.USER_ID] = str(user_doc[constants.ID])
-            user_doc.pop(constants.ID)
+            user_doc[constants.USER_ID] = str(user_doc[constants.MONGO_ID])
+            user_doc.pop(constants.MONGO_ID)
 
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
@@ -77,7 +77,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user_doc = yield motor.Op(self.db.users.insert, user)
                 logging.debug(u"saved new user in database: {0}".format(user_doc))
 
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               COOKIE_FIELDS)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
@@ -122,7 +122,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 user_doc = yield motor.Op(self.db.users.insert, userToInsert)
                 logging.debug(u"saved new user in database: {0}".format(user_doc))
 
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: user_doc},
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               COOKIE_FIELDS)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
@@ -156,7 +156,7 @@ class CreateUserHandler(BaseHandler):
         usos_doc = yield self.get_usos(constants.USOS_URL, usos_url)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.ID: self.get_current_user()[constants.ID]})
+            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if not user_doc:
             self.error("Użytkownik musi posiadać konto.")
@@ -196,7 +196,7 @@ class CreateUserHandler(BaseHandler):
             update[constants.ACCESS_TOKEN_KEY] = access_token_key
             update[constants.UPDATE_TIME] = datetime.now()
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, update)
+            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
             logging.debug(u"updated user with usos base info: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
@@ -243,7 +243,7 @@ class VerifyHandler(BaseHandler):
                 updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
                 user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                    {constants.ID: user_doc[constants.ID]}, updated_user)
+                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
                 template_data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
                     user_doc_updated)
@@ -315,7 +315,7 @@ class RegisterHandler(BaseHandler):
             update[constants.ACCESS_TOKEN_KEY] = access_token_key
             update[constants.UPDATE_TIME] = datetime.now()
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.ID: user_doc[constants.ID]}, update)
+            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
             logging.debug(u"updated user with usos base info: {0}".format(user_doc))
 
             authorize_url = usos_url + 'services/oauth/authorize'
@@ -332,7 +332,7 @@ class VerifyHandler(BaseHandler):
         oauth_verifier = self.get_argument("oauth_verifier")
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.ID: self.get_current_user()[constants.ID]})
+            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if user_doc:
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
@@ -358,19 +358,19 @@ class VerifyHandler(BaseHandler):
             updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.ID: user_doc[constants.ID]}, updated_user)
+                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
             logging.debug('user usos veryfication ok - db updated with {0}'.format(user_doc_updated))
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.ID: self.get_current_user()[constants.ID]}, COOKIE_FIELDS)
+                {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, COOKIE_FIELDS)
 
             self.clear_cookie(constants.USER_SECURE_COOKIE)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.ID]))
+            self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
             self.redirect('/')
         else:

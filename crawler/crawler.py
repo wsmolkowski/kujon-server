@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta, datetime
 
+from bson.objectid import ObjectId
 import motor
 from tornado import queues, gen, ioloop
 from tornado.log import enable_pretty_logging
@@ -21,6 +22,8 @@ class MongoDbQueue(object):
         self._queue = queues.Queue(maxsize=queue_maxsize)
 
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+
+        #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(ObjectId("56dad1dec4f9d23e009ca27c")))
 
     @gen.coroutine
     def __load_work(self):
@@ -53,22 +56,22 @@ class MongoDbQueue(object):
         job[constants.UPDATE_TIME] = datetime.now()
         if message:
             job[constants.JOB_MESSAGE] = message
-        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.ID: job[constants.ID]}, job)
+        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.debug('updated job: {0} with status: {1} resulted in: {2}'.format(job[constants.ID], status, update))
+        logging.debug('updated job: {0} with status: {1} resulted in: {2}'.format(job[constants.MONGO_ID], status, update))
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug('processing job: {0} with job type: {1}'.format(job[constants.ID], job[constants.JOB_TYPE]))
+        logging.debug('processing job: {0} with job type: {1}'.format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
 
         if job[constants.JOB_TYPE] == 'initial_user_crawl':
             yield self.crawler.initial_user_crawl(job[constants.USER_ID])
         elif job[constants.JOB_TYPE] == 'update_user_crawl':
-            yield self.crawler.initial_user_crawl(job[constants.USER_ID])  # FIXME - create dedicated method
+            yield self.crawler.update_user_crawl(job[constants.USER_ID])
         else:
             raise Exception('could not process job with unknown job type: {0}'.format(job[constants.JOB_TYPE]))
 
-        logging.debug('processed job: {0} with job type: {1}'.format(job[constants.ID], job[constants.JOB_TYPE]))
+        logging.debug('processed job: {0} with job type: {1}'.format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
 
     @gen.coroutine
     def worker(self):
@@ -91,7 +94,7 @@ class MongoDbQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = 'Exception while executing job {0} {1}', job[constants.ID]
+                    msg = 'Exception while executing job {0} {1}', job[constants.MONGO_ID]
                     logging.exception("{0} {1}".format(msg, ex.message))
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)

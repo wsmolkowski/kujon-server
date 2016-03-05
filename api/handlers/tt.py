@@ -1,12 +1,14 @@
 # coding=UTF-8
 
+from datetime import date, timedelta
+
 import tornado.web
 from bson.objectid import ObjectId
-from datetime import date, timedelta
+
 from base import BaseHandler
 from commons import constants
 from commons.usosutils.usosclient import UsosClient
-from commons.usosutils import usosinstances
+
 
 class TTApi(BaseHandler):
     @tornado.web.asynchronous
@@ -14,7 +16,6 @@ class TTApi(BaseHandler):
     def get(self, given_date):
 
         parameters = yield self.get_parameters()
-
 
         # fixed values needed for development
         result = list()
@@ -55,7 +56,7 @@ class TTApi(BaseHandler):
         result.append(elem)
         self.success(result)
         return
-        #checking if date is correct
+        # checking if date is correct
         try:
             given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
@@ -65,22 +66,21 @@ class TTApi(BaseHandler):
 
         # get user data
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                                {constants.ID: ObjectId(parameters[constants.ID])})
+            {constants.MONGO_ID: ObjectId(parameters[constants.MONGO_ID])})
         # get usosdata for
         usos = self.get_usos(constants.USOS_ID, parameters[constants.USOS_ID])
 
-
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
-                                {constants.USER_ID: ObjectId(parameters[constants.ID]),
-                                 constants.TT_STARTDATE: str(monday)})
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]),
+             constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
             # fetch TT from USOS
             client = UsosClient(base_url=usos[constants.USOS_URL],
-                     consumer_key=usos[constants.CONSUMER_KEY],
-                     consumer_secret=usos[constants.CONSUMER_SECRET],
-                     access_token_key=user_doc[constants.ACCESS_TOKEN_KEY],
-                     access_token_secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+                                consumer_key=usos[constants.CONSUMER_KEY],
+                                consumer_secret=usos[constants.CONSUMER_SECRET],
+                                access_token_key=user_doc[constants.ACCESS_TOKEN_KEY],
+                                access_token_secret=user_doc[constants.ACCESS_TOKEN_SECRET])
             try:
                 result = client.tt(monday)
 
@@ -89,10 +89,10 @@ class TTApi(BaseHandler):
                 # insert TT to mongo
                 tt = dict()
                 tt[constants.USOS_ID] = parameters[constants.USOS_ID]
-                tt[constants.USER_ID] = parameters[constants.ID]
+                tt[constants.USER_ID] = parameters[constants.MONGO_ID]
                 tt[constants.TT_STARTDATE] = str(monday)
                 if not result:
-                    result=list()
+                    result = list()
                 else:
                     # insert a call for crawl here for next_monday variable for TT only
                     pass
@@ -100,6 +100,6 @@ class TTApi(BaseHandler):
                 tt_doc = yield self.db[constants.COLLECTION_TT].insert(tt)
                 self.success(result)
             except Exception, ex:
-                self.error(u"Bład podczas pobierania TT z USOS for {0}.".format(given_date))
+                self.error("Bład podczas pobierania TT z USOS for {0}.".format(given_date))
         else:
             self.success(tt_doc['tts'])

@@ -24,13 +24,13 @@ class GradesForUserApi(BaseHandler):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.ID])},
+        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
                                                            ('grades', constants.TERM_ID, constants.COURSE_ID,
                                                             'course_name')).sort([(constants.TERM_ID, -1)])
 
         while (yield cursor.fetch_next):
             grades_for_course_and_term = cursor.next_object()
-            grades_for_course_and_term.pop(constants.ID)
+            grades_for_course_and_term.pop(constants.MONGO_ID)
             grades_for_course_and_term['course_name'] = grades_for_course_and_term['course_name']['pl']
 
             units = {}
@@ -88,7 +88,7 @@ class GradesForCourseAndTermApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        pipeline = {constants.USER_ID: ObjectId(parameters[constants.ID]), constants.COURSE_ID: course_id,
+        pipeline = {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id}
         limit_fields = ('course_name', 'course_id', 'grades')
 

@@ -17,7 +17,7 @@ class FriendsApi(BaseHandler):
         friends = []
         friends_returned = []
         # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
-        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.ID])}},
+        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
 
@@ -46,19 +46,19 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                           constants.ID]),
+                                                                                                           constants.MONGO_ID]),
                                                                            constants.FRIEND_ID: user_info_id})
         if not friend_doc:
 
             # check if user_info exists
-            user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_INFO_ID: user_info_id,
+            user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id,
                                                                                  constants.USOS_ID: parameters[
                                                                                      constants.USOS_ID]})
 
             if user_info:
                 result = dict()
                 result[constants.USOS_ID] = parameters[constants.USOS_ID]
-                result[constants.USER_ID] = ObjectId(parameters[constants.ID])
+                result[constants.USER_ID] = ObjectId(parameters[constants.MONGO_ID])
                 result[constants.FRIEND_ID] = str(user_info_id)
                 friend_doc = self.db[constants.COLLECTION_FRIENDS].insert(result)
                 if friend_doc:
@@ -77,11 +77,11 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.ID]),
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
         if friend_in_db:
             friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.ID]),
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
             if friend_doc:
                 self.success(user_info_id)
@@ -96,13 +96,13 @@ class FriendsSuggestionsApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.ID])})
+        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
 
         courses = {}
         suggested_participants = {}
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])})
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
         if course_doc:
             for term in course_doc['course_editions']:
                 for course in course_doc['course_editions'][term]:
@@ -126,14 +126,14 @@ class FriendsSuggestionsApi(BaseHandler):
                     participant_id = participant[constants.USER_ID]
 
                     # checking if participant is not current logged user
-                    if int(user_info[constants.USER_INFO_ID]) == participant_id:
+                    if int(user_info[constants.ID]) == participant_id:
                         continue
 
                     # checking if participant is allready added
                     poz = helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
                     if poz:
                         continue
-                    del participant[constants.USER_INFO_ID]
+                    del participant[constants.ID]
                     # count how many courses have together
                     if participant_id in suggested_participants:
                         suggested_participants[participant_id]['count'] += 1

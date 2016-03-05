@@ -24,9 +24,9 @@ class UsersInfoByIdApi(BaseHandler):
 
         # parameters = yield self.get_parameters(usos_paired=True)
 
-        user_info = yield self.db.users_info.find_one({constants.USER_INFO_ID: user_info_id}, LIMIT_FIELDS)
+        user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if user_info:
-            user = yield self.db[constants.COLLECTION_USERS].find_one({'id': ObjectId(user_info[constants.ID])})
+            user = yield self.db[constants.COLLECTION_USERS].find_one({'id': ObjectId(user_info[constants.MONGO_ID])})
             result = list()
             result.append(user)
             result.append(user_info)
@@ -42,10 +42,10 @@ class UserInfoApi(BaseHandler):
 
         parameters = yield self.get_parameters()
 
-        user = yield self.db[constants.COLLECTION_USERS].find_one({constants.ID: ObjectId(parameters[constants.ID])},
+        user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(parameters[constants.MONGO_ID])},
                                                                   LIMIT_FIELDS_USER)
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.ID])}, LIMIT_FIELDS)
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])}, LIMIT_FIELDS)
 
         if not user_info:
             self.error('Poczekaj szukamy informacji o użytkowniku..')
@@ -86,7 +86,7 @@ class UserInfoPhotoApi(BaseHandler):
         yield self.get_parameters()
 
         try:
-            user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
+            user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
             self.set_header('Content-Type', 'image/jpeg')
             self.write(b64decode(user_photo['photo']))
             
