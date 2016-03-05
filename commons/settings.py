@@ -16,7 +16,7 @@ FACEBOOK_CLIENT_SECRET = "3f2e953dbfebc98a2ea2fc888266f1c4"
 PROJECT_TITLE = "Kujon.io"
 
 DEBUG = True
-RELOAD = False
+RELOAD = True
 CLEAN_DB = False
 GZIP = True
 

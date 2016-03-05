@@ -59,11 +59,11 @@ class UserInfoApi(BaseHandler):
 
         # change student status value to name
         if user['student_status'] == 0:
-            user['student_status'] = "brak"
+            user['student_status'] = u"brak"
         elif user['student_status'] == 1:
-            user['student_status'] = "nieaktywny student"
+            user['student_status'] = u"nieaktywny student"
         elif user['student_status'] == 2:
-            user['student_status'] = "aktywny student"
+            user['student_status'] = u"aktywny student"
 
         # change description to only polish
         for program in user['student_programmes']:
@@ -85,8 +85,8 @@ class UserInfoPhotoApi(BaseHandler):
 
         try:
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: ObjectId(photo_id)})
+            if user_photo:
+                self.set_header("Content-Type", "image/jpeg")
+                self.write(b64decode(user_photo['photo']))
         except Exception:
             self.error(u"Niepoprawny numer zdjęcia..")
-        if user_photo:
-            self.set_header("Content-Type", "image/jpeg")
-            self.write(b64decode(user_photo['photo']))
