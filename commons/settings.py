@@ -20,12 +20,12 @@ RELOAD = True
 CLEAN_DB = False
 GZIP = True
 
-SITE_DOMAIN = u"localhost"
+SITE_DOMAIN = "localhost"
 API_PORT = 8881
-DEPLOY_API = u"http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
+DEPLOY_API = "http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
 
 WEB_PORT = 8888
-DEPLOY_WEB = u"http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
+DEPLOY_WEB = "http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
 
 CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
 

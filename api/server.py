@@ -6,7 +6,7 @@ import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
-from tornado.options import define, options, parse_command_line
+from tornado.options import define, parse_command_line
 
 from commons.usosutils.usoscrawler import UsosCrawler
 from commons import settings
@@ -46,7 +46,7 @@ def prepare_environment():
     reload(sys)  # Reload does the trick!
     sys.setdefaultencoding(constants.ENCODING)
     if sys.getdefaultencoding() != constants.ENCODING:
-        logging.error(u"Could not change encoding to %s".format(constants.ENCODING))
+        logging.error("Could not change encoding to %s".format(constants.ENCODING))
 
     uc = UsosCrawler()
     if settings.CLEAN_DB:
@@ -55,7 +55,7 @@ def prepare_environment():
             uc.recreate_usos()
             uc.recreate_dictionaries()
         except Exception, ex:
-            logging.exception(u"Problem during environment preparation: %s".format(ex.message))
+            logging.exception("Problem during environment preparation: %s".format(ex.message))
             sys.exit(-1)
 
 
@@ -65,7 +65,7 @@ def main():
 
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug(u"DEBUG MODE is ON")
+        logging.debug("DEBUG MODE is ON")
 
     prepare_environment()
 

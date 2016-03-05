@@ -1,69 +1,109 @@
-import time
 import logging
+from datetime import timedelta, datetime
 
-from tornado import gen
-from tornado.ioloop import IOLoop
+import motor
+from tornado import queues, gen, ioloop
+from tornado.log import enable_pretty_logging
 
-from commons import constants, settings
-from commons.mongo_dao import Dao
+from commons import settings, constants, mongo_utils
 from commons.usosutils.usoscrawler import UsosCrawler
 
-if settings.DEBUG:
-    logging.basicConfig(format='%(asctime)s %(message)s', datefmt=settings.LOGGING_DATEFORMAT, level=logging.DEBUG)
-    logging.debug("DEBUG MODE is ON")
-else:
-    logging.basicConfig(format='%(asctime)s %(message)s', datefmt=settings.LOGGING_DATEFORMAT, level=logging.INFO)
-
-SLEEP = 2
+QUEUE_MAXSIZE = 100
+SLEEP = 1
 
 
-@gen.coroutine
-def crawler():
-    dao = Dao()
-    crawler = UsosCrawler(dao=dao)
+class MongoDbQueue(object):
+    def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
+        super(MongoDbQueue, self).__init__()
 
-    initial_processing = list()
+        self.crawler = UsosCrawler()
+        self._queue = queues.Queue(maxsize=queue_maxsize)
+
+        self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
     @gen.coroutine
-    def crawl_initial():
+    def __load_work(self):
 
-        for job_doc in dao.get_user_jobs(constants.JOB_START):
-            if job_doc in initial_processing:
-                return
+        # check if data for users should be updated
+        delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
 
-            initial_processing.append(job_doc[constants.USER_ID])
-            logging.info(u"starting initial_user_crawl for user {0}".format(job_doc[constants.USER_ID]))
-            yield crawler.initial_user_crawl(job_doc[constants.USER_ID])
+        cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find(
+            {constants.UPDATE_TIME: {'$gt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
+        )
 
-            dao.update_user_job(job_doc[constants.ID], constants.JOB_END)
-            initial_processing.remove(job_doc[constants.USER_ID])
-            logging.info(u"finished initial_user_crawl for user {0}".format(job_doc[constants.USER_ID]))
+        while (yield cursor.fetch_next):
+            job = cursor.next_object()
+            new_job = self._db[constants.COLLECTION_JOBS_QUEUE].insert(
+                mongo_utils.update_user_job(job[constants.USER_ID]))
+            logging.debug('created new job with type: {0}'.format(new_job))
 
-    @gen.coroutine
-    def crawl_update():
+        # create jobs and put into queue
+        cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
-        for job_doc in dao.get_user_jobs_for_update():
-            if job_doc[constants.USER_ID] in initial_processing:
-                return
-
-            initial_processing.append(job_doc[constants.USER_ID])
-            logging.info(u"creating update_user_crawl for user {0}".format(job_doc[constants.USER_ID]))
-
-            dao.insert_user_job(job_doc[constants.USER_ID])
-
-            initial_processing.remove(job_doc[constants.USER_ID])
-            logging.info(u"finished update_user_crawl for user {0}".format(job_doc[constants.USER_ID]))
+        while (yield cursor.fetch_next):
+            job = cursor.next_object()
+            logging.debug('putting job to queue for user: {0} and type: {1}'.format(job[constants.USER_ID],
+                                                                                    job[constants.JOB_TYPE]))
+            yield self._queue.put(job)
 
     @gen.coroutine
-    def worker_initial():
+    def update_job(self, job, status, message=''):
+        job[constants.JOB_STATUS] = status
+        job[constants.UPDATE_TIME] = datetime.now()
+        job[constants.JOB_MESSAGE] = message
+        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.ID: job[constants.ID]}, job)
+
+        logging.debug('updated job: {0} with status: {1} resulted in: {2}'.format(job[constants.ID], status, update))
+
+    @gen.coroutine
+    def process_job(self, job):
+        logging.debug('processing job: {0} with job type: {1}'.format(job[constants.ID], job[constants.JOB_TYPE]))
+
+        if job[constants.JOB_TYPE] == 'initial_user_crawl':
+            yield self.crawler.initial_user_crawl(job[constants.USER_ID])
+        elif job[constants.JOB_TYPE] == 'update_user_crawl':
+            yield self.crawler.initial_user_crawl(job[constants.USER_ID])  # FIXME - create dedicated method
+        else:
+            raise Exception('could not process job with unknown job type: {0}'.format(job[constants.JOB_TYPE]))
+
+        logging.debug('processed job: {0} with job type: {1}'.format(job[constants.ID], job[constants.JOB_TYPE]))
+
+    @gen.coroutine
+    def worker(self):
+
         while True:
-            yield [crawl_update(), crawl_initial()]
-            time.sleep(SLEEP)
 
-    worker_initial()
+            if self._queue.empty():
+                yield gen.sleep(SLEEP)
+                yield self.__load_work()
+
+            else:
+                job = yield self._queue.get()
+                logging.debug('consuming queue job {0}'.format(job))
+
+                try:
+                    yield self.update_job(job, constants.JOB_START)
+
+                    yield self.process_job(job)
+
+                    yield self.update_job(job, constants.JOB_FINISH)
+
+                except Exception, ex:
+                    msg = 'Exception while executing job {0} {1}', job[constants.ID]
+                    logging.exception("{0} {1}".format(msg, ex.message))
+
+                    yield self.update_job(job, constants.JOB_FAIL, msg)
+                finally:
+                    self._queue.task_done()
+
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    ioLoop = IOLoop.instance()
-    ioLoop.add_callback(crawler)
-    ioLoop.start()
+    enable_pretty_logging()
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug("DEBUG MODE is ON")
+
+    mq = MongoDbQueue()
+
+    io_loop = ioloop.IOLoop.current()
+    io_loop.run_sync(mq.worker)

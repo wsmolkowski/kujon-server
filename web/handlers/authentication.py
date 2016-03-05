@@ -327,10 +327,11 @@ class VerifyHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument("oauth_token")
+        # oauth_token_key = self.get_argument("oauth_token")
         oauth_verifier = self.get_argument("oauth_verifier")
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']})
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.ID: self.get_current_user()[constants.ID]})
 
         if user_doc:
             usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
@@ -358,14 +359,17 @@ class VerifyHandler(BaseHandler):
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.ID: user_doc[constants.ID]}, updated_user)
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']},
-                                                                          COOKIE_FIELDS)
+            logging.debug('user usos veryfication ok - db updated with {0}'.format(user_doc_updated))
+
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                {constants.ID: self.get_current_user()[constants.ID]}, COOKIE_FIELDS)
+
             self.clear_cookie(constants.USER_SECURE_COOKIE)
             self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.db[constants.COLLECTION_JOBS_INITIAL_USER].insert(mongo_utils.user_job_insert(user_doc[constants.ID]))
+            self.db[constants.COLLECTION_JOBS_QUEUE].insert(mongo_utils.initial_user_job(user_doc[constants.ID]))
 
             self.redirect('/')
         else:

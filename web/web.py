@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug(u"DEBUG MODE is ON")
+        logging.debug("DEBUG MODE is ON")
 
     web = Application()
     web.listen(settings.WEB_PORT)
