@@ -22,17 +22,26 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
             function bindListeners(){
                 $('.panel-heading').bind( 'click', function(){
                     //FIXME - do not call when content already loaded
-                    var lecturerId = $(this).attr("lecturer-id");
-                    main.callLecturerDetails(lecturerId, function(lecturerInfo){
 
+                    var lecturerId = $(this).attr("lecturer-id");
+
+                    main.callLecturerDetails(lecturerId, function(lecturerInfo){
                         var idContent = '#lecturerDetails' + lecturerId;
+                        var API_URL;
+
+                        main.getConfig(function(config){
+                            API_URL = config['API_URL'];
+                        });
 
                         if (lecturerInfo.status == 'success'){
+                            lecturerInfo.data['API_URL']=API_URL;
                             $(idContent).html(templateDetails(lecturerInfo.data));
                         } else {
                             $(idContent).html(templateError({'message': lecturerInfo.message}));
                         }
                     });
+
+
                 })
             };
 

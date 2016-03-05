@@ -5,13 +5,10 @@ define('navigation', ['jquery', 'handlebars', 'main', 'text!templates/navigation
 
             var navigationTemplate = Handlebars.compile(navTpl);
 
-            main.getConfig(function(data){
-                $('#navigation').html(navigationTemplate(data.data));
+            main.getConfig(function(config){
+                $('#navigation').html(navigationTemplate(config.data));
             });
 
-            //tutaj możesz zrobić np. wywołanie JSON
-            
-            //a tutaj możesz np. zapiąć listenery, uruchomić subkomponenty jQuery itp.
         }
     }    
 });
