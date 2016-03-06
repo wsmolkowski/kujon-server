@@ -5,8 +5,8 @@ USOSINSTANCES = [
      'name': 'The University of Wąchock - DEMO',
      'url': 'https://usosapps.demo.usos.edu.pl/',
      'logo': '/static/img/DEMO.jpeg',
-     'consumer_key': 'b9MHLmXygtGDbcL5BCj3',
-     'consumer_secret': '4TQESZkkBMFCT2JgtnzAtD5XG6ACZjsEb5vTrDGM',
+     'consumer_key': 'FMmNufDTWNBxceDKwTED',
+     'consumer_secret': '293pW5PrhKAFQ5kwJLYUxeFyNtUhPh2S4NYCTvjC',
      'contact': 'dsksysadm@adm.uw.edu.pl'
      },
     {'usos_id': 'UW',
@@ -21,8 +21,8 @@ USOSINSTANCES = [
      'name': 'Politechnika Świętokrzystka',
      'url': 'https://api.usos.tu.kielce.pl/',
      'logo': '/static/img/PS.jpeg',
-     'consumer_key': 'equujDB5ZLzTmPfcy2c2',
-     'consumer_secret': 'PNMLtvWr6p34tmYSjmDKfNwQEmUdkMwExearQhWA',
+     'consumer_key': 'KjkcJxANGhWF8dxtjKkM',
+     'consumer_secret': '9FZvfvmQSLePjw3V5k5guSfERr7eN8USPMHzHV6U',
      'contact': 'd.walczyk@tu.kielce.pl'
      },
     {'usos_id': 'PWSZ',

@@ -174,8 +174,8 @@ class CreateUserHandler(BaseHandler):
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            request_token_url = "{0}services/oauth/request_token?oauth_callback={1}?{2}".format(
-                usos_doc[constants.USOS_URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
+            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
+                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL )
 
             client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)
@@ -293,8 +293,8 @@ class RegisterHandler(BaseHandler):
         else:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            request_token_url = "{0}services/oauth/request_token?oauth_callback={1}?{2}".format(
-                usos_doc[constants.USOS_URL], settings.CALLBACK_URL, 'scopes=studies|offline_access')
+            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
+                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL )
 
             client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)

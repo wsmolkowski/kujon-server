@@ -1,10 +1,8 @@
 import logging
 from datetime import datetime
 from datetime import timedelta, date
-
 import tornado.gen
 from bson.objectid import ObjectId
-
 import usosinstances
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -12,7 +10,6 @@ from commons.helpers import log_execution_time
 from commons.mongo_dao import Dao
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
-
 
 class UsosCrawler:
     def __init__(self, dao=None):
@@ -90,8 +87,8 @@ class UsosCrawler:
                 logging.debug("no photo for user_id: {0}".format(user_id))
 
     def __build_user_info(self, client, user_id, user_info_id, crawl_time, usos):
-        if self.dao.user_info_exists(user_id):
-            logging.debug("not building user info since it already exists for {0}".format(user_id))
+        if user_id and self.dao.user_info_exists(user_id):
+            logging.debug("not building user info - it already exists for {0}".format(user_id))
             return
 
         result = client.user_info(user_info_id)
@@ -105,7 +102,7 @@ class UsosCrawler:
                                                                crawl_time, usos)
 
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.debug("user_info inserted: {0}".format(ui_doc))
+        logging.debug("user_info for {0} inserted: {1}".format(result[constants.ID],ui_doc))
 
         # if user conducts courses - fetch courses
         if result['course_editions_conducted']:
@@ -188,7 +185,7 @@ class UsosCrawler:
         if result:
             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
-            raise Exception(result)
+            # raise Exception(result)
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug("course_editions for user_id: {0} inserted: {1}".format(user_id, ce_doc))
         else:
@@ -228,7 +225,7 @@ class UsosCrawler:
                 logging.debug(u"course_edition for course_id: {0} term_id: {1} inserted {2}".format(course_edition[
                                                     constants.COURSE_ID], course_edition[constants.TERM_ID], c_doc))
             else:
-                logging.debug(u"no course_edition for course_id: {0} term_id: {1}.".format(course_edition[
+                logging.debug(u"no course_edition for course_id: {0} term_id: {1}".format(course_edition[
                                                         constants.COURSE_ID], course_edition[constants.TERM_ID]))
 
     @tornado.gen.coroutine

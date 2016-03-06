@@ -57,20 +57,20 @@ class MongoDbQueue(object):
             job[constants.JOB_MESSAGE] = message
         update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.debug('updated job: {0} with status: {1} resulted in: {2}'.format(job[constants.MONGO_ID], status, update))
+        logging.debug("updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug('processing job: {0} with job type: {1}'.format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
+        logging.debug("processing job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
 
         if job[constants.JOB_TYPE] == 'initial_user_crawl':
             yield self.crawler.initial_user_crawl(job[constants.USER_ID])
         elif job[constants.JOB_TYPE] == 'update_user_crawl':
             yield self.crawler.update_user_crawl(job[constants.USER_ID])
         else:
-            raise Exception('could not process job with unknown job type: {0}'.format(job[constants.JOB_TYPE]))
+            raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
 
-        logging.debug('processed job: {0} with job type: {1}'.format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
+        logging.debug("processed job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
 
     @gen.coroutine
     def worker(self):
@@ -83,7 +83,7 @@ class MongoDbQueue(object):
 
             else:
                 job = yield self._queue.get()
-                logging.debug('consuming queue job {0}'.format(job))
+                logging.debug("consuming queue job {0}".format(job))
 
                 try:
                     yield self.update_job(job, constants.JOB_START)
@@ -93,8 +93,8 @@ class MongoDbQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = 'Exception while executing job {0} {1}', job[constants.MONGO_ID]
-                    logging.exception("{0} {1}".format(msg, ex.message))
+                    msg = "Exception while executing job {0} ".format(job[constants.MONGO_ID])
+                    logging.exception(msg)
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)
                 finally:
