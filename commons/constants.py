@@ -29,12 +29,12 @@ CONSUMER_KEY = "consumer_key"
 CONSUMER_SECRET = "consumer_secret"
 
 JOB_STATUS = "status"
-JOB_TYPE = 'type'
+JOB_TYPE = "type"
 JOB_PENDING = "pending"
 JOB_START = "start"
 JOB_FINISH = "finish"
 JOB_FAIL = "fail"
-JOB_MESSAGE = 'message'
+JOB_MESSAGE = "message"
 
 USER_TYPE = "user_type"
 USER_CREATED = "user_created"
@@ -73,4 +73,4 @@ COLLECTION_JOBS_QUEUE = "jobs_queue"
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
-CRAWL_TYPE = 'crawl_type'
+CRAWL_TYPE = "crawl_type"
