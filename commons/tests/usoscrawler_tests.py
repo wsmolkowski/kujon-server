@@ -59,7 +59,6 @@ class CrawlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_EDITIONS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
-        self.assertTrue(self.dao.count(constants.COLLECTION_CRAWLLOG) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
 
 
@@ -81,7 +80,6 @@ class CrawlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSE_EDITION) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_GRADES) > 0)
-        self.assertTrue(self.dao.count(constants.COLLECTION_CRAWLLOG) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
@@ -107,7 +105,6 @@ class CrawlerTest(AsyncTestCase):
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSE_EDITION) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_GRADES) > 0)
-        self.assertTrue(self.dao.count(constants.COLLECTION_CRAWLLOG) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)

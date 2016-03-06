@@ -33,12 +33,11 @@ class MongoDbQueue(object):
 
         cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find(
             {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
-        ).sort([(constants.UPDATE_TIME, -1)]).limit(1)
+        ).sort([(constants.UPDATE_TIME, -1)])
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            print job[constants.UPDATE_TIME], delta, job[constants.MONGO_ID]
-            #yield self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(job[constants.USER_ID]))
+            yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
         cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
@@ -51,11 +50,18 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
+        # insert current status to history
+        old = job.copy()
+        old.pop(constants.MONGO_ID)
+        yield self._db[constants.COLLECTION_JOBS_LOG].insert(old)
+
+        # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
-        if message:
-            job[constants.JOB_MESSAGE] = message
-        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update({constants.MONGO_ID: job[constants.MONGO_ID]}, job)
+        job[constants.JOB_MESSAGE] = message
+
+        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update(
+                {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.debug("updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
