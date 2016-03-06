@@ -11,7 +11,7 @@ def user_job(user_id, job_type):
         constants.JOB_MESSAGE: None,
         constants.JOB_STATUS: constants.JOB_PENDING,
         constants.JOB_TYPE: job_type
-    }
+}
 
 
 def initial_user_job(user_id):

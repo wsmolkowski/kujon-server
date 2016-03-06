@@ -188,7 +188,7 @@ class UsosCrawler:
         if result:
             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
-            raise Exception(result)
+            #raise Exception(result)
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug("course_editions for user_id: {0} inserted: {1}".format(user_id, ce_doc))
         else:
@@ -367,13 +367,6 @@ class UsosCrawler:
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         return client, usos
 
-    def __insert_crawl_log(self, crawl_time, user_id, usos, crawl_type):
-        result = self.append(dict(), usos[constants.USOS_ID], crawl_time, crawl_time)
-        result[constants.USER_ID] = user_id
-        result[constants.CRAWL_TYPE] = crawl_type
-        doc = self.dao.insert(constants.COLLECTION_CRAWLLOG, result)
-        logging.debug("{0} crawl log inserted with id {1}".format(crawl_type, doc))
-
     @log_execution_time
     @tornado.gen.coroutine
     def initial_user_crawl(self, user_id):
@@ -411,9 +404,6 @@ class UsosCrawler:
             self.__build_courses(client, user_id, usos, crawl_time)
 
             self.__build_faculties(client, usos, crawl_time)
-
-            # crawl collection
-            self.__insert_crawl_log(crawl_time, user_id, usos, 'initial')
 
         except Exception, ex:
             raise Exception("Exception while initial user usos crawler: {0}".format(ex.message))
@@ -464,9 +454,6 @@ class UsosCrawler:
 
             self.__build_faculties(client, usos, crawl_time)
             '''
-
-            # crawl collection
-            self.__insert_crawl_log(crawl_time, user_id, usos, 'update')
 
         except Exception, ex:
             raise Exception("Exception while updated crawler: {0}".format(ex.message))
