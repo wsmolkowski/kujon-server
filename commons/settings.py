@@ -29,4 +29,4 @@ DEPLOY_WEB = "http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
 
 CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
 
-LOGGING_DATEFORMAT = '%m-%d-%Y %I:%M:%S %p'
+LOGGING_DATEFORMAT = "%m-%d-%Y %I:%M:%S %p"
