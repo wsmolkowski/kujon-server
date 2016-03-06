@@ -32,14 +32,13 @@ class MongoDbQueue(object):
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
 
         cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find(
-            {constants.UPDATE_TIME: {'$gt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
-        )
+            {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
+        ).sort([(constants.UPDATE_TIME, -1)]).limit(1)
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            new_job = yield self._db[constants.COLLECTION_JOBS_QUEUE].insert(
-                job_factory.update_user_job(job[constants.USER_ID]))
-            logging.debug('created new job with type: {0}'.format(new_job))
+            print job[constants.UPDATE_TIME], delta, job[constants.MONGO_ID]
+            #yield self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(job[constants.USER_ID]))
 
         # create jobs and put into queue
         cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
