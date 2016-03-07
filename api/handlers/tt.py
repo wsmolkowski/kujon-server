@@ -62,5 +62,9 @@ class TTApi(BaseHandler):
             t['name'] = t['name']['pl']
             t['course_name'] = t['course_name']['pl']
             t['building_name'] = t['building_name']['pl']
+            if t['type'] == 'classgroup':
+                t['type'] = 'zajęcia'
+            elif t['type'] == 'exam':
+                t['type'] = 'egzamin'
 
         self.success(tt_doc['tts'])

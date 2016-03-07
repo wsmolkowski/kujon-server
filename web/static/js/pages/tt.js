@@ -29,7 +29,6 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                                         room_number: $(this).attr('room_number'),
                                         building_name: $(this).attr('building_name'),
                                         group_number: $(this).attr('group_number'),
-                                        course_name: $(this).attr('course_number'),
                                         type: $(this).attr('type'),
                                     });
                                 });
@@ -46,7 +45,6 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                 'eventRender': function(event, element) {
                     var description = "sala: " + event.room_number + "<br>"
                     description += "budynek: " + event.building_name + "<br>"
-                    description += "przedmiot: " + event.course_name + "<br>"
                     description += "grupa: " + event.group_number + "<br>"
                     description += "typ: " + event.type
                     element.tooltip({title: description, html: true, container: "body", placement: 'right'});
