@@ -53,9 +53,9 @@ class Dao:
     def get_users_info(self, user_id):
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
 
-    def get_users_info_by_usos_id(self, usos_user_id, usos):
-        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.MONGO_ID: usos_user_id, constants.USOS_ID: usos[
-            constants.USOS_ID]})
+    def get_users_info(self, user_id, usos):
+        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
+                                                                   constants.USOS_ID: usos[constants.USOS_ID]})
 
     def get_users_info_photo(self, user_id, usos_id):
         return self._db[constants.COLLECTION_PHOTOS].find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
@@ -159,8 +159,8 @@ class Dao:
         for term_data in data['course_editions'].values():
             for term in term_data:
                 if term[constants.COURSE_ID] not in course_edition:
-                    course_edition.append({constants.COURSE_ID: term[constants.COURSE_ID], constants.TERM_ID: term[
-                        constants.TERM_ID]})
+                    course_edition.append({constants.COURSE_ID: term[constants.COURSE_ID],
+                                           constants.TERM_ID: term[constants.TERM_ID]})
         return course_edition
 
     def get_user_courses_editions(self, user_id):
@@ -193,11 +193,15 @@ class Dao:
         return list()
 
     def user_info_id(self, user_id):
-        id = self._db[constants.COLLECTION_USERS_INFO].find_one(
+        doc_id = self._db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: user_id}, (constants.MONGO_ID,))
-        return id[constants.MONGO_ID]
+        return doc_id[constants.MONGO_ID]
 
-    def curseseditions_exists(self, user_id):
-        if self._db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id}):
-            return True
+    def curseseditions_id(self, user_id):
+        ce_doc = self._db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
+        if ce_doc:
+            return ce_doc[constants.MONGO_ID]
         return False
+
+    def delete_doc(self, collection, doc_id):
+        self._db[collection].remove({constants.MONGO_ID: doc_id})
