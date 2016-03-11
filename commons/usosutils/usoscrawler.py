@@ -187,7 +187,7 @@ class UsosCrawler:
         result[constants.USER_ID] = user_id
 
         ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.debug("course_editions for user_id: %r inserted: %r", user_id, str(ce_doc))
+        logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
 
         if existing_id and ce_doc:
             self.dao.delete_doc(constants.COLLECTION_COURSES_EDITIONS, existing_id)
