@@ -9,9 +9,10 @@ from tornado.log import enable_pretty_logging
 from tornado.options import define, parse_command_line
 
 from commons.usosutils.usoscrawler import UsosCrawler
-from commons import settings
-from commons import constants
+from commons import settings, constants, utils
 from handlers_list import HANDLERS
+
+utils.initialize_logging('api_server')
 
 
 define('cookie_secret', default=settings.COOKIE_SECRET)

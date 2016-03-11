@@ -1,10 +1,11 @@
-import logging
 import chronos
 
 from tornado.log import enable_pretty_logging
 
-from commons import settings
+from commons import utils
 from commons.usosutils.usoscrawler import UsosCrawler
+
+utils.initialize_logging('scheduler')
 
 
 def update_time_table():
@@ -21,9 +22,6 @@ def init():
     chronos.start(True)
 
 if __name__ == '__main__':
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug("DEBUG MODE is ON")
 
     enable_pretty_logging()
     init()

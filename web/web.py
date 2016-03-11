@@ -4,11 +4,12 @@ import logging
 import motor
 import tornado.ioloop
 import tornado.web
-from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line
 
 from handlers import web, authentication
-from commons import settings
+from commons import settings, utils
+
+utils.initialize_logging('web_server')
 
 
 class Application(tornado.web.Application):
@@ -52,11 +53,6 @@ class Application(tornado.web.Application):
 
 if __name__ == "__main__":
     parse_command_line()
-    enable_pretty_logging()
-
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug("DEBUG MODE is ON")
 
     web = Application()
     web.listen(settings.WEB_PORT)
