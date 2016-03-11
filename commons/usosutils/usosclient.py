@@ -14,7 +14,7 @@ URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = u"services/courses/course_edition
 URI_GRADES_FOR_COURSE_AND_TERM = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = u"services/courses/classtypes_index"
 URI_PROGRAMMES = u"services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
-URI_GROUPS = u"services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|class_type|course_id|term_id"
+URI_GROUPS = u"services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria"
 URI_COURSES_UNITS = u"services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}"
 URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement"
 URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]"

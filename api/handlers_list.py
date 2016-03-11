@@ -1,6 +1,5 @@
 from handlers.base import UsosesApi
-from handlers.courses import CoursesApi
-from handlers.courses import CoursesEditionsApi
+from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi
 from handlers.faculties import FacultyByIdApi
 from handlers.friends import FriendsSuggestionsApi, FriendsApi
 from handlers.grades import GradesForCourseAndTermApi, GradesForUserApi
@@ -18,6 +17,7 @@ HANDLERS = [
     (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),
 
     (r"/api/courseseditions/", CoursesEditionsApi),
+    (r"/api/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
     (r"/api/courses/([^/]+)", CoursesApi),
 
     (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
