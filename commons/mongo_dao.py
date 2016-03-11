@@ -205,3 +205,13 @@ class Dao:
 
     def delete_doc(self, collection, doc_id):
         self._db[collection].remove({constants.MONGO_ID: doc_id})
+
+    def get_users(self):
+        return self._db[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True},
+                    (constants.MONGO_ID, constants.USOS_ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET))
+
+    def get_time_table(self, user_id, usos_id):
+        tt_doc = self._db[constants.COLLECTION_TT].find_one({constants.USER_ID: user_id, constants.USOS_ID: usos_id})
+        if tt_doc:
+            return tt_doc[constants.MONGO_ID]
+        return False
