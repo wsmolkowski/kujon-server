@@ -21,7 +21,8 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 $('.panel-heading').bind( 'click', function(){
                     //FIXME - do not call when content already loaded
                     var courseId = $(this).attr("course-id");
-                    main.callCourseDetails(courseId, function(courseInfo){
+                    var termId = $(this).attr("term-id");
+                    main.callCourseEditionDetails(courseId, termId, function(courseInfo){
 
                         var idContent = '#courseDetails' + courseId;
 
