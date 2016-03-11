@@ -264,7 +264,7 @@ class UsosCrawler:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.FACULTY_ID] = faculty
                 fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
-                logging.debug("faculty for fac_id: %r inserted %r", faculty, fac_doc)
+                logging.debug("faculty for fac_id: %r inserted %r", faculty, str(fac_doc))
             else:
                 logging.debug("no faculty for fac_id: %r.", faculty)
 
