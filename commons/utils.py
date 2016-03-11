@@ -1,10 +1,11 @@
+import datetime
+import logging
 import os
 import sys
-import logging
 import tempfile
-import httplib2
-import datetime
 import traceback
+
+import httplib2
 from bson.objectid import ObjectId
 
 try:
@@ -16,12 +17,13 @@ import settings
 import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
-LOG = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def get_proxy():
     if settings.PROXY_PORT and settings.PROXY_URL:
-        return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT, proxy_rdns=False)
+        return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL,
+                                  proxy_port=settings.PROXY_PORT, proxy_rdns=False)
     return None
 
 
@@ -64,12 +66,11 @@ def serialize(data):
 
 
 def mkdir(newdir):
-
     if os.path.isdir(newdir):
         pass
     elif os.path.isfile(newdir):
         raise OSError("a file with the same name as the desired " \
-                    "dir, '%s', already exists." % newdir)
+                      "dir, '%s', already exists." % newdir)
     else:
         head, tail = os.path.split(newdir)
         if head and not os.path.isdir(head):
@@ -79,7 +80,6 @@ def mkdir(newdir):
 
 
 def initialize_logging(logger_name):
-
     try:
         log_format = '%%(asctime)s | %%(levelname)s | %s | %%(name)s(%%(filename)s:%%(lineno)s) | %%(message)s' % logger_name
         log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -116,5 +116,5 @@ def initialize_logging(logger_name):
         )
 
     # re-get the log after logging is initialized
-    global LOG
-    LOG = logging.getLogger(__name__)
+    global log
+    log = logging.getLogger(__name__)

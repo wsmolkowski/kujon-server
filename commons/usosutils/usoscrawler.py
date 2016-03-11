@@ -11,6 +11,8 @@ from commons.mongo_dao import Dao
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
+log = logging.getLogger(__name__)
+
 
 class UsosCrawler:
     def __init__(self, dao=None):

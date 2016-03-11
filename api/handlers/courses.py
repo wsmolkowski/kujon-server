@@ -2,7 +2,7 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-from datetime import date, datetime
+
 from base import BaseHandler
 from commons import constants
 
@@ -12,6 +12,7 @@ LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'cou
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
+
 
 class CourseEditionApi(BaseHandler):
     @tornado.web.asynchronous
@@ -41,21 +42,12 @@ class CourseEditionApi(BaseHandler):
                 ct = cursor.next_object()
                 classtypes[ct['id']] = ct['name']['pl']
 
-
-            #terms
-            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-                {constants.USOS_ID: parameters[constants.USOS_ID],
-                 constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-            if not constants:
-                self.error("Błąd podczas pobierania okresów..")
-                return
-            else:
-                term_doc['name'] = term_doc['name']['pl']
-                course_doc['term'] = term_doc
-
             # change faculty_id to faculty name
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-                constants.FACULTY_ID], constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
+                constants.FACULTY_ID],
+                                                                              constants.USOS_ID: parameters[
+                                                                                  constants.USOS_ID]},
+                                                                             LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
             course_doc['name'] = course_doc['name']['pl']
@@ -84,7 +76,7 @@ class CourseEditionApi(BaseHandler):
             # get information about group
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    #groups
+                    # groups
                     group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
                         {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
                          constants.TERM_ID: term_id, 'course_unit_id': int(unit)}, LIMIT_FIELDS_GROUPS)
@@ -93,9 +85,20 @@ class CourseEditionApi(BaseHandler):
                         return
                     else:
                         group_doc['class_type'] = classtypes[group_doc['class_type_id']]
-                        del(group_doc['class_type_id'])
+                        del (group_doc['class_type_id'])
                         groups.append(group_doc)
             course_doc['groups'] = groups
+
+            # terms
+            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+                {constants.USOS_ID: parameters[constants.USOS_ID],
+                 constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
+            if not constants:
+                self.error("Błąd podczas pobierania okresów..")
+                return
+            else:
+                term_doc['name'] = term_doc['name']['pl']
+                course_doc['term'] = term_doc
 
             self.success(course_doc)
 
@@ -162,35 +165,17 @@ class CoursesEditionsApi(BaseHandler):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        #get terms
-        terms_active = list()
-        terms_inactive = list()
+        # get terms
+        terms = list()
         for term in course_doc['course_editions']:
-            today = date.today()
             year = {
                 'term': term,
                 'term_data': course_doc['course_editions'][term]
             }
-
-            #terms - gt info from mongo to check if it is active
-            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-                {constants.USOS_ID: parameters[constants.USOS_ID],
-                constants.TERM_ID: term}, LIMIT_FIELDS_TERMS)
-            if not constants:
-                self.error("Błąd podczas pobierania okresu {0}..".format(term))
-                return
-            else:
-                end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
-                if today <= end_date:
-                    terms_active.append(year)
-                else:
-                    terms_inactive.append(year)
-
-        terms = terms_active + terms_inactive
+            terms.append(year)
 
         # add groups to courses
-        courses_active = list()
-        courses_inactive = list()
+        courses = list()
         for term in terms:
             for course in term['term_data']:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
@@ -207,13 +192,6 @@ class CoursesEditionsApi(BaseHandler):
                 course['groups'] = groups
                 course['course_name'] = course['course_name']['pl']
                 del course['course_units_ids']
-
-                if term in terms_active:
-                    courses_active.append(course)
-                else:
-                    courses_inactive.append(course)
-        courses = dict()
-        courses['active'] = courses_active
-        courses['inactive'] = courses_inactive
+                courses.append(course)
 
         self.success(courses)
