@@ -24,6 +24,7 @@ class MongoDbQueue(object):
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
         #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(ObjectId("56dad1dec4f9d23e009ca27c")))
+        #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(ObjectId("56e295c8c4f9d21760d60922")))
 
     @gen.coroutine
     def __load_work(self):
@@ -50,7 +51,7 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
-        # insert current status to history
+        # insert current job to history collection
         old = job.copy()
         old.pop(constants.MONGO_ID)
         yield self._db[constants.COLLECTION_JOBS_LOG].insert(old)
@@ -99,7 +100,7 @@ class MongoDbQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = "Exception while executing job {0} ".format(job[constants.MONGO_ID])
+                    msg = "Exception while executing job {0} with: {0}".format(job[constants.MONGO_ID], ex.message)
                     logging.exception(msg)
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)

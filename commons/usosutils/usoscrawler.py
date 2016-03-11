@@ -121,11 +121,13 @@ class UsosCrawler:
             course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
             logging.debug("course_edition for course_id: %r term_id: %r inserted: %r", course_id, term_id, str(course_doc))
 
-    def __build_tt(self, client, user_id, crawl_time, usos, given_date):
+    def __build_time_table(self, client, user_id, usos_id, given_date):
+        existing_tt = self.dao.get_time_table(user_id, usos_id)
 
+        '''
         tts = self.dao.get_user_tt(user_id, usos[constants.USOS_ID], given_date)
         if tts:
-            for tt in tts:
+            for time_table in tts:
                 pass
                 # TODO: sprawdzenie czy istnieja grupy
                 # w zaleznosci od typu:
@@ -133,20 +135,27 @@ class UsosCrawler:
                 # If type equals "meeting":
                 # If type equals "exam":
         else:
-            try:
-                result = client.tt(given_date)
-                tt = dict()
-                tt[constants.USOS_ID] = usos[constants.USOS_ID]
-                tt[constants.TT_STARTDATE] = str(given_date)
-                tt['tts'] = result
-                tt[constants.USER_ID] = user_id
-                tt_doc = self.dao.insert(constants.COLLECTION_TT, tt)
-                if result:
-                    logging.debug("time tables for date: %r inserted: %r", given_date, tt_doc)
-                else:
-                    logging.debug("no time tables for date: %r inserted empty", given_date)
-            except Exception, ex:
-                logging.debug("problem during tt fetch: %r", ex.message)
+        '''
+        try:
+            result = client.time_table(given_date)
+        except Exception, ex:
+            logging.exception('Exception {0} while fetching time table for: {1} and {2}'.format(
+                ex.message, user_id, given_date))
+            return
+
+        if result:
+            tt = dict()
+            tt[constants.USOS_ID] = usos_id
+            tt[constants.TT_STARTDATE] = str(given_date)
+            tt['tts'] = result
+            tt[constants.USER_ID] = user_id
+            tt_doc = self.dao.insert(constants.COLLECTION_TT, tt)
+            logging.debug("time tables for date: %r inserted: %r", given_date, tt_doc)
+
+            if existing_tt:
+                self.dao.remove(constants.COLLECTION_TT, existing_tt)
+        else:
+            logging.debug("no time tables for date: %r inserted empty", given_date)
 
     def __build_programmes(self, client, user_info_id, crawl_time, usos):
 
@@ -374,13 +383,11 @@ class UsosCrawler:
 
         user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
 
-        # fetch tt for current and next week
-        today = date.today()
-        monday = today - timedelta(days=(today.weekday()) % 7)
-        next_monday = monday + timedelta(days=7)
+        # fetch time_table for current and next week
+        monday = self.__get_monday()
 
-        self.__build_tt(client, user_id, crawl_time, usos, monday)
-        self.__build_tt(client, user_id, crawl_time, usos, next_monday)
+        self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
+        self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
 
         self.__build_programmes(client, user_info_id, crawl_time, usos)
 
@@ -395,6 +402,14 @@ class UsosCrawler:
         self.__build_courses(client, user_id, usos, crawl_time)
 
         self.__build_faculties(client, usos, crawl_time)
+
+    def __get_next_monday(self, monday):
+        return monday + timedelta(days=7)
+
+    def __get_monday(self):
+        today = date.today()
+        monday = today - timedelta(days=(today.weekday()) % 7)
+        return monday
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -418,5 +433,21 @@ class UsosCrawler:
 
         self.__build_faculties(client, usos, crawl_time)
 
+    @tornado.gen.coroutine
+    def update_time_tables(self):
+        monday = self.__get_monday()
+        next_monday = self.__get_next_monday(monday)
+
+        for user in self.dao.get_users():
+            try:
+                logging.debug('updating time table for user: {0} and monday: {1}'.format(user[constants.MONGO_ID], monday))
+                client, usos = self.__get_usos_client(user)
+
+                self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], monday)
+                self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], next_monday)
+
+                logging.debug('updating time table for user: {0}'.format(user[constants.MONGO_ID]))
+            except Exception, ex:
+                logging.exception('Exception in update_time_tables {0}'.format(ex.message))
 
 

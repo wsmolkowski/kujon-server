@@ -23,7 +23,7 @@ class TTApi(BaseHandler):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
             next_monday = monday + timedelta(days=7)
         except Exception, ex:
-            self.error("Niepoprawny format daty..%r, try: YYYY-MM-DD", given_date)
+            self.error("Niepoprawny format daty: %r, poprawny: YYYY-MM-DD", given_date)
 
         # get user data
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
@@ -43,7 +43,7 @@ class TTApi(BaseHandler):
                                 access_token_key=user_doc[constants.ACCESS_TOKEN_KEY],
                                 access_token_secret=user_doc[constants.ACCESS_TOKEN_SECRET])
             try:
-                result = client.tt(monday)
+                result = client.time_table(monday)
 
                 # insert TT to mongo
                 tt_doc = dict()

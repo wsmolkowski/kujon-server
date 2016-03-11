@@ -70,11 +70,11 @@ class UsosClient:
             u"Error while fetching programmes for requesst: {0}. Response code: {1} body: {2}".format(request, code,
                                                                                                       body))
 
-    def tt(self, start_date):
+    def time_table(self, start_date):
         if not start_date:
-            raise Exception(u"Cannot fetch for USOS time table for empty start date parameter")
+            raise Exception("Cannot fetch for USOS time table for empty start date parameter")
 
-        request = u"{0}{1}".format(self.base_url, URI_TT.format(start_date))
+        request = "{0}{1}".format(self.base_url, URI_TT.format(start_date))
         code, body = self.client.request(request)
         if code['status'] == '200':
             return json.loads(body)
