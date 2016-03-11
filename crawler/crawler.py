@@ -6,7 +6,10 @@ import motor
 from tornado import queues, gen, ioloop
 from tornado.log import enable_pretty_logging
 
-from commons import settings, constants
+from commons import settings, constants, utils
+
+utils.initialize_logging('crawler')
+
 from commons.usosutils.usoscrawler import UsosCrawler
 import job_factory
 
@@ -109,11 +112,6 @@ class MongoDbQueue(object):
 
 
 if __name__ == '__main__':
-    enable_pretty_logging()
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug("DEBUG MODE is ON")
-
     mq = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
