@@ -2,9 +2,8 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 'use strict';
 
 
-    function setActiveLink(hash) {  
+    function setActiveLink(hash, param) {
         //console.log('hash: ' + hash + ' isUserLoggedIn: ' + main.isUserLoggedIn());
-
         //pokaż kręcacz porządnie
         $('#spinner').show();
 
@@ -40,10 +39,15 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
     crossroads.addRoute('home', function() {
         setActiveLink('home');
     });
-    
+
     crossroads.addRoute('user', function() {
         setActiveLink('user');
     });
+
+    crossroads.addRoute('user/{id}', function(id) {
+        setActiveLink('user',id.id);
+    });
+
 
     crossroads.addRoute('grades', function() {
         setActiveLink('grades');
@@ -51,6 +55,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     crossroads.addRoute('courses', function() {
         setActiveLink('courses');
+    });
+
+    crossroads.addRoute('courses/{id}', function(id) {
+        setActiveLink('courses',id.id);
     });
 
     crossroads.addRoute('terms', function() {
@@ -63,6 +71,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     crossroads.addRoute('lecturers', function() {
         setActiveLink('lecturers');
+    });
+
+    crossroads.addRoute('lecturers/{id}', function(id) {
+        setActiveLink('lecturers',id.id);
     });
 
     crossroads.addRoute('register', function() {
