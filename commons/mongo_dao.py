@@ -6,6 +6,8 @@ from bson.objectid import ObjectId
 from AESCipher import AESCipher
 from commons import settings, constants
 
+log = logging.getLogger(__name__)
+
 
 class Dao:
     def __init__(self, dburi=None, dbname=None):

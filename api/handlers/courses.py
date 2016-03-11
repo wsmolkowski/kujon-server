@@ -13,6 +13,7 @@ LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
+
 class CourseEditionApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -40,7 +41,6 @@ class CourseEditionApi(BaseHandler):
             while (yield cursor.fetch_next):
                 ct = cursor.next_object()
                 classtypes[ct['id']] = ct['name']['pl']
-
 
             # change faculty_id to faculty name
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
@@ -76,7 +76,7 @@ class CourseEditionApi(BaseHandler):
             # get information about group
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    #groups
+                    # groups
                     group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
                         {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
                          constants.TERM_ID: term_id, 'course_unit_id': int(unit)}, LIMIT_FIELDS_GROUPS)
@@ -85,11 +85,11 @@ class CourseEditionApi(BaseHandler):
                         return
                     else:
                         group_doc['class_type'] = classtypes[group_doc['class_type_id']]
-                        del(group_doc['class_type_id'])
+                        del (group_doc['class_type_id'])
                         groups.append(group_doc)
             course_doc['groups'] = groups
 
-            #terms
+            # terms
             term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
                 {constants.USOS_ID: parameters[constants.USOS_ID],
                  constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
@@ -98,10 +98,7 @@ class CourseEditionApi(BaseHandler):
                 return
             else:
                 term_doc['name'] = term_doc['name']['pl']
-                course_doc['term']=term_doc
-
-
-
+                course_doc['term'] = term_doc
 
             self.success(course_doc)
 
@@ -168,7 +165,7 @@ class CoursesEditionsApi(BaseHandler):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        #get terms
+        # get terms
         terms = list()
         for term in course_doc['course_editions']:
             year = {
