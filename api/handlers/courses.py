@@ -2,7 +2,7 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-
+from datetime import date, datetime
 from base import BaseHandler
 from commons import constants
 
@@ -42,12 +42,20 @@ class CourseEditionApi(BaseHandler):
                 classtypes[ct['id']] = ct['name']['pl']
 
 
+            #terms
+            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+                {constants.USOS_ID: parameters[constants.USOS_ID],
+                 constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
+            if not constants:
+                self.error("Błąd podczas pobierania okresów..")
+                return
+            else:
+                term_doc['name'] = term_doc['name']['pl']
+                course_doc['term'] = term_doc
+
             # change faculty_id to faculty name
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-                constants.FACULTY_ID],
-                                                                              constants.USOS_ID: parameters[
-                                                                                  constants.USOS_ID]},
-                                                                             LIMIT_FIELDS_FACULTY)
+                constants.FACULTY_ID], constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
             course_doc['name'] = course_doc['name']['pl']
@@ -88,20 +96,6 @@ class CourseEditionApi(BaseHandler):
                         del(group_doc['class_type_id'])
                         groups.append(group_doc)
             course_doc['groups'] = groups
-
-            #terms
-            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-                {constants.USOS_ID: parameters[constants.USOS_ID],
-                 constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-            if not constants:
-                self.error("Błąd podczas pobierania okresów..")
-                return
-            else:
-                term_doc['name'] = term_doc['name']['pl']
-                course_doc['term']=term_doc
-
-
-
 
             self.success(course_doc)
 
@@ -169,16 +163,34 @@ class CoursesEditionsApi(BaseHandler):
             classtypes[ct['id']] = ct['name']['pl']
 
         #get terms
-        terms = list()
+        terms_active = list()
+        terms_inactive = list()
         for term in course_doc['course_editions']:
+            today = date.today()
             year = {
                 'term': term,
                 'term_data': course_doc['course_editions'][term]
             }
-            terms.append(year)
+
+            #terms - gt info from mongo to check if it is active
+            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+                {constants.USOS_ID: parameters[constants.USOS_ID],
+                constants.TERM_ID: term}, LIMIT_FIELDS_TERMS)
+            if not constants:
+                self.error("Błąd podczas pobierania okresu {0}..".format(term))
+                return
+            else:
+                end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
+                if today <= end_date:
+                    terms_active.append(year)
+                else:
+                    terms_inactive.append(year)
+
+        terms = terms_active + terms_inactive
 
         # add groups to courses
-        courses = list()
+        courses_active = list()
+        courses_inactive = list()
         for term in terms:
             for course in term['term_data']:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
@@ -195,6 +207,13 @@ class CoursesEditionsApi(BaseHandler):
                 course['groups'] = groups
                 course['course_name'] = course['course_name']['pl']
                 del course['course_units_ids']
-                courses.append(course)
+
+                if term in terms_active:
+                    courses_active.append(course)
+                else:
+                    courses_inactive.append(course)
+        courses = dict()
+        courses['active'] = courses_active
+        courses['inactive'] = courses_inactive
 
         self.success(courses)
