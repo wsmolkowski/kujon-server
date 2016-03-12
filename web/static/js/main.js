@@ -172,7 +172,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 TT(start, callback);
             },
 
-
         };
 
 });

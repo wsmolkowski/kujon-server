@@ -21,7 +21,9 @@
   <tr><td>Prowadzący grup</td>
     <td>
     {{#lecturers}}
-      <a href="#lecturers/{{user_id}}">{{first_name}} {{last_name}}</a><br>
+      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#lecturerModal" data-lecturerId="{{user_id}}">
+        {{first_name}} {{last_name}}
+      </button><br>
     {{/lecturers}}
     </td>
   </tr>
@@ -29,7 +31,9 @@
   <tr><td>Koordynatorzy</td>
     <td>
     {{#coordinators}}
-      <a href="#lecturers">{{first_name}} {{last_name}}</a><br>
+      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#lecturerModal" data-lecturerId="{{user_id}}">
+        {{first_name}} {{last_name}}
+      </button><br>
     {{/coordinators}}
     </td>
   </tr>
@@ -48,3 +52,21 @@
 
 </tbody>
 </table>
+
+<!-- Modal -->
+<div class="modal fade" id="lecturerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+      </div>
+      <div class="modal-body">
+        <div id="lecturerDetails"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+      </div>
+    </div>
+  </div>
+</div>
