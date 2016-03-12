@@ -51,7 +51,8 @@ class UserInfoApi(BaseHandler):
             self.error('Poczekaj szukamy informacji o użytkowniku..')
             return
 
-        user_info['user_email'] = user_info.pop('email')
+        if 'email' in user_info:
+            user_info['user_email'] = user_info.pop('email')
 
         user.update(user_info)
 

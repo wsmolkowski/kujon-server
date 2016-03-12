@@ -80,6 +80,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(buildApiUrl('/api/users/'), callback);
         };
 
+        function userInfo(userId, callback){
+            var request_url = buildApiUrl('/api/users/') + userId;
+            callAjaxGet(buildApiUrl(request_url), callback);
+        };
+
         function terms(callback){
             callAjaxGet(buildApiUrl('/api/terms/'), callback);
         };
@@ -136,6 +141,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             callUsers: function(callback){
                 users(callback);
+            },
+            callUserInfo: function(userId, callback){
+                userInfo(userId, callback);
             },
             callTerms: function(callback){
                 terms(callback);

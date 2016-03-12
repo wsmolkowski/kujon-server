@@ -2,7 +2,7 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-
+from datetime import date, datetime
 from base import BaseHandler
 from commons import constants
 
@@ -28,6 +28,12 @@ class TermsApi(BaseHandler):
                 while (yield cursor.fetch_next):
                     term_data = cursor.next_object()
                     term_data[constants.TERM_ID] = term
+                    today = date.today()
+                    end_date = datetime.strptime(term_data['finish_date'], "%Y-%m-%d").date()
+                    if today <= end_date:
+                        term_data['active'] = True
+                    else:
+                        term_data['active'] = False
                     terms_doc.append(term_data)
         if not terms_doc:
             self.error("Poczekaj szukamy semestrów.")
