@@ -7,18 +7,33 @@
                 <td></td>
             </tr>
             <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
+            {{#if office_hours.pl}}
             <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>
+            {{/if}}
             <tr><td>Pokój</td><td>{{room.building_id}} - {{room.building_name.pl}}</td></tr>
+            {{#if homepage_url}}
             <tr><td>Strona domowa</td><td><a href="{{homepage_url}}" target="_blank">{{homepage_url}}</a></td></tr>
-            <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
+            {{/if}}
+            {{#if interests.pl}}
+                <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
+            {{/if}}
+            {{#if employment_positions}}
             <tr><td>Zatrudnienie</td><td></td></tr>
             {{#employment_positions}}
             <tr><td></td><td>{{position.name.pl}} w {{faculty.name.pl}}</td></tr>
             {{/employment_positions}}
+            {{/if}}
             <tr><td>Prowadzone przedmioty</td></tr>
-            {{#course_editions_conducted}}
-            <tr><td></td><td><a onclick="$('#modalCourse').modal('show')">{{course_name.pl}}</a> {{term_id}} {{lecturers.user_id}} {{lecturers.id}} {{course_id}}</td></tr>
-            {{/course_editions_conducted}}
+            <tr><td></td><td>
+               <div class="span4 collapse-group">
+                   <p class="collapse" id="viewcourses{{id}}">
+                   {{#course_editions_conducted}}
+                        {{course_name.pl}} {{term_id}}<br>
+                   {{/course_editions_conducted}}
+                   </p>
+                   <p><a class="btn" data-toggle="collapse" data-target="#viewcourses{{id}}">Pokaż przedmioty &raquo;</a></p>
+               </div>
+            </td></tr>
             </table>
         <td>
         {{#if has_photo}}

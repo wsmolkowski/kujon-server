@@ -4,12 +4,12 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     function setActiveLink(hash, param) {
 
-        if (main.isUserLoggedIn() && ! main.isUserRegistered()){
-            require(['lib/pages/register'], function(page) {
-                page.render();
-            });
-            return;
-        }
+//        if (main.isUserLoggedIn() && ! main.isUserRegistered()){
+//            require(['lib/pages/register'], function(page) {
+//                page.render();
+//            });
+//            return;
+//        }
 
         //console.log('hash: ' + hash + ' isUserLoggedIn: ' + main.isUserLoggedIn());
         //pokaż kręcacz porządnie

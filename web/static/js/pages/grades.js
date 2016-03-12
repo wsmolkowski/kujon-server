@@ -1,11 +1,11 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/course_details.html'],
-function($, Handlebars, main, tpl, tplError, tplCourse) {
-'use strict';
+define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/course_details_modal.html'],
+    function($, Handlebars, main, tpl, tplError, tplCourseModal) {
+    'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
-            var templateCourse = Handlebars.compile(tplCourse);
+            var templateCourse = Handlebars.compile(tplCourseModal);
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
@@ -15,19 +15,15 @@ function($, Handlebars, main, tpl, tplError, tplCourse) {
                 }
 
                 $('#courseModal').on('show.bs.modal', function (event) {
-                      var button = $(event.relatedTarget) // Button that triggered the modal
-                      var courseId = button.attr('data-courseId') // Extract info from data-* attributes
-                      var termId = button.attr('data-termId') // Extract info from data-* attributes
-
-                      // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-                      // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-
+                      var button = $(event.relatedTarget)
+                      var courseId = button.attr('data-courseId')
+                      var termId = button.attr('data-termId')
 
                       var modal = $(this)
 
                       main.callCourseEditionDetails(courseId, termId, function(courseInfo){
                         if (courseInfo.status == 'success'){
-                            modal.find('.modal-title').text('Informacje o kursie ' + courseId + ' w semestrze ' + termId);
+                            modal.find('.modal-title').text(courseInfo.data['name']);
                             modal.find('.modal-body').html(templateCourse(courseInfo.data));
                         } else {
                             modal.find('.modal-body').html(templateError({'message': courseInfo.message}));
@@ -35,9 +31,6 @@ function($, Handlebars, main, tpl, tplError, tplCourse) {
                       });
                 });
             });
-
-            //a tutaj możesz np. zapiąć listenery
-
         }
     }    
 });

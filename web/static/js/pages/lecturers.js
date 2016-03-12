@@ -1,13 +1,11 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html', 'text!templates/error.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html', 'text!templates/error.html', 'text!templates/course_details_modal.html'],
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal) {
     'use strict';
-
     return {
         render: function() {
-
             var template = Handlebars.compile(tpl);
             var templateDetails = Handlebars.compile(tplDetails);
-
+            var templateCourse = Handlebars.compile(tplCourseModal);
             var templateError = Handlebars.compile(tplError);
 
             main.callLecturers(function(data){
@@ -20,7 +18,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
             });
 
             var API_URL;
-
             main.getConfig(function(config){
                 API_URL = config['API_URL'];
             });
@@ -46,7 +43,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                     }
                 })
             };
-
         }
     }    
 });

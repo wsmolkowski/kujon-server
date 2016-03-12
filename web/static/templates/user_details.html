@@ -1,0 +1,32 @@
+<table>
+    <tbody>
+    <tr>
+        <td >
+            <table class="table table-strip table-responsive">
+            {{#if has_photo}}
+                <tr><td><img src="{{photo}}"></td></tr>
+            {{/if}}
+            <tr><td>Status studenta</td><td>{{student_status}}</td></tr>
+            {{#if student_number}}
+                <tr><td>Numer indeksu</td><td>{{student_number}}</td></tr>
+            {{/if}}
+            {{#if user_email}}
+                <tr><td>Email</td><td>{{user_email}}</td></tr>
+            {{/if}}
+            {{#if student_programmes}}
+                <tr><td>Kierunki</td><td></td></tr>
+                {{#student_programmes}}
+                    <tr><td>{{id}}</td><td>{{programme.description}} ({{programme.id}}) </td></tr>
+                {{/student_programmes}}
+            {{/if}}
+            </table>
+        <td>
+        {{#if has_photo}}
+        <div class="img-thumbnail">
+            <img src="{{API_URL}}/api/users_info_photos/{{has_photo}}" >
+        </div>
+        </td>
+        {{/if}}
+    </tr>
+    </tbody>
+</table>

@@ -125,19 +125,6 @@ class UsosCrawler:
 
     def __build_time_table(self, client, user_id, usos_id, given_date):
         existing_tt = self.dao.get_time_table(user_id, usos_id)
-
-        '''
-        tts = self.dao.get_user_tt(user_id, usos[constants.USOS_ID], given_date)
-        if tts:
-            for time_table in tts:
-                pass
-                # TODO: sprawdzenie czy istnieja grupy
-                # w zaleznosci od typu:
-                # If type equals "classgroup":
-                # If type equals "meeting":
-                # If type equals "exam":
-        else:
-        '''
         try:
             result = client.time_table(given_date)
         except Exception, ex:

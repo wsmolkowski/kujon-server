@@ -1,6 +1,6 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!templates/course_details.html',
-        'text!templates/error.html', 'text!templates/lecturer_details.html', 'text!templates/user.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplLecturerDetails, tplUser) {
+        'text!templates/error.html', 'text!templates/lecturer_details.html', 'text!templates/user_details.html'],
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplLecturerDetails, tplUserDetails) {
 'use strict';
     return {
         render: function() {
@@ -8,8 +8,13 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             var templateDetails = Handlebars.compile(tplDetails);
             var templateError = Handlebars.compile(tplError);
             var templateLecturerDetails = Handlebars.compile(tplLecturerDetails);
-            var templateUser = Handlebars.compile(tplUser);
+            var templateUserDetails = Handlebars.compile(tplUserDetails);
 
+            var API_URL;
+
+            main.getConfig(function(config){
+                API_URL = config['API_URL'];
+            });
 
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
@@ -48,6 +53,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                                   main.callLecturerDetails(lecturerId, function(lecturerInfo){
                                     if (lecturerInfo.status == 'success'){
+                                        lecturerInfo.data['API_URL'] = API_URL;
                                         modal.find('.modal-title').text(lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']);
                                         modal.find('.modal-body').html(templateLecturerDetails(lecturerInfo.data));
                                     } else {
@@ -66,8 +72,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                                   main.callUserInfo(userId, function(userInfo){
                                     if (userInfo.status == 'success'){
+                                        userInfo.data['API_URL'] = API_URL;
                                         modal.find('.modal-title').text(userInfo.data['first_name'] + ' ' + userInfo.data['last_name']);
-                                        modal.find('.modal-body').html(templateUser(userInfo.data));
+                                        modal.find('.modal-body').html(templateUserDetails(userInfo.data));
                                     } else {
                                         modal.find('.modal-body').html(templateError({'message': userInfo.message}));
                                     }

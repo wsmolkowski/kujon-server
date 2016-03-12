@@ -5,7 +5,7 @@ from base64 import b64decode
 
 import tornado.web
 from bson.objectid import ObjectId
-
+from commons.usosutils import usoshelper
 from base import BaseHandler
 from commons import constants
 from commons.usosutils import usosinstances
@@ -22,15 +22,26 @@ class UsersInfoByIdApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, user_info_id):
 
-        # parameters = yield self.get_parameters(usos_paired=True)
+        parameters = yield self.get_parameters()
 
         user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if user_info:
+            # check if user has account in kujon
             user = yield self.db[constants.COLLECTION_USERS].find_one({'id': ObjectId(user_info[constants.MONGO_ID])})
-            result = list()
-            result.append(user)
-            result.append(user_info)
-            self.success(result)
+            if not user:
+                user_info[constants.USER_ID] = None
+            else:
+                user_info[constants.USER_ID] = user[constants.USER_ID]
+
+            # change description
+            if user_info['student_programmes']:
+                for program in user_info['student_programmes']:
+                    program['programme']['description'] = program['programme']['description']['pl']
+
+            # change student status value to name
+            user_info['student_status'] = usoshelper.convert_student_status_to_name(user_info['student_status'])
+
+            self.success(user_info)
         else:
             self.error('Please hold on we are looking your USOS user information.')
 
@@ -59,13 +70,7 @@ class UserInfoApi(BaseHandler):
         # remove unneccecary fields
         user.pop('update_time')
 
-        # change student status value to name
-        if user['student_status'] == 0:
-            user['student_status'] = u'brak'
-        elif user['student_status'] == 1:
-            user['student_status'] = u'nieaktywny student'
-        elif user['student_status'] == 2:
-            user['student_status'] = u'aktywny student'
+        user['student_status'] = usoshelper.convert_student_status_to_name(user['student_status'])
 
         # change description to only polish
         for program in user['student_programmes']:
