@@ -18,7 +18,11 @@
             <tr>
                 <td>{{term_id}}</td>
                 <td>{{course_id}}</td>
-                <td><a href="#courses">{{course_name}}</a></td>
+                <td>
+                    <button class="btn btn-link" type="button" data-toggle="modal" data-target="#courseModal" data-courseId="{{course_id}}" data-termId="{{term_id}}">
+                        {{course_name}}
+                    </button><br>
+                </td>
                 {{#grades}}
                 {{#if @first}}
                     <td>{{exam_session_number}}</td>
@@ -43,4 +47,22 @@
             </tbody>
         </table>
     </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="courseModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+      </div>
+      <div class="modal-body">
+        <div id="lecturerDetails"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+      </div>
+    </div>
+  </div>
 </div>

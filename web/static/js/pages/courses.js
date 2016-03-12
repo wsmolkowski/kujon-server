@@ -37,7 +37,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                         $('#lecturerModal').on('show.bs.modal', function (event) {
                               var button = $(event.relatedTarget) // Button that triggered the modal
-                              var lecturerId = button.data('whatever') // Extract info from data-* attributes
+                              var lecturerId = button.attr('data-lecturerId') // Extract info from data-* attributes
                               // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
                               // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
 
@@ -46,7 +46,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                               main.callLecturerDetails(lecturerId, function(lecturerInfo){
                                 if (lecturerInfo.status == 'success'){
-                                    modal.find('.modal-title').text('New message to ' + lecturerId);
+                                    modal.find('.modal-title').text(lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']);
                                     modal.find('.modal-body').html(templateLecturerDetails(lecturerInfo.data));
                                 } else {
                                     modal.find('.modal-body').html(templateError({'message': lecturerInfo.message}));
