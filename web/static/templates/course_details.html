@@ -44,7 +44,9 @@
   <tr><td>Studenci</td>
     <td>
     {{#participants}}
-      <a href="#user/{{user_id}}">{{last_name}} {{first_name}}</a><br>
+      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#userModal" data-userId="{{user_id}}">
+        {{last_name}} {{first_name}}
+      </button><br>
     {{/participants}}
     </td>
   </tr>
@@ -54,15 +56,31 @@
 </table>
 
 <!-- Modal -->
-<div class="modal fade" id="lecturerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+<div class="modal fade" id="lecturerModal" tabindex="-1" role="dialog" aria-labelledby="lecturerModalLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+        <h4 class="modal-title" id="lecturerModalLabel">New message</h4>
       </div>
       <div class="modal-body">
-        <div id="lecturerDetails"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="userModalLabel">New message</h4>
+      </div>
+      <div class="modal-body">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>

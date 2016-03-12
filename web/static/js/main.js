@@ -82,7 +82,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 
         function userInfo(userId, callback){
             var request_url = buildApiUrl('/api/users/') + userId;
-            callAjaxGet(buildApiUrl(request_url), callback);
+            callAjaxGet(request_url, callback);
         };
 
         function terms(callback){
