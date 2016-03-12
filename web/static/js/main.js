@@ -176,6 +176,13 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     return true;
                 }
             },
+            isUserRegistered: function(){
+                if (! $.cookie('USOS_PAIRED')){
+                    return false;
+                } else {
+                    return true;
+                }
+            },
             callTT: function(start, callback){
                 TT(start, callback);
             },

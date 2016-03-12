@@ -3,6 +3,14 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
 
     function setActiveLink(hash, param) {
+
+        if (main.isUserLoggedIn() && ! main.isUserRegistered()){
+            require(['lib/pages/register'], function(page) {
+                page.render();
+            });
+            return;
+        }
+
         //console.log('hash: ' + hash + ' isUserLoggedIn: ' + main.isUserLoggedIn());
         //pokaż kręcacz porządnie
         $('#spinner').show();
@@ -10,11 +18,13 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         require(['lib/pages/'+hash], function(page) {
             if (hash == 'home' || hash == 'login'){
                 page.render();
+                $('#spinner').hide();
             } else {
                 if (main.isUserLoggedIn() == false){
                     setActiveLink('login');
                 } else {
                     page.render();
+                    $('#spinner').hide();
                 }
 
                 $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
@@ -22,7 +32,7 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
             }
 
             //schowaj kręcacz (?)
-            $('#spinner').hide();
+
         });
     }
 
