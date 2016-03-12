@@ -5,7 +5,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
         render: function() {
             var template = Handlebars.compile(tpl);
             var templateDetails = Handlebars.compile(tplDetails);
-
             var templateError = Handlebars.compile(tplError);
 
             main.callCourseseditions(function(data){
@@ -18,21 +17,25 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             });
 
             function bindListeners(){
-                $('.panel-heading').bind( 'click', function(){
-                    //FIXME - do not call when content already loaded
+                $('a.panel-row').bind( 'click', function(){
                     var courseId = $(this).attr("course-id");
                     var termId = $(this).attr("term-id");
-                    main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                    var ariaexpanded = $(this).attr("aria-expanded");
+                    if (ariaexpanded == "false") {
+                        $(this).attr("aria-expanded","true");
+                        main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                            var idContent = '#courseDetails' + courseId;
 
-                        var idContent = '#courseDetails' + courseId;
-
-                        if (courseInfo.status == 'success'){
-                            $(idContent).html(templateDetails(courseInfo.data));
-                        } else {
-                            $(idContent).html(templateError({'message': courseInfo.message}));
-                        }
-                    });
-              })
+                            if (courseInfo.status == 'success'){
+                                $(idContent).html(templateDetails(courseInfo.data));
+                            } else {
+                                $(idContent).html(templateError({'message': courseInfo.message}));
+                            }
+                        });
+                    } else {
+                        $(this).attr("aria-expanded","false");
+                    }
+                })
             };
 
         }
