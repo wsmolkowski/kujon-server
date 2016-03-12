@@ -37,6 +37,7 @@ class ProgrammesApi(BaseHandler):
 
         if not user_info:
             self.error("Poczekaj szukamy danych o kursach użytkownika.")
+            return
 
         programmes = []
         for program in user_info['student_programmes']:

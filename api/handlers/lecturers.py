@@ -60,7 +60,7 @@ class LecturerByIdApi(BaseHandler):
         user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
             self.error("Poczekaj szukamy informacji o nauczycielu.")
-
+            return
 
         # change ObjectId to str for photo
         if user_info['has_photo']:

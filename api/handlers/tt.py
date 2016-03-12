@@ -23,7 +23,8 @@ class TTApi(BaseHandler):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
             next_monday = monday + timedelta(days=7)
         except Exception, ex:
-            self.error("Niepoprawny format daty: %r, poprawny: YYYY-MM-DD", given_date)
+            self.error("Niepoprawny format daty: %r.", given_date)
+            return
 
         # get user data
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
@@ -56,6 +57,7 @@ class TTApi(BaseHandler):
                 tt_id = yield self.db[constants.COLLECTION_TT].insert(tt_doc)
             except Exception, ex:
                 self.error("Błąd podczas pobierania TT z USOS for {0}.".format(given_date))
+                return
 
         # remove english names
         for t in tt_doc['tts']:

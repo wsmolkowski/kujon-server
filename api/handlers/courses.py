@@ -62,7 +62,7 @@ class CourseEditionApi(BaseHandler):
                 {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
                  constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
             if not course_edition_doc:
-                self.error("Bląd podczas pobierania course_edition!")
+                self.error("Bląd podczas pobierania course_edition.")
                 return
             # sort participants
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
@@ -81,7 +81,7 @@ class CourseEditionApi(BaseHandler):
                         {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
                          constants.TERM_ID: term_id, 'course_unit_id': int(unit)}, LIMIT_FIELDS_GROUPS)
                     if not group_doc:
-                        self.error("Błąd podczas pobierania grupy!")
+                        self.error("Błąd podczas pobierania grupy.")
                         return
                     else:
                         group_doc['class_type'] = classtypes[group_doc['class_type_id']]
@@ -94,7 +94,7 @@ class CourseEditionApi(BaseHandler):
                 {constants.USOS_ID: parameters[constants.USOS_ID],
                  constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
             if not constants:
-                self.error("Błąd podczas pobierania okresów..")
+                self.error("Błąd podczas pobierania okresów.")
                 return
             else:
                 term_doc['name'] = term_doc['name']['pl']

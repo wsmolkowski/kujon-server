@@ -17,6 +17,10 @@ import settings
 import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
+DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
+
+DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 log = logging.getLogger(__name__)
 
 
@@ -81,8 +85,7 @@ def mkdir(newdir):
 
 def initialize_logging(logger_name):
     try:
-        log_format = '%%(asctime)s | %%(levelname)s | %s | %%(name)s(%%(filename)s:%%(lineno)s) | %%(message)s' % logger_name
-        log_date_format = "%Y-%m-%d %H:%M:%S"
+        log_format = DEFAULT_FORMAT % logger_name
 
         logging.basicConfig(
             format=log_format,
@@ -97,7 +100,7 @@ def initialize_logging(logger_name):
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
         file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
-        formatter = logging.Formatter(log_format, log_date_format)
+        formatter = logging.Formatter(log_format, DEFAULT_DATE_FORMAT)
         file_handler.setFormatter(formatter)
 
         root_log = logging.getLogger()
