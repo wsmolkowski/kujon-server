@@ -2,7 +2,7 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-
+from commons.usosutils import usoshelper
 from base import BaseHandler
 from commons import constants
 
@@ -22,17 +22,13 @@ class CourseEditionApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                                           constants.USOS_ID: parameters[
-                                                                               constants.USOS_ID]}, LIMIT_FIELDS)
+                                    constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            self.fail("Nie znaleźliśmy kursu..")
+            self.error("Nie znaleźliśmy kursu..")
         else:
-            # change true to TAK
-            if course_doc['is_currently_conducted']:
-                course_doc['is_currently_conducted'] = 'TAK'
-            else:
-                course_doc['is_currently_conducted'] = 'NIE'
+            # change int to value
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_student_status(course_doc['is_currently_conducted'])
 
             # get courses_classtypes
             classtypes = dict()
@@ -44,18 +40,9 @@ class CourseEditionApi(BaseHandler):
 
             # change faculty_id to faculty name
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-                constants.FACULTY_ID],
-                                                                              constants.USOS_ID: parameters[
-                                                                                  constants.USOS_ID]},
-                                                                             LIMIT_FIELDS_FACULTY)
+                constants.FACULTY_ID],constants.USOS_ID: parameters[constants.USOS_ID]},LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
-            course_doc['name'] = course_doc['name']['pl']
-            course_doc['learning_outcomes'] = course_doc['learning_outcomes']['pl']
-            course_doc['description'] = course_doc['description']['pl']
-            course_doc['assessment_criteria'] = course_doc['assessment_criteria']['pl']
-            course_doc['bibliography'] = course_doc['bibliography']['pl']
-            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
             # get information about course_edition
             course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
@@ -115,31 +102,18 @@ class CoursesApi(BaseHandler):
                                                                                constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            self.fail("Nie znaleźliśmy kursu: {0}.".format(course_id))
+            self.error("Nie znaleźliśmy danych kursu: {0}.".format(course_id))
         else:
-            # change true to TAK
-            if course_doc['is_currently_conducted']:
-                course_doc['is_currently_conducted'] = 'TAK'
-            else:
-                course_doc['is_currently_conducted'] = 'NIE'
+            # change id to value
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(course_doc['is_currently_conducted'])
 
             # change faculty_id to faculty name
             fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-                constants.FACULTY_ID],
-                                                                              constants.USOS_ID: parameters[
-                                                                                  constants.USOS_ID]},
-                                                                             LIMIT_FIELDS_FACULTY)
+                constants.FACULTY_ID],constants.USOS_ID: parameters[constants.USOS_ID]},LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
-            course_doc['name'] = course_doc['name']['pl']
-            course_doc['learning_outcomes'] = course_doc['learning_outcomes']['pl']
-            course_doc['description'] = course_doc['description']['pl']
-            course_doc['assessment_criteria'] = course_doc['assessment_criteria']['pl']
-            course_doc['bibliography'] = course_doc['bibliography']['pl']
-            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
             self.success(course_doc)
-
 
 class CoursesEditionsApi(BaseHandler):
     @tornado.web.asynchronous

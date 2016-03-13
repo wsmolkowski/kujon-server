@@ -8,14 +8,14 @@
             </tr>
             <tr><td>Status pracownika</td><td>{{staff_status}}</td></tr>
             {{#if office_hours.pl}}
-            <tr><td>Godziny przyjęć</td><td>{{office_hours.pl}}</td></tr>
+            <tr><td>Godziny przyjęć</td><td>{{office_hours}}</td></tr>
             {{/if}}
             <tr><td>Pokój</td><td>{{room.building_id}} - {{room.building_name.pl}}</td></tr>
             {{#if homepage_url}}
             <tr><td>Strona domowa</td><td><a href="{{homepage_url}}" target="_blank">{{homepage_url}}</a></td></tr>
             {{/if}}
             {{#if interests.pl}}
-                <tr><td>Zainteresowania</td><td>{{interests.pl}}</td></tr>
+                <tr><td>Zainteresowania</td><td>{{interests}}</td></tr>
             {{/if}}
             {{#if employment_positions}}
             <tr><td>Zatrudnienie</td><td></td></tr>
@@ -28,7 +28,7 @@
                <div class="span4 collapse-group">
                    <p class="collapse" id="viewcourses{{id}}">
                    {{#course_editions_conducted}}
-                        {{course_name.pl}} {{term_id}}<br>
+                        {{course_name}} {{term_id}}<br>
                    {{/course_editions_conducted}}
                    </p>
                    <p><a class="btn" data-toggle="collapse" data-target="#viewcourses{{id}}">Pokaż przedmioty &raquo;</a></p>

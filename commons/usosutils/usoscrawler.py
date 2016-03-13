@@ -102,6 +102,14 @@ class UsosCrawler:
             result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
                                                                crawl_time, usos)
 
+        # strip english values and if value is empty change to None
+        result['office_hours'] = result['interests']['pl']
+        result['interests'] = result['interests']['pl']
+
+        # strip empty values
+        if result['homepage_url'] and result['homepage_url'] == "":
+            result['homepage_url'] = None
+
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug("user_info for %r inserted: %r", result[constants.ID], str(ui_doc))
 
@@ -246,7 +254,17 @@ class UsosCrawler:
                 if result:
                     result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                     result[constants.COURSE_ID] = result.pop(constants.ID)
+
+                    # strip english names
+                    result['name'] = result['name']['pl']
+                    result['learning_outcomes'] = result['learning_outcomes']['pl']
+                    result['description'] = result['description']['pl']
+                    result['assessment_criteria'] = result['assessment_criteria']['pl']
+                    result['bibliography'] = result['bibliography']['pl']
+                    result['fac_id']['name'] = result['fac_id']['name']['pl']
+
                     c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
+
                     logging.debug("course for course_id: %r inserted %r", course, str(c_doc))
                 else:
                     logging.debug("no course for course_id: %r.", course)

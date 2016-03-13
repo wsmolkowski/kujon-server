@@ -39,7 +39,7 @@ class UsersInfoByIdApi(BaseHandler):
                     program['programme']['description'] = program['programme']['description']['pl']
 
             # change student status value to name
-            user_info['student_status'] = usoshelper.convert_student_status_to_name(user_info['student_status'])
+            user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
 
             self.success(user_info)
         else:
@@ -70,7 +70,7 @@ class UserInfoApi(BaseHandler):
         # remove unneccecary fields
         user.pop('update_time')
 
-        user['student_status'] = usoshelper.convert_student_status_to_name(user['student_status'])
+        user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
 
         # change description to only polish
         for program in user['student_programmes']:
