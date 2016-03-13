@@ -149,8 +149,8 @@ class UsosCrawler:
             tt_doc = self.dao.insert(constants.COLLECTION_TT, tt)
             logging.debug("time tables for date: %r inserted: %r", given_date, tt_doc)
 
-            if existing_tt:
-                self.dao.remove(constants.COLLECTION_TT, existing_tt)
+            # if existing_tt:
+            #     self.dao.remove(constants.COLLECTION_TT, existing_tt)
         else:
             logging.debug("no time tables for date: %r inserted empty", given_date)
 
@@ -261,7 +261,6 @@ class UsosCrawler:
                     result['description'] = result['description']['pl']
                     result['assessment_criteria'] = result['assessment_criteria']['pl']
                     result['bibliography'] = result['bibliography']['pl']
-                    result['fac_id']['name'] = result['fac_id']['name']['pl']
 
                     c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
 

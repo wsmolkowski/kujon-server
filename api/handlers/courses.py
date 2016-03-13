@@ -43,6 +43,7 @@ class CourseEditionApi(BaseHandler):
                 constants.FACULTY_ID],constants.USOS_ID: parameters[constants.USOS_ID]},LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
+            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
             # get information about course_edition
             course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
@@ -112,6 +113,7 @@ class CoursesApi(BaseHandler):
                 constants.FACULTY_ID],constants.USOS_ID: parameters[constants.USOS_ID]},LIMIT_FIELDS_FACULTY)
             course_doc.pop(constants.FACULTY_ID)
             course_doc[constants.FACULTY_ID] = fac_doc
+            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
             self.success(course_doc)
 
