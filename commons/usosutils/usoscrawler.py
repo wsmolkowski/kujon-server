@@ -110,6 +110,10 @@ class UsosCrawler:
         if result['homepage_url'] and result['homepage_url'] == "":
             result['homepage_url'] = None
 
+        # strip english names from programmes description
+        for programme in result['student_programmes']:
+            programme['programme']['description'] = programme['programme']['description']['pl']
+
         ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
         logging.debug("user_info for %r inserted: %r", result[constants.ID], str(ui_doc))
 
@@ -165,6 +169,14 @@ class UsosCrawler:
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+
+                # strip english names
+                result['name'] = result['name']['pl']
+                result['mode_of_studies'] = result['mode_of_studies']['pl']
+                result['level_of_studies'] = result['level_of_studies']['pl']
+                result['duration'] = result['duration']['pl']
+                result['description'] = result['description']['pl']
+
                 prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
                 logging.debug("programme %r inserted: %r.", programme[constants.ID], str(prog_doc))
             else:

@@ -3,7 +3,6 @@
         <table class="table table-hover table-responsive">
             <caption>Kierunki nauczania</caption>
             <thead>
-            <th>Id</th>
             <th>Nazwa</th>
             <th>Numer</th>
             <th>Poziom</th>
@@ -13,12 +12,11 @@
             <tbody>
             {{#data}}
             <tr>
-                <td>{{id}}</td>
                 <td>{{programme.description.pl}}</td>
                 <td>{{programme.id}}</td>
-                <td>{{programme.level_of_studies.pl}}</td>
-                <td>{{programme.mode_of_studies.pl}}</td>
-                <td>{{programme.duration.pl}}</td>
+                <td>{{programme.level_of_studies}}</td>
+                <td>{{programme.mode_of_studies}}</td>
+                <td>{{programme.duration}}</td>
             </tr>
             {{/data}}
             </tbody>

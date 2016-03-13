@@ -72,10 +72,6 @@ class UserInfoApi(BaseHandler):
 
         user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
 
-        # change description to only polish
-        for program in user['student_programmes']:
-            program['programme']['description'] = program['programme']['description']['pl']
-
         # add school name from usosinstances based on usos_id
         user['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if usos[constants.USOS_ID] == user[constants.USOS_ID]), None)
 
