@@ -1,11 +1,16 @@
 <div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>Oceny</h4>
+        <div class="btn-group pull-left">
+            <a class="btn btn-default btn-sm">Bieżący cykl</a>
+            <a class="btn btn-default btn-sm">Wszystkie cykle</a>
+        </div>
+    </div>
     <div class="panel-body">
         <table class="table table-hover table-responsive">
             <thead>
             <th>Semestr</th>
-            <th>Kod przedmiotu</th>
             <th>Przedmiot</th>
-
             <th>Termin</th>
             <th>Rodzaj</th>
             <th>Ocena</th>
@@ -16,7 +21,6 @@
             {{#data}}
             <tr>
                 <td>{{term_id}}</td>
-                <td>{{course_id}}</td>
                 <td>
                     <button class="btn btn-link" type="button" data-toggle="modal" data-target="#courseModal" data-courseId="{{course_id}}" data-termId="{{term_id}}">
                         {{course_name}}
@@ -30,7 +34,6 @@
                     <td>{{value_description}}</td>
                 {{else}}
                 <tr>
-                    <td></td>
                     <td></td>
                     <td></td>
                     <td>{{exam_session_number}}</td>

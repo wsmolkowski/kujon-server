@@ -17,8 +17,16 @@
   </div>
 </div>
 <div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>Nauczyciele</h4>
+        <div class="btn-group pull-left">
+            <span class="clickable filter" data-toggle="tooltip" title="Toggle table filter" data-container="body">
+                <input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Szukaj.." />
+            </span>
+
+        </div>
+    </div>
     <div class="panel-body">
-        <caption>Moi nauczyciele</caption>
         <div class="panel-group" id="accordionLecturers" role="tablist" aria-multiselectable="true">
             <div class="panel panel-table">
                 <div class="panel-heading">

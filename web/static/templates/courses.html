@@ -28,14 +28,23 @@
     </div>
   </div>
 </div>
+
+
+
 <div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>Przedmioty</h4>
+        <div class="btn-group pull-left">
+            <a class="btn btn-default btn-sm">Bieżący cykl</a>
+            <a class="btn btn-default btn-sm">Wszystkie cykle</a>
+        </div>
+    </div>
     <div class="panel-body">
         <div class="panel-group" id="accordionCourses" role="tablist" aria-multiselectable="true">
             <div class="panel panel-table">
                 <div class="panel-heading">
                     <div class="row">
                         <div class="col-md-6"><b>Nazwa</b></div>
-                        <div class="col-md-2"><b>Nr przedmiotu</b></div>
                         <div class="col-md-2"><b>Cykl akademicki</b></div>
                     </div>
                 </div>
@@ -49,7 +58,6 @@
                                 {{course_name}}
                             </a>
                         </div>
-                        <div class="col-md-2">{{course_id}}</div>
                         <div class="col-md-2">{{term_id}}</div>
                     </div>
                 </div>

@@ -33,11 +33,6 @@ class UsersInfoByIdApi(BaseHandler):
             else:
                 user_info[constants.USER_ID] = user[constants.USER_ID]
 
-            # change description
-            if user_info['student_programmes']:
-                for program in user_info['student_programmes']:
-                    program['programme']['description'] = program['programme']['description']['pl']
-
             # change student status value to name
             user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
 

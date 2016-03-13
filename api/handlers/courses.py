@@ -28,7 +28,7 @@ class CourseEditionApi(BaseHandler):
             self.error("Nie znaleźliśmy kursu..")
         else:
             # change int to value
-            course_doc['is_currently_conducted'] = usoshelper.dict_value_student_status(course_doc['is_currently_conducted'])
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(course_doc['is_currently_conducted'])
 
             # get courses_classtypes
             classtypes = dict()
@@ -52,10 +52,13 @@ class CourseEditionApi(BaseHandler):
             if not course_edition_doc:
                 self.error("Bląd podczas pobierania course_edition.")
                 return
+
             # sort participants
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
+
             # make lecurers uniqe list
             course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
+
             course_doc['coordinators'] = course_edition_doc['coordinators']
             course_doc['course_units_ids'] = course_edition_doc['course_units_ids']
             course_doc['grades'] = course_edition_doc['grades']
