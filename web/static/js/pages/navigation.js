@@ -7,12 +7,13 @@ define('navigation', ['jquery', 'handlebars', 'main', 'text!templates/navigation
 
             main.getConfig(function(config){
                 $('#navigation').html(navigationTemplate(config.data));
-            });
 
-            //a tutaj możesz np. zapiąć listenery, uruchomić subkomponenty jQuery itp.
-            $('.login-button').click(function(){
-                main.showSpinner();
-                return true;
+                //a tutaj możesz np. zapiąć listenery, uruchomić subkomponenty jQuery itp.
+                $('.login-button').click(function(){
+                    main.showSpinner();
+                    return true;
+                });
+
             });
         }
     }    
