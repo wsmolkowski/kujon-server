@@ -20,18 +20,20 @@
             {{#if employment_positions}}
             <tr><td>Zatrudnienie</td><td></td></tr>
             {{#employment_positions}}
-            <tr><td></td><td>{{position.name.pl}} w {{faculty.name.pl}}</td></tr>
+            <tr><td></td><td>{{position.name}} w {{faculty.name}}</td></tr>
             {{/employment_positions}}
             {{/if}}
             <tr><td>Prowadzone przedmioty</td></tr>
             <tr><td></td><td>
                <div class="span4 collapse-group">
-                   <p class="collapse" id="viewcourses{{id}}">
+                   <p class="collapse" id="viewLecturer{{id}}">
                    {{#course_editions_conducted}}
-                        {{course_name}} {{term_id}}<br>
+                     <button class="btn btn-link" type="button" data-toggle="modal" data-target="#courseModal" data-termId="{{term_id}}" data-courseId="{{course_id}}">
+                        {{course_name}} {{term_id}}
+                     </button><br>
                    {{/course_editions_conducted}}
                    </p>
-                   <p><a class="btn" data-toggle="collapse" data-target="#viewcourses{{id}}">Pokaż przedmioty &raquo;</a></p>
+                   <p><a class="btn" data-toggle="collapse" data-target="#viewLecturer{{id}}">Pokaż przedmioty &raquo;</a></p>
                </div>
             </td></tr>
             </table>

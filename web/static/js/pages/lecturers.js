@@ -27,7 +27,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                     var lecturerId = $(this).attr("lecturer-id");
                     var ariaexpanded = $(this).attr("aria-expanded");
                     if (ariaexpanded == "false") {
+
                         $(this).attr("aria-expanded","true");
+
                         main.callLecturerDetails(lecturerId, function(lecturerInfo){
                             var idContent = '#lecturerDetails' + lecturerId;
 
@@ -37,6 +39,23 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                             } else {
                                 $(idContent).html(templateError({'message': lecturerInfo.message}));
                             }
+
+                            $('#courseModal').on('show.bs.modal', function (event) {
+                                  var button = $(event.relatedTarget);
+                                  var courseId = button.attr('data-courseId');
+                                  var termId = button.attr('data-termId');
+                                  var modal = $(this);
+
+                                  main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                                    if (courseInfo.status == 'success'){
+                                        courseInfo.data['API_URL'] = API_URL;
+                                        modal.find('.modal-title').text(courseInfo.data['course_name']);
+                                        modal.find('.modal-body').html(templateLecturerDetails(courseInfo.data));
+                                    } else {
+                                        modal.find('.modal-body').html(templateError({'message': courseInfo.message}));
+                                    }
+                                  });
+                            });
                         });
                     } else {
                         $(this).attr("aria-expanded","false");

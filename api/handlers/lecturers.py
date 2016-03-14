@@ -2,7 +2,7 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-
+from commons.usosutils import usoshelper
 from base import BaseHandler
 from commons import constants
 
@@ -67,12 +67,13 @@ class LecturerByIdApi(BaseHandler):
             user_info['has_photo'] = str(user_info['has_photo'])
 
         # change staff_status to dictionary
-        if user_info['staff_status'] == 1:
-            user_info['staff_status'] = 'Pracownik'
-        if user_info['staff_status'] == 2:
-            user_info['staff_status'] = 'Nauczyciel akademicki'
-        if user_info['staff_status'] == 0:
-            user_info['staff_status'] = 'Nieaktywny pracownik'
+        user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
+
+        # strip employment_positions from english names
+        for position in user_info['employment_positions']:
+            position['position']['name'] = position['position']['name']['pl']
+            position['faculty']['name'] = position['faculty']['name']['pl']
+
 
         # change course_editions_conducted to list of courses
         course_editions = []
@@ -83,7 +84,11 @@ class LecturerByIdApi(BaseHandler):
                     {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
                      constants.USOS_ID: parameters[constants.USOS_ID]})
                 if course_doc:
-                    course_editions.append(course_doc)
+                    course=dict()
+                    course['course_name'] = course_doc['course_name']['pl']
+                    course['course_id'] = course_doc['course_id']
+                    course['term_id'] = course_doc['term_id']
+                    course_editions.append(course)
                 else:
                     course_editions.append("Dont have data for course and term..")
             user_info['course_editions_conducted'] = course_editions
