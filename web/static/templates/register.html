@@ -9,11 +9,12 @@
 
     <div class="row">
         {{#data}}
-        <form id="f{{usos_id}}" class="form-horizontal user-register-form" action="/authentication/create" method="post">
+        <form id="f{{usos_id}}" class="form-horizontal" action="/authentication/create" method="post">
             <input type="hidden" name="usos" value="{{url}}">
             <div class="col-sm-6 col-md-2">
                 <div class="thumbnail">
-                    <a href="#" onclick="document.getElementById('f{{usos_id}}').submit();"><img src="{{logo}}" alt="{{name}}" height="100" width="100">
+                    <a class="user-register-form" href="#" data-usosId="{{usos_id}}">
+                        <img src="{{logo}}" alt="{{name}}" height="100" width="100">
                         <div class="caption"><h5>{{name}}</h5></div>
                     </a>
                 </div>

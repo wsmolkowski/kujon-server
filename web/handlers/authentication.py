@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+import json
 import motor
 import oauth2 as oauth
 import tornado.auth
@@ -151,9 +152,9 @@ class CreateUserHandler(BaseHandler):
     @tornado.gen.coroutine
     def post(self):
 
-        usos_url = self.get_argument("usos").strip()
+        data = json.loads(self.request.body)
 
-        usos_doc = yield self.get_usos(constants.USOS_URL, usos_url)
+        usos_doc = yield self.get_usos(constants.USOS_ID, data[constants.USOS_ID])
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
@@ -163,45 +164,45 @@ class CreateUserHandler(BaseHandler):
             return
 
         if user_doc[constants.USOS_URL]:
-            usoses = yield self.db[constants.COLLECTION_USOSINSTANCES].find().to_list(length=100)
-            usoses = self.aes.decrypt_usoses(usoses)
-
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
-            data["usoses"] = usoses
+            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(data[constants.USOS_ID])
 
-            self.success(data)
-        else:
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+            self.error(data)
+            return
 
-            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
-                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL )
+        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            client = oauth.Client(consumer, **self.oauth_parameters)
-            resp, content = client.request(request_token_url)
-            if resp['status'] != '200':
-                raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
+        request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
+            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL )
 
-            request_token = self.get_token(content)
+        client = oauth.Client(consumer, **self.oauth_parameters)
+        resp, content = client.request(request_token_url)
+        if resp['status'] != '200':
+            raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
 
-            # updating to db user access_token_key & access_token_secret
-            access_token_key = request_token.key
-            access_token_secret = request_token.secret
+        request_token = self.get_token(content)
 
-            update = user_doc
-            update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            update[constants.USOS_URL] = usos_url
-            # update[constants.MOBILE_ID] = mobile_id
-            update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-            update[constants.ACCESS_TOKEN_KEY] = access_token_key
-            update[constants.UPDATE_TIME] = datetime.now()
+        # updating to db user access_token_key & access_token_secret
+        access_token_key = request_token.key
+        access_token_secret = request_token.secret
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
-            logging.debug(u"updated user with usos base info: {0}".format(user_doc))
+        update = user_doc
+        update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        update[constants.USOS_URL] = usos_doc[constants.USOS_URL]
+        # update[constants.MOBILE_ID] = mobile_id
+        update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
+        update[constants.ACCESS_TOKEN_KEY] = access_token_key
+        update[constants.UPDATE_TIME] = datetime.now()
 
-            authorize_url = usos_url + 'services/oauth/authorize'
-            url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
-            self.redirect(url_redirect)
+        user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
+        logging.debug("updated user with usos base info: %r", user_doc)
+
+        authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
+        url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
+
+        self.success({'redirect': url_redirect})
+
+        #self.redirect(url_redirect)
 
 
 class VerifyHandler(BaseHandler):

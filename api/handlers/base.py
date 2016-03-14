@@ -11,11 +11,6 @@ from commons.mixins.JSendMixin import JSendMixin
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
-    def set_default_headers(self):
-        # self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        self.set_header("Access-Control-Allow-Credentials", "true")
-        self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @property
     def crawler(self):

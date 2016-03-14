@@ -14,14 +14,14 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         /* private methods */
 
         function showSpinner(){
-            if (spinner == 0){
+            if (spinner < 1){
                 $('#spinner').show();
                 spinner ++;
             }
         }
 
         function hideSpinner(){
-            if (spinner == 1){
+            if (spinner > 0){
                 $('#spinner').hide();
                 spinner = spinner - 1;
             }
@@ -61,6 +61,42 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 
         function buildApiUrl(api){
             return config['API_URL'] + api;
+        };
+
+        function buildWebUrl(url){
+            return config['DEPLOY_URL'] + url;
+        };
+
+        function callAjaxPost(request_url, jsonData){
+
+            $.ajax({
+                type: 'POST',
+                url: request_url,
+                data: JSON.stringify(jsonData),
+                contentType: "application/json",
+                dataType: "json",
+                xhrFields: {
+                    withCredentials: true
+                },
+                beforeSend: function(){
+                    showSpinner();
+                },
+                complete: function(){
+                    hideSpinner();
+                },
+                crossDomain: true,
+                success:  function (data) {
+                    if (data.status == 'success' && data.data.redirect !== undefined){
+                        window.location.href = data.data.redirect;
+                    } else {
+                        $('#page').html(templateError({'message': data.message}));
+                    }
+                },
+                error: function(jqXHR, exception) {
+                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
+                    $('#page').html(templateError(msg));
+                }
+            });
         };
 
         function callAjaxGet(request_url, callback){
@@ -132,9 +168,18 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function TT(start, callback) {
-                var request_url = buildApiUrl('/api/tt/') + start;
-                callAjaxGet(request_url, callback);
+            var request_url = buildApiUrl('/api/tt/') + start;
+            callAjaxGet(request_url, callback);
         };
+
+        function registerUsos(usosId){
+            var url = buildWebUrl('/authentication/create');
+            var data = {
+                'usos_id': usosId
+            }
+
+            callAjaxPost(url, data);
+        }
 
         /* public methods */
         return {
@@ -207,8 +252,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             hideSpinner: function(){
                 hideSpinner();
+            },
+            callRegisterUsos: function(usosId){
+                registerUsos(usosId);
             }
-
         };
 
 });
