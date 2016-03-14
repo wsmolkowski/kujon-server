@@ -47,7 +47,7 @@
         </td>
     </tr>
     {{/if}}
-
+    {{#if term}}
     <tr>
         <td>Zajęcia w cyklu</td>
         <td>{{term.name}}</td>
@@ -56,7 +56,7 @@
         <td>Okres</td>
         <td>{{term.start_date}} - {{term.end_date}}</td>
     </tr>
-
+    {{/if}}
     <tr>
         <td>Prowadzący grup</td>
         <td>
@@ -81,6 +81,7 @@
         <td>{{class_type}}, numer grupy: {{group_number}}</td>
     </tr>
     {{/groups}}
+    {{#if participants}}
     <tr>
         <td>Studenci</td>
         <td>
@@ -89,6 +90,6 @@
             {{/participants}}
         </td>
     </tr>
-
+    {{/if}}
     </tbody>
 </table>

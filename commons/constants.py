@@ -49,6 +49,9 @@ COOKIE_EXPIRES_DAYS = 1
 OAUTH_TOKEN = "oauth_token"
 OAUTH_TOKEN_SECRET = "oauth_token_secret"
 
+LECTURER_STATUS = "staff_status"
+LECTURER_STATUS_ACTIVE = 2
+
 ALERT_MESSAGE = "alert_message"
 GRADE_FINAL = "Końcowa"
 

@@ -23,8 +23,10 @@
             <tr><td></td><td>{{position.name}} w {{faculty.name}}</td></tr>
             {{/employment_positions}}
             {{/if}}
+            {{#if course_editions_conducted}}
             <tr><td>Prowadzone przedmioty</td></tr>
-            <tr><td></td><td>
+            <tr><td></td>
+               <td>
                <div class="span4 collapse-group">
                    <p class="collapse" id="viewLecturer{{id}}">
                    {{#course_editions_conducted}}
@@ -35,7 +37,9 @@
                    </p>
                    <p><a class="btn" data-toggle="collapse" data-target="#viewLecturer{{id}}">Pokaż przedmioty</a></p>
                </div>
-            </td></tr>
+               </td>
+            </tr>
+            {{/if}}
             </table>
         <td>
         {{#if has_photo}}

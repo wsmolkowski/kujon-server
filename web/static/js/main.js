@@ -2,8 +2,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 {
         /* variables */
         var templateError = Handlebars.compile(tplError);
-
         var config;
+
 
         function updateConfig(data){
             config = data;

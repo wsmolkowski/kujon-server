@@ -53,15 +53,19 @@ class CourseEditionApi(BaseHandler):
                 self.error("Bląd podczas pobierania course_edition.")
                 return
 
-            # sort participants
-            course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
+            # sort participant
+            if 'participants' in course_doc:
+                course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
+            else:
+                pass
 
             # make lecurers uniqe list
             course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
 
             course_doc['coordinators'] = course_edition_doc['coordinators']
             course_doc['course_units_ids'] = course_edition_doc['course_units_ids']
-            course_doc['grades'] = course_edition_doc['grades']
+            if 'grades' in course_doc:
+                course_doc['grades'] = course_edition_doc['grades']
 
             groups = list()
             # get information about group
@@ -72,8 +76,7 @@ class CourseEditionApi(BaseHandler):
                         {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
                          constants.TERM_ID: term_id, 'course_unit_id': int(unit)}, LIMIT_FIELDS_GROUPS)
                     if not group_doc:
-                        self.error("Błąd podczas pobierania grupy.")
-                        return
+                        continue
                     else:
                         group_doc['class_type'] = classtypes[group_doc['class_type_id']]
                         del (group_doc['class_type_id'])
@@ -84,9 +87,8 @@ class CourseEditionApi(BaseHandler):
             term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
                 {constants.USOS_ID: parameters[constants.USOS_ID],
                  constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-            if not constants:
-                self.error("Błąd podczas pobierania okresów.")
-                return
+            if not term_doc:
+                pass
             else:
                 term_doc['name'] = term_doc['name']['pl']
                 course_doc['term'] = term_doc

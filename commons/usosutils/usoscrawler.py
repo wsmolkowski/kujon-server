@@ -254,8 +254,12 @@ class UsosCrawler:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
 
-        # get courses conducted by lecturer
-        # for course_conducted in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
+        # get courses conducted by lecturers
+        for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
+            if len(course_conducted['course_editions_conducted']) > 0:
+                for courseedition in course_conducted['course_editions_conducted']:
+                    course_id, term_id = courseedition['id'].split('|')
+                    courses.append(course_id)
 
         # get courses that exists in mongo and remove from list to fetch
         if courses:

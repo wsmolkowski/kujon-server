@@ -49,8 +49,8 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                                   main.callCourseEditionDetails(courseId, termId, function(courseInfo){
                                     if (courseInfo.status == 'success'){
                                         courseInfo.data['API_URL'] = API_URL;
-                                        modal.find('.modal-title').text(courseInfo.data['course_name']);
-                                        modal.find('.modal-body').html(templateLecturerDetails(courseInfo.data));
+                                        modal.find('.modal-title').text(courseInfo.data['name']);
+                                        modal.find('.modal-body').html(templateCourse(courseInfo.data));
                                     } else {
                                         modal.find('.modal-body').html(templateError({'message': courseInfo.message}));
                                     }
