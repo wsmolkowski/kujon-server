@@ -160,13 +160,12 @@ class CreateUserHandler(BaseHandler):
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if not user_doc:
-            self.error("Użytkownik musi posiadać konto.")
+            self.error("Użytkownik musi posiadać konto. Prośba o zalogowanie.")
             return
 
         if user_doc[constants.USOS_URL]:
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(data[constants.USOS_ID])
-
+            data[constants.ALERT_MESSAGE] = "Użytkownik zarejestrowany dla {0}".format(data[constants.USOS_ID])
             self.error(data)
             return
 
@@ -178,7 +177,8 @@ class CreateUserHandler(BaseHandler):
         client = oauth.Client(consumer, **self.oauth_parameters)
         resp, content = client.request(request_token_url)
         if resp['status'] != '200':
-            raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
+            self.error("Invalid USOS response %s:\n%s" % (resp['status'], content))
+            return
 
         request_token = self.get_token(content)
 
