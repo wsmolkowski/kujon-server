@@ -11,28 +11,23 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 //            return;
 //        }
 
-        //console.log('hash: ' + hash + ' isUserLoggedIn: ' + main.isUserLoggedIn());
-        //pokaż kręcacz porządnie
-        $('#spinner').show();
+        main.showSpinner(); //pokaż kręcacz porządnie
 
         require(['lib/pages/'+hash], function(page) {
             if (hash == 'home' || hash == 'login'){
                 page.render();
-                $('#spinner').hide();
             } else {
                 if (main.isUserLoggedIn() == false){
                     setActiveLink('login');
                 } else {
                     page.render();
-                    $('#spinner').hide();
                 }
 
                 $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
                 $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
             }
 
-            //schowaj kręcacz (?)
-
+            main.hideSpinner(); //schowaj kręcacz (?)
         });
     }
 

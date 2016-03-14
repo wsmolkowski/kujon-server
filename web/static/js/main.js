@@ -9,7 +9,23 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             config = data;
         }
 
+        var spinner = 0;
+
         /* private methods */
+
+        function showSpinner(){
+            if (spinner == 0){
+                $('#spinner').show();
+                spinner ++;
+            }
+        }
+
+        function hideSpinner(){
+            if (spinner == 1){
+                $('#spinner').hide();
+                spinner = spinner - 1;
+            }
+        }
 
         function buildConfig(callback){
             $.ajax({
@@ -56,10 +72,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     withCredentials: true
                 },
                 beforeSend: function(){
-                    $('#spinner').show();
+                    showSpinner();
                 },
                 complete: function(){
-                    $('#spinner').hide();
+                    hideSpinner();
                 },
                 crossDomain: true,
                 success:  function (data) {
@@ -186,6 +202,12 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callTT: function(start, callback){
                 TT(start, callback);
             },
+            showSpinner: function(){
+                showSpinner();
+            },
+            hideSpinner: function(){
+                hideSpinner();
+            }
 
         };
 
