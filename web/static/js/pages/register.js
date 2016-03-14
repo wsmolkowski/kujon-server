@@ -15,6 +15,16 @@ define(['jquery', 'handlebars', 'main', 'text!templates/register.html','text!tem
             });
 
             //a tutaj możesz np. zapiąć listenery
+            $('.user-register-form').submit(function(){
+                main.showSpinner();
+                debugger;
+
+                var formId = this.id;
+
+                console.log(formId);
+
+                main.hideSpinner();
+            });
         }
     }    
 });
