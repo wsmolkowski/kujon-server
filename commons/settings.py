@@ -16,7 +16,7 @@ FACEBOOK_CLIENT_SECRET = "3f2e953dbfebc98a2ea2fc888266f1c4"
 PROJECT_TITLE = "Kujon.io"
 
 DEBUG = True
-RELOAD = True
+RELOAD = False
 CLEAN_DB = False
 GZIP = True
 
@@ -28,7 +28,5 @@ WEB_PORT = 8888
 DEPLOY_WEB = "http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
 
 CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
-
-LOGGING_DATEFORMAT = "%m-%d-%Y %I:%M:%S %p"
 
 UNICODE = "UTF-8"
