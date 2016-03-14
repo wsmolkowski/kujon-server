@@ -1,65 +1,94 @@
 <table class="table table-hover table-responsive">
-<tbody>
-  <tr><td>Jednostka</td><td>{{fac_id.name}}, {{fac_id.postal_address}}, tel.: {{fac_id.phone_numbers}}</td></tr>
-  {{#if lang_id}}
-  <tr><td>Język prowadzenia</td><td>{{lang_id}}</td></tr>
-  {{/if}}
-  <tr><td>Czy jest prowadzony</td><td>{{is_currently_conducted}}</td></tr>
-  {{#if description}}
-  <tr><td>Opis</td><td>
-      <div class="span4 collapse-group">
-            <p class="collapse" id="viewdescription">{{nl2br description}}</p>
-            <p><a class="btn" data-toggle="collapse" data-target="#viewdescription">Pokaż opis &raquo;</a></p>
-       </div>
-  </td></tr>
-  {{/if}}
-  {{#if bibliography}}
-  <tr><td>Bibliografia</td><td>
-       <div class="span4 collapse-group">
-            <p class="collapse" id="viewbiblio">{{nl2br bibliography}}</p>
-            <p><a class="btn" data-toggle="collapse" data-target="#viewbiblio">Pokaż bibliografię &raquo;</a></p>
-       </div>
-  </td></tr>
-  {{/if}}
-  {{#if assessment_criteria}}
-  <tr><td>Kryteria oceny</td><td>
-      <div class="span4 collapse-group">
-            <p class="collapse" id="viewcriteria">{{nl2br assessment_criteria}}</p>
-            <p><a class="btn" data-toggle="collapse" data-target="#viewcriteria">Pokaż kryteria &raquo;</a></p>
-       </div>
-  </td></tr>
-  {{/if}}
+    <tbody>
+    <tr>
+        <td>Jednostka</td>
+        <td>{{fac_id.name}}, {{fac_id.postal_address}}, tel.: {{fac_id.phone_numbers}}</td>
+    </tr>
+    {{#if lang_id}}
+    <tr>
+        <td>Język prowadzenia</td>
+        <td>{{lang_id}}</td>
+    </tr>
+    {{/if}}
+    <tr>
+        <td>Czy jest prowadzony</td>
+        <td>{{is_currently_conducted}}</td>
+    </tr>
+    {{#if description}}
+    <tr>
+        <td>Opis</td>
+        <td>
+            <div class="span4 collapse-group">
+                <p class="collapse" id="viewdescription">{{nl2br description}}</p>
+                <p><a class="btn" data-toggle="collapse" data-target="#viewdescription">Pokaż opis</a></p>
+            </div>
+        </td>
+    </tr>
+    {{/if}}
+    {{#if bibliography}}
+    <tr>
+        <td>Bibliografia</td>
+        <td>
+            <div class="span4 collapse-group">
+                <p class="collapse" id="viewbiblio">{{nl2br bibliography}}</p>
+                <p><a class="btn" data-toggle="collapse" data-target="#viewbiblio">Pokaż bibliografię</a></p>
+            </div>
+        </td>
+    </tr>
+    {{/if}}
+    {{#if assessment_criteria}}
+    <tr>
+        <td>Kryteria oceny</td>
+        <td>
+            <div class="span4 collapse-group">
+                <p class="collapse" id="viewcriteria">{{nl2br assessment_criteria}}</p>
+                <p><a class="btn" data-toggle="collapse" data-target="#viewcriteria">Pokaż kryteria</a></p>
+            </div>
+        </td>
+    </tr>
+    {{/if}}
 
-  <tr><td>Zajęcia w cyklu</td><td>{{term.name}}</td></tr>
-  <tr><td>Okres</td><td>{{term.start_date}} - {{term.end_date}}</td></tr>
+    <tr>
+        <td>Zajęcia w cyklu</td>
+        <td>{{term.name}}</td>
+    </tr>
+    <tr>
+        <td>Okres</td>
+        <td>{{term.start_date}} - {{term.end_date}}</td>
+    </tr>
 
-  <tr><td>Prowadzący grup</td>
-    <td>
-    {{#lecturers}}
-        {{first_name}} {{last_name}},
-    {{/lecturers}}
-    </td>
-  </tr>
-  {{#if coordinators}}
-  <tr><td>Koordynatorzy</td>
-    <td>
-    {{#coordinators}}
-        {{first_name}} {{last_name}},
-    {{/coordinators}}
-    </td>
-  </tr>
-  {{/if}}
-  {{#groups}}
-  <tr><td>Typ zajęć</td><td>{{class_type}}, numer grupy: {{group_number}} </td></tr>
-  {{/groups}}
-  <tr><td>Studenci</td>
-    <td>
-    {{#participants}}
-        {{last_name}} {{first_name}},
-    {{/participants}}
-    </td>
-  </tr>
+    <tr>
+        <td>Prowadzący grup</td>
+        <td>
+            {{#lecturers}}
+            {{first_name}} {{last_name}},
+            {{/lecturers}}
+        </td>
+    </tr>
+    {{#if coordinators}}
+    <tr>
+        <td>Koordynatorzy</td>
+        <td>
+            {{#coordinators}}
+            {{first_name}} {{last_name}},
+            {{/coordinators}}
+        </td>
+    </tr>
+    {{/if}}
+    {{#groups}}
+    <tr>
+        <td>Typ zajęć</td>
+        <td>{{class_type}}, numer grupy: {{group_number}}</td>
+    </tr>
+    {{/groups}}
+    <tr>
+        <td>Studenci</td>
+        <td>
+            {{#participants}}
+            {{last_name}} {{first_name}},
+            {{/participants}}
+        </td>
+    </tr>
 
-
-</tbody>
+    </tbody>
 </table>
