@@ -378,7 +378,7 @@ class UsosCrawler:
                 if l not in users:
                     users.append(l)
 
-    def __get_usos_client(self, user):
+    def __build_client(self, user):
         usos = self.dao.get_usos(user[constants.USOS_ID])
         client = UsosClient(usos[constants.USOS_URL], usos[constants.CONSUMER_KEY],
                             usos[constants.CONSUMER_SECRET],
@@ -397,7 +397,7 @@ class UsosCrawler:
         if not user:
             raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-        client, usos = self.__get_usos_client(user)
+        client, usos = self.__build_client(user)
 
         user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
 
@@ -421,10 +421,12 @@ class UsosCrawler:
 
         self.__build_faculties(client, usos, crawl_time)
 
-    def __get_next_monday(self, monday):
+    @staticmethod
+    def __get_next_monday(monday):
         return monday + timedelta(days=7)
 
-    def __get_monday(self):
+    @staticmethod
+    def __get_monday():
         today = date.today()
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
@@ -441,13 +443,13 @@ class UsosCrawler:
         if not user:
             raise Exception("Update crawler not started. Unknown user with id: %r", user_id)
 
-        client, usos = self.__get_usos_client(user)
+        client, usos = self.__build_client(user)
 
         courses_conducted = self.dao.courses_conducted(user_id)
 
         self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
 
-        user_info_id = self.dao.user_info_id(user_id)
+        #user_info_id = self.dao.user_info_id(user_id)
 
         self.__build_faculties(client, usos, crawl_time)
 
@@ -459,7 +461,7 @@ class UsosCrawler:
         for user in self.dao.get_users():
             try:
                 logging.debug('updating time table for user: {0} and monday: {1}'.format(user[constants.MONGO_ID], monday))
-                client, usos = self.__get_usos_client(user)
+                client, usos = self.__build_client(user)
 
                 self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], monday)
                 self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], next_monday)
