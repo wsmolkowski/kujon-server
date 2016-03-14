@@ -254,7 +254,7 @@ class UsosCrawler:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
 
-        # get courses conducted by lecturers
+        # get courses conducted by a;; lecturers
         for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
             if len(course_conducted['course_editions_conducted']) > 0:
                 for courseedition in course_conducted['course_editions_conducted']:
