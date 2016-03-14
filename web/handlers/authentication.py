@@ -165,7 +165,7 @@ class CreateUserHandler(BaseHandler):
 
         if user_doc[constants.USOS_URL]:
             data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(data[constants.USOS_ID])
+            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(user_doc[constants.USOS_ID])
 
             self.error(data)
             return

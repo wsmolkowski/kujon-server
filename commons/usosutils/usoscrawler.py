@@ -254,6 +254,9 @@ class UsosCrawler:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
 
+        # get courses conducted by lecturer
+        # for course_conducted in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
+
         # get courses that exists in mongo and remove from list to fetch
         if courses:
             for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
@@ -403,7 +406,6 @@ class UsosCrawler:
 
         # fetch time_table for current and next week
         monday = self.__get_monday()
-
         self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
         self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
 

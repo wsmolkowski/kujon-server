@@ -97,6 +97,10 @@ class Dao:
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find(
             {constants.USOS_ID: usos_id, constants.USER_ID: user_id})
 
+    def get_courses_conducted_by_lecturers(self, usos_id):
+        return self._db[constants.COLLECTION_USERS_INFO].find(
+            {constants.USOS_ID: usos_id, "staff_status": 2}, 'course_editions_conducted')
+
     def get_faculties_from_courses(self, usos_id):
         return self._db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}).distinct(constants.FACULTY_ID)
 
