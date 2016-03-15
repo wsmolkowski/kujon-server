@@ -139,7 +139,7 @@ class UsosCrawler:
     def __build_course_editions_for_conducted(self, client, courses_conducted, crawl_time, usos):
         for courseterm in courses_conducted:
             course_id, term_id = courseterm[constants.ID].split('|')
-            course_doc = self.dao.get_usos_course_edition(course_id, term_id, usos[constants.USOS_ID])
+            course_doc = self.dao.get_course_edition(course_id, term_id, usos[constants.USOS_ID])
             if course_doc:
                 continue
 
