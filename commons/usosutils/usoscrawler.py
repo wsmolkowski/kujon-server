@@ -300,9 +300,6 @@ class UsosCrawler:
                     if course_id not in courses:
                         courses.append(course_id)
 
-        # make courses uniq list
-        courses = list(set(courses))
-
         # get courses that exists in mongo and remove from list to fetch
         for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
             courses.remove(existing_course[constants.COURSE_ID])
