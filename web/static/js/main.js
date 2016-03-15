@@ -27,8 +27,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             }
         }
 
-        function buildConfig(callback){
-            $.ajax({
+        function buildConfig(){
+            return $.ajax({
                     type: 'GET',
                     url: 'http://localhost:8888/config',
                     xhrFields: {
@@ -37,9 +37,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     success:  function (data) {
                       if (data.status == 'success'){
                         updateConfig(data.data);
-                        if (callback){
-                            callback(data);
-                        }
+
                       } else {
                         $('#page').html(templateError(data));
                       }
@@ -51,12 +49,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 });
         };
 
-        function getConfig(callback){
-            if (! config){
-                buildConfig(callback);
-            } else {
-                callback(config);
-            }
+        function getConfig(){
+            return config;
         };
 
         function buildApiUrl(api){
@@ -187,7 +181,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         return {
 
             init: function() {
-                buildConfig(null);
 
                 // {{#nl2br}} replace returns with <br>
                 Handlebars.registerHelper('nl2br', function(text) {
@@ -195,9 +188,11 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     var nl2br = (text + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + '<br>' + '$2');
                     return new Handlebars.SafeString(nl2br);
                 });
+
+                return buildConfig();
             },
-            getConfig: function(callback){
-                getConfig(callback);
+            getConfig: function(){
+                return config;
             },
             callUsoses: function(callback){
                 usoses(callback);
@@ -240,11 +235,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 }
             },
             isUserRegistered: function(){
-                if (! $.cookie('USOS_PAIRED')){
-                    return false;
-                } else {
-                    return true;
-                }
+                return config['USOS_PAIRED'];
             },
             callTT: function(start, callback){
                 TT(start, callback);

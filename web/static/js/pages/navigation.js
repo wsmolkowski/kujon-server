@@ -5,8 +5,9 @@ define('navigation', ['jquery', 'handlebars', 'main', 'text!templates/navigation
 
             var navigationTemplate = Handlebars.compile(navTpl);
 
-            main.getConfig(function(config){
-                $('#navigation').html(navigationTemplate(config.data));
+            $.when(main.init()).then(function(){
+                var config = main.getConfig();
+                $('#navigation').html(navigationTemplate(config));
 
                 //a tutaj możesz np. zapiąć listenery, uruchomić subkomponenty jQuery itp.
                 $('.login-button').click(function(){

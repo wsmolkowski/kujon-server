@@ -1,34 +1,42 @@
 define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery, main, crossroads, hasher) {
 'use strict';
 
-
     function setActiveLink(hash, param) {
 
-//        if (main.isUserLoggedIn() && ! main.isUserRegistered()){
-//            require(['lib/pages/register'], function(page) {
-//                page.render();
-//            });
-//            return;
-//        }
+        $.when(main.init()).then(function(){
+            main.showSpinner(); //pokaż kręcacz porządnie
 
-        main.showSpinner(); //pokaż kręcacz porządnie
+            var config = main.getConfig();
 
-        require(['lib/pages/'+hash], function(page) {
-            if (hash == 'home' || hash == 'login'){
-                page.render();
-            } else {
-                if (main.isUserLoggedIn() == false){
-                    setActiveLink('login');
-                } else {
+            if (main.isUserLoggedIn() == true && main.isUserRegistered() == false){
+                require(['lib/pages/register'], function(page) {
                     page.render();
-                }
+                });
 
-                $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
-                $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
+            } else {
+
+                require(['lib/pages/'+hash], function(page) {
+                    if (hash == 'home' || hash == 'login'){
+                        page.render();
+                    } else {
+                        if (main.isUserLoggedIn() == false){
+                            setActiveLink('login');
+                        } else {
+                            page.render();
+                        }
+
+                        $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+                        $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
+                    }
+
+                });
             }
 
             main.hideSpinner(); //schowaj kręcacz (?)
+
         });
+
+
     }
 
 
