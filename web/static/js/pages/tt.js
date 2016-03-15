@@ -10,7 +10,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
                 'firstDay': 1,
-                lang: 'pl',
+                'lang': 'pl',
                 'aspectRatio': 2,
                 'nowIndicator': true,
                 'lang': 'pl',
