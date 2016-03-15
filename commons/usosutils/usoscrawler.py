@@ -78,7 +78,14 @@ class UsosCrawler:
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
-            photo = client.user_info_photo(user_info_id)
+
+            try:
+                photo = client.user_info_photo(user_info_id)
+            except Exception, ex:
+                logging.exception('Could not find user_info_photo for user_info_photo: {0} due to {1}'.format(
+                    user_info_id, ex.message))
+                return
+
             if photo:
                 photo = self.append(photo, usos[constants.USOS_ID], crawl_time, crawl_time)
                 photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
@@ -92,7 +99,13 @@ class UsosCrawler:
             logging.debug("not building user info - it already exists for %r", user_id)
             return
 
-        result = client.user_info(user_info_id)
+        try:
+            result = client.user_info(user_info_id)
+        except Exception, ex:
+            logging.exception('Could not find user_info_id for user_info_id: {0} due to {1}'.format(
+                user_info_id, ex.message))
+            return
+
         result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
         if user_id:
             result[constants.USER_ID] = user_id
@@ -126,11 +139,17 @@ class UsosCrawler:
     def __build_course_editions_for_conducted(self, client, courses_conducted, crawl_time, usos):
         for courseterm in courses_conducted:
             course_id, term_id = courseterm[constants.ID].split('|')
-            course_doc = self.dao.get_course_edition(course_id, term_id, usos[constants.USOS_ID])
+            course_doc = self.dao.get_usos_course_edition(course_id, term_id, usos[constants.USOS_ID])
             if course_doc:
                 continue
-            
-            course_result = client.course_edition(course_id, term_id, fetch_participants=False)
+
+            try:
+                course_result = client.course_edition(course_id, term_id, fetch_participants=False)
+            except Exception, ex:
+                logging.exception('Could not find course_edition for course: {0} term: {1) due to {2}'.format(
+                    course_id, term_id, ex.message))
+                continue
+
             course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
             course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
             logging.debug("course_edition for course_id: %r term_id: %r inserted: %r", course_id, term_id, str(course_doc))
@@ -164,8 +183,13 @@ class UsosCrawler:
             # checking if program exists in mongo
             if self.dao.get_programme(programme['programme'][constants.ID], usos[constants.USOS_ID]):
                 continue
-            
-            result = client.programme(programme['programme'][constants.ID])
+
+            try:
+                result = client.programme(programme['programme'][constants.ID])
+            except Exception, ex:
+                logging.exception('Could not find programme for {0} due to {1}'.format(programme, ex.message))
+                continue
+
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.PROGRAMME_ID] = result.pop(constants.ID)
@@ -187,7 +211,12 @@ class UsosCrawler:
             logging.debug("courses_editions exists for user_id: %r", user_id)
             return
 
-        result = client.courseeditions_info()
+        try:
+            result = client.courseeditions_info()
+        except Exception, ex:
+            logging.exception('Could not find courseeditions_info due to {0}'.format(ex.message))
+            return
+
         if result:
             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
@@ -200,7 +229,12 @@ class UsosCrawler:
 
         existing_id = self.dao.curseseditions_id(user_id)
 
-        result = client.courseeditions_info()
+        try:
+            result = client.courseeditions_info()
+        except Exception, ex:
+            logging.exception('Could not find courseeditions_info due to {0}'.format(ex.message))
+            return
+
         result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
         result[constants.USER_ID] = user_id
 
@@ -228,10 +262,13 @@ class UsosCrawler:
 
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
             existing_doc = self.dao.get_course_edition(course_edition[constants.COURSE_ID],
-                                                       course_edition[constants.TERM_ID], usos[constants.USOS_ID])
-
-            result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
-                                           fetch_participants=True)
+                                                            course_edition[constants.TERM_ID], usos[constants.USOS_ID])
+            try:
+                result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
+                                               fetch_participants=True)
+            except Exception, ex:
+                logging.exception('Could not find course_edition for {0} due to {1}'.format(course_edition, ex.message))
+                continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -251,7 +288,7 @@ class UsosCrawler:
         courses = list()
 
         # get course_edition
-        for course_edition in self.dao.get_course_edition(usos[constants.USOS_ID]):
+        for course_edition in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
             for term in course_edition['course_editions']:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
@@ -274,7 +311,12 @@ class UsosCrawler:
         # get the rest of courses on course list from usos
         if courses:
             for course in courses:
-                result = client.course(course)
+                try:
+                    result = client.course(course)
+                except Exception, ex:
+                    logging.exception('Could not find course for {0} due to {1}'.format(course, ex.message))
+                    continue
+
                 if result:
                     result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                     result[constants.COURSE_ID] = result.pop(constants.ID)
@@ -298,7 +340,12 @@ class UsosCrawler:
             if self.dao.get_faculty(faculty, usos[constants.USOS_ID]):
                 continue  # fac already exists
 
-            result = client.faculty(faculty)
+            try:
+                result = client.faculty(faculty)
+            except Exception, ex:
+                logging.exception('Could not find faculty for {0} due to {1}'.format(faculty, ex.message))
+                continue
+
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.FACULTY_ID] = faculty
@@ -324,7 +371,12 @@ class UsosCrawler:
             if self.dao.get_units(unit_id, usos[constants.USOS_ID]):
                 continue  # units already exists
 
-            result = client.units(unit_id)
+            try:
+                result = client.units(unit_id)
+            except Exception, ex:
+                logging.exception('Could not find units for {0} due to {1}'.format(unit_id, ex.message))
+                continue
+
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.UNIT_ID] = result.pop(constants.ID)
@@ -337,7 +389,11 @@ class UsosCrawler:
     def __build_groups(self, client, crawl_time, units, usos):
 
         for unit in units:
-            result = client.groups(unit)
+            try:
+                result = client.groups(unit)
+            except Exception, ex:
+                logging.exception('Could not find groups for {0} due to {1}'.format(unit, ex.message))
+                continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -354,7 +410,13 @@ class UsosCrawler:
 
         for data in self.dao.get_user_courses_editions(user_id):
             term_id, course_id = data[0], data[1]
-            result = client.course_edition(course_id, term_id, fetch_participants=True)
+
+            try:
+                result = client.course_edition(course_id, term_id, fetch_participants=True)
+            except Exception, ex:
+                logging.exception('Could not find course_edition for course: {0} and term {1} due to {2}'.format(
+                    course_id, term_id, ex.message))
+                return
 
             self.__find_users_related(users_found, result)
 
