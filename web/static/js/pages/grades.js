@@ -1,5 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/course_details_modal.html'],
-    function($, Handlebars, main, tpl, tplError, tplCourseModal) {
+define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables'],
+    function($, Handlebars, main, tpl, tplError, tplCourseModal, datatables) {
     'use strict';
     return {
         render: function() {
@@ -13,6 +13,8 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
                 } else {
                     $('#page').html(templateError({'message': data.message}));
                 }
+
+                $('#grades-table').DataTable();
 
                 $('#courseModal').on('show.bs.modal', function (event) {
                       var button = $(event.relatedTarget)
