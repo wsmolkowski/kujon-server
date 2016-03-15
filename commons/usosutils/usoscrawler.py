@@ -289,10 +289,8 @@ class UsosCrawler:
 
         # get course_edition
         for course_edition in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
-            for term in course_edition['course_editions']:
-                for course in course_edition['course_editions'][term]:
-                    if course[constants.COURSE_ID] not in courses:
-                        courses.append()
+            if course_edition[constants.COURSE_ID] not in courses:
+                courses.append(course_edition[constants.COURSE_ID])
 
         # get courses conducted by all lecturers
         for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
@@ -301,6 +299,9 @@ class UsosCrawler:
                     course_id, term_id = courseedition['id'].split('|')
                     if course_id not in courses:
                         courses.append(course_id)
+
+        # make courses uniq list
+        courses = list(set(courses))
 
         # get courses that exists in mongo and remove from list to fetch
         for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
