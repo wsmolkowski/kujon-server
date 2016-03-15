@@ -1,21 +1,23 @@
 <div class="panel panel-default">
 
-    <div>
-    <p class="panel-body" class="col-md-12 brd">
-        <p class="text-center">Aby móc pracować w kujonie - wybierz uczelnie na której masz konto w USOS, przekierujemy Cię abyś sie zalogował..
-        </p>
-        <br>
-    </div>
-
     <div class="row">
-        {{#data}}
-            <div class="thumbnail">
-                <a class="user-register-form" href="#" data-usosId="{{usos_id}}">
-                    <img src="{{logo}}" alt="{{name}}" class="img-responsive">
-                    <div class="caption"><strong>{{name}}</strong></div>
-                </a>
-            </div>
-        {{/data}}
-    </div>
 
+        <div class="col-lg-12">
+            <h3 class="page-header">Aby móc pracować w kujonie - wybierz uczelnie na której masz konto w USOS,
+                przekierujemy Cię abyś sie zalogował.</h3>
+        </div>
+
+
+        {{#data}}
+        <div class="col-lg-3 col-md-4 col-xs-6 thumb" class="user-register-form" data-usosId="{{usos_id}}">
+            <a class="thumbnail" href="#">
+                <img class="img-responsive" src="{{logo}}" alt="{{name}}">
+                <div class="caption"><strong>{{name}}</strong></div>
+            </a>
+        </div>
+        {{/data}}
+
+        <hr>
+
+    </div>
 </div>
