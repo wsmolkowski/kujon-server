@@ -1,4 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/terms.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/terms.html', 'text!templates/error.html', 'datatables'],
+function($, Handlebars, main, tpl, tplError, datatables) {
 'use strict';
     return {
         render: function() {
@@ -11,6 +12,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/terms.html', 'text!templ
                 } else {
                     $('#page').html(templateError({'message': data.message}));
                 }
+
+                $('#terms-table').DataTable();
+
             });
             
             //a tutaj możesz np. zapiąć listenery
