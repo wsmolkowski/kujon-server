@@ -14,7 +14,6 @@ define('navigation', ['jquery', 'handlebars', 'main', 'text!templates/navigation
                     main.showSpinner();
                     return true;
                 });
-
             });
         }
     }    

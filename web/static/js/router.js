@@ -11,6 +11,7 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
             if (main.isUserLoggedIn() == true && main.isUserRegistered() == false){
                 require(['lib/pages/register'], function(page) {
                     page.render();
+                    main.hideSpinner(); //schowaj kręcacz (?)
                 });
 
             } else {
@@ -18,11 +19,13 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                 require(['lib/pages/'+hash], function(page) {
                     if (hash == 'home' || hash == 'login'){
                         page.render();
+                        main.hideSpinner(); //schowaj kręcacz (?)
                     } else {
                         if (main.isUserLoggedIn() == false){
                             setActiveLink('login');
                         } else {
                             page.render();
+                            main.hideSpinner(); //schowaj kręcacz (?)
                         }
 
                         $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
@@ -31,8 +34,6 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
                 });
             }
-
-            main.hideSpinner(); //schowaj kręcacz (?)
 
         });
 
