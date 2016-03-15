@@ -249,17 +249,22 @@ class UsosCrawler:
     def __build_courses(self, client, user_id, usos, crawl_time):
 
         courses = list()
+
+        # get courses_editions for user
         for course_edition in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
             for term in course_edition['course_editions']:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
 
-        # get courses conducted by a;; lecturers
+        # get courses conducted by all lecturers
         for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
             if len(course_conducted['course_editions_conducted']) > 0:
                 for courseedition in course_conducted['course_editions_conducted']:
                     course_id, term_id = courseedition['id'].split('|')
                     courses.append(course_id)
+
+        # make uniq courses
+        courses = list(set(courses))
 
         # get courses that exists in mongo and remove from list to fetch
         if courses:
