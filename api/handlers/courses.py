@@ -27,7 +27,7 @@ class CourseEditionApi(BaseHandler):
                                                                                constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            self.error("Nie znaleźliśmy kursu.")
+            self.error("Nie znaleźliśmy kursu {0} w semestrze {1}".format(course_id, term_id))
             return
 
         # change int to value
