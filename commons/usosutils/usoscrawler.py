@@ -283,7 +283,7 @@ class UsosCrawler:
                                                         constants.COURSE_ID], course_edition[constants.TERM_ID])
 
     @tornado.gen.coroutine
-    def __build_courses(self, client, user_id, usos, crawl_time):
+    def __build_courses(self, client, usos, crawl_time):
 
         courses = list()
 
@@ -291,48 +291,45 @@ class UsosCrawler:
         for course_edition in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
             for term in course_edition['course_editions']:
                 for course in course_edition['course_editions'][term]:
-                    courses.append(course[constants.COURSE_ID])
+                    if course[constants.COURSE_ID] not in courses:
+                        courses.append()
 
         # get courses conducted by all lecturers
         for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
             if len(course_conducted['course_editions_conducted']) > 0:
                 for courseedition in course_conducted['course_editions_conducted']:
                     course_id, term_id = courseedition['id'].split('|')
-                    courses.append(course_id)
-
-        # make uniq courses
-        courses = list(set(courses))
+                    if course_id not in courses:
+                        courses.append(course_id)
 
         # get courses that exists in mongo and remove from list to fetch
-        if courses:
-            for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
-                courses.remove(existing_course[constants.COURSE_ID])
+        for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
+            courses.remove(existing_course[constants.COURSE_ID])
 
         # get the rest of courses on course list from usos
-        if courses:
-            for course in courses:
-                try:
-                    result = client.course(course)
-                except Exception, ex:
-                    logging.exception('Could not find course for {0} due to {1}'.format(course, ex.message))
-                    continue
+        for course in courses:
+            try:
+                result = client.course(course)
+            except Exception, ex:
+                logging.exception('Could not find course for {0} due to {1}'.format(course, ex.message))
+                continue
 
-                if result:
-                    result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                    result[constants.COURSE_ID] = result.pop(constants.ID)
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                result[constants.COURSE_ID] = result.pop(constants.ID)
 
-                    # strip english names
-                    result['name'] = result['name']['pl']
-                    result['learning_outcomes'] = result['learning_outcomes']['pl']
-                    result['description'] = result['description']['pl']
-                    result['assessment_criteria'] = result['assessment_criteria']['pl']
-                    result['bibliography'] = result['bibliography']['pl']
+                # strip english names
+                result['name'] = result['name']['pl']
+                result['learning_outcomes'] = result['learning_outcomes']['pl']
+                result['description'] = result['description']['pl']
+                result['assessment_criteria'] = result['assessment_criteria']['pl']
+                result['bibliography'] = result['bibliography']['pl']
 
-                    c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
+                c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
 
-                    logging.debug("course for course_id: %r inserted %r", course, str(c_doc))
-                else:
-                    logging.debug("no course for course_id: %r.", course)
+                logging.debug("course for course_id: %r inserted %r", course, str(c_doc))
+            else:
+                logging.debug("no course for course_id: %r.", course)
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crawl_time):
@@ -490,7 +487,7 @@ class UsosCrawler:
 
         yield self.__process_user_data(client, user_id, usos, crawl_time)
 
-        self.__build_courses(client, user_id, usos, crawl_time)
+        self.__build_courses(client, usos, crawl_time)
 
         self.__build_faculties(client, usos, crawl_time)
 
