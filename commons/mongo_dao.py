@@ -93,6 +93,10 @@ class Dao:
              constants.TERM_ID: term_id,
              constants.USOS_ID: usos_id})
 
+    def get_course_edition(self, usos_id):
+        return self._db[constants.COLLECTION_COURSE_EDITION].find(
+            {constants.USOS_ID: usos_id})
+
     def get_courses_editions(self, user_id, usos_id):
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find(
             {constants.USOS_ID: usos_id, constants.USER_ID: user_id})
