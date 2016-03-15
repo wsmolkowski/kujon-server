@@ -67,7 +67,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             return config['DEPLOY_URL'] + url;
         };
 
-        function callAjaxPost(request_url, jsonData){
+        function callAjaxPost(request_url, jsonData, callback){
 
             $.ajax({
                 type: 'POST',
@@ -86,11 +86,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 },
                 crossDomain: true,
                 success:  function (data) {
-                    if (data.status == 'success' && data.data.redirect !== undefined){
-                        window.location.href = data.data.redirect;
-                    } else {
-                        $('#page').html(templateError({'message': data.message}));
-                    }
+                    callback(data);
                 },
                 error: function(jqXHR, exception) {
                     var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
@@ -178,7 +174,13 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 'usos_id': usosId
             }
 
-            callAjaxPost(url, data);
+            callAjaxPost(url, data, function(response){
+                if (response.status == 'success' && response.data.redirect !== undefined){
+                    window.location.href = response.data.redirect;
+                } else {
+                    $('#page').html(templateError(response));
+                }
+            });
         }
 
         /* public methods */

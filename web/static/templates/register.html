@@ -1,26 +1,23 @@
 <div class="panel panel-default">
 
-    <div>
-    <p class="panel-body" class="col-md-12 brd">
-        <p class="text-center">Aby móc pracować w kujonie - wybierz uczelnie na której masz konto w USOS, przekierujemy Cię abyś sie zalogował..
-        </p>
-        <br>
-    </div>
-
     <div class="row">
-        {{#data}}
-        <form id="f{{usos_id}}" class="form-horizontal" action="/authentication/create" method="post">
-            <input type="hidden" name="usos" value="{{url}}">
-            <div class="col-sm-6 col-md-2">
-                <div class="thumbnail">
-                    <a class="user-register-form" href="#" data-usosId="{{usos_id}}">
-                        <img src="{{logo}}" alt="{{name}}" height="100" width="100">
-                        <div class="caption"><h5>{{name}}</h5></div>
-                    </a>
-                </div>
-            </div>
-        </form>
-        {{/data}}
-    </div>
 
+        <div class="col-lg-12">
+            <h3 class="page-header">Aby móc pracować w kujonie - wybierz uczelnie na której masz konto w USOS,
+                przekierujemy Cię abyś sie zalogował.</h3>
+        </div>
+
+
+        {{#data}}
+        <div class="col-lg-3 col-md-4 col-xs-6 thumb" >
+            <a class="thumbnail user-register-form" href="#" data-usosId="{{usos_id}}">
+                <img class="img-responsive" src="{{logo}}" alt="{{name}}">
+                <div class="caption"><strong>{{name}}</strong></div>
+            </a>
+        </div>
+        {{/data}}
+
+        <hr>
+
+    </div>
 </div>
