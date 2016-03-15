@@ -250,8 +250,8 @@ class UsosCrawler:
 
         courses = list()
 
-        # get courses_editions for user
-        for course_edition in self.dao.get_courses_editions(user_id, usos[constants.USOS_ID]):
+        # get course_edition
+        for course_edition in self.dao.get_course_edition(usos[constants.USOS_ID]):
             for term in course_edition['course_editions']:
                 for course in course_edition['course_editions'][term]:
                     courses.append(course[constants.COURSE_ID])
