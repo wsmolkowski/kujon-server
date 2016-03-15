@@ -164,9 +164,8 @@ class CreateUserHandler(BaseHandler):
             return
 
         if user_doc[constants.USOS_URL]:
-            data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "Użytkownik zarejestrowany dla {0}".format(data[constants.USOS_ID])
-            self.error(data)
+            message = "Użytkownik już zarejestrowany w {0}.".format(user_doc[constants.USOS_ID])
+            self.error(message)
             return
 
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
