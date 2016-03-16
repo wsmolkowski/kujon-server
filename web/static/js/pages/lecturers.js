@@ -17,24 +17,18 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                 }
             });
 
-            var API_URL;
-            main.getConfig(function(config){
-                API_URL = config['API_URL'];
-            });
 
             function bindListeners(){
                 $('a.panel-row').bind( 'click', function(){
                     var lecturerId = $(this).attr("lecturer-id");
                     var ariaexpanded = $(this).attr("aria-expanded");
                     if (ariaexpanded == "false") {
-
                         $(this).attr("aria-expanded","true");
 
                         main.callLecturerDetails(lecturerId, function(lecturerInfo){
                             var idContent = '#lecturerDetails' + lecturerId;
 
                             if (lecturerInfo.status == 'success'){
-                                lecturerInfo.data['API_URL'] = API_URL;
                                 $(idContent).html(templateDetails(lecturerInfo.data));
                             } else {
                                 $(idContent).html(templateError({'message': lecturerInfo.message}));
@@ -48,7 +42,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
 
                                   main.callCourseEditionDetails(courseId, termId, function(courseInfo){
                                     if (courseInfo.status == 'success'){
-                                        courseInfo.data['API_URL'] = API_URL;
                                         modal.find('.modal-title').text(courseInfo.data['name']);
                                         modal.find('.modal-body').html(templateCourse(courseInfo.data));
                                     } else {

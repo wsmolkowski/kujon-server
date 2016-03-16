@@ -34,14 +34,15 @@ class UsersInfoByIdApi(BaseHandler):
 
             # change student status value to name
             user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
+        else:
+            self.error('Please hold on we are looking your USOS user information.')
+            return
 
         #show url to photo
         if user_info['has_photo']:
             user_info['has_photo'] = settings.DEPLOY_API + '/api/users_info_photos/' + str(user_info['has_photo'])
 
-            self.success(user_info)
-        else:
-            self.error('Please hold on we are looking your USOS user information.')
+        self.success(user_info)
 
 
 class UserInfoApi(BaseHandler):
