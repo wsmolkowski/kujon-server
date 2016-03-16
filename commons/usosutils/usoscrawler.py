@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime
 from datetime import timedelta, date
+
 import tornado.gen
 from bson.objectid import ObjectId
+
 import usosinstances
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -10,8 +12,6 @@ from commons.helpers import log_execution_time
 from commons.mongo_dao import Dao
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
-
-log = logging.getLogger(__name__)
 
 
 class UsosCrawler:
@@ -48,7 +48,7 @@ class UsosCrawler:
         self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
         for usos in self.dao.get_usoses():
             logging.info("recreating dictionaries in collections %r for %r", constants.COLLECTION_COURSES_CLASSTYPES,
-                usos[constants.USOS_ID])
+                         usos[constants.USOS_ID])
             inserts = list()
             class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
             if len(class_types) > 0:
@@ -61,7 +61,8 @@ class UsosCrawler:
                 logging.debug(
                     "dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
             else:
-                raise Exception("fail to recreate_dictionaries %r for %r", constants.COLLECTION_COURSES_CLASSTYPES, usos[constants.USOS_ID])
+                raise Exception("fail to recreate_dictionaries %r for %r", constants.COLLECTION_COURSES_CLASSTYPES,
+                                usos[constants.USOS_ID])
         raise tornado.gen.Return(True)
 
     def drop_collections(self):
@@ -152,7 +153,8 @@ class UsosCrawler:
 
             course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
             course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
-            logging.debug("course_edition for course_id: %r term_id: %r inserted: %r", course_id, term_id, str(course_doc))
+            logging.debug("course_edition for course_id: %r term_id: %r inserted: %r", course_id, term_id,
+                          str(course_doc))
 
     def __build_time_table(self, client, user_id, usos_id, given_date):
         existing_tt = self.dao.get_time_table(user_id, usos_id)
@@ -262,7 +264,7 @@ class UsosCrawler:
 
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
             existing_doc = self.dao.get_course_edition(course_edition[constants.COURSE_ID],
-                                                            course_edition[constants.TERM_ID], usos[constants.USOS_ID])
+                                                       course_edition[constants.TERM_ID], usos[constants.USOS_ID])
             try:
                 result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
                                                fetch_participants=True)
@@ -274,13 +276,13 @@ class UsosCrawler:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
                 logging.debug("course_edition for course_id: %r term_id: %r inserted %r", course_edition[
-                                                    constants.COURSE_ID], course_edition[constants.TERM_ID], str(c_doc))
+                    constants.COURSE_ID], course_edition[constants.TERM_ID], str(c_doc))
 
                 if existing_doc:
                     self.dao.delete_doc(constants.COLLECTION_COURSE_EDITION, existing_doc[constants.MONGO_ID])
             else:
                 logging.debug("no course_edition for course_id: %r term_id: %r", course_edition[
-                                                        constants.COURSE_ID], course_edition[constants.TERM_ID])
+                    constants.COURSE_ID], course_edition[constants.TERM_ID])
 
     @tornado.gen.coroutine
     def __build_courses(self, client, usos, crawl_time):
@@ -517,7 +519,7 @@ class UsosCrawler:
 
         self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
 
-        #user_info_id = self.dao.user_info_id(user_id)
+        # user_info_id = self.dao.user_info_id(user_id)
 
         self.__build_faculties(client, usos, crawl_time)
 
@@ -528,7 +530,8 @@ class UsosCrawler:
 
         for user in self.dao.get_users():
             try:
-                logging.debug('updating time table for user: {0} and monday: {1}'.format(user[constants.MONGO_ID], monday))
+                logging.debug(
+                    'updating time table for user: {0} and monday: {1}'.format(user[constants.MONGO_ID], monday))
                 client, usos = self.__build_client(user)
 
                 self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], monday)
@@ -537,5 +540,3 @@ class UsosCrawler:
                 logging.debug('updating time table for user: {0}'.format(user[constants.MONGO_ID]))
             except Exception, ex:
                 logging.exception('Exception in update_time_tables {0}'.format(ex.message))
-
-
