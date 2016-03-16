@@ -225,6 +225,6 @@ class UsosVerificationHandler(BaseHandler):
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-            self.redirect('/')
+            self.redirect('/#main')
         else:
             self.redirect('/')
