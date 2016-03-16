@@ -31,4 +31,4 @@ CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
 
 UNICODE = "UTF-8"
 
-LOGIN_URL = "/#login"
+LOGIN_URL = "{0}/#login".format(DEPLOY_WEB)       # here user will be redirected when not logged in attempt for authenticated service
