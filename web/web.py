@@ -36,6 +36,7 @@ class Application(tornado.web.Application):
         __settings = dict(
             debug=settings.DEBUG,
             #reload=settings.RELOAD,
+            login_url=settings.LOGIN_URL,
             gzip=settings.GZIP,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),

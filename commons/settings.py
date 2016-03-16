@@ -20,7 +20,7 @@ RELOAD = False
 CLEAN_DB = False
 GZIP = True
 
-SITE_DOMAIN = "localhost"
+SITE_DOMAIN = "localhost"   # important for google and facebook authentication
 API_PORT = 8881
 DEPLOY_API = "http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
 
@@ -30,3 +30,5 @@ DEPLOY_WEB = "http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
 CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
 
 UNICODE = "UTF-8"
+
+LOGIN_URL = "/#login"
