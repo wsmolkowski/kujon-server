@@ -28,13 +28,19 @@ class GradesForUserApi(BaseHandler):
                                                            ('grades', constants.TERM_ID, constants.COURSE_ID,
                                                             'course_name')).sort([(constants.TERM_ID, -1)])
 
+        new_grades = []
+
         while (yield cursor.fetch_next):
-            grades_for_course_and_term = cursor.next_object()
-            grades_for_course_and_term.pop(constants.MONGO_ID)
-            grades_for_course_and_term['course_name'] = grades_for_course_and_term['course_name']['pl']
+            grades_courseedition = cursor.next_object()
+            grades_courseedition.pop(constants.MONGO_ID)
+            grades_courseedition['course_name'] = grades_courseedition['course_name']['pl']
+
+            # if there is no grades -> pass
+            if len(grades_courseedition['grades']['course_grades'])==0 and len(grades_courseedition['grades']['course_units_grades'])==0:
+                continue
 
             units = {}
-            for unit in grades_for_course_and_term['grades']['course_units_grades']:
+            for unit in grades_courseedition['grades']['course_units_grades']:
                 pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: parameters[constants.USOS_ID]}}, {
                     '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
                                 'as': 'courses_classtypes'}}]
@@ -52,33 +58,31 @@ class GradesForUserApi(BaseHandler):
                     elem['classtype_id'] = classtypes[(elem['classtype_id'])]
                     units[unit_id] = elem
 
-            new_grades = []
             if len(units) > 0:  # oceny czeciowe
-                grades_for_course_and_term['grades']['course_units'] = units
-                for egzam in grades_for_course_and_term['grades']['course_units_grades']:
-                    for termin in grades_for_course_and_term['grades']['course_units_grades'][egzam]:
-                        elem = grades_for_course_and_term['grades']['course_units_grades'][egzam][termin]
+                grades_courseedition['grades']['course_units'] = units
+                for egzam in grades_courseedition['grades']['course_units_grades']:
+                    for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
+                        elem = grades_courseedition['grades']['course_units_grades'][egzam][termin]
                         if int(egzam) in units:
                             elem['class_type'] = units[int(egzam)]['classtype_id']
                         else:
                             elem['class_type'] = None
                         elem['value_description'] = elem['value_description']['pl']
+                        elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
+                        elem['course_name'] = grades_courseedition['course_name']
+                        elem['term_id'] = grades_courseedition['term_id']
                         new_grades.append(elem)
-                grades_for_course_and_term['grades'] = new_grades
-                grades.append(grades_for_course_and_term)
             else:  # ocena koncowa bez czesciowych
-                for egzam in grades_for_course_and_term['grades']['course_grades']:
-                    elem = grades_for_course_and_term['grades']['course_grades'][egzam]
+                for egzam in grades_courseedition['grades']['course_grades']:
+                    elem = grades_courseedition['grades']['course_grades'][egzam]
                     elem['value_description'] = elem['value_description']['pl']
                     elem['class_type'] = constants.GRADE_FINAL
+                    elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
+                    elem['course_name'] = grades_courseedition['course_name']
+                    elem['term_id'] = grades_courseedition['term_id']
                     new_grades.append(elem)
-                grades_for_course_and_term['grades'] = new_grades
-                grades.append(grades_for_course_and_term)
 
-        if not grades:
-            self.error("Poczekaj szukamy ocen..")
-        else:
-            self.success(grades)
+        self.success(new_grades)
 
 
 class GradesForCourseAndTermApi(BaseHandler):

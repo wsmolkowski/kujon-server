@@ -28,23 +28,11 @@
                         {{course_name}}
                     </button><br>
                 </td>
-                {{#grades}}
-                {{#if @first}}
-                    <td>{{exam_session_number}}</td>
-                    <td>{{class_type}}</td>
-                    <td>{{value_symbol}}</td>
-                    <td>{{value_description}}</td>
-                {{else}}
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td>{{exam_session_number}}</td>
-                    <td>{{class_type}}</td>
-                    <td>{{value_symbol}}</td>
-                    <td>{{value_description}}</td>
+                <td>{{exam_session_number}}</td>
+                <td>{{class_type}}</td>
+                <td>{{value_symbol}}</td>
+                <td>{{value_description}}</td>
                 </tr>
-                {{/if}}
-                {{/grades}}
             </tr>
             {{/data}}
 
