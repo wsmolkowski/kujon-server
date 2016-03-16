@@ -17,12 +17,12 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
             } else {
 
                 require(['lib/pages/'+hash], function(page) {
-                    if (hash == 'home' || hash == 'login'){
+                    if (hash == 'index'){
                         page.render();
                         main.hideSpinner(); //schowaj kręcacz (?)
                     } else {
                         if (main.isUserLoggedIn() == false){
-                            setActiveLink('login');
+                            setActiveLink('home');
                         } else {
                             page.render();
                             main.hideSpinner(); //schowaj kręcacz (?)
@@ -42,7 +42,7 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
 
     crossroads.addRoute('', function() {
-        setActiveLink('home');
+        setActiveLink('index');
     });
 
     // "_=_" is added on callback from facebook - should be removed
@@ -50,8 +50,8 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('home');
     });
 
-    crossroads.addRoute('home', function() {
-        setActiveLink('home');
+    crossroads.addRoute('index', function() {
+        setActiveLink('index');
     });
 
     crossroads.addRoute('user', function() {
@@ -111,8 +111,8 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('tt');
     });
 
-    crossroads.addRoute('login', function() {
-        setActiveLink('login');
+    crossroads.addRoute('home', function() {
+        setActiveLink('home');
     });
 
     function parseHash(newHash, oldHash) {

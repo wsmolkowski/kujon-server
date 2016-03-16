@@ -35,7 +35,8 @@ class GradesForUserApi(BaseHandler):
             grades_courseedition['course_name'] = grades_courseedition['course_name']['pl']
 
             # if there is no grades -> pass
-            if len(grades_courseedition['grades']['course_grades'])==0 and len(grades_courseedition['grades']['course_units_grades'])==0:
+            if len(grades_courseedition['grades']['course_grades']) == 0 and \
+               len(grades_courseedition['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}

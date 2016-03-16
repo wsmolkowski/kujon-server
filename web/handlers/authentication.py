@@ -60,7 +60,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect('/#main')
+            self.redirect('/#home')
         else:
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_WEB + '/authentication/facebook',
@@ -104,7 +104,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect('/#main')
+            self.redirect('/#home')
 
         else:
             yield self.authorize_redirect(
@@ -225,6 +225,6 @@ class UsosVerificationHandler(BaseHandler):
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-            self.redirect('/#main')
+            self.redirect('/#home')
         else:
             self.redirect('/')
