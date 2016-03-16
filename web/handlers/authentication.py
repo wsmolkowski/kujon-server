@@ -18,6 +18,8 @@ from crawler import job_factory
 COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)
 
+log = logging.getLogger(__name__)
+
 
 class LoginHandler(BaseHandler):
     def get(self):
@@ -223,9 +225,7 @@ class VerifyHandler(BaseHandler):
         template_data = self.template_data()
 
         if user_doc:
-            usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
-                constants.USOS_URL]})
-            usos_doc = self.aes.decrypt_usos(usos_doc)
+            usos_doc = yield self.get_usos(constants.USOS_URL, user_doc[constants.USOS_URL])
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
@@ -281,8 +281,7 @@ class RegisterHandler(BaseHandler):
 
         usos_url = self.get_argument("usos").strip()
 
-        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: usos_url})
-        usos_doc = self.aes.decrypt_usos(usos_doc)
+        usos_doc = yield self.get_usos(constants.USOS_URL, usos_url)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['_id']})
 
@@ -340,17 +339,15 @@ class VerifyHandler(BaseHandler):
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if user_doc:
-            usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_URL: user_doc[
-                constants.USOS_URL]})
-            usos_doc = self.aes.decrypt_usos(usos_doc)
+            usos_doc = yield self.get_usos(constants.USOS_URL, user_doc[constants.USOS_URL])
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
             request_token.set_verifier(oauth_verifier)
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
-                constants.CONSUMER_SECRET])
+            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-            access_token_url = usos_doc[constants.USOS_URL] + 'services/oauth/access_token'
+            access_token_url = "{0}{1}".format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, "GET")
 
             access_token = self.get_token(content)
@@ -365,7 +362,7 @@ class VerifyHandler(BaseHandler):
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
-            logging.debug('user usos veryfication ok - db updated with {0}'.format(user_doc_updated))
+            logging.debug('user usos veryfication ok. db updated with {0}'.format(user_doc_updated))
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, COOKIE_FIELDS)
