@@ -10,12 +10,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             var templateLecturerDetails = Handlebars.compile(tplLecturerDetails);
             var templateUserDetails = Handlebars.compile(tplUserDetails);
 
-            var API_URL;
-
-            main.getConfig(function(config){
-                API_URL = config['API_URL'];
-            });
-
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data));
@@ -30,7 +24,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     var courseId = $(this).attr("course-id");
                     var termId = $(this).attr("term-id");
                     var ariaexpanded = $(this).attr("aria-expanded");
-
                     if (ariaexpanded == "false") {
                         $(this).attr("aria-expanded","true");
 
@@ -51,24 +44,21 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                                   main.callLecturerDetails(lecturerId, function(lecturerInfo){
                                     if (lecturerInfo.status == 'success'){
-                                        lecturerInfo.data['API_URL'] = API_URL;
                                         modal.find('.modal-title').text(lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']);
                                         modal.find('.modal-body').html(templateLecturerDetails(lecturerInfo.data));
                                     } else {
                                         modal.find('.modal-body').html(templateError({'message': lecturerInfo.message}));
                                     }
                                   });
-                            });
+                            })
 
                             $('#userModal').on('show.bs.modal', function (event) {
                                   var button = $(event.relatedTarget);
                                   var userId = button.attr('data-userId');
-
                                   var modal = $(this);
 
                                   main.callUserInfo(userId, function(userInfo){
                                     if (userInfo.status == 'success'){
-                                        userInfo.data['API_URL'] = API_URL;
                                         modal.find('.modal-title').text(userInfo.data['first_name'] + ' ' + userInfo.data['last_name']);
                                         modal.find('.modal-body').html(templateUserDetails(userInfo.data));
                                     } else {

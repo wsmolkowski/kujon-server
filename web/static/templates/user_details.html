@@ -3,9 +3,6 @@
     <tr>
         <td >
             <table class="table table-strip table-responsive">
-            {{#if has_photo}}
-                <tr><td><img src="{{has_photo}}"></td></tr>
-            {{/if}}
             <tr><td>Status studenta</td><td>{{student_status}}</td></tr>
             {{#if student_number}}
                 <tr><td>Numer indeksu</td><td>{{student_number}}</td></tr>
@@ -23,7 +20,7 @@
         <td>
         {{#if has_photo}}
         <div class="img-thumbnail">
-            <img src="{{API_URL}}/api/users_info_photos/{{has_photo}}" >
+            <img src="{{has_photo}}" >
         </div>
         </td>
         {{/if}}
