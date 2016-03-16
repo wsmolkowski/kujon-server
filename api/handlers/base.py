@@ -54,17 +54,14 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
     @tornado.gen.coroutine
     def get_usoses(self):
 
-        if not self._usoses:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
-            while (yield cursor.fetch_next):
-                usos = cursor.next_object()
+        usoses = list()
+        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+        while (yield cursor.fetch_next):
+            usos = cursor.next_object()
 
-                usos = self.aes.decrypt_usos(usos)
-
-                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-                self._usoses.append(usos)
-
-        raise tornado.gen.Return(self._usoses)
+            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+            usoses.append(usos)
+        self.success(usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):
