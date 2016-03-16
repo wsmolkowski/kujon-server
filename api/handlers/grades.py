@@ -27,7 +27,6 @@ class GradesForUserApi(BaseHandler):
         cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
                                                            ('grades', constants.TERM_ID, constants.COURSE_ID,
                                                             'course_name')).sort([(constants.TERM_ID, -1)])
-
         new_grades = []
 
         while (yield cursor.fetch_next):
