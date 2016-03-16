@@ -164,17 +164,23 @@ class CreateUserHandler(BaseHandler):
             return
 
         if user_doc[constants.USOS_URL]:
-            message = "Użytkownik już zarejestrowany w {0}.".format(user_doc[constants.USOS_ID])
-            self.error(message)
+            self.error("Użytkownik już zarejestrowany w {0}.".format(user_doc[constants.USOS_ID]))
             return
 
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+        try:
+            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-        request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL)
+            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
+                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL)
 
-        client = oauth.Client(consumer, **self.oauth_parameters)
-        resp, content = client.request(request_token_url)
+            client = oauth.Client(consumer, **self.oauth_parameters)
+            resp, content = client.request(request_token_url)
+        except Exception, ex:
+            msg = "Wystąpił problem z połączeniem z serwerem USOS {0}".format(ex.message)
+            logging.exception(msg)
+            self.error(msg)
+            return
+
         if resp['status'] != '200':
             self.error("Invalid USOS response %s:\n%s" % (resp['status'], content))
             return
@@ -193,8 +199,9 @@ class CreateUserHandler(BaseHandler):
         update[constants.ACCESS_TOKEN_KEY] = access_token_key
         update[constants.UPDATE_TIME] = datetime.now()
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].update({constants.MONGO_ID: user_doc[constants.MONGO_ID]},
-                                                                    update)
+        user_doc = yield self.db[constants.COLLECTION_USERS].update(
+            {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
+
         logging.debug("updated user with usos base info: %r", user_doc)
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
