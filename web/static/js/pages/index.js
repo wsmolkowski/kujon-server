@@ -1,4 +1,4 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/home.html'], function($, Handlebars, main, tpl) {
+define(['jquery', 'handlebars', 'main', 'text!templates/index.html'], function($, Handlebars, main, tpl) {
 'use strict';
     return {
         render: function() {
