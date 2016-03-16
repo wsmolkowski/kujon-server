@@ -18,7 +18,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <a class="panel-row" course-id="{{course_id}}" term-id="{{term_id}}" role="button" data-toggle="collapse" data-parent="#accordionCourses" href="#collapse{{course_id}}" aria-expanded="false" aria-controls="collapse{{course_id}}">
-                                {{course_name}}
+                                {{course_name}} {{encodeURI course_id}}
                             </a>
                         </div>
                         <div class="col-md-2">{{term_id}}</div>

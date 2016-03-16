@@ -138,7 +138,7 @@ class CoursesEditionsApi(BaseHandler):
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
-            ('course_editions',)
+            ('course_editions',constants.MONGO_ID)
         )
 
         if not course_doc:

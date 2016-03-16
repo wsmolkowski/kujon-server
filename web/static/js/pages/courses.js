@@ -43,14 +43,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                         });
 
-
-                        $('#details').on('show', function() {
-                            $('#details-switch').html('Ukryj szczegóły')
-                        })
-                        $('#details').on('hide', function() {
-                            $('#details-switch.collapsed').html('Pokaż szczegóły')
-                        })
-
                     } else {
                         $(this).attr("aria-expanded","false");
                     }
