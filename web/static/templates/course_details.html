@@ -13,7 +13,7 @@
         {{nl2br description}}
         </div>
       </div>
-      <a class="btn btn-default collapsed" data-toggle="collapse" href="#cD{{course_id}}">
+      <a class="btn btn-link collapsed" data-toggle="collapse" href="#cD{{course_id}}">
           <span class="if-collapsed">Pokaż opis</span>
           <span class="if-not-collapsed">Ukryj opis</span>
       </a>
@@ -57,7 +57,7 @@
   <tr><td>Prowadzący grup</td>
     <td>
     {{#lecturers}}
-      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#lecturerModal" data-lecturerId="{{user_id}}">
+      <button class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">
         {{first_name}} {{last_name}}
       </button><br>
     {{/lecturers}}
@@ -67,7 +67,7 @@
   <tr><td>Koordynatorzy</td>
     <td>
     {{#coordinators}}
-      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#lecturerModal" data-lecturerId="{{user_id}}">
+      <button class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">
         {{first_name}} {{last_name}}
       </button><br>
     {{/coordinators}}
@@ -80,7 +80,7 @@
   <tr><td>Studenci</td>
     <td>
     {{#participants}}
-      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#userModal" data-userId="{{user_id}}">
+      <button class="btn btn-link user-btn" type="button" data-userId="{{user_id}}">
         {{last_name}} {{first_name}}
       </button><br>
     {{/participants}}
@@ -90,37 +90,3 @@
 
 </tbody>
 </table>
-
-<!-- Modal -->
-<div class="modal fade" id="lecturerModal" tabindex="-1" role="dialog" aria-labelledby="lecturerModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="lecturerModalLabel"></h4>
-      </div>
-      <div class="modal-body">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="userModalLabel"></h4>
-      </div>
-      <div class="modal-body">
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-      </div>
-    </div>
-  </div>
-</div>
