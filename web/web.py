@@ -27,8 +27,8 @@ class Application(tornado.web.Application):
             (r"/", web.MainHandler),
             (r"/config", web.ApplicationConfigHandler),
             (r"/authentication/logout", authentication.LogoutHandler),
-            (r"/authentication/create", authentication.CreateUserHandler),
-            (r"/authentication/verify", authentication.VerifyHandler),
+            (r"/authentication/register", authentication.UsosRegisterHandler),
+            (r"/authentication/verify", authentication.UsosVerificationHandler),
             (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
             (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
         ]

@@ -115,7 +115,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class CreateUserHandler(BaseHandler):
+class UsosRegisterHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -178,7 +178,7 @@ class CreateUserHandler(BaseHandler):
         self.success({'redirect': url_redirect})
 
 
-class VerifyHandler(BaseHandler):
+class UsosVerificationHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
