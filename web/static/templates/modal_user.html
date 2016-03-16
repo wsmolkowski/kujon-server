@@ -1,15 +1,60 @@
 <div class="modal fade" id="userModal{{user_id}}" tabindex="-1" role="dialog" aria-labelledby="userModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="userModalLabel">{{title}}</h4>
-      </div>
-      <div class="modal-body" id="userBody{{user_id}}">
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-      </div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="userModalLabel">{{first_name}} {{first_name}}</h4>
+            </div>
+            <div class="modal-body" id="userBody{{user_id}}">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <table class="table table-strip table-responsive">
+                                <tr>
+                                    <td>Status studenta</td>
+                                    <td>{{student_status}}</td>
+                                </tr>
+                                {{#if student_number}}
+                                <tr>
+                                    <td>Numer indeksu</td>
+                                    <td>{{student_number}}</td>
+                                </tr>
+                                {{/if}}
+                                {{#if user_email}}
+                                <tr>
+                                    <td>Email</td>
+                                    <td>{{user_email}}</td>
+                                </tr>
+                                {{/if}}
+                                {{#if student_programmes}}
+                                <tr>
+                                    <td>Kierunki</td>
+                                    <td></td>
+                                </tr>
+                                {{#student_programmes}}
+                                <tr>
+                                    <td>{{id}}</td>
+                                    <td>{{programme.description}} ({{programme.id}})</td>
+                                </tr>
+                                {{/student_programmes}}
+                                {{/if}}
+                            </table>
+                        <td>
+                            {{#if has_photo}}
+                            <div class="img-thumbnail">
+                                <img src="{{has_photo}}">
+                            </div>
+                        </td>
+                        {{/if}}
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
