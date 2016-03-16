@@ -18,10 +18,15 @@
     <tr>
         <td>Opis</td>
         <td>
-            <div class="span4 collapse-group">
-                <p class="collapse" id="viewdescription">{{nl2br description}}</p>
-                <p><a class="btn" data-toggle="collapse" data-target="#viewdescription">Pokaż opis</a></p>
+        <div class="collapse" id="cD{{course_id}}">
+            <div class="well">
+            {{nl2br description}}
             </div>
+        </div>
+        <a class="btn btn-default collapsed" data-toggle="collapse" href="#cD{{course_id}}">
+            <span class="if-collapsed">Pokaż opis</span>
+            <span class="if-not-collapsed">Ukryj opis</span>
+        </a>
         </td>
     </tr>
     {{/if}}
@@ -29,10 +34,15 @@
     <tr>
         <td>Bibliografia</td>
         <td>
-            <div class="span4 collapse-group">
-                <p class="collapse" id="viewbiblio">{{nl2br bibliography}}</p>
-                <p><a class="btn" data-toggle="collapse" data-target="#viewbiblio">Pokaż bibliografię</a></p>
+        <div class="collapse" id="cB{{course_id}}">
+            <div class="well">
+            {{nl2br bibliography}}
             </div>
+        </div>
+        <a class="btn btn-default collapsed" data-toggle="collapse" href="#cB{{course_id}}">
+            <span class="if-collapsed">Pokaż bibliografię</span>
+            <span class="if-not-collapsed">Ukryj bibliografię</span>
+        </a>
         </td>
     </tr>
     {{/if}}
@@ -40,10 +50,15 @@
     <tr>
         <td>Kryteria oceny</td>
         <td>
-            <div class="span4 collapse-group">
-                <p class="collapse" id="viewcriteria">{{nl2br assessment_criteria}}</p>
-                <p><a class="btn" data-toggle="collapse" data-target="#viewcriteria">Pokaż kryteria</a></p>
+        <div class="collapse" id="cC{{course_id}}">
+            <div class="well">
+            {{nl2br assessment_criteria}}
             </div>
+        </div>
+        <a class="btn btn-default collapsed" data-toggle="collapse" href="#cC{{course_id}}">
+            <span class="if-collapsed">Pokaż kryteria</span>
+            <span class="if-not-collapsed">Ukryj kryteria</span>
+        </a>
         </td>
     </tr>
     {{/if}}

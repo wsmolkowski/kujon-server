@@ -61,7 +61,7 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
 
             usos['logo'] = settings.DEPLOY_WEB + usos['logo']
             usoses.append(usos)
-        self.success(usoses)
+        raise tornado.gen.Return(usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):

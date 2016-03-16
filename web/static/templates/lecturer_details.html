@@ -28,16 +28,19 @@
             <tr><td>Prowadzone przedmioty</td></tr>
             <tr><td></td>
                <td>
-               <div class="span4 collapse-group">
-                   <p class="collapse" id="viewLecturer{{id}}">
+               <div class="collapse" id="cC{{id}}">
+                    <div class="well">
                    {{#course_editions_conducted}}
                      <button class="btn btn-link" type="button" data-toggle="modal" data-target="#courseModal" data-termId="{{term_id}}" data-courseId="{{course_id}}">
                         {{course_name}} {{term_id}}
                      </button><br>
                    {{/course_editions_conducted}}
-                   </p>
-                   <p><a class="btn" data-toggle="collapse" data-target="#viewLecturer{{id}}">Pokaż przedmioty</a></p>
+                    </div>
                </div>
+                <a class="btn btn-default collapsed" data-toggle="collapse" href="#cC{{id}}">
+                    <span class="if-collapsed">Pokaż przedmioty</span>
+                    <span class="if-not-collapsed">Ukryj przedmioty</span>
+                </a>
                </td>
             </tr>
             {{/if}}
