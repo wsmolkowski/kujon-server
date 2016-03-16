@@ -183,68 +183,6 @@ class VerifyHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument('oauth_token')
-        oauth_verifier = self.get_argument('oauth_verifier')
-
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
-
-        template_data = self.template_data()
-
-        if user_doc:
-            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
-
-            request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
-                constants.ACCESS_TOKEN_SECRET])
-            request_token.set_verifier(oauth_verifier)
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[
-                constants.CONSUMER_SECRET])
-            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-            access_token_url = usos_doc[constants.USOS_URL] + 'services/oauth/access_token'
-            esp, content = client.request(access_token_url, 'GET')
-
-            updated_user = dict()
-            try:
-                access_token = self.get_token(content)
-
-                updated_user = user_doc
-                updated_user[constants.USOS_PAIRED] = True
-                updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
-                updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
-                updated_user[constants.UPDATE_TIME] = datetime.now()
-                updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
-
-                user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
-
-                template_data[constants.ALERT_MESSAGE] = 'user_doc authenticated with mobile_id / username: {0}'.format(
-                    user_doc_updated)
-
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']},
-                                                                              COOKIE_FIELDS)
-                self.clear_cookie(constants.USER_SECURE_COOKIE)
-                self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                       tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                       constants.COOKIE_EXPIRES_DAYS)
-
-                self.redirect('/')
-            except KeyError:
-                template_data[constants.ALERT_MESSAGE] = 'failed user_doc authenticate with {0} {1}'.format(
-                    updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
-                        constants.ACCESS_TOKEN_KEY])
-
-            self.redirect('/')
-        else:
-            template_data[
-                constants.ALERT_MESSAGE] = 'user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}'.format(
-                oauth_token_key, oauth_verifier)
-            self.render('#create', **template_data)
-
-
-class VerifyHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
         # oauth_token_key = self.get_argument('oauth_token')
         oauth_verifier = self.get_argument('oauth_verifier')
 
@@ -275,7 +213,7 @@ class VerifyHandler(BaseHandler):
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
-            logging.debug('user usos veryfication ok. db updated with {0}'.format(user_doc_updated))
+            logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, COOKIE_FIELDS)
