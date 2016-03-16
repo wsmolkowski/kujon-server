@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from commons.usosutils import usoshelper
 from base import BaseHandler
 from commons import constants
+from commons import settings
 
 LIMIT_FIELDS = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
@@ -92,4 +93,9 @@ class LecturerByIdApi(BaseHandler):
                 else:
                     course_editions.append("Dont have data for course and term..")
             user_info['course_editions_conducted'] = course_editions
+
+        #show url to photo
+        if user_info['has_photo']:
+            user_info['has_photo'] = settings.DEPLOY_API + '/api/users_info_photos/' + str(user_info['has_photo'])
+
         self.success(user_info)

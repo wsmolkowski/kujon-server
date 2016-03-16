@@ -58,7 +58,7 @@ class CourseEditionApi(BaseHandler):
             return
 
         # sort participant
-        if 'participants' in course_doc:
+        if 'participants' in course_edition_doc:
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
         else:
             pass
