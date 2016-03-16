@@ -15,10 +15,8 @@ from base import BaseHandler
 from commons import constants, settings
 from crawler import job_factory
 
-COOKIE_FIELDS = ('id', constants.USOS_URL, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                  constants.USOS_PAIRED)
-
-log = logging.getLogger(__name__)
 
 
 class LoginHandler(BaseHandler):
@@ -120,7 +118,6 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 userToInsert[constants.USER_EMAIL] = user['email']
                 userToInsert[constants.USOS_PAIRED] = False
                 userToInsert[constants.USER_CREATED] = datetime.now()
-                userToInsert[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, userToInsert)
                 logging.debug(u"saved new user in database: {0}".format(user_doc))
@@ -165,7 +162,7 @@ class CreateUserHandler(BaseHandler):
             self.error("Użytkownik musi posiadać konto. Prośba o zalogowanie.")
             return
 
-        if user_doc[constants.USOS_URL]:
+        if user_doc[constants.USOS_PAIRED]:
             self.error("Użytkownik już zarejestrowany w {0}.".format(user_doc[constants.USOS_ID]))
             return
 
@@ -183,7 +180,7 @@ class CreateUserHandler(BaseHandler):
             self.error(msg)
             return
 
-        if resp['status'] != '200':
+        if 'status' not in resp or resp['status'] != '200':
             self.error("Invalid USOS response %s:\n%s" % (resp['status'], content))
             return
 
@@ -195,8 +192,6 @@ class CreateUserHandler(BaseHandler):
 
         update = user_doc
         update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-        update[constants.USOS_URL] = usos_doc[constants.USOS_URL]
-        # update[constants.MOBILE_ID] = mobile_id
         update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
         update[constants.ACCESS_TOKEN_KEY] = access_token_key
         update[constants.UPDATE_TIME] = datetime.now()
@@ -225,7 +220,7 @@ class VerifyHandler(BaseHandler):
         template_data = self.template_data()
 
         if user_doc:
-            usos_doc = yield self.get_usos(constants.USOS_URL, user_doc[constants.USOS_URL])
+            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
@@ -274,59 +269,6 @@ class VerifyHandler(BaseHandler):
             self.render("#create", **template_data)
 
 
-class RegisterHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def post(self):
-
-        usos_url = self.get_argument("usos").strip()
-
-        usos_doc = yield self.get_usos(constants.USOS_URL, usos_url)
-
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['_id']})
-
-        if user_doc[constants.USOS_URL]:
-            usoses = yield self.db.usosinstances.find().to_list(length=100)
-            data = self.template_data()
-            data[constants.ALERT_MESSAGE] = "user: already register for usos".format(usos_url)
-            data["usoses"] = usoses
-
-            self.write(data)
-        else:
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
-                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-                settings.CALLBACK_URL)
-
-            client = oauth.Client(consumer, **self.oauth_parameters)
-            resp, content = client.request(request_token_url)
-            if resp['status'] != '200':
-                raise Exception("Invalid response %s:\n%s" % (resp['status'], content))
-
-            request_token = self.get_token(content)
-
-            # updating to db user access_token_key & access_token_secret
-            access_token_key = request_token.key
-            access_token_secret = request_token.secret
-
-            update = user_doc
-            update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            update[constants.USOS_URL] = usos_url
-            # update[constants.MOBILE_ID] = mobile_id
-            update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-            update[constants.ACCESS_TOKEN_KEY] = access_token_key
-            update[constants.UPDATE_TIME] = datetime.now()
-
-            user_doc = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
-            logging.debug("updated user with usos base info: %r", user_doc)
-
-            authorize_url = usos_url + 'services/oauth/authorize'
-            url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
-            self.redirect(url_redirect)
-
-
 class VerifyHandler(BaseHandler):
     @tornado.web.authenticated
     @tornado.web.asynchronous
@@ -339,7 +281,7 @@ class VerifyHandler(BaseHandler):
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if user_doc:
-            usos_doc = yield self.get_usos(constants.USOS_URL, user_doc[constants.USOS_URL])
+            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
                 constants.ACCESS_TOKEN_SECRET])
