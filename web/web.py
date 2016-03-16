@@ -35,7 +35,7 @@ class Application(tornado.web.Application):
 
         __settings = dict(
             debug=settings.DEBUG,
-            #reload=settings.RELOAD,
+            autoreload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
             compress_response=settings.COMPRESS_RESPONSE,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
