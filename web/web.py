@@ -54,7 +54,7 @@ class Application(tornado.web.Application):
 if __name__ == "__main__":
     parse_command_line()
 
-    web = Application()
-    web.listen(settings.WEB_PORT)
+    application = Application()
+    application.listen(settings.WEB_PORT, address=settings.SITE_DOMAIN)
     logging.info(settings.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()
