@@ -1,7 +1,7 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!templates/course_details.html',
-        'text!templates/error.html', 'text!templates/lecturer_details.html', 'text!templates/user_details.html',
+        'text!templates/error.html', 'text!templates/lecturer_details.html',
         'text!templates/modal_lecturer.html', 'text!templates/modal_user.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplLecturerDetails, tplUserDetails, tplModalLecturer, tplModalUser) {
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplLecturerDetails, tplModalLecturer, tplModalUser) {
 'use strict';
     return {
         render: function() {
@@ -9,7 +9,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             var templateDetails = Handlebars.compile(tplDetails);
             var templateError = Handlebars.compile(tplError);
             var templateLecturerDetails = Handlebars.compile(tplLecturerDetails);
-            var templateUserDetails = Handlebars.compile(tplUserDetails);
             var templateModalLecturer = Handlebars.compile(tplModalLecturer);
             var templateModalUser = Handlebars.compile(tplModalUser);
 
@@ -73,14 +72,14 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                                 'title': lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']
                             });
 
-                            $('#idLecturerModal').html(htmlModal);
+                            $('#modalWrapper').html(htmlModal);
 
                             $(modalId).modal('show');
                             $(modalBodyId).html(templateLecturerDetails(lecturerInfo.data));
 
                             $(modalId).on('hidden.bs.modal', function (e) {
                                 $(this).remove();
-                                $('#idLecturerModal').html();
+                                $('#modalWrapper').html();
                                 $(modalId).hide();
                             });
 
@@ -102,19 +101,15 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     main.callUserInfo(userId, function(userInfo){
                         if (userInfo.status == 'success'){
 
-                            var htmlModal = templateModalUser({
-                                'user_id': userId,
-                                'title': userInfo.data['first_name'] + ' ' + userInfo.data['last_name']
-                            });
+                            userInfo.data['user_id'] = userId;
 
-                            $('#idUserModal').html(htmlModal);
+                            var htmlModal = templateModalUser(userInfo.data);
+                            $('#modalWrapper').html(htmlModal);
                             $(modalId).modal('show');
-
-                            $(modalBodyId).html(templateUserDetails(userInfo.data));
 
                             $(modalId).on('hidden.bs.modal', function (e) {
                                 $(this).remove();
-                                $('#idUserModal').html();
+                                $('#modalWrapper').html();
                                 $(modalId).hide();
                             });
 
