@@ -26,7 +26,6 @@ class Application(tornado.web.Application):
         __handlers = [
             (r"/", web.MainHandler),
             (r"/config", web.ApplicationConfigHandler),
-            (r"/authentication/login", authentication.LoginHandler),
             (r"/authentication/logout", authentication.LogoutHandler),
             (r"/authentication/create", authentication.CreateUserHandler),
             (r"/authentication/verify", authentication.VerifyHandler),

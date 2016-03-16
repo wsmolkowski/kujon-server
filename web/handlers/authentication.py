@@ -19,34 +19,10 @@ COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKE
                  constants.USOS_PAIRED)
 
 
-class LoginHandler(BaseHandler):
+class LogoutHandler(BaseHandler):
     def get(self):
-        data = self.template_data()
-        self.render("login.html", **data)
-
-    @tornado.web.asynchronous
-    @tornado.gen.engine
-    def post(self):
-        access_token_key = self.get_argument("inputAccessTokenKey")
-        access_token_secret = self.get_argument("inputAccessTokenSecret")
-
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.ACCESS_TOKEN_SECRET: access_token_secret,
-             constants.ACCESS_TOKEN_KEY: access_token_key},
-            constants.USER_PRESENT_KEYS)
-        if user_doc:
-            user_doc[constants.USER_ID] = str(user_doc[constants.MONGO_ID])
-            user_doc.pop(constants.MONGO_ID)
-
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
-            self.redirect('/')
-        else:
-            data = self.template_data()
-            data[constants.ALERT_MESSAGE] = u"login authentication failed for {0} and {1}".format(access_token_key,
-                                                                                                  access_token_secret)
-            self.render("login.html", **data)
+        self.clear_cookie(constants.USER_SECURE_COOKIE)
+        self.redirect('/')
 
 
 class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
@@ -76,7 +52,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, user)
-                logging.debug(u"saved new user in database: {0}".format(user_doc))
+                logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               COOKIE_FIELDS)
@@ -84,7 +60,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect("/")
+            self.redirect('/')
         else:
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_WEB + '/authentication/facebook',
@@ -103,8 +79,8 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 redirect_uri=settings.DEPLOY_WEB + '/authentication/google',
                 code=self.get_argument('code'))
             user = yield self.oauth2_request(
-                "https://www.googleapis.com/oauth2/v1/userinfo",
-                access_token=access["access_token"])
+                'https://www.googleapis.com/oauth2/v1/userinfo',
+                access_token=access['access_token'])
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'email': user['email']},
@@ -120,7 +96,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 userToInsert[constants.USER_CREATED] = datetime.now()
 
                 user_doc = yield motor.Op(self.db.users.insert, userToInsert)
-                logging.debug(u"saved new user in database: {0}".format(user_doc))
+                logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               COOKIE_FIELDS)
@@ -128,7 +104,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect("/")
+            self.redirect('/')
 
         else:
             yield self.authorize_redirect(
@@ -137,12 +113,6 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 scope=['profile', 'email'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
-
-
-class LogoutHandler(BaseHandler):
-    def get(self):
-        self.clear_cookie(constants.USER_SECURE_COOKIE)
-        self.redirect("/")
 
 
 class CreateUserHandler(BaseHandler):
@@ -159,29 +129,30 @@ class CreateUserHandler(BaseHandler):
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         if not user_doc:
-            self.error("Użytkownik musi posiadać konto. Prośba o zalogowanie.")
+            self.error('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
             return
 
         if user_doc[constants.USOS_PAIRED]:
-            self.error("Użytkownik już zarejestrowany w {0}.".format(user_doc[constants.USOS_ID]))
+            self.error('Użytkownik już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
             return
 
         try:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            request_token_url = "{0}services/oauth/request_token?{1}&oauth_callback={2}".format(
-                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades', settings.CALLBACK_URL)
+            request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
+                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
+                settings.CALLBACK_URL)
 
             client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)
         except Exception, ex:
-            msg = "Wystąpił problem z połączeniem z serwerem USOS {0}".format(ex.message)
+            msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
             logging.exception(msg)
             self.error(msg)
             return
 
         if 'status' not in resp or resp['status'] != '200':
-            self.error("Invalid USOS response %s:\n%s" % (resp['status'], content))
+            self.error('Invalid USOS response %s:\n%s' % (resp['status'], content))
             return
 
         request_token = self.get_token(content)
@@ -199,10 +170,10 @@ class CreateUserHandler(BaseHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].update(
             {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
 
-        logging.debug("updated user with usos base info: %r", user_doc)
+        logging.debug('updated user with usos base info: %r', user_doc)
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
-        url_redirect = "%s?oauth_token=%s" % (authorize_url, request_token.key)
+        url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
 
         self.success({'redirect': url_redirect})
 
@@ -212,8 +183,8 @@ class VerifyHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument("oauth_token")
-        oauth_verifier = self.get_argument("oauth_verifier")
+        oauth_token_key = self.get_argument('oauth_token')
+        oauth_verifier = self.get_argument('oauth_verifier')
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'id': self.get_current_user()['id']})
 
@@ -229,7 +200,7 @@ class VerifyHandler(BaseHandler):
                 constants.CONSUMER_SECRET])
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
             access_token_url = usos_doc[constants.USOS_URL] + 'services/oauth/access_token'
-            esp, content = client.request(access_token_url, "GET")
+            esp, content = client.request(access_token_url, 'GET')
 
             updated_user = dict()
             try:
@@ -245,7 +216,7 @@ class VerifyHandler(BaseHandler):
                 user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                     {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
-                template_data[constants.ALERT_MESSAGE] = "user_doc authenticated with mobile_id / username: {0}".format(
+                template_data[constants.ALERT_MESSAGE] = 'user_doc authenticated with mobile_id / username: {0}'.format(
                     user_doc_updated)
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({'_id': self.get_current_user()['_id']},
@@ -257,16 +228,16 @@ class VerifyHandler(BaseHandler):
 
                 self.redirect('/')
             except KeyError:
-                template_data[constants.ALERT_MESSAGE] = "failed user_doc authenticate with {0} {1}".format(
+                template_data[constants.ALERT_MESSAGE] = 'failed user_doc authenticate with {0} {1}'.format(
                     updated_user[constants.ACCESS_TOKEN_SECRET], updated_user[
                         constants.ACCESS_TOKEN_KEY])
 
-            self.redirect("/")
+            self.redirect('/')
         else:
             template_data[
-                constants.ALERT_MESSAGE] = "user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}".format(
+                constants.ALERT_MESSAGE] = 'user_doc not found for given oauth_token_key:{0}, oauth_verifier: {1}'.format(
                 oauth_token_key, oauth_verifier)
-            self.render("#create", **template_data)
+            self.render('#create', **template_data)
 
 
 class VerifyHandler(BaseHandler):
@@ -274,8 +245,8 @@ class VerifyHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        # oauth_token_key = self.get_argument("oauth_token")
-        oauth_verifier = self.get_argument("oauth_verifier")
+        # oauth_token_key = self.get_argument('oauth_token')
+        oauth_verifier = self.get_argument('oauth_verifier')
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
@@ -289,8 +260,8 @@ class VerifyHandler(BaseHandler):
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-            access_token_url = "{0}{1}".format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
-            esp, content = client.request(access_token_url, "GET")
+            access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
+            esp, content = client.request(access_token_url, 'GET')
 
             access_token = self.get_token(content)
 
