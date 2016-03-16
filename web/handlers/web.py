@@ -11,7 +11,6 @@ class MainHandler(BaseHandler):
 
 
 class ApplicationConfigHandler(BaseHandler):
-    @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
