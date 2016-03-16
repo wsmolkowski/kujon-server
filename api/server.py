@@ -32,7 +32,7 @@ class Application(tornado.web.Application):
             debug=settings.DEBUG,
             #reload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
-            gzip=settings.GZIP,
+            compress_response=settings.COMPRESS_RESPONSE,
             cookie_secret=settings.COOKIE_SECRET,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET}

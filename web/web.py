@@ -37,7 +37,7 @@ class Application(tornado.web.Application):
             debug=settings.DEBUG,
             #reload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
-            gzip=settings.GZIP,
+            compress_response=settings.COMPRESS_RESPONSE,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret=settings.COOKIE_SECRET,

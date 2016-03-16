@@ -17,7 +17,7 @@ PROJECT_TITLE = "Kujon.io"
 
 DEBUG = True
 RELOAD = False
-GZIP = True
+COMPRESS_RESPONSE = True
 
 SITE_DOMAIN = "localhost"   # important for google and facebook authentication
 API_PORT = 8881
