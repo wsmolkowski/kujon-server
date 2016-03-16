@@ -50,16 +50,6 @@ def prepare_environment():
     if sys.getdefaultencoding() != constants.ENCODING:
         logging.error("Could not change encoding to %s".format(constants.ENCODING))
 
-    uc = UsosCrawler()
-    if settings.CLEAN_DB:
-        try:
-            uc.drop_collections()
-            uc.recreate_usos()
-            uc.recreate_dictionaries()
-        except Exception, ex:
-            logging.exception("Problem during environment preparation: %s".format(ex.message))
-            sys.exit(-1)
-
 
 def main():
     parse_command_line()

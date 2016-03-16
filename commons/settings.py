@@ -17,7 +17,6 @@ PROJECT_TITLE = "Kujon.io"
 
 DEBUG = True
 RELOAD = False
-CLEAN_DB = False
 GZIP = True
 
 SITE_DOMAIN = "localhost"   # important for google and facebook authentication
