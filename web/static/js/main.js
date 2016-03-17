@@ -189,6 +189,13 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     return new Handlebars.SafeString(nl2br);
                 });
 
+                // {{#replace}} replace string handlebar helper
+                 Handlebars.registerHelper('replacebrackets', function( string ){
+	                var pom= ( string || '' ).replace( "(", "\\(" );
+	                pom = ( pom || '' ).replace( ")", "\\)" );
+	                return pom;
+                });
+
                 return buildConfig();
             },
             getConfig: function(){
