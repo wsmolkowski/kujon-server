@@ -30,7 +30,11 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     if ($(this).attr("aria-expanded") == "false") {
                         $(this).attr("aria-expanded","true");
 
-                        main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                        // escape brackets for courseId that are escaped in helper replacebrackets
+                        var courseId_notescaped= ( courseId || '' ).replace( "\\(", "(" );
+	                    courseId_notescaped = ( courseId_notescaped || '' ).replace( "\\)", ")" );
+
+                        main.callCourseEditionDetails(courseId_notescaped, termId, function(courseInfo){
                             var idContent = '#courseDetails' + courseId;
 
                             if (courseInfo.status == 'success'){
