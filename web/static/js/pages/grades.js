@@ -1,4 +1,4 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables'],
+define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/modal_course.html', 'datatables'],
     function($, Handlebars, main, tpl, tplError, tplCourseModal, datatables) {
     'use strict';
     return {
