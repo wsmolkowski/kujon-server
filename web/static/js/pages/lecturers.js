@@ -1,5 +1,7 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html', 'text!templates/error.html', 'text!templates/course_details_modal.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal) {
+define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html',
+    'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables','text!templates/modal_lecturer.html',
+    'text!templates/lecturer_details.html'],
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal, datatables, tplModalLecturer, tplLecturerDetails) {
     'use strict';
     return {
         render: function() {
@@ -7,53 +9,57 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
             var templateDetails = Handlebars.compile(tplDetails);
             var templateCourse = Handlebars.compile(tplCourseModal);
             var templateError = Handlebars.compile(tplError);
+            var templateModalLecturer = Handlebars.compile(tplModalLecturer);
+            var templateLecturerDetails = Handlebars.compile(tplLecturerDetails);
 
             main.callLecturers(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data));
-                    bindListeners();
+                    $('#lecturers-table').DataTable();
+
+                    bindModals();
                 } else {
                     $('#page').html(templateError({'message': data.message}));
                 }
             });
 
 
-            function bindListeners(){
-                $('a.panel-row').bind( 'click', function(){
-                    var lecturerId = $(this).attr("lecturer-id");
-                    var ariaexpanded = $(this).attr("aria-expanded");
-                    if (ariaexpanded == "false") {
-                        $(this).attr("aria-expanded","true");
+            function bindModals(){
 
-                        main.callLecturerDetails(lecturerId, function(lecturerInfo){
-                            var idContent = '#lecturerDetails' + lecturerId;
+                $('.lecturer-btn').click(function(){
+                    var lecturerId = $(this).attr("data-lecturerId");
+                    var modalId = '#lecturerModal' + lecturerId;
+                    var modalBodyId = '#lecturerBody' + lecturerId;
 
-                            if (lecturerInfo.status == 'success'){
-                                $(idContent).html(templateDetails(lecturerInfo.data));
-                            } else {
-                                $(idContent).html(templateError({'message': lecturerInfo.message}));
-                            }
+                    $(modalId).modal();
 
-                            $('#courseModal').on('show.bs.modal', function (event) {
-                                  var button = $(event.relatedTarget);
-                                  var courseId = button.attr('data-courseId');
-                                  var termId = button.attr('data-termId');
-                                  var modal = $(this);
+                    main.callLecturerDetails(lecturerId, function(lecturerInfo){
+                        if (lecturerInfo.status == 'success'){
 
-                                  main.callCourseEditionDetails(courseId, termId, function(courseInfo){
-                                    if (courseInfo.status == 'success'){
-                                        modal.find('.modal-title').text(courseInfo.data['name']);
-                                        modal.find('.modal-body').html(templateCourse(courseInfo.data));
-                                    } else {
-                                        modal.find('.modal-body').html(templateError({'message': courseInfo.message}));
-                                    }
-                                  });
+                            var htmlModal = templateModalLecturer({
+                                'lecturer_id': lecturerId,
+                                'title': lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']
                             });
-                        });
-                    } else {
-                        $(this).attr("aria-expanded","false");
-                    }
-                })
+
+                            $('#modalWrapper').html(htmlModal);
+
+                            $(modalId).modal('show');
+                            $(modalBodyId).html(templateLecturerDetails(lecturerInfo.data));
+
+                            $(modalId).on('hidden.bs.modal', function (e) {
+                                $(this).remove();
+                                $('#modalWrapper').html();
+                                $(modalId).hide();
+                            });
+
+                        } else {
+                            $(modalId).modal('show');
+                            $(modalBodyId).html(templateError({'message': userInfo.message}));
+                        }
+                    });
+
+                });
+
             };
         }
     }    

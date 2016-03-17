@@ -42,7 +42,8 @@ def reindex():
     for collection in db.collection_names():
         if 'system' in collection:
             continue
-        db[collection].reindex()
+        ri = db[collection].reindex()
+        pprint(ri)
         logging.info('collection {0} reindexed'.format(collection))
 
 
@@ -146,5 +147,5 @@ if __name__ == "__main__":
     # clean()
     # ensure_indexes()
     # reindex()
-    print_statistics()
+    # print_statistics()
     # save_statistics()

@@ -41,10 +41,13 @@ class LecturersApi(BaseHandler):
                     lecturer_id = lecturer[constants.USER_ID]
 
                     lecturer.pop('id')
+                    lecturer[constants.TERM_ID] = course_doc[constants.TERM_ID]
+                    lecturer[constants.COURSE_ID] = course_doc[constants.COURSE_ID]
+                    lecturer['course_name'] = course_doc['course_name']['pl']
                     lecturers_returned[lecturer_id] = lecturer
 
             lecturers_returned = lecturers_returned.values()
-            lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
+            #lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
             self.error("Poczekaj szukamy nauczycieli.")
         else:
