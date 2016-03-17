@@ -1,11 +1,10 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html',
+define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
     'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables','text!templates/modal_lecturer.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal, datatables, tplModalLecturer) {
+    function($, Handlebars, main, tplLecturers, tplError, tplCourseModal, datatables, tplModalLecturer) {
     'use strict';
     return {
         render: function() {
-            var template = Handlebars.compile(tpl);
-            var templateDetails = Handlebars.compile(tplDetails);
+            var template = Handlebars.compile(tplLecturers);
             var templateCourse = Handlebars.compile(tplCourseModal);
             var templateError = Handlebars.compile(tplError);
             var templateModalLecturer = Handlebars.compile(tplModalLecturer);
