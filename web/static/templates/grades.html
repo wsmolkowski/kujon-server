@@ -1,12 +1,6 @@
 <div class="panel panel-default">
     <div class="panel-heading">
         <h4>Oceny</h4>
-        <!--
-        <div class="btn-group pull-left">
-            <a class="btn btn-default btn-sm">Bieżący cykl</a>
-            <a class="btn btn-default btn-sm">Wszystkie cykle</a>
-        </div>
-        -->
     </div>
     <div class="panel-body">
         <table id="grades-table" class="table table-hover table-responsive">
@@ -24,9 +18,7 @@
             <tr>
                 <td>{{term_id}}</td>
                 <td>
-                    <button class="btn btn-link" type="button" data-toggle="modal" data-target="#courseModal" data-courseId="{{course_id}}" data-termId="{{term_id}}">
-                        {{course_name}}
-                    </button><br>
+                    <a class="btn btn-link course-btn" type="button" data-courseId="{{course_id}}" data-termId="{{term_id}}">{{course_name}}</a>
                 </td>
                 <td>{{exam_session_number}}</td>
                 <td>{{class_type}}</td>
@@ -41,20 +33,4 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="courseModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="exampleModalLabel"></h4>
-      </div>
-      <div class="modal-body">
-        <div id="lecturerDetails"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="modalWrapper"></div>

@@ -5,34 +5,50 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
         render: function() {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
-            var templateCourse = Handlebars.compile(tplCourseModal);
+            var templateCourseModal = Handlebars.compile(tplCourseModal);
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data));
+                    bindModals();
                 } else {
                     $('#page').html(templateError({'message': data.message}));
                 }
-
-                $('#grades-table').DataTable();
-
-                $('#courseModal').on('show.bs.modal', function (event) {
-                      var button = $(event.relatedTarget)
-                      var courseId = button.attr('data-courseId')
-                      var termId = button.attr('data-termId')
-
-                      var modal = $(this)
-
-                      main.callCourseEditionDetails(courseId, termId, function(courseInfo){
-                        if (courseInfo.status == 'success'){
-                            modal.find('.modal-title').text(courseInfo.data['name']);
-                            modal.find('.modal-body').html(templateCourse(courseInfo.data));
-                        } else {
-                            modal.find('.modal-body').html(templateError({'message': courseInfo.message}));
-                        }
-                      });
-                });
             });
+
+            function bindModals(){
+                $('.course-btn').click(function(){
+                    var courseId = $(this).attr("data-courseId");
+                    var termId = $(this).attr("data-termId");
+                    var modalId = '#courseModal' + courseId;
+
+                    $(modalId).modal();
+
+                    main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                        if (courseInfo.status == 'success'){
+
+                            courseInfo.data['courseId'] = courseId;
+                            var htmlModal = templateCourseModal(courseInfo.data);
+
+                            $('#modalWrapper').html(htmlModal);
+
+                            $(modalId).modal('show');
+
+                            $(modalId).on('hidden.bs.modal', function (e) {
+                                $(this).remove();
+                                $('#modalWrapper').html();
+                                $(modalId).hide();
+                            });
+
+                        } else {
+                            $(modalId).modal('show');
+                            $(modalBodyId).html(templateError({'message': userInfo.message}));
+                        }
+                    });
+
+                });
+
+            }
         }
     }    
 });

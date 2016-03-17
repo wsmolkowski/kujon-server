@@ -5,7 +5,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
     return {
         render: function() {
             var template = Handlebars.compile(tplLecturers);
-            var templateCourse = Handlebars.compile(tplCourseModal);
+            var templateModalCourse = Handlebars.compile(tplCourseModal);
             var templateError = Handlebars.compile(tplError);
             var templateModalLecturer = Handlebars.compile(tplModalLecturer);
 
@@ -34,6 +34,38 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
 
                             lecturerInfo.data['lecturer_id'] = lecturerId;
                             var htmlModal = templateModalLecturer(lecturerInfo.data);
+
+                            $('#modalWrapper').html(htmlModal);
+
+                            $(modalId).modal('show');
+
+                            $(modalId).on('hidden.bs.modal', function (e) {
+                                $(this).remove();
+                                $('#modalWrapper').html();
+                                $(modalId).hide();
+                            });
+
+                        } else {
+                            $(modalId).modal('show');
+                            $(modalBodyId).html(templateError({'message': userInfo.message}));
+                        }
+                    });
+
+                });
+
+
+                $('.course-btn').click(function(){
+                    var courseId = $(this).attr("data-courseId");
+                    var termId = $(this).attr("data-termId");
+                    var modalId = '#courseModal' + courseId;
+
+                    $(modalId).modal();
+
+                    main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                        if (courseInfo.status == 'success'){
+
+                            courseInfo.data['courseId'] = courseId;
+                            var htmlModal = templateModalCourse(courseInfo.data);
 
                             $('#modalWrapper').html(htmlModal);
 
