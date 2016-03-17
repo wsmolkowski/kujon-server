@@ -1,7 +1,6 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!templates/lecturer_details.html',
-    'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables','text!templates/modal_lecturer.html',
-    'text!templates/lecturer_details.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal, datatables, tplModalLecturer, tplLecturerDetails) {
+    'text!templates/error.html', 'text!templates/course_details_modal.html', 'datatables','text!templates/modal_lecturer.html'],
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplCourseModal, datatables, tplModalLecturer) {
     'use strict';
     return {
         render: function() {
@@ -10,7 +9,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
             var templateCourse = Handlebars.compile(tplCourseModal);
             var templateError = Handlebars.compile(tplError);
             var templateModalLecturer = Handlebars.compile(tplModalLecturer);
-            var templateLecturerDetails = Handlebars.compile(tplLecturerDetails);
 
             main.callLecturers(function(data){
                 if (data.status == 'success'){
@@ -29,22 +27,18 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html', 'text!t
                 $('.lecturer-btn').click(function(){
                     var lecturerId = $(this).attr("data-lecturerId");
                     var modalId = '#lecturerModal' + lecturerId;
-                    var modalBodyId = '#lecturerBody' + lecturerId;
 
                     $(modalId).modal();
 
                     main.callLecturerDetails(lecturerId, function(lecturerInfo){
                         if (lecturerInfo.status == 'success'){
 
-                            var htmlModal = templateModalLecturer({
-                                'lecturer_id': lecturerId,
-                                'title': lecturerInfo.data['first_name'] + ' ' + lecturerInfo.data['last_name']
-                            });
+                            lecturerInfo.data['lecturer_id'] = lecturerId;
+                            var htmlModal = templateModalLecturer(lecturerInfo.data);
 
                             $('#modalWrapper').html(htmlModal);
 
                             $(modalId).modal('show');
-                            $(modalBodyId).html(templateLecturerDetails(lecturerInfo.data));
 
                             $(modalId).on('hidden.bs.modal', function (e) {
                                 $(this).remove();
