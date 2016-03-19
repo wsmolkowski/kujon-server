@@ -1,6 +1,6 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!templates/course_details.html',
         'text!templates/error.html', 'text!templates/modal_lecturer.html', 'text!templates/modal_user.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplLecturerDetails, tplModalLecturer, tplModalUser) {
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplModalLecturer, tplModalUser) {
 'use strict';
     return {
         render: function() {
