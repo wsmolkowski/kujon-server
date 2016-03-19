@@ -49,10 +49,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 });
         };
 
-        function getConfig(){
-            return config;
-        };
-
         function buildApiUrl(api){
             return config['API_URL'] + api;
         };
