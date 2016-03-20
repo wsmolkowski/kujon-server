@@ -186,9 +186,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 });
 
                 // {{#replace}} replace string handlebar helper
-                 Handlebars.registerHelper('replacebrackets', function( string ){
+                 Handlebars.registerHelper('replspechars', function( string ){
 	                var pom= ( string || '' ).replace( "(", "\\(" );
 	                pom = ( pom || '' ).replace( ")", "\\)" );
+	                pom = ( pom || '' ).replace( "`", "\\`" );
 	                return pom;
                 });
 
