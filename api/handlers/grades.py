@@ -93,7 +93,7 @@ class GradesForCourseAndTermApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         pipeline = {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]), constants.COURSE_ID: course_id,
-                    constants.TERM_ID: term_id}
+                    constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}
         limit_fields = ('course_name', 'course_id', 'grades')
 
         classtypes = {}

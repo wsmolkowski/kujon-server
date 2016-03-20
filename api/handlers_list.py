@@ -27,7 +27,6 @@ HANDLERS = [
     (r"/api/terms/([^/]+)", TermApi),
 
     (r"/api/friends/suggestions/", FriendsSuggestionsApi),
-
     (r"/api/friends/([^/]+)", FriendsApi),
     (r"/api/friends/", FriendsApi),
 

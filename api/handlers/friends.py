@@ -16,7 +16,7 @@ class FriendsApi(BaseHandler):
 
         friends = []
         friends_returned = []
-        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nzwisko, id
+        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nazwisko, id
         pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
