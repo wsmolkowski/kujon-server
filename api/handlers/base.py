@@ -57,10 +57,10 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         if not self._usoses or not self._usoses_encrypted:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
             while (yield cursor.fetch_next):
-                usos = cursor.next_object()
-                usos_encrypted = self.aes.decrypt_usos(usos)
-                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos['logo']
+                usos_encrypted = cursor.next_object()
+                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
+                usos = usos_encrypted.copy()
+                usos = dict(self.aes.decrypt_usos(usos))
 
                 self._usoses.append(usos)
                 self._usoses_encrypted.append(usos_encrypted)
