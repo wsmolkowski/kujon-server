@@ -49,23 +49,29 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-    _usoses = []
-
+    _usoses = list()
+    _usoses_encrypted = list()
     @tornado.gen.coroutine
-    def get_usoses(self):
+    def get_usoses(self, show_encrypted):
 
-        usoses = list()
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
-        while (yield cursor.fetch_next):
-            usos = cursor.next_object()
+        if not self._usoses or not self._usoses_encrypted:
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+            while (yield cursor.fetch_next):
+                usos = cursor.next_object()
+                usos_encrypted = self.aes.decrypt_usos(usos)
+                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos['logo']
 
-            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-            usoses.append(usos)
-        raise tornado.gen.Return(usoses)
+                self._usoses.append(usos)
+                self._usoses_encrypted.append(usos_encrypted)
+        if show_encrypted:
+            raise tornado.gen.Return(self._usoses_encrypted)
+        else:
+            raise tornado.gen.Return(self._usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):
-        usoses = yield self.get_usoses()
+        usoses = yield self.get_usoses(show_encrypted=False)
 
         for u in usoses:
             if u[key] == value:
@@ -77,10 +83,7 @@ class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        # TODO: here user check switch off becaue it is not paired yet. maybe should be only check
-        # the user because it shoud be sign on using this method on mobile. should be check after mobi version ready.
-        # parameters = yield self.get_parameters()
 
-        data = yield self.get_usoses()
+        data = yield self.get_usoses(show_encrypted=True)
 
         self.success(data)
