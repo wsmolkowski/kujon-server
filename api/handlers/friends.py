@@ -16,7 +16,6 @@ class FriendsApi(BaseHandler):
 
         friends = []
         friends_returned = []
-        # TODO: ograniczyc wynik zwrcany do 3 pol: imie, nazwisko, id
         pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
@@ -46,14 +45,14 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                           constants.MONGO_ID]),
+                                                                           constants.MONGO_ID]),
                                                                            constants.FRIEND_ID: user_info_id})
         if not friend_doc:
 
             # check if user_info exists
             user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id,
                                                                                  constants.USOS_ID: parameters[
-                                                                                     constants.USOS_ID]})
+                                                                                 constants.USOS_ID]})
 
             if user_info:
                 result = dict()
@@ -77,11 +76,11 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.MONGO_ID]),
+                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
         if friend_in_db:
             friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[
-                                                                                                             constants.MONGO_ID]),
+                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
             if friend_doc:
                 self.success(user_info_id)
@@ -116,8 +115,7 @@ class FriendsSuggestionsApi(BaseHandler):
                 if not course_participants:
                     continue
 
-                # TODO: change to metod in dao??
-                friends_added = []
+                friends_added = list()
                 cursor = self.db[constants.COLLECTION_FRIENDS].find()
                 while (yield cursor.fetch_next):
                     friends_added.append(cursor.next_object())
@@ -126,7 +124,7 @@ class FriendsSuggestionsApi(BaseHandler):
                     participant_id = participant[constants.USER_ID]
 
                     # checking if participant is not current logged user
-                    if int(user_info[constants.ID]) == participant_id:
+                    if user_info[constants.ID] == participant_id:
                         continue
 
                     # checking if participant is allready added
@@ -146,4 +144,6 @@ class FriendsSuggestionsApi(BaseHandler):
         if not suggested_participants:
             self.error("Poczekaj szukamy sugerowanych przyjaciół.")
         else:
-            self.success(suggested_participants)
+            # sort by count descending and limit to 10 records
+            suggested_participants = sorted(suggested_participants, key=lambda k: k['count'], reverse=True)
+            self.success(suggested_participants[:10])
