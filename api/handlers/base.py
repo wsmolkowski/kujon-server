@@ -4,8 +4,6 @@ import urlparse
 
 import oauth2 as oauth
 import tornado.gen
-
-
 from commons import handlers, constants, settings
 from commons.mixins.JSendMixin import JSendMixin
 
