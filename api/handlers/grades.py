@@ -107,8 +107,7 @@ class GradesForCourseAndTermApi(BaseHandler):
         units = {}
         if grades and len(grades) > 0:
             for unit in grades['grades']['course_units_grades']:
-                # TODO: to refactor - join data for 2 usoses and data not connected well
-                pipeline = [{'$match': {'unit_id': int(unit)}}, {
+                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: parameters[constants.USOS_ID]}}, {
                     '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
                                 'as': 'courses_classtypes'}}]
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
