@@ -12,7 +12,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
             main.callLecturers(function(data){
                 if (data.status == 'success'){
                     $('#page').html(template(data));
-                    $('#lecturers-table').DataTable();
+                    $('#lecturers-table').DataTable(main.getDataDatableConfig());
 
                     bindModals();
                 } else {

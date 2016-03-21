@@ -252,6 +252,35 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             callRegisterUsos: function(usosId){
                 registerUsos(usosId);
+            },
+            getDataDatableConfig: function(){
+                return {
+                    paging: false,
+                    "language": {
+                        "decimal":        "",
+                        "emptyTable":     "Brak danych do wyświetlenia",
+                        "info":           "_START_ do _END_ z _TOTAL_ wierszy",
+                        "infoEmpty":      "0 do 0 z 0 wierszy",
+                        "infoFiltered":   "(filtered from _MAX_ total entries)",
+                        "infoPostFix":    "",
+                        "thousands":      ",",
+                        "lengthMenu":     "Pokaż _MENU_ wierszy",
+                        "loadingRecords": "Wszytuję...",
+                        "processing":     "Przetwarzam...",
+                        "search":         "Szukaj:",
+                        "zeroRecords":    "Nie znaleziono rekordów",
+                        "paginate": {
+                            "first":      "Pierwszy",
+                            "last":       "Ostatni",
+                            "next":       "Następny",
+                            "previous":   "Poprzedni"
+                        },
+                        "aria": {
+                            "sortAscending":  ": activate to sort column ascending",
+                            "sortDescending": ": activate to sort column descending"
+                        }
+                    }
+                };
             }
         };
 

@@ -13,7 +13,7 @@ function($, Handlebars, main, tpl, tplError, datatables) {
                     $('#page').html(templateError({'message': data.message}));
                 }
 
-                $('#terms-table').DataTable();
+                $('#terms-table').DataTable(main.getDataDatableConfig());
 
             });
             
