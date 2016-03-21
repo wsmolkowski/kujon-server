@@ -37,11 +37,11 @@
             <ul class="nav navbar-nav navbar-right">
                 <li id="spinner"><a class="fa fa-spinner fa-pulse"></a></li>
                 {{#if USER_LOGGED }}
-                <li><a href="{{API_URL}}/authentication/logout" class="login-button"><img src="static/img/logout.png" width="24px"> Wyloguj</a></li>
+                <li><a href="{{API_URL}}/authentication/logout" class="login-button"><i class="fa fa-sign-out"></i> Wyloguj</a></li>
                 {{else}}
                 <li class="dropdown" href="#login">
                     <a href="{{API_URL}}/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                       aria-haspopup="true" aria-expanded="false"><img src="static/img/login.png" width="24px"> Zaloguj <span class="caret"></span></a>
+                       aria-haspopup="true" aria-expanded="false"><i class="fa fa-sign-in"></i> Zaloguj <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="{{API_URL}}/authentication/google" class="fa fa-google-plus login-button"> przez Google</a></li>
                         <li><a href="{{API_URL}}/authentication/facebook" class="fa fa-facebook-official login-button"> przez Facebook</a></li>
