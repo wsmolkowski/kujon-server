@@ -6,6 +6,7 @@ import oauth2 as oauth
 import tornado.gen
 from commons import handlers, constants, settings
 from commons.mixins.JSendMixin import JSendMixin
+from emailqueue.queues import MongoDbEmailQueue
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
@@ -75,6 +76,22 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             if u[key] == value:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
+
+    _email_queue = None
+    @property
+    def email_queue(self):
+        if not self._email_queue:
+            self._email_queue = MongoDbEmailQueue(
+                smtp_host=settings.SMTP_HOST,
+                smtp_port=settings.SMTP_PORT,
+                smtp_user=settings.SMTP_USER,
+                smtp_password=settings.SMTP_PASSWORD,
+                mongodb_uri=settings.MONGODB_URI,
+                mongodb_collection=constants.COLLECTION_EMAIL_QUEUE,
+                mongodb_database=settings.MONGODB_NAME,
+                queue_maxsize=0
+            )
+        return self._email_queue
 
 
 class UsosesApi(BaseHandler):

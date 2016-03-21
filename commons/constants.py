@@ -74,6 +74,7 @@ COLLECTION_TT = "tts"
 COLLECTION_JOBS_QUEUE = "jobs_queue"
 COLLECTION_JOBS_LOG = "jobs_queue_log"
 COLLECTION_STATISTICS_HISTORY = 'statistic_history'
+COLLECTION_EMAIL_QUEUE = 'email_queue'
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data

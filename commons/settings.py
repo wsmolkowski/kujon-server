@@ -31,3 +31,8 @@ CALLBACK_URL = "{0}/authentication/verify".format(DEPLOY_WEB)
 UNICODE = "UTF-8"
 
 LOGIN_URL = "{0}/#login".format(DEPLOY_WEB)       # here user will be redirected when not logged in attempt for authenticated service
+
+SMTP_HOST = 'smtp.gmail.com'
+SMTP_PORT = 587
+SMTP_USER = 'smtp_user'
+SMTP_PASSWORD = 'smtp_password'
