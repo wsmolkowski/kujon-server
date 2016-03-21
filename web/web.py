@@ -6,7 +6,7 @@ import tornado.ioloop
 import tornado.web
 from tornado.options import parse_command_line
 
-from handlers import web, authentication
+from handlers import web
 from commons import settings, utils
 
 utils.initialize_logging('web_server')
@@ -26,11 +26,6 @@ class Application(tornado.web.Application):
         __handlers = [
             (r"/", web.MainHandler),
             (r"/config", web.ApplicationConfigHandler),
-            (r"/authentication/logout", authentication.LogoutHandler),
-            (r"/authentication/register", authentication.UsosRegisterHandler),
-            (r"/authentication/verify", authentication.UsosVerificationHandler),
-            (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
-            (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
         ]
 
         __settings = dict(

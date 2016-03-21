@@ -8,8 +8,16 @@ from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.tt import TTApi
 from handlers.terms import TermsApi, TermApi
 from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
+from handlers import authentication
+
 
 HANDLERS = [
+    (r"/authentication/logout", authentication.LogoutHandler),
+    (r"/authentication/register", authentication.UsosRegisterHandler),
+    (r"/authentication/verify", authentication.UsosVerificationHandler),
+    (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
+    (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
+
     (r"/api/usoses", UsosesApi),
 
     (r"/api/users/", UserInfoApi),

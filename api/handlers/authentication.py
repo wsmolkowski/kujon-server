@@ -22,7 +22,7 @@ COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKE
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie(constants.USER_SECURE_COOKIE)
-        self.redirect('/')
+        self.redirect(settings.DEPLOY_WEB)
 
 
 class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
@@ -31,7 +31,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_WEB + '/authentication/facebook',
+                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 client_secret=self.settings['facebook_oauth']['secret'],
                 code=self.get_argument('code'),
@@ -60,10 +60,10 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect('/#home')
+            self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_WEB + '/authentication/facebook',
+                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 scope=['public_profile', 'email', 'user_friends'],
                 response_type='code',
@@ -76,7 +76,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_WEB + '/authentication/google',
+                redirect_uri=settings.DEPLOY_API + '/authentication/google',
                 code=self.get_argument('code'))
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
@@ -104,11 +104,11 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                                    tornado.escape.json_encode(json_util.dumps(user_doc)),
                                    constants.COOKIE_EXPIRES_DAYS)
 
-            self.redirect('/#home')
+            self.redirect(settings.DEPLOY_WEB + '/#home')
 
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_WEB + '/authentication/google',
+                redirect_uri=settings.DEPLOY_API + '/authentication/google',
                 client_id=self.settings['google_oauth']['key'],
                 scope=['profile', 'email'],
                 response_type='code',
@@ -225,6 +225,6 @@ class UsosVerificationHandler(BaseHandler):
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-            self.redirect('/#home')
+            self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
-            self.redirect('/')
+            self.redirect(settings.DEPLOY_WEB )

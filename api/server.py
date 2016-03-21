@@ -8,7 +8,6 @@ from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 from tornado.options import define, parse_command_line
 
-from commons.usosutils.usoscrawler import UsosCrawler
 from commons import settings, constants, utils
 from handlers_list import HANDLERS
 
