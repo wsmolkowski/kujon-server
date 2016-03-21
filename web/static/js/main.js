@@ -114,6 +114,14 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(buildApiUrl('/api/usoses'), callback);
         };
 
+        function friendssuggestion(callback){
+            callAjaxGet(buildApiUrl('/api/friends/suggestions/'), callback);
+        };
+
+        function friends(callback){
+            callAjaxGet(buildApiUrl('/api/friends/'), callback);
+        };
+
         function users(callback){
             callAjaxGet(buildApiUrl('/api/users/'), callback);
         };
@@ -200,6 +208,12 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             callUsoses: function(callback){
                 usoses(callback);
+            },
+            callFriendsSuggestion: function(callback){
+                friendssuggestion(callback);
+            },
+            callFriends: function(callback){
+                friends(callback);
             },
             callUsers: function(callback){
                 users(callback);

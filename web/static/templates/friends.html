@@ -1,24 +1,52 @@
 <div class="panel panel-default">
+    <div class="panel-heading col-xs-6">
+        <h4>Osoby, które możesz znać</h4>
+    </div>
+    <div class="panel-heading col-xs-6">
+        <h4>Znajomi</h4>
+    </div>
     <div class="panel-body">
-        <table class="table table-hover table-responsive">
-            <caption>Znajomi</caption>
+        <div class="col-xs-6">
+        <table id="suggested-table" class="table table-hover table-responsive">
             <thead>
-                <th>Imię</th>
-                <th>Nazwisko</th>
-                <th>User Id</th>
+            <th>Osoba</th>
+            <th>Zajęcia</th>
+            <th></th>
             </thead>
             <tbody>
-            {{#data}}
+            {{#suggestiondata}}
             <tr>
-                <td>{{first_name}}</td>
-                <td>{{last_name}}</td>
-                <td>{{user_id}}</td>
+                <td><a class="btn btn-link friend-btn" type="button" data-friendId="{{user_id}}">{{last_name}} {{first_name}}</a></td>
+                <td>13</td>
                 <td>
-                    <button class="btn btn-primary btn-danger" onclick="friends_remove({{user_id}});">Usuń</button>
+                    <a class="btn btn-primary btn-xs">Dodaj znajomego</a>
+                    <a class="btn btn-default btn-xs">Nie znam</a>
                 </td>
             </tr>
-            {{/data}}
+            {{/suggestiondata}}
             </tbody>
         </table>
+        </div>
+        <div class="col-xs-6">
+        <table id="friends-table" class="table table-hover table-responsive">
+            <thead>
+            <th>Nazwisko</th>
+            <th></th>
+            <th></th>
+            </thead>
+            <tbody>
+            {{#friendsdata}}
+            <tr>
+                <td><a class="btn btn-link friend-btn" type="button" data-friendId="{{user_id}}">{{last_name}} {{first_name}}</a></td>
+                <td>
+                    <a class="btn btn-danger btn-xs">Usuń</a>
+                </td>
+            </tr>
+            {{/friendsdata}}
+            </tbody>
+        </table>
+        </div>
     </div>
 </div>
+
+<div id="modalWrapper"></div>
