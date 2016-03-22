@@ -19,6 +19,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 } else {
                     $('#page').html(templateError(data));
                 }
+                $('#students-table').DataTable(main.getDataDatableConfig());
             });
 
             function bindListeners(){
@@ -110,7 +111,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                             $(modalBodyId).html(templateError({'message': userInfo.message}));
                         }
                     });
-
                 });
             }
         }

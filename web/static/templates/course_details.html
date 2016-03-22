@@ -79,15 +79,19 @@
   {{/groups}}
   <tr><td>Studenci</td>
     <td>
-        <table id="students-table{{course_id}}" class="table table-hover table-responsive">
+        <div class="collapse" id="stu{{course_id}}">
+            <div class="well">
                 {{#participants}}
-                <tr>
                     <p class="btn btn-link user-btn" type="button" data-userId="{{user_id}}">
                         {{last_name}} {{first_name}}
-                    </p>
-                </tr>
+                    </p><br>
                 {{/participants}}
-        </table>
+            </div>
+        </div>
+        <a class="btn btn-default collapsed" data-toggle="collapse" href="#stu{{course_id}}">
+            <span class="if-collapsed">Pokaż studentów</span>
+            <span class="if-not-collapsed">Ukryj studentów</span>
+        </a>
     </td>
   </tr>
 </tbody>
