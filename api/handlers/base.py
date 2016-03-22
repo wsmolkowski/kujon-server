@@ -79,3 +79,11 @@ class UsosesApi(BaseHandler):
         data = yield self.get_usoses(show_encrypted=True)
 
         self.success(data)
+
+
+class DefaultErrorHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        self.fail('Przepraszamy, ale podany adres nie istnieje.')
