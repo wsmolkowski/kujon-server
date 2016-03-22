@@ -4,12 +4,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/index.html'], function($
         render: function() {
             var template = Handlebars.compile(tpl);
 
-            var data = {
-                hello: 'World'              
-            };
-            
-            $('#page').html(template(data));
-            
+            $.when(main.init()).then(function(){
+                var config = main.getConfig();
+                $('#page').html(template(config));
+            });
         }
     }    
 });
