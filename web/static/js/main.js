@@ -167,7 +167,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function registerUsos(usosId){
-            var url = buildWebUrl('/authentication/register');
+            var url = buildApiUrl('/authentication/register');
             var data = {
                 'usos_id': usosId
             }
