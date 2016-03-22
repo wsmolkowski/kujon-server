@@ -26,7 +26,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
 
                     main.callCourseEditionDetails(courseId, termId, function(courseInfo){
                         if (courseInfo.status == 'success'){
-
                             courseInfo.data['courseId'] = courseId;
                             var htmlModal = templateCourseModal(courseInfo.data);
 
@@ -39,15 +38,12 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
                                 $('#modalWrapper').html();
                                 $(modalId).hide();
                             });
-
                         } else {
                             $(modalId).modal('show');
                             $(modalBodyId).html(templateError({'message': userInfo.message}));
                         }
                     });
-
                 });
-
             }
         }
     }    

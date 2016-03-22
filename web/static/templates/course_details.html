@@ -79,14 +79,16 @@
   {{/groups}}
   <tr><td>Studenci</td>
     <td>
-    {{#participants}}
-      <button class="btn btn-link user-btn" type="button" data-userId="{{user_id}}">
-        {{last_name}} {{first_name}}
-      </button><br>
-    {{/participants}}
+        <table id="students-table{{course_id}}" class="table table-hover table-responsive">
+                {{#participants}}
+                <tr>
+                    <p class="btn btn-link user-btn" type="button" data-userId="{{user_id}}">
+                        {{last_name}} {{first_name}}
+                    </p>
+                </tr>
+                {{/participants}}
+        </table>
     </td>
   </tr>
-
-
 </tbody>
 </table>
