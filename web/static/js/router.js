@@ -13,33 +13,22 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
                 });
-
+            } else if (main.isUserLoggedIn() == false) {
+                require(['lib/pages/index'], function(page) {
+                    page.render();
+                    main.hideSpinner(); //schowaj kręcacz (?)
+                });
             } else {
 
                 require(['lib/pages/'+hash], function(page) {
-                    if (hash == 'index'){
-                        page.render();
-                        main.hideSpinner(); //schowaj kręcacz (?)
-                    } else {
-                        if (main.isUserLoggedIn() == false){
-                            setActiveLink('home');
-                        } else {
-                            page.render();
-                            main.hideSpinner(); //schowaj kręcacz (?)
-                        }
-
-                        $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
-                        $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
-                    }
-
+                    page.render();
+                    main.hideSpinner(); //schowaj kręcacz (?)
+                    $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+                    $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
                 });
             }
-
         });
-
-
     }
-
 
     crossroads.addRoute('', function() {
         setActiveLink('index');
