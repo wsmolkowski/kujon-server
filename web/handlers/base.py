@@ -32,5 +32,6 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-
-        self.redirect('/#404')
+        data = self.template_data()
+        data['message'] = 'Przepraszamy ale strona o podanym adresie nie istnieje.'
+        self.render('error.html', **data)

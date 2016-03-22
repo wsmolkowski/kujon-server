@@ -9,14 +9,10 @@ import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
-from bson import json_util
 
 from base import BaseHandler
 from commons import constants, settings
 from crawler import job_factory
-
-COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                 constants.USOS_PAIRED)
 
 
 class LogoutHandler(BaseHandler):
@@ -39,7 +35,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'email': access['email']},
-                COOKIE_FIELDS)
+                self._COOKIE_FIELDS)
 
             if not user_doc:
                 user = dict()
@@ -49,16 +45,13 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user[constants.USER_EMAIL] = access['email']
                 user[constants.USOS_PAIRED] = False
                 user[constants.USER_CREATED] = datetime.now()
-                user[constants.USOS_URL] = None
 
                 user_doc = yield motor.Op(self.db.users.insert, user)
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
-                                                                              COOKIE_FIELDS)
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
+                                                                              self._COOKIE_FIELDS)
+            yield self.reset_user_cookie(user_doc)
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
@@ -84,7 +77,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {'email': user['email']},
-                COOKIE_FIELDS)
+                self._COOKIE_FIELDS)
 
             if not user_doc:
                 userToInsert = dict()
@@ -99,10 +92,8 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
-                                                                              COOKIE_FIELDS)
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
+                                                                          self._COOKIE_FIELDS)
+            yield self.reset_user_cookie(user_doc)
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
 
@@ -179,15 +170,34 @@ class UsosRegisterHandler(BaseHandler):
 
 
 class UsosVerificationHandler(BaseHandler):
+
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         # oauth_token_key = self.get_argument('oauth_token')
-        oauth_verifier = self.get_argument('oauth_verifier')
-
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
+
+        if self.get_argument('error', False):
+            updated_user = user_doc
+            updated_user[constants.USOS_PAIRED] = False
+            updated_user[constants.ACCESS_TOKEN_SECRET] = None
+            updated_user[constants.ACCESS_TOKEN_KEY] = None
+            updated_user[constants.UPDATE_TIME] = datetime.now()
+            updated_user[constants.OAUTH_VERIFIER] = None
+
+            user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
+                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
+
+            logging.error('user usos veryfication error and db updated with {0}'.format(user_doc_updated))
+
+            yield self.reset_user_cookie()
+
+            self.fail('Autoryzacja z wybrany systemem USOS nie powiodła się.')
+            return
+
+        oauth_verifier = self.get_argument('oauth_verifier')
 
         if user_doc:
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
@@ -215,16 +225,10 @@ class UsosVerificationHandler(BaseHandler):
 
             logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, COOKIE_FIELDS)
-
-            self.clear_cookie(constants.USER_SECURE_COOKIE)
-            self.set_secure_cookie(constants.USER_SECURE_COOKIE,
-                                   tornado.escape.json_encode(json_util.dumps(user_doc)),
-                                   constants.COOKIE_EXPIRES_DAYS)
+            yield self.reset_user_cookie()
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
-            self.redirect(settings.DEPLOY_WEB )
+            self.redirect(settings.DEPLOY_WEB)

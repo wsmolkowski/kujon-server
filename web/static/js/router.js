@@ -13,7 +13,7 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
                 });
-            } else if (main.isUserLoggedIn() == false && hash != '404') {
+            } else if (main.isUserLoggedIn() == false) {
                 require(['lib/pages/index'], function(page) {
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
@@ -102,14 +102,6 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     crossroads.addRoute('home', function() {
         setActiveLink('home');
-    });
-
-    crossroads.addRoute('disclaimer', function() {
-        setActiveLink('disclaimer');
-    });
-
-    crossroads.addRoute('404', function() {
-        setActiveLink('404');
     });
 
     function parseHash(newHash, oldHash) {
