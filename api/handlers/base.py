@@ -4,12 +4,16 @@ import urlparse
 
 import oauth2 as oauth
 import tornado.gen
+from bson import json_util
+
 from commons import handlers, constants, settings
 from commons.mixins.JSendMixin import JSendMixin
 from emailqueue.queues import MongoDbEmailQueue
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
+    _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+                      constants.USOS_PAIRED)
 
     @property
     def crawler(self):
@@ -70,12 +74,22 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             )
         return self._email_queue
 
+    @tornado.gen.coroutine
+    def reset_user_cookie(self, user_doc=None):
+        if not user_doc:
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, self._COOKIE_FIELDS)
+
+        self.clear_cookie(constants.USER_SECURE_COOKIE)
+        self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+                               tornado.escape.json_encode(json_util.dumps(user_doc)),
+                               constants.COOKIE_EXPIRES_DAYS)
+
 
 class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-
         data = yield self.get_usoses(show_encrypted=True)
 
         self.success(data)

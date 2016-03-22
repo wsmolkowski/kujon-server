@@ -63,7 +63,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 type: 'POST',
                 url: request_url,
                 data: JSON.stringify(jsonData),
-                contentType: "application/json",
+                //contentType: "application/json",
                 dataType: "json",
                 xhrFields: {
                     withCredentials: true
