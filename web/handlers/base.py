@@ -26,3 +26,11 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
             'USER_LOGGED': True if user else False
         }
+
+
+class DefaultErrorHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        self.redirect('/#404')

@@ -7,6 +7,8 @@ import tornado.web
 from tornado.options import parse_command_line
 
 from handlers import web
+from handlers.base import DefaultErrorHandler
+
 from commons import settings, utils
 
 utils.initialize_logging('web_server')
@@ -37,7 +39,8 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret=settings.COOKIE_SECRET,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
-            facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET}
+            facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
+            default_handler_class=DefaultErrorHandler,
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)

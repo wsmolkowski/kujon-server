@@ -13,7 +13,7 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
                 });
-            } else if (main.isUserLoggedIn() == false) {
+            } else if (main.isUserLoggedIn() == false && hash != '404') {
                 require(['lib/pages/index'], function(page) {
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
@@ -102,6 +102,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
     crossroads.addRoute('home', function() {
         setActiveLink('home');
+    });
+
+    crossroads.addRoute('404', function() {
+        setActiveLink('404');
     });
 
     function parseHash(newHash, oldHash) {
