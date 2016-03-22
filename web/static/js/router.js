@@ -104,6 +104,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('home');
     });
 
+    crossroads.addRoute('disclaimer', function() {
+        setActiveLink('disclaimer');
+    });
+
     crossroads.addRoute('404', function() {
         setActiveLink('404');
     });
