@@ -115,6 +115,11 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('home');
     });
 
+    crossroads.addRoute('disclaimer', function() {
+        setActiveLink('disclaimer');
+    });
+
+
     function parseHash(newHash, oldHash) {
         crossroads.parse(newHash); 
     }
