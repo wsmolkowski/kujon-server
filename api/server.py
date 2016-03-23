@@ -9,8 +9,8 @@ from tornado.log import enable_pretty_logging
 from tornado.options import define, parse_command_line
 
 from commons import settings, constants, utils
-from handlers_list import HANDLERS
 from handlers.base import DefaultErrorHandler
+from handlers_list import HANDLERS
 
 utils.initialize_logging('api_server')
 
@@ -37,6 +37,7 @@ class Application(tornado.web.Application):
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
             default_handler_class=DefaultErrorHandler,
+            xheaders=True,
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)

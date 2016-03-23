@@ -190,11 +190,12 @@ class UsosVerificationHandler(BaseHandler):
             user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
 
-            logging.error('user usos veryfication error and db updated with {0}'.format(user_doc_updated))
+            logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
+                                                                                        user_doc_updated))
 
             yield self.reset_user_cookie()
 
-            self.fail('Autoryzacja z wybrany systemem USOS nie powiodła się.')
+            self.fail('Autoryzacja z wybranym systemem USOS nie powiodła się.')
             return
 
         oauth_verifier = self.get_argument('oauth_verifier')

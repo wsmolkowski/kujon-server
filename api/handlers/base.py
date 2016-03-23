@@ -5,10 +5,10 @@ import urlparse
 import oauth2 as oauth
 import tornado.gen
 from bson import json_util
+from emailqueue.queues import MongoDbEmailQueue
 
 from commons import handlers, constants, settings
 from commons.mixins.JSendMixin import JSendMixin
-from emailqueue.queues import MongoDbEmailQueue
 
 
 class BaseHandler(handlers.CommonHandler, JSendMixin):
@@ -29,16 +29,15 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
         user_doc = self.get_current_user()
 
         if not user_doc:
-            usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
-            mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
+            # usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
+            # mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
             atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
             ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MOBILE_ID: mobile_id,
-                                                                           constants.ACCESS_TOKEN_SECRET: atk,
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_SECRET: atk,
                                                                            constants.ACCESS_TOKEN_KEY: ats})
         if not user_doc or not user_doc['usos_paired']:
-            raise tornado.web.HTTPError(400, "Request not authenticated..")
+            raise tornado.web.HTTPError(400, "Request not authenticated.")
 
         raise tornado.gen.Return(user_doc)
 
