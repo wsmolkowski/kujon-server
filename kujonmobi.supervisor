@@ -1,0 +1,52 @@
+
+[program:kujon-api-8000]
+command=python /opt/kujon.mobi/current/api/api.py --port=8000
+stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+
+[program:kujon-api-8001]
+command=python /opt/kujon.mobi/current/api/api.py --port=8001
+stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+
+[program:kujon-api-8002]
+command=python /opt/kujon.mobi/current/api/api.py --port=8002
+stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+
+[program:kujon-api-8003]
+command=python /opt/kujon.mobi/current/api/api.py --port=8003
+stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+
+[program:kujon-web-8004]
+command=python /opt/kujon.mobi/current/api/api.py --port=8004
+stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+
+[program:kujon-web-8005]
+command=python /opt/kujon.mobi/current/api/api.py --port=8005
+stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+
+[program:kujon-web-8006]
+command=python /opt/kujon.mobi/current/api/api.py --port=8006
+stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+
+[program:kujon-web-8007]
+command=python /opt/kujon.mobi/current/api/api.py --port=8007
+stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+
+[program:kujon-scheduler]
+command=python /opt/kujon.mobi/current/scheduler/scheduler.py
+stderr_logfile = /var/log/kujon.mobi/kujon-scheduler-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-scheduler-stdout.log
+
+[program:kujon-crawler]
+command=python /opt/kujon.mobi/current/crawler/crawler.py
+stderr_logfile = /var/log/kujon.mobi/kujon-crawler-stderr.log
+stdout_logfile = /var/log/kujon.mobi/kujon-crawler-stdout.log
+
+
