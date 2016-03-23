@@ -6,15 +6,13 @@ import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
-from tornado.options import define, parse_command_line
+from tornado.options import parse_command_line, define, options
 
-from commons import settings, constants, utils
+from commons import settings, constants
 from handlers.base import DefaultErrorHandler
 from handlers_list import HANDLERS
 
-utils.initialize_logging('api_server')
-
-
+define("port", default=settings.API_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
@@ -33,7 +31,7 @@ class Application(tornado.web.Application):
             autoreload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
             compress_response=settings.COMPRESS_RESPONSE,
-            cookie_secret=settings.COOKIE_SECRET,
+            cookie_secret=options.cookie_secret,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
             default_handler_class=DefaultErrorHandler,
@@ -64,7 +62,7 @@ def main():
     prepare_environment()
 
     application = Application()
-    application.listen(settings.API_PORT, address=settings.SITE_DOMAIN)
+    application.listen(options.port, address=settings.SITE_DOMAIN)
     logging.info(settings.DEPLOY_API)
 
     IOLoop.instance().start()

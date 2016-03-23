@@ -4,13 +4,14 @@ import os
 import motor
 import tornado.ioloop
 import tornado.web
-from tornado.options import parse_command_line
+from tornado.options import parse_command_line, define, options
 
-from commons import settings, utils
+from commons import settings
 from handlers import web
 from handlers.base import DefaultErrorHandler
 
-utils.initialize_logging('web_server')
+define("port", default=settings.WEB_PORT, help="run on the given port", type=int)
+define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
@@ -36,7 +37,7 @@ class Application(tornado.web.Application):
             compress_response=settings.COMPRESS_RESPONSE,
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            cookie_secret=settings.COOKIE_SECRET,
+            cookie_secret=options.cookie_secret,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
             default_handler_class=DefaultErrorHandler,
@@ -52,6 +53,6 @@ if __name__ == "__main__":
     parse_command_line()
 
     application = Application()
-    application.listen(settings.WEB_PORT, address=settings.SITE_DOMAIN)
+    application.listen(options.port, address=settings.SITE_DOMAIN)
     logging.info(settings.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()
