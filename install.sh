@@ -2,7 +2,6 @@
 
 
 LOGDIR="/var/log/kujon.mobi"
-CONFDIR="/etc/kujon.mobi"
 APPDIR="/opt/kujon.mobi"
 ORIGUSER="$USER"
 
@@ -32,10 +31,6 @@ sudo -E pip install -r requirements.txt
 # Create log directory and give $USER access to the folder
 sudo mkdir -p $LOGDIR
 sudo chown -hR $ORIGUSER $LOGDIR
-
-# Create config directory and give $USER access to the folder
-sudo mkdir -p $CONFDIR
-sudo chown -hR $ORIGUSER $CONFDIR
 
 # Create application directory and give $USER access to the folder
 sudo mkdir -p $APPDIR
