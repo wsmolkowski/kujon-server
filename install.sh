@@ -14,7 +14,6 @@ then
     sudo apt-get -y install python-setuptools
     sudo apt-get -y install libffi-dev  	# For python bcrypt package
     sudo apt-get -y install nginx 		# For reverse http server
-    sudo apt-get -y install git			# For code lookup
     sudo apt-get -y install npm			# For JS package management
     sudo apt-get -y install python-pip		# For Python package management
     # Install pip if required
