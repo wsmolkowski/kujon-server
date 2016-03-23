@@ -13,7 +13,7 @@ var require = {
         "jquery-cookie":        "static/bower_components/jquery.cookie/jquery.cookie",
         "fullcalendar":         "static/bower_components/fullcalendar/fullcalendar.min",
         "fullcalendarpl":       "static/bower_components/fullcalendar/dist/lang/pl",
-        "datatables":           "static/bower_components/DataTables-1.10.11/js/jquery.dataTables.min",
+        "datatables":           "static/bower_components/datatables/media/js/jquery.dataTables.min",
         "templates":            "static/templates",
         "main":                 "static/js/main",
         "navigation":           "static/js/pages/navigation",
