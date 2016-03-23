@@ -1,13 +1,11 @@
+import logging
+
+from tornado.options import parse_command_line
+
 import chronos
-
-from tornado.log import enable_pretty_logging
-
-from commons import utils
-from commons.usosutils.usoscrawler import UsosCrawler
+from commons import settings
 from commons.mongo_util import reindex, save_statistics
-
-
-utils.initialize_logging('scheduler')
+from commons.usosutils.usoscrawler import UsosCrawler
 
 
 def update_time_table():
@@ -27,5 +25,9 @@ def init():
 
 if __name__ == '__main__':
 
-    enable_pretty_logging()
+    parse_command_line()
+
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     init()

@@ -52,6 +52,9 @@ class Application(tornado.web.Application):
 if __name__ == "__main__":
     parse_command_line()
 
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     application = Application()
     application.listen(options.port, address=settings.SITE_DOMAIN)
     logging.info(settings.DEPLOY_WEB)

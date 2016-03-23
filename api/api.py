@@ -5,7 +5,6 @@ import motor
 import tornado.ioloop
 import tornado.web
 from tornado.ioloop import IOLoop
-from tornado.log import enable_pretty_logging
 from tornado.options import parse_command_line, define, options
 
 from commons import settings, constants
@@ -53,11 +52,8 @@ def prepare_environment():
 
 def main():
     parse_command_line()
-    enable_pretty_logging()
-
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug("DEBUG MODE is ON")
 
     prepare_environment()
 
