@@ -40,5 +40,15 @@ export PYTHONPATH=$PYTHONPATH:/opt/kujon.mobi/current
 npm install bower -g
 ln -s /usr/bin/nodejs /usr/bin/node
 
+cd /tmp
+
+wget --header "Authorization: token 784d2329d009d54e3aa23b1926ab4b89f31e23be" --header "Accept: application/vnd.github.v3.raw" --output-document=bower.sh https://raw.githubusercontent.com/kujonmobi/kujon-server/release-v1.0/scripts/bower.sh
+chmod +x bower.sh
+
+wget --header "Authorization: token 784d2329d009d54e3aa23b1926ab4b89f31e23be" --header "Accept: application/vnd.github.v3.raw" --output-document=nginx.conf https://raw.githubusercontent.com/kujonmobi/kujon-server/release-v1.0/config/nginx.conf
+wget --header "Authorization: token 784d2329d009d54e3aa23b1926ab4b89f31e23be" --header "Accept: application/vnd.github.v3.raw" --output-document=supervisor.conf https://raw.githubusercontent.com/kujonmobi/kujon-server/release-v1.0/scripts/supervisor.conf
+wget --header "Authorization: token 784d2329d009d54e3aa23b1926ab4b89f31e23be" --header "Accept: application/vnd.github.v3.raw" --output-document=kujonmobi.supervisor https://raw.githubusercontent.com/kujonmobi/kujon-server/release-v1.0/scripts/kujonmobi.supervisor
+
+chow -R usr *
 
 echo -e "\n\nBootstrapping complete."
