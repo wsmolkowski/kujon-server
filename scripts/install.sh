@@ -4,6 +4,7 @@ LOGDIR="/var/log/kujon.mobi"
 APPDIR="/opt/kujon.mobi"
 ORIGUSER="$USER"
 
+apt-get update
 
 # Install any system packages (Ubuntu/Debian only) that are pre-requisites
 if uname -a | grep "Debian\|Ubuntu"
@@ -11,11 +12,12 @@ then
     echo -e "\n\nInstalling required system packages . . ."
     apt-get -y install gcc build-essential python-dev
     apt-get -y install python-setuptools
-    apt-get -y install libffi-dev  	# For python bcrypt package
+    apt-get -y install libffi-dev     	# For python bcrypt package
     apt-get -y install nginx 		    # For reverse http server
     apt-get -y install npm		    	# For JS package management
+    apt-get -y install git       		# For proper npm work
     apt-get -y install python-pip		# For Python package management
-    apt-get -y install curl    		#
+    # apt-get -y install curl    		#
     # Install pip if required
     if ! which pip; then
         easy_install pip

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+bower init
 bower install bootstrap --save
 bower install crossroads --save
 bower install hasher --save
