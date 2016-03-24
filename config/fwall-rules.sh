@@ -46,8 +46,8 @@ ${IPTABLES} -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
 echo " * allowing smtp on port 25"
 ${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 25 -j ACCEPT
 
-echo " * allowing submission on port 587"
-${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 587 -j ACCEPT
+#echo " * allowing submission on port 587"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 587 -j ACCEPT
 
 #echo " * allowing imaps on port 993"
 #${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 993 -j ACCEPT
