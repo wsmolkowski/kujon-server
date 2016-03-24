@@ -17,17 +17,20 @@ then
     apt-get -y install npm		    	# For JS package management
     apt-get -y install git       		# For proper npm work
     apt-get -y install python-pip		# For Python package management
-    # apt-get -y install curl    		#
-    # Install pip if required
-    if ! which pip; then
-        easy_install pip
-    fi
+    apt-get -y install supervisor		# For Python package management
 fi
 
 
 # Install all required Python packages
 echo -e "\n\nInstalled required Python packages with pip . . ."
--E pip install -r requirements.txt
+pip install tornado
+pip install oauth2
+pip install pycurl
+pip install pycrypto
+pip install emailqueue
+pip install pymongo
+pip install motor
+pip install tornado
 
 # Create log directory and give $USER access to the folder
 mkdir -p $LOGDIR
