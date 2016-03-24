@@ -43,6 +43,24 @@ ${IPTABLES} -A INPUT -p tcp --dport 80  -m state --state NEW -j ACCEPT
 echo " * allowing https on port 443"
 ${IPTABLES} -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
 
+echo " * allowing smtp on port 25"
+${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 25 -j ACCEPT
+
+echo " * allowing submission on port 587"
+${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 587 -j ACCEPT
+
+#echo " * allowing imaps on port 993"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 993 -j ACCEPT
+
+#echo " * allowing pop3s on port 995"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 995 -j ACCEPT
+
+#echo " * allowing imap on port 143"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 143 -j ACCEPT
+
+#echo " * allowing pop3 on port 110"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 110 -j ACCEPT
+
 echo " * allowing ping responses"
 ${IPTABLES} -A INPUT -p ICMP --icmp-type 8 -j ACCEPT
 
