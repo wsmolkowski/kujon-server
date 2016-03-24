@@ -12,12 +12,13 @@ then
     sudo apt-get -y install gcc build-essential python-dev
     sudo apt-get -y install python-setuptools
     sudo apt-get -y install libffi-dev  	# For python bcrypt package
-    sudo apt-get -y install nginx 		# For reverse http server
-    sudo apt-get -y install npm			# For JS package management
+    sudo apt-get -y install nginx 		    # For reverse http server
+    sudo apt-get -y install npm		    	# For JS package management
     sudo apt-get -y install python-pip		# For Python package management
+    sudo apt-get -y install curl    		#
     # Install pip if required
     if ! which pip; then
-        sudo easy_install-2.7 pip
+        sudo easy_install pip
     fi
 fi
 
@@ -38,6 +39,11 @@ sudo chown -hR $ORIGUSER $APPDIR
 #cp --no-clobber "config/cutthroat.conf" "${CONFDIR}/cutthroat.conf"
 # For a quickstart; ideally the DB should be placed elsewhere
 #cp --no-clobber "starter.db" "${DATADIR}/cutthroat.db"
+
+export PYTHONPATH=$PYTHONPATH:/opt/kujon.mobi/current
+
+sudo npm install bower -g
+sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 
 echo -e "\n\nBootstrapping complete."
