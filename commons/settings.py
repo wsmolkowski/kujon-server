@@ -19,7 +19,7 @@ DEBUG = True
 RELOAD = False
 COMPRESS_RESPONSE = True
 
-SITE_DOMAIN = "kujon.mobi"   # important for google and facebook authentication
+SITE_DOMAIN = "localhost"   # important for google and facebook authentication
 API_PORT = 8881
 DEPLOY_API = "http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
 
