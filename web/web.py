@@ -13,7 +13,6 @@ from handlers.base import DefaultErrorHandler
 define("port", default=settings.WEB_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
 
-
 class Application(tornado.web.Application):
 
     _db = None
