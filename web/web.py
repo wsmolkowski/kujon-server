@@ -56,6 +56,6 @@ if __name__ == "__main__":
         logging.getLogger().setLevel(logging.DEBUG)
 
     application = Application()
-    application.listen(options.port, address=settings.SITE_DOMAIN)
+    application.listen(options.port)
     logging.info(settings.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()

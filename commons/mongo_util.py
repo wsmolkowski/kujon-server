@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 import sys
 import traceback
 from pprint import pprint
@@ -7,6 +6,7 @@ from pprint import pprint
 import pymongo
 import tornado.gen
 import tornado.ioloop
+from datetime import datetime
 
 import constants
 import settings
@@ -144,8 +144,8 @@ def clean():
 if __name__ == "__main__":
     utils.initialize_logging('mongo_utils')
 
-    # clean()
-    # ensure_indexes()
-    # reindex()
+    clean()
+    ensure_indexes()
+    reindex()
     # print_statistics()
     # save_statistics()

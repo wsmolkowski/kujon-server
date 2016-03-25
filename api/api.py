@@ -58,7 +58,7 @@ def main():
     prepare_environment()
 
     application = Application()
-    application.listen(options.port, address=settings.SITE_DOMAIN)
+    application.listen(options.port)
     logging.info(settings.DEPLOY_API)
 
     IOLoop.instance().start()
