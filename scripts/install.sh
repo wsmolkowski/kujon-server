@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-LOGDIR="/var/log/kujon.mobi"
-APPDIR="/opt/kujon.mobi"
-ORIGUSER="$USER"
+USER="appuser"
+APPDIR="/home/$USER/kujon.mobi"
+LOGDIR=$APPDIR'/log/'
+
 
 apt-get update
 
@@ -40,7 +41,7 @@ chown -hR $ORIGUSER $LOGDIR
 mkdir -p $APPDIR
 chown -hR $ORIGUSER $APPDIR
 
-export PYTHONPATH=$PYTHONPATH:/opt/kujon.mobi/current
+export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 npm install bower -g
 ln -s /usr/bin/nodejs /usr/bin/node

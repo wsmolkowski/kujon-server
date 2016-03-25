@@ -1,31 +1,29 @@
 [program:kujon-api-8000]
-command=python /opt/kujon.mobi/current/api/api.py --port=8000
-stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+command=python /home/appuser/kujon.mobi/current/api/api.py --port=8000
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-api-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-api-stdout.log
 
 [program:kujon-api-8001]
-command=python /opt/kujon.mobi/current/api/api.py --port=8001
-stderr_logfile = /var/log/kujon.mobi/kujon-api-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-api-stdout.log
+command=python /home/appuser/kujon.mobi/current/api/api.py --port=8001
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-api-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-api-stdout.log
 
 [program:kujon-web-8002]
-command=python /opt/kujon.mobi/current/web/web.py --port=8002
-stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+command=python /home/appuser/kujon.mobi/current/web/web.py --port=8002
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-web-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-web-stdout.log
 
 [program:kujon-web-8003]
-command=python /opt/kujon.mobi/current/web/web.py --port=8003
-stderr_logfile = /var/log/kujon.mobi/kujon-web-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-web-stdout.log
+command=python /home/appuser/kujon.mobi/current/web/web.py --port=8003
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-web-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-web-stdout.log
 
 [program:kujon-scheduler]
-command=python /opt/kujon.mobi/current/scheduler/scheduler.py
-stderr_logfile = /var/log/kujon.mobi/kujon-scheduler-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-scheduler-stdout.log
+command=python /home/appuser/kujon.mobi/current/scheduler/scheduler.py
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-scheduler-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-scheduler-stdout.log
 
 [program:kujon-crawler]
-command=python /opt/kujon.mobi/current/crawler/crawler.py
-stderr_logfile = /var/log/kujon.mobi/kujon-crawler-stderr.log
-stdout_logfile = /var/log/kujon.mobi/kujon-crawler-stdout.log
-
-
+command=python /home/appuser/kujon.mobi/current/crawler/crawler.py
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-crawler-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-crawler-stdout.log
