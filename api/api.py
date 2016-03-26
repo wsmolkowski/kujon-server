@@ -67,7 +67,7 @@ def main():
         server = HTTPServer(application, ssl_options=ssl_ctx)
         server.listen(options.port)
     else:
-        application.listen(options.port, address=settings.SITE_DOMAIN)
+        application.listen(options.port)
 
     logging.info(settings.DEPLOY_API)
 

@@ -1,4 +1,4 @@
-MONGODB_URI = "mongodb://admin:devel@localmongoinstance/kujon-devel"
+MONGODB_URI = "mongodb://admin:devel@localhost"
 MONGODB_NAME = "kujon-devel"
 
 COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
@@ -19,7 +19,7 @@ DEBUG = True
 RELOAD = False
 COMPRESS_RESPONSE = True
 
-SITE_DOMAIN = "localhost"   # important for google and facebook authentication
+SITE_DOMAIN = "localhost:8881"   # important for google and facebook authentication
 API_PORT = 8881
 DEPLOY_API = "http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
 
