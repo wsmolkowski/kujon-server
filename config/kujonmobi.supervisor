@@ -27,3 +27,4 @@ stdout_logfile = /home/appuser/kujon.mobi/log/kujon-scheduler-stdout.log
 command=python /home/appuser/kujon.mobi/current/crawler/crawler.py
 stderr_logfile = /home/appuser/kujon.mobi/log/kujon-crawler-stderr.log
 stdout_logfile = /home/appuser/kujon.mobi/log/kujon-crawler-stdout.log
+
