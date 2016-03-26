@@ -1,5 +1,5 @@
-MONGODB_URI = "mongodb://localmongoinstance/usos-test2"
-MONGODB_NAME = "usos-test2"
+MONGODB_URI = "mongodb://admin:devel@localhost"
+MONGODB_NAME = "kujon-devel"
 
 COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 AES_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
