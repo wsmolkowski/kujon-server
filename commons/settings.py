@@ -1,4 +1,4 @@
-MONGODB_URI = "mongodb://admin:devel@localhost"
+MONGODB_URI = "mongodb://admin:devel@localhost/kujon-devel"
 MONGODB_NAME = "kujon-devel"
 
 COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
