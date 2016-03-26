@@ -1,9 +1,11 @@
 import logging
+import ssl
 import sys
 
 import motor
 import tornado.ioloop
 import tornado.web
+from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
@@ -58,7 +60,15 @@ def main():
     prepare_environment()
 
     application = Application()
-    application.listen(options.port)
+    if settings.SSL_CERT and settings.SSL_KEY:
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
+
+        server = HTTPServer(application, ssl_options=ssl_ctx)
+        server.listen(options.port)
+    else:
+        application.listen(options.port, address=settings.SITE_DOMAIN)
+
     logging.info(settings.DEPLOY_API)
 
     IOLoop.instance().start()

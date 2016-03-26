@@ -1,4 +1,4 @@
-MONGODB_URI = "mongodb://admin:devel@localhost/kujon-devel"
+MONGODB_URI = "mongodb://admin:devel@localmongoinstance/kujon-devel"
 MONGODB_NAME = "kujon-devel"
 
 COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
@@ -36,3 +36,6 @@ SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USER = 'smtp_user'
 SMTP_PASSWORD = 'smtp_password'
+
+SSL_CERT = None
+SSL_KEY = None
