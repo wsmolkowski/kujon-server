@@ -2,13 +2,13 @@
 
 import json
 import logging
-from datetime import datetime
 
 import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
+from datetime import datetime
 
 from base import BaseHandler
 from commons import constants, settings
@@ -27,7 +27,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_API + 'authentication/facebook',
+                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 client_secret=self.settings['facebook_oauth']['secret'],
                 code=self.get_argument('code'),
@@ -56,7 +56,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_API + 'authentication/facebook',
+                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 scope=['public_profile', 'email', 'user_friends'],
                 response_type='code',
@@ -69,7 +69,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_API + 'authentication/google',
+                redirect_uri=settings.DEPLOY_API + '/authentication/google',
                 code=self.get_argument('code'))
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
@@ -99,7 +99,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_API + 'authentication/google',
+                redirect_uri=settings.DEPLOY_API + '/authentication/google',
                 client_id=self.settings['google_oauth']['key'],
                 scope=['profile', 'email'],
                 response_type='code',
