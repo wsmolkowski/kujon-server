@@ -1,11 +1,8 @@
-# mongodb 3.2+
 tornado
-pymongo
-motor
-httplib2
 oauth2
 pycurl
 pycrypto
 emailqueue
-
-# https://github.com/whiteclover/chronos
+pymongo
+motor
+tornado

@@ -1,38 +1,46 @@
-MONGODB_URI = "mongodb://localmongoinstance/usos-test2"
-MONGODB_NAME = "usos-test2"
+import os
+from ConfigParser import RawConfigParser
 
-COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
-AES_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
+config = RawConfigParser()
 
-PROXY_URL = None
-PROXY_PORT = None
+if os.getenv('KUJON.MOBI.PROD', False):
+    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-prod.conf'))
+else:
+    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-dev.conf'))
 
-GOOGLE_CLIENT_ID = "245488701889-u3n2u20ekptiue8tlaltec5rdhsvanof.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "C8tEnY0XdhEc82Hlx5pBVp9u"
+MONGODB_URI = config.get('database', 'MONGODB_URI')
+MONGODB_NAME = config.get('database', 'MONGODB_NAME')
 
-FACEBOOK_CLIENT_ID = "435328606663469"
-FACEBOOK_CLIENT_SECRET = "3f2e953dbfebc98a2ea2fc888266f1c4"
+COOKIE_SECRET = config.get('application', 'COOKIE_SECRET')
+AES_SECRET = config.get('application', 'AES_SECRET')
 
-PROJECT_TITLE = "Kujon.mobi"
+PROJECT_TITLE = config.get('application', 'PROJECT_TITLE')
+DEBUG = config.getboolean('application', 'DEBUG')
+RELOAD = config.getboolean('application', 'RELOAD')
+COMPRESS_RESPONSE = config.getboolean('application', 'COMPRESS_RESPONSE')
+UNICODE = config.get('application', 'UNICODE')
 
-DEBUG = True
-RELOAD = False
-COMPRESS_RESPONSE = True
+PROXY_URL = config.get('proxy', 'PROXY_URL') if not config.get('proxy', 'PROXY_URL') else None
+PROXY_PORT = config.getint('proxy', 'PROXY_PORT') if not config.get('proxy', 'PROXY_PORT') else None
 
-SITE_DOMAIN = "localhost"   # important for google and facebook authentication
-API_PORT = 8881
-DEPLOY_API = "http://{0}:{1}".format(SITE_DOMAIN, API_PORT)
+GOOGLE_CLIENT_ID = config.get('social', 'GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = config.get('social', 'GOOGLE_CLIENT_SECRET')
+FACEBOOK_CLIENT_ID = config.get('social', 'FACEBOOK_CLIENT_ID')
+FACEBOOK_CLIENT_SECRET = config.get('social', 'FACEBOOK_CLIENT_SECRET')
 
-WEB_PORT = 8888
-DEPLOY_WEB = "http://{0}:{1}".format(SITE_DOMAIN, WEB_PORT)
+SITE_DOMAIN = config.get('deployment', 'SITE_DOMAIN')
+API_PORT = config.getint('deployment', 'API_PORT')
+DEPLOY_API = config.get('deployment', 'DEPLOY_API')
 
-CALLBACK_URL = "{0}/authentication/verify".format(API_PORT)
+WEB_PORT = config.getint('deployment', 'WEB_PORT')
+DEPLOY_WEB = config.get('deployment', 'DEPLOY_WEB')
+CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
+LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
-UNICODE = "UTF-8"
+SMTP_HOST = config.get('email', 'SMTP_HOST')
+SMTP_PORT = config.getint('email', 'SMTP_PORT')
+SMTP_USER = config.get('email', 'SMTP_USER')
+SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
-LOGIN_URL = "{0}/#login".format(API_PORT)       # here user will be redirected when not logged in attempt for authenticated service
-
-SMTP_HOST = 'smtp.gmail.com'
-SMTP_PORT = 587
-SMTP_USER = 'smtp_user'
-SMTP_PASSWORD = 'smtp_password'
+SSL_CERT = config.get('ssl', 'SSL_CERT') if not config.get('ssl', 'SSL_CERT') else None
+SSL_KEY = config.get('ssl', 'SSL_KEY') if not config.get('ssl', 'SSL_KEY') else None

@@ -30,7 +30,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         function buildConfig(){
             return $.ajax({
                     type: 'GET',
-                    url: 'http://localhost:8888/config',
+                    url: '/config',
+                    dataType: "json",
                     xhrFields: {
                       withCredentials: true
                     },
@@ -111,58 +112,58 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function usoses(callback){
-            callAjaxGet(buildApiUrl('/api/usoses'), callback);
+            callAjaxGet(buildApiUrl('/usoses'), callback);
         };
 
         function friendssuggestion(callback){
-            callAjaxGet(buildApiUrl('/api/friends/suggestions/'), callback);
+            callAjaxGet(buildApiUrl('/friends/suggestions/'), callback);
         };
 
         function friends(callback){
-            callAjaxGet(buildApiUrl('/api/friends/'), callback);
+            callAjaxGet(buildApiUrl('/friends/'), callback);
         };
 
         function users(callback){
-            callAjaxGet(buildApiUrl('/api/users/'), callback);
+            callAjaxGet(buildApiUrl('/users/'), callback);
         };
 
         function userInfo(userId, callback){
-            var request_url = buildApiUrl('/api/users/') + userId;
+            var request_url = buildApiUrl('/users/') + userId;
             callAjaxGet(request_url, callback);
         };
 
         function terms(callback){
-            callAjaxGet(buildApiUrl('/api/terms/'), callback);
+            callAjaxGet(buildApiUrl('/terms/'), callback);
         };
 
         function programmes(callback){
-            callAjaxGet(buildApiUrl('/api/programmes/'), callback);
+            callAjaxGet(buildApiUrl('/programmes/'), callback);
         };
 
         function grades(callback){
-            callAjaxGet(buildApiUrl('/api/grades/'), callback);
+            callAjaxGet(buildApiUrl('/grades/'), callback);
         };
 
         function courseseditions(callback){
-            callAjaxGet(buildApiUrl('/api/courseseditions/'), callback);
+            callAjaxGet(buildApiUrl('/courseseditions/'), callback);
         };
 
         function lecturers(callback){
-            callAjaxGet(buildApiUrl('/api/lecturers/'), callback);
+            callAjaxGet(buildApiUrl('/lecturers/'), callback);
         };
 
         function lecturerDetails(lecturerId, callback){
-            var request_url = buildApiUrl('/api/lecturers/') + lecturerId;
+            var request_url = buildApiUrl('/lecturers/') + lecturerId;
             callAjaxGet(request_url, callback);
         };
 
         function courseEditionDetails(courseId, termId, callback){
-            var request_url = buildApiUrl('/api/courseseditions/') + courseId + '/' + encodeURIComponent(termId);
+            var request_url = buildApiUrl('/courseseditions/') + courseId + '/' + encodeURIComponent(termId);
             callAjaxGet(request_url, callback);
         };
 
         function TT(start, callback) {
-            var request_url = buildApiUrl('/api/tt/') + start;
+            var request_url = buildApiUrl('/tt/') + start;
             callAjaxGet(request_url, callback);
         };
 

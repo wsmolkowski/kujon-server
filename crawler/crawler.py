@@ -1,17 +1,12 @@
 import logging
 from datetime import timedelta, datetime
 
-from bson.objectid import ObjectId
 import motor
 from tornado import queues, gen, ioloop
-from tornado.log import enable_pretty_logging
+from tornado.options import parse_command_line
 
-from commons import settings, constants, utils
-
-utils.initialize_logging('crawler')
-
+from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
-import job_factory
 
 QUEUE_MAXSIZE = 100
 SLEEP = 1
@@ -112,6 +107,11 @@ class MongoDbQueue(object):
 
 
 if __name__ == '__main__':
+    parse_command_line()
+
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     mq = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
