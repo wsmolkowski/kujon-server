@@ -4,9 +4,9 @@ from ConfigParser import RawConfigParser
 config = RawConfigParser()
 
 if os.getenv('KUJON.MOBI.PROD', False):
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'prod-settings.conf'))
+    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-prod.conf'))
 else:
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'dev-settings.conf'))
+    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-dev.conf'))
 
 MONGODB_URI = config.get('database', 'MONGODB_URI')
 MONGODB_NAME = config.get('database', 'MONGODB_NAME')
