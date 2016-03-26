@@ -121,3 +121,10 @@ def initialize_logging(logger_name):
     # re-get the log after logging is initialized
     global log
     log = logging.getLogger(__name__)
+
+
+def cookie_secret():
+    import base64
+    import uuid
+
+    print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
