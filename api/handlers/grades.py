@@ -13,6 +13,8 @@ class GradesForUserApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         grades = list()
 
@@ -91,6 +93,8 @@ class GradesForCourseAndTermApi(BaseHandler):
     def get(self, course_id, term_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         pipeline = {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]), constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}

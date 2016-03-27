@@ -21,6 +21,8 @@ class CourseEditionApi(BaseHandler):
     def get(self, course_id, term_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
                                                                            constants.USOS_ID: parameters[
@@ -106,6 +108,8 @@ class CoursesApi(BaseHandler):
     def get(self, course_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
                                                                            constants.USOS_ID: parameters[
@@ -135,6 +139,8 @@ class CoursesEditionsApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},

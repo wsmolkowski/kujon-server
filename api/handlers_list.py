@@ -1,3 +1,4 @@
+from handlers import authentication
 from handlers.base import UsosesApi
 from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi
 from handlers.faculties import FacultyByIdApi
@@ -5,11 +6,9 @@ from handlers.friends import FriendsSuggestionsApi, FriendsApi
 from handlers.grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.lecturers import LecturersApi, LecturerByIdApi
 from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
-from handlers.tt import TTApi
 from handlers.terms import TermsApi, TermApi
+from handlers.tt import TTApi
 from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
-from handlers import authentication
-
 
 HANDLERS = [
     (r"/authentication/logout", authentication.LogoutHandler),
@@ -18,35 +17,35 @@ HANDLERS = [
     (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
     (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
 
-    (r"/api/usoses", UsosesApi),
+    (r"/usoses", UsosesApi),
 
-    (r"/api/users/", UserInfoApi),
-    (r"/api/users/([^/]+)", UsersInfoByIdApi),
-    (r"/api/users_info_photos/([^/]+)", UserInfoPhotoApi),
+    (r"/users/", UserInfoApi),
+    (r"/users/([^/]+)", UsersInfoByIdApi),
+    (r"/users_info_photos/([^/]+)", UserInfoPhotoApi),
 
-    (r"/api/courseseditions/", CoursesEditionsApi),
-    (r"/api/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
-    (r"/api/courses/([^/]+)", CoursesApi),
+    (r"/courseseditions/", CoursesEditionsApi),
+    (r"/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
+    (r"/courses/([^/]+)", CoursesApi),
 
-    (r"/api/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
-    (r"/api/grades/", GradesForUserApi),
+    (r"/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
+    (r"/grades/", GradesForUserApi),
 
-    (r"/api/terms/", TermsApi),
-    (r"/api/terms/([^/]+)", TermApi),
+    (r"/terms/", TermsApi),
+    (r"/terms/([^/]+)", TermApi),
 
-    (r"/api/friends/suggestions/", FriendsSuggestionsApi),
-    (r"/api/friends/([^/]+)", FriendsApi),
-    (r"/api/friends/", FriendsApi),
+    (r"/friends/suggestions/", FriendsSuggestionsApi),
+    (r"/friends/([^/]+)", FriendsApi),
+    (r"/friends/", FriendsApi),
 
-    (r"/api/lecturers/", LecturersApi),
-    (r"/api/lecturers/([^/]+)", LecturerByIdApi),
+    (r"/lecturers/", LecturersApi),
+    (r"/lecturers/([^/]+)", LecturerByIdApi),
 
-    (r"/api/tt/([^/]+)", TTApi),
+    (r"/tt/([^/]+)", TTApi),
 
-    (r"/api/programmes/", ProgrammesApi),
-    (r"/api/programmes/([^/]+)", ProgrammesByIdApi),
+    (r"/programmes/", ProgrammesApi),
+    (r"/programmes/([^/]+)", ProgrammesByIdApi),
 
-    (r"/api/faculties/([^/]+)", FacultyByIdApi),
+    (r"/faculties/([^/]+)", FacultyByIdApi),
 
 ]
 

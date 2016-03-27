@@ -1,20 +1,19 @@
 import logging
+import ssl
 import sys
 
 import motor
 import tornado.ioloop
 import tornado.web
+from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from tornado.log import enable_pretty_logging
-from tornado.options import define, parse_command_line
+from tornado.options import parse_command_line, define, options
 
-from commons import settings, constants, utils
-from handlers_list import HANDLERS
+from commons import settings, constants
 from handlers.base import DefaultErrorHandler
+from handlers_list import HANDLERS
 
-utils.initialize_logging('api_server')
-
-
+define("port", default=settings.API_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
@@ -33,10 +32,11 @@ class Application(tornado.web.Application):
             autoreload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
             compress_response=settings.COMPRESS_RESPONSE,
-            cookie_secret=settings.COOKIE_SECRET,
+            cookie_secret=options.cookie_secret,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
             default_handler_class=DefaultErrorHandler,
+            xheaders=True,
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
@@ -54,16 +54,21 @@ def prepare_environment():
 
 def main():
     parse_command_line()
-    enable_pretty_logging()
-
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug("DEBUG MODE is ON")
 
     prepare_environment()
 
     application = Application()
-    application.listen(settings.API_PORT, address=settings.SITE_DOMAIN)
+    if settings.SSL_CERT and settings.SSL_KEY:
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
+
+        server = HTTPServer(application, ssl_options=ssl_ctx)
+        server.listen(options.port)
+    else:
+        application.listen(options.port)
+
     logging.info(settings.DEPLOY_API)
 
     IOLoop.instance().start()

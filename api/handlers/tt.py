@@ -1,9 +1,8 @@
 # coding=UTF-8
 
-from datetime import date, timedelta
-
 import tornado.web
 from bson.objectid import ObjectId
+from datetime import date, timedelta
 
 from base import BaseHandler
 from commons import constants
@@ -16,6 +15,8 @@ class TTApi(BaseHandler):
     def get(self, given_date):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         # checking if date is correct
         try:

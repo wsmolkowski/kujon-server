@@ -3,6 +3,7 @@
 import tornado.web
 from bson.objectid import ObjectId
 from datetime import date, datetime
+
 from base import BaseHandler
 from commons import constants
 
@@ -14,6 +15,8 @@ class TermsApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         terms = []
         terms_doc = []
@@ -47,6 +50,8 @@ class TermApi(BaseHandler):
     def get(self, term_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
             {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}, TERM_LIMIT_FIELDS)

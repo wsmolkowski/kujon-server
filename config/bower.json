@@ -1,0 +1,28 @@
+{
+  "name": "kujon-bower",
+  "description": "kujon-bower packages",
+  "main": "bower.json",
+  "moduleType": [],
+  "license": "",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "crossroads": "^0.12.2",
+    "hasher": "^1.2.0",
+    "requirejs": "^2.2.0",
+    "text": "requirejs-text#^2.0.14",
+    "handlebars": "^4.0.5",
+    "fullcalendar": "^2.6.1",
+    "jquery.cookie": "jquery-cookie#^1.4.1",
+    "datatables": "^1.10.11",
+    "font-awesome": "fontawesome#^4.5.0"
+  }
+}

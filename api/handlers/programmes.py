@@ -31,6 +31,8 @@ class ProgrammesApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
