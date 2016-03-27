@@ -44,7 +44,7 @@ class UsersInfoByIdApi(BaseHandler):
 
         #show url to photo
         if user_info['has_photo']:
-            user_info['has_photo'] = settings.DEPLOY_API + '/api/users_info_photos/' + str(user_info['has_photo'])
+            user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
         self.success(user_info)
 
