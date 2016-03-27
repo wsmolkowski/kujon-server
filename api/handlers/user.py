@@ -2,11 +2,13 @@
 
 import logging
 from base64 import b64decode
+
 import tornado.web
 from bson.objectid import ObjectId
-from commons.usosutils import usoshelper
+
 from base import BaseHandler
 from commons import constants, settings
+from commons.usosutils import usoshelper
 from commons.usosutils import usosinstances
 
 LIMIT_FIELDS = (
@@ -22,6 +24,8 @@ class UsersInfoByIdApi(BaseHandler):
     def get(self, user_info_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if user_info:
@@ -51,6 +55,8 @@ class UserInfoApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(parameters[constants.MONGO_ID])},
                                                                   LIMIT_FIELDS_USER)

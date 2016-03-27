@@ -2,10 +2,11 @@
 
 import tornado.web
 from bson.objectid import ObjectId
-from commons.usosutils import usoshelper
+
 from base import BaseHandler
 from commons import constants
 from commons import settings
+from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
@@ -18,6 +19,8 @@ class LecturersApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         courses = {}
         lecturers_returned = {}
@@ -55,6 +58,8 @@ class LecturerByIdApi(BaseHandler):
     def get(self, user_info_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:

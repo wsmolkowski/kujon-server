@@ -12,6 +12,8 @@ class FacultyByIdApi(BaseHandler):
     def get(self, fac_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
                                                                           constants.USOS_ID: parameters[

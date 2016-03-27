@@ -37,7 +37,7 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_SECRET: atk,
                                                                            constants.ACCESS_TOKEN_KEY: ats})
         if not user_doc or not user_doc['usos_paired']:
-            raise tornado.web.HTTPError(400, "Request not authenticated.")
+            raise tornado.gen.Return(self.fail("Request not authenticated."))
 
         raise tornado.gen.Return(user_doc)
 

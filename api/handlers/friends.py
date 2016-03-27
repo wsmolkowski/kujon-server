@@ -13,6 +13,8 @@ class FriendsApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         friends = []
         friends_returned = []
@@ -74,6 +76,8 @@ class FriendsApi(BaseHandler):
     def delete(self, user_info_id):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
                                                                              constants.MONGO_ID]),
@@ -94,6 +98,8 @@ class FriendsSuggestionsApi(BaseHandler):
     def get(self):
 
         parameters = yield self.get_parameters()
+        if not parameters:
+            return
 
         user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
 
