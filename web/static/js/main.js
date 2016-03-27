@@ -243,9 +243,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callLecturerDetails: function(lecturerId, callback){
                 lecturerDetails(lecturerId, callback);
             },
-            cleanSecureCookie: function(){
-                $.cookie(config['USER_SECURE_COOKIE'], null);
-            },
             isUserLoggedIn: function(){
                 if (! $.cookie('USER_SECURE_COOKIE')){
                     return false;
@@ -268,7 +265,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callRegisterUsos: function(usosId){
                 registerUsos(usosId);
             },
-            getDataDatableConfig: function(){
+            getDatableConfig: function(){
                 return {
                     paging: false,
                     "language": {

@@ -19,7 +19,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 } else {
                     $('#page').html(templateError(data));
                 }
-                $('#students-table').DataTable(main.getDataDatableConfig());
+                $('#students-table').DataTable(main.getDatableConfig());
             });
 
             function bindListeners(){
