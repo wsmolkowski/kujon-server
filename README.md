@@ -1,2 +1,2 @@
-# kujon
+# kujon - server, api, mobi
 
