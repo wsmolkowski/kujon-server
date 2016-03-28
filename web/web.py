@@ -29,7 +29,6 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", web.MainHandler),
-            (r"/config", web.ApplicationConfigHandler),
         ]
 
         __settings = dict(
