@@ -113,11 +113,4 @@ class ApplicationConfigHandler(BaseHandler):
         else:
             usos_paired = False
 
-        self.success(data={
-            'PROJECT_TITLE': settings.PROJECT_TITLE,
-            'DEPLOY_URL': settings.DEPLOY_WEB,
-            'API_URL': settings.DEPLOY_API,
-            'USOS_PAIRED': usos_paired,
-            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
-            'USER_LOGGED': True if user else False
-        })
+        self.success(data=self.config_data())

@@ -7,5 +7,5 @@ from base import BaseHandler
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.render("index.html", **self.template_data())
+        self.render("index.html", **self.config_data())
 
