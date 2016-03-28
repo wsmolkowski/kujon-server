@@ -1,0 +1,5 @@
+alias cdapp='cd /home/appuser/kujon.mobi/current'
+alias start='/home/appuser/kujon.mobi/current/scripts/manage.sh start'
+alias stop='/home/appuser/kujon.mobi/current/scripts/manage.sh stop'
+alias restart=' /home/appuser/kujon.mobi/current/scripts/manage.sh restart'
+alias cdlog='cd /home/appuser/kujon.mobi/log'
