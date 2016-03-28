@@ -79,6 +79,7 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, self._COOKIE_FIELDS)
 
+        #self.clear_cookie(constants.USER_SECURE_COOKIE, path='/', domain=settings.SITE_DOMAIN)
         self.clear_cookie(constants.USER_SECURE_COOKIE)
         self.set_secure_cookie(constants.USER_SECURE_COOKIE,
                                tornado.escape.json_encode(json_util.dumps(user_doc)),
@@ -100,3 +101,23 @@ class DefaultErrorHandler(BaseHandler):
     def get(self):
 
         self.fail('Przepraszamy, ale podany adres nie istnieje.')
+
+
+class ApplicationConfigHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        user = self.get_current_user()
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
+        else:
+            usos_paired = False
+
+        self.success(data={
+            'PROJECT_TITLE': settings.PROJECT_TITLE,
+            'DEPLOY_URL': settings.DEPLOY_WEB,
+            'API_URL': settings.DEPLOY_API,
+            'USOS_PAIRED': usos_paired,
+            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
+            'USER_LOGGED': True if user else False
+        })

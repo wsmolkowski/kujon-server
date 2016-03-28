@@ -9,9 +9,3 @@ class MainHandler(BaseHandler):
     def get(self):
         self.render("index.html", **self.template_data())
 
-
-class ApplicationConfigHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        self.success(data=self.template_data())

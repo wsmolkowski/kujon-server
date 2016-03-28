@@ -1,5 +1,5 @@
 from handlers import authentication
-from handlers.base import UsosesApi
+from handlers.base import UsosesApi, ApplicationConfigHandler
 from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi
 from handlers.faculties import FacultyByIdApi
 from handlers.friends import FriendsSuggestionsApi, FriendsApi
@@ -11,6 +11,7 @@ from handlers.tt import TTApi
 from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 
 HANDLERS = [
+    (r"/config", ApplicationConfigHandler),
     (r"/authentication/logout", authentication.LogoutHandler),
     (r"/authentication/register", authentication.UsosRegisterHandler),
     (r"/authentication/verify", authentication.UsosVerificationHandler),
