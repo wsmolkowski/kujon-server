@@ -44,6 +44,7 @@ class Application(tornado.web.Application):
         self.db
 
 
+
 def prepare_environment():
     # change encoding to utf-8
     reload(sys)  # Reload does the trick!
@@ -66,8 +67,10 @@ def main():
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
         server.listen(options.port)
+        logging.info('SSL ENABLED FOR API')
     else:
         application.listen(options.port)
+        logging.info('SSL DISABLED FOR API')
 
     logging.info(settings.DEPLOY_API)
 

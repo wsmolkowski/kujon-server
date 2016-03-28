@@ -1,7 +1,25 @@
 #!/usr/bin/env bash
 
-TOKEN=784d2329d009d54e3aa23b1926ab4b89f31e23be
-RELEASE=v0.1
+#git config --global user.name "kujonmobi"
+#git config --global user.email "wsmo@protonmail.com"
 
-cd /tmp
-wget --header "Authorization: token $TOKEN"  --output-document=$RELEASE.tar.gz https://github.com/kujonmobi/kujon-server/archive/RELEASE.tar.gz
+APPDIR=/home/appuser/kujon.mobi/current
+export PYTHONPATH=$PYTHONPATH:$APPDIR
+
+echo 'stopping services...'
+sudo service nginx stop
+sudo supervisorctl stop all
+echo 'services stopped'
+
+echo 'cloning code'
+rm -rf $APPDIR
+git clone https://github.com/kujonmobi/kujon-server.git $APPDIR
+
+ln -s /home/appuser/kujon.mobi/bower_components/ $APPDIR/web/static/
+
+echo 'starting services...'
+sudo service nginx start
+sudo supervisorctl start all
+echo 'services started'
+
+sudo chown -R appuser:appuser $APPDIR

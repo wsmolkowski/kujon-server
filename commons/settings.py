@@ -42,5 +42,5 @@ SMTP_PORT = config.getint('email', 'SMTP_PORT')
 SMTP_USER = config.get('email', 'SMTP_USER')
 SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
-SSL_CERT = config.get('ssl', 'SSL_CERT') if not config.get('ssl', 'SSL_CERT') else None
-SSL_KEY = config.get('ssl', 'SSL_KEY') if not config.get('ssl', 'SSL_KEY') else None
+SSL_CERT = config.get('ssl', 'SSL_CERT') if config.get('ssl', 'SSL_CERT') else None
+SSL_KEY = config.get('ssl', 'SSL_KEY') if config.get('ssl', 'SSL_KEY') else None

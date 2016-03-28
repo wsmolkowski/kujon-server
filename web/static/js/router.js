@@ -8,12 +8,12 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
             var config = main.getConfig();
 
-            if (main.isUserLoggedIn() == true && main.isUserRegistered() == false){
+            if (config['USER_LOGGED'] == true && config['USOS_PAIRED'] == false){
                 require(['lib/pages/register'], function(page) {
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)
                 });
-            } else if (main.isUserLoggedIn() == false && hash != '404') {
+            } else if (config['USER_LOGGED'] == false) {
                 require(['lib/pages/index'], function(page) {
                     page.render();
                     main.hideSpinner(); //schowaj kręcacz (?)

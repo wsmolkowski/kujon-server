@@ -66,8 +66,10 @@ if __name__ == "__main__":
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
         server.listen(options.port)
+        logging.info('SSL ENABLED FOR WEB')
     else:
         application.listen(options.port)
+        logging.info('SSL DISABLED FOR API')
 
     logging.info(settings.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()
