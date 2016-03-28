@@ -33,6 +33,22 @@ class CommonHandler(RequestHandler):
             return json_util.loads(cookie)
         return None
 
+    def config_data(self):
+        user = self.get_current_user()
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
+        else:
+            usos_paired = False
+
+        return {
+            'PROJECT_TITLE': settings.PROJECT_TITLE,
+            'DEPLOY_URL': settings.DEPLOY_WEB,
+            'API_URL': settings.DEPLOY_API,
+            'USOS_PAIRED': usos_paired,
+            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
+            'USER_LOGGED': True if user else False
+        }
+
     @property
     def oauth_parameters(self):
         return {
