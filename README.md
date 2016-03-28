@@ -1,3 +1,2 @@
-# kujon.mobi
-
+# kujon
 
