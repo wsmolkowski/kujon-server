@@ -1,3 +1,2 @@
 # kujon
-# https://kujon.mobi/
 
