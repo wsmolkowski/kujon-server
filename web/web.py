@@ -68,7 +68,7 @@ if __name__ == "__main__":
         logging.info('SSL ENABLED FOR WEB')
     else:
         application.listen(options.port)
-        logging.info('SSL DISABLED FOR API')
+        logging.info('SSL DISABLED FOR WEB')
 
     logging.info(settings.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()

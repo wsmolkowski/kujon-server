@@ -2,7 +2,6 @@ import datetime
 import logging
 import os
 import sys
-import tempfile
 import traceback
 
 import httplib2
@@ -93,11 +92,11 @@ def initialize_logging(logger_name):
         )
 
         # set up file loggers
-        log_dir = os.path.join(tempfile.gettempdir(), settings.PROJECT_TITLE).lower()
-        if not os.path.exists(log_dir):
-            mkdir(log_dir)
+        if not os.path.exists(settings.LOG_DIR):
+            print 'log folder {0} does not exists'.format(settings.LOG_DIR)
+            sys.exit()
 
-        log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
+        log_file = os.path.join(settings.LOG_DIR, '{0}.log'.format(logger_name))
 
         file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
         formatter = logging.Formatter(log_format, DEFAULT_DATE_FORMAT)

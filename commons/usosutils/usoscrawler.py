@@ -1,9 +1,9 @@
 import logging
-from datetime import datetime
-from datetime import timedelta, date
 
 import tornado.gen
 from bson.objectid import ObjectId
+from datetime import datetime
+from datetime import timedelta, date
 
 import usosinstances
 from commons import constants
@@ -61,8 +61,8 @@ class UsosCrawler:
                 logging.debug(
                     "dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
             else:
-                raise Exception("fail to recreate_dictionaries %r for %r", constants.COLLECTION_COURSES_CLASSTYPES,
-                                usos[constants.USOS_ID])
+                logging.error("fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                usos[constants.USOS_ID]))
         raise tornado.gen.Return(True)
 
     def drop_collections(self):
