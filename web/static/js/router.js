@@ -8,22 +8,28 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
 
             var config = main.getConfig();
 
-            if (config['USER_LOGGED'] == true && config['USOS_PAIRED'] == false){
+            if (hash == 'disclaimer') {
+                require(['lib/pages/disclaimer'], function(page) {
+                    page.render();
+                    main.hideSpinner();
+                });
+            }
+            else if (config['USER_LOGGED'] == true && config['USOS_PAIRED'] == false){
                 require(['lib/pages/register'], function(page) {
                     page.render();
-                    main.hideSpinner(); //schowaj kręcacz (?)
+                    main.hideSpinner();
                 });
             } else if (config['USER_LOGGED'] == false) {
                 require(['lib/pages/index'], function(page) {
                     page.render();
-                    main.hideSpinner(); //schowaj kręcacz (?)
+                    main.hideSpinner();
                 });
             } else {
 
                 require(['lib/pages/'+hash], function(page) {
                     page.render();
-                    main.hideSpinner(); //schowaj kręcacz (?)
-                    $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+                    main.hideSpinner();
+                    $('.navbar li.active').removeClass('active');
                     $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
                 });
             }
