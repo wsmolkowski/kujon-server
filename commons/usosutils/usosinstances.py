@@ -18,7 +18,7 @@ USOSINSTANCES = [
      'contact': 'm.frica@chat.edu.pl',
      'enabled': True
      },
-    {'usos_id': 'UP',  # z palca dodane
+    {'usos_id': 'UP',   # z palca dodane
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
