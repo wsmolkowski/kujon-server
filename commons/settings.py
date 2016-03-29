@@ -3,6 +3,7 @@ from ConfigParser import RawConfigParser
 
 config = RawConfigParser()
 
+
 if os.getenv('KUJON_MOBI_PROD', False):
     config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-prod.conf'))
 else:
