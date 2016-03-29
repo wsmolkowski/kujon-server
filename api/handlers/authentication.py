@@ -2,13 +2,13 @@
 
 import json
 import logging
+from datetime import datetime
 
 import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
-from datetime import datetime
 
 from base import BaseHandler
 from commons import constants, settings
@@ -17,7 +17,7 @@ from crawler import job_factory
 
 class LogoutHandler(BaseHandler):
     def get(self):
-        self.clear_cookie(constants.USER_SECURE_COOKIE)
+        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.redirect(settings.DEPLOY_WEB)
 
 

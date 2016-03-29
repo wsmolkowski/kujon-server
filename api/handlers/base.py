@@ -79,9 +79,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, self._COOKIE_FIELDS)
 
-        #self.clear_cookie(constants.USER_SECURE_COOKIE, path='/', domain=settings.SITE_DOMAIN)
-        self.clear_cookie(constants.USER_SECURE_COOKIE)
-        self.set_secure_cookie(constants.USER_SECURE_COOKIE,
+        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE,
                                tornado.escape.json_encode(json_util.dumps(user_doc)),
                                constants.COOKIE_EXPIRES_DAYS)
 

@@ -1,6 +1,7 @@
 define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-cookie'], function($, Handlebars, tplError, jc)
 {
         /* variables */
+
         var templateError = Handlebars.compile(tplError);
         var config;
 
@@ -244,7 +245,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 lecturerDetails(lecturerId, callback);
             },
             isUserLoggedIn: function(){
-                if (! $.cookie('USER_SECURE_COOKIE')){
+                if (! $.cookie('KUJON_SECURE_COOKIE')){
                     return false;
                 } else {
                     return true;
