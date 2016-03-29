@@ -1,14 +1,14 @@
 import os
 from ConfigParser import RawConfigParser
 
-CONFIG = RawConfigParser()
-PRODUCTION = True
+CONFIG = RawConfigParser(allow_no_value=True)
+PRODUCTION = False
 
 
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-if os.getenv('KUJON_MOBI_PROD', False) or PRODUCTION:
+if PRODUCTION:
     CONFIG.read(os.path.join(parent_dir(), 'config', 'settings-prod.conf'))
 else:
     CONFIG.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
@@ -25,8 +25,8 @@ RELOAD = CONFIG.getboolean('application', 'RELOAD')
 COMPRESS_RESPONSE = CONFIG.getboolean('application', 'COMPRESS_RESPONSE')
 UNICODE = CONFIG.get('application', 'UNICODE')
 
-PROXY_URL = CONFIG.get('proxy', 'PROXY_URL') if not CONFIG.get('proxy', 'PROXY_URL') else None
-PROXY_PORT = CONFIG.getint('proxy', 'PROXY_PORT') if not CONFIG.get('proxy', 'PROXY_PORT') else None
+PROXY_URL = CONFIG.get('proxy', 'PROXY_URL') if CONFIG.get('proxy', 'PROXY_URL') else None
+PROXY_PORT = CONFIG.getint('proxy', 'PROXY_PORT') if CONFIG.get('proxy', 'PROXY_PORT') else None
 
 GOOGLE_CLIENT_ID = CONFIG.get('social', 'GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = CONFIG.get('social', 'GOOGLE_CLIENT_SECRET')
