@@ -30,7 +30,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         function buildConfig(){
             return $.ajax({
                     type: 'GET',
-                    url: 'https://api.kujon.mobi/config',
+                    url: 'http://localhost:8881/config',
                     dataType: "json",
                     xhrFields: {
                       withCredentials: true

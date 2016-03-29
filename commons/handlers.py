@@ -1,8 +1,8 @@
+import tornado.gen
 from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 from tornado.web import RequestHandler
-import tornado.gen
 
 import constants
 import settings
@@ -71,6 +71,9 @@ class CommonHandler(RequestHandler):
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
             while (yield cursor.fetch_next):
                 usos_encrypted = cursor.next_object()
+                # if usos is not enabled to show
+                if not usos_encrypted['enabled']:
+                    continue
                 usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
                 usos = usos_encrypted.copy()
                 usos = dict(self.aes.decrypt_usos(usos))
