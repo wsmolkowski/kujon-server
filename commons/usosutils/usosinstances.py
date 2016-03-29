@@ -21,7 +21,7 @@ USOSINSTANCES = [
     {'usos_id': 'UP',  # z palca dodane
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
-     'logo': '/static/img/logo/logo-UP-64x64.jpg',
+     'logo': '/static/img/logo/logo-up-64x64.jpg',
      'consumer_key': 'G7rJcLJeARevmqfTjB3R',
      'consumer_secret': 'j339BwrnreUJynsCkrCQDEuYnfF4ZtkS6gqGsjea',
      'contact': 'usos@up.wroc.pl',
