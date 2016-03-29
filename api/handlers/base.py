@@ -90,7 +90,6 @@ class UsosesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         data = yield self.get_usoses(show_encrypted=True)
-
         self.success(data)
 
 
@@ -98,7 +97,6 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-
         self.fail('Przepraszamy, ale podany adres nie istnieje.')
 
 
@@ -106,10 +104,6 @@ class ApplicationConfigHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        user = self.get_current_user()
-        if user and constants.USOS_PAIRED in user.keys():
-            usos_paired = user[constants.USOS_PAIRED]
-        else:
-            usos_paired = False
+        self.set_header("Cache-control", "no-cache")
 
         self.success(data=self.config_data())

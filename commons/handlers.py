@@ -68,12 +68,10 @@ class CommonHandler(RequestHandler):
     def get_usoses(self, show_encrypted):
 
         if not self._usoses or not self._usoses_encrypted:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
             while (yield cursor.fetch_next):
                 usos_encrypted = cursor.next_object()
-                # if usos is not enabled to show
-                if not usos_encrypted['enabled']:
-                    continue
+
                 usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
                 usos = usos_encrypted.copy()
                 usos = dict(self.aes.decrypt_usos(usos))
