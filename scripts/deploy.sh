@@ -14,7 +14,7 @@ echo 'services stopped'
 echo 'cloning code'
 rm -rf $APPDIR
 git clone https://github.com/kujonmobi/kujon-server.git $APPDIR
-
+chmod g+w -R $APPDIR
 ln -s /home/appuser/kujon.mobi/bower_components/ $APPDIR/web/static/
 
 echo 'starting services...'
