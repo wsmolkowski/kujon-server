@@ -18,6 +18,7 @@ from crawler import job_factory
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.clear_cookie(constants.KUJON_CONFIG_COOKIE)
         self.redirect(settings.DEPLOY_WEB)
 
 

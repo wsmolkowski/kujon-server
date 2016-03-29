@@ -3,6 +3,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         /* variables */
 
         var templateError = Handlebars.compile(tplError);
+        var applicationConfig = JSON.parse($.cookie('KUJON_CONFIG_COOKIE'));
         var config;
 
 
@@ -28,10 +29,18 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             }
         }
 
+        function buildApiUrl(api){
+            return applicationConfig['API_URL'] + api;
+        };
+
+        function buildWebUrl(url){
+            return applicationConfig['DEPLOY_URL'] + url;
+        };
+
         function buildConfig(){
             return $.ajax({
                     type: 'GET',
-                    url: 'https://api.kujon.mobi/config',
+                    url: buildApiUrl('/config'),
                     dataType: "json",
                     xhrFields: {
                       withCredentials: true
@@ -49,14 +58,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                       $('#page').html(templateError(msg));
                     }
                 });
-        };
-
-        function buildApiUrl(api){
-            return config['API_URL'] + api;
-        };
-
-        function buildWebUrl(url){
-            return config['DEPLOY_URL'] + url;
         };
 
         function callAjaxPost(request_url, jsonData, callback){
