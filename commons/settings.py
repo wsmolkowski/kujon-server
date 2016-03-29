@@ -2,11 +2,16 @@ import os
 from ConfigParser import RawConfigParser
 
 config = RawConfigParser(allow_no_value=True)
+PRODUCTION = False
 
-if os.getenv('KUJON_MOBI_PROD', False):
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-prod.conf'))
+
+def parent_dir():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+if PRODUCTION:
+    config.read(os.path.join(parent_dir(), 'config', 'settings-prod.conf'))
 else:
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-dev.conf'))
+    config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
 
 MONGODB_URI = config.get('database', 'MONGODB_URI')
 MONGODB_NAME = config.get('database', 'MONGODB_NAME')
