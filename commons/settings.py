@@ -49,3 +49,5 @@ SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
 SSL_CERT = config.get('ssl', 'SSL_CERT') if config.get('ssl', 'SSL_CERT') else None
 SSL_KEY = config.get('ssl', 'SSL_KEY') if config.get('ssl', 'SSL_KEY') else None
+
+LOG_DIR = config.get('administration', 'LOG_DIR')
