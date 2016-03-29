@@ -8,6 +8,15 @@ define(['jquery', 'handlebars', 'main', 'text!templates/index.html'], function($
                 var config = main.getConfig();
                 $('#page').html(template(config));
             });
+
+            main.callUsoses(function(data){
+                if (data.status == 'success'){
+                    $('#page').html(template(data));
+                } else {
+                    $('#page').html(templateError({'message': data.message}));
+                }
+            });
+
         }
     }    
 });

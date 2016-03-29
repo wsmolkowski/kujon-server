@@ -1,8 +1,8 @@
+import tornado.gen
 from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 from tornado.web import RequestHandler
-import tornado.gen
 
 import constants
 import settings
@@ -27,7 +27,7 @@ class CommonHandler(RequestHandler):
         return httpclient.AsyncHTTPClient()
 
     def get_current_user(self):
-        cookie = self.get_secure_cookie(constants.USER_SECURE_COOKIE)
+        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
         if cookie:
             cookie = json_decode(cookie)
             return json_util.loads(cookie)
@@ -45,7 +45,7 @@ class CommonHandler(RequestHandler):
             'DEPLOY_URL': settings.DEPLOY_WEB,
             'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
-            'USER_SECURE_COOKIE': constants.USER_SECURE_COOKIE,
+            'KUJON_SECURE_COOKIE': constants.KUJON_SECURE_COOKIE,
             'USER_LOGGED': True if user else False
         }
 
@@ -68,9 +68,10 @@ class CommonHandler(RequestHandler):
     def get_usoses(self, show_encrypted):
 
         if not self._usoses or not self._usoses_encrypted:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
             while (yield cursor.fetch_next):
                 usos_encrypted = cursor.next_object()
+
                 usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
                 usos = usos_encrypted.copy()
                 usos = dict(self.aes.decrypt_usos(usos))

@@ -1,12 +1,17 @@
 import os
 from ConfigParser import RawConfigParser
 
-config = RawConfigParser()
+config = RawConfigParser(allow_no_value=True)
+PRODUCTION = False
 
-if os.getenv('KUJON_MOBI_PROD', False):
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-prod.conf'))
+
+def parent_dir():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+if PRODUCTION:
+    config.read(os.path.join(parent_dir(), 'config', 'settings-prod.conf'))
 else:
-    config.read(os.path.join(os.path.dirname(os.getcwd()), 'config', 'settings-dev.conf'))
+    config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
 
 MONGODB_URI = config.get('database', 'MONGODB_URI')
 MONGODB_NAME = config.get('database', 'MONGODB_NAME')
@@ -20,8 +25,8 @@ RELOAD = config.getboolean('application', 'RELOAD')
 COMPRESS_RESPONSE = config.getboolean('application', 'COMPRESS_RESPONSE')
 UNICODE = config.get('application', 'UNICODE')
 
-PROXY_URL = config.get('proxy', 'PROXY_URL') if not config.get('proxy', 'PROXY_URL') else None
-PROXY_PORT = config.getint('proxy', 'PROXY_PORT') if not config.get('proxy', 'PROXY_PORT') else None
+PROXY_URL = config.get('proxy', 'PROXY_URL') if config.get('proxy', 'PROXY_URL') else None
+PROXY_PORT = config.getint('proxy', 'PROXY_PORT') if config.get('proxy', 'PROXY_PORT') else None
 
 GOOGLE_CLIENT_ID = config.get('social', 'GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config.get('social', 'GOOGLE_CLIENT_SECRET')
@@ -44,3 +49,5 @@ SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
 SSL_CERT = config.get('ssl', 'SSL_CERT') if config.get('ssl', 'SSL_CERT') else None
 SSL_KEY = config.get('ssl', 'SSL_KEY') if config.get('ssl', 'SSL_KEY') else None
+
+LOG_DIR = config.get('administration', 'LOG_DIR')
