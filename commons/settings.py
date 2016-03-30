@@ -8,7 +8,6 @@ PRODUCTION = False
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 if PRODUCTION:
     config.read(os.path.join(parent_dir(), 'config', 'settings-prod.conf'))
 else:
