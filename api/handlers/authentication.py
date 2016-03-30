@@ -18,7 +18,6 @@ from crawler import job_factory
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.clear_cookie(constants.KUJON_CONFIG_COOKIE)
         self.redirect(settings.DEPLOY_WEB)
 
 
@@ -93,7 +92,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
-                                                                          self._COOKIE_FIELDS)
+                                                                              self._COOKIE_FIELDS)
             yield self.reset_user_cookie(user_doc)
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
@@ -171,7 +170,6 @@ class UsosRegisterHandler(BaseHandler):
 
 
 class UsosVerificationHandler(BaseHandler):
-
     @tornado.web.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -230,6 +228,8 @@ class UsosVerificationHandler(BaseHandler):
             yield self.reset_user_cookie()
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+
+            yield self.email_registration()
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:

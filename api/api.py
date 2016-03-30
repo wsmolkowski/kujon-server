@@ -44,7 +44,6 @@ class Application(tornado.web.Application):
         self.db
 
 
-
 def prepare_environment():
     # change encoding to utf-8
     reload(sys)  # Reload does the trick!
