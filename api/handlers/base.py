@@ -5,13 +5,13 @@ import urlparse
 import oauth2 as oauth
 import tornado.gen
 from bson import json_util
-from emailqueue.queues import MongoDbEmailQueue
 
-from commons import handlers, constants, settings
+from commons import handlers, constants
+from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class BaseHandler(handlers.CommonHandler, JSendMixin):
+class BaseHandler(handlers.CommonHandler, JSendMixin, EmailMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
@@ -44,7 +44,8 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
     @staticmethod
     def validate_usos(usos, parameters):
         if not usos:
-            raise tornado.web.HTTPError(400, "Usos {0} not supported!".format(parameters.usos_id))
+            raise tornado.web.HTTPError(400, "Usos {0} nie jest wspierany. Skontaktuj się z administratorem.".format(
+                parameters.usos_id))
 
     @staticmethod
     def get_token(content):
@@ -55,23 +56,6 @@ class BaseHandler(handlers.CommonHandler, JSendMixin):
     def get_token(content):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
-
-    _email_queue = None
-
-    @property
-    def email_queue(self):
-        if not self._email_queue:
-            self._email_queue = MongoDbEmailQueue(
-                smtp_host=settings.SMTP_HOST,
-                smtp_port=settings.SMTP_PORT,
-                smtp_user=settings.SMTP_USER,
-                smtp_password=settings.SMTP_PASSWORD,
-                mongodb_uri=settings.MONGODB_URI,
-                mongodb_collection=constants.COLLECTION_EMAIL_QUEUE,
-                mongodb_database=settings.MONGODB_NAME,
-                queue_maxsize=0
-            )
-        return self._email_queue
 
     @tornado.gen.coroutine
     def reset_user_cookie(self, user_doc=None):
@@ -90,6 +74,7 @@ class UsosesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         data = yield self.get_usoses(show_encrypted=True)
+
         self.success(data)
 
 
@@ -97,13 +82,11 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('Przepraszamy, ale podany adres nie istnieje.')
+        self.fail('Przepraszamy, ale strona o podanym adresie nie istnieje.')
 
 
 class ApplicationConfigHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.set_header("Cache-control", "no-cache")
-
         self.success(data=self.config_data())
