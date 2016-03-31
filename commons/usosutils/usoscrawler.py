@@ -47,10 +47,12 @@ class UsosCrawler:
 
         self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
         for usos in self.dao.get_usoses():
-            logging.info("recreating dictionaries in collections %r for %r", constants.COLLECTION_COURSES_CLASSTYPES,
-                         usos[constants.USOS_ID])
             inserts = list()
-            class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
+            try:
+                class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
+            except Exception, ex:
+                logging.error("fail to recreate_dictionaries for {0}: {1}".format(usos[constants.USOS_ID], ex.message))
+                continue
             if len(class_types) > 0:
                 for class_type in class_types.values():
                     class_type[constants.USOS_ID] = usos[constants.USOS_ID]
