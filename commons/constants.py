@@ -77,7 +77,15 @@ COLLECTION_JOBS_QUEUE = "jobs_queue"
 COLLECTION_JOBS_LOG = "jobs_queue_log"
 COLLECTION_STATISTICS_HISTORY = 'statistic_history'
 COLLECTION_EMAIL_QUEUE = 'email_queue'
+COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
 CRAWL_TYPE = "crawl_type"
+
+SMTP_SUBJECT = 'subject'
+SMTP_FROM = 'from'
+SMTP_TO = 'to'
+SMTP_TEXT = 'text'
+SMTP_MIME_TYPE = 'mime_type'
+SMTP_CHARSET = 'charset'

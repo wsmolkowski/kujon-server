@@ -7,21 +7,20 @@ import tornado.gen
 from bson import json_util
 
 from commons import handlers, constants
-from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class BaseHandler(handlers.CommonHandler, JSendMixin, EmailMixin):
+class BaseHandler(handlers.CommonHandler, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
     @property
-    def crawler(self):
-        return self.application.crawler
-
-    @property
     def db(self):
         return self.application.db
+
+    @property
+    def email_queue(self):
+        return self.application.email_queue
 
     @tornado.gen.coroutine
     def get_parameters(self):

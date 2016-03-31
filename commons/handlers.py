@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import tornado.gen
 from bson import json_util
 from tornado import httpclient
@@ -7,6 +9,7 @@ from tornado.web import RequestHandler
 import constants
 import settings
 import utils
+from crawler import email_factory
 from AESCipher import AESCipher
 
 
@@ -91,3 +94,25 @@ class CommonHandler(RequestHandler):
             if u[key] == value:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
+
+    @tornado.gen.coroutine
+    def email_registration(self):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
+
+        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+        recipient = user_doc[constants.USER_EMAIL]
+
+        email_job = email_factory.email_job(
+            'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
+            settings.SMTP_USER,
+            recipient if type(recipient) is list else [recipient],
+            '\nCześć,'
+            '\nRejestracja w USOS {0} zakończona pomyślnie.'
+            '\nW razie pytań, bądź wątpliwości pozostajemy do Twojej dyspozycji.'
+            '\nNapisz do nas {1}'
+            '\nPozdrawiamy,'
+            '\nZespół {2}\n'.format(usos_doc['name'], settings.SMTP_USER, settings.PROJECT_TITLE)
+        )
+
+        yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)

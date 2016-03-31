@@ -8,7 +8,6 @@ import tornado.web
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
-from emailqueue.queues import MongoDbEmailQueue
 
 from commons import settings, constants
 from handlers.base import DefaultErrorHandler
@@ -16,17 +15,6 @@ from handlers_list import HANDLERS
 
 define("port", default=settings.API_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
-
-EMAIL_QUEUE = MongoDbEmailQueue(
-    smtp_host=settings.SMTP_HOST,
-    smtp_port=settings.SMTP_PORT,
-    smtp_user=settings.SMTP_USER,
-    smtp_password=settings.SMTP_PASSWORD,
-    mongodb_uri=settings.MONGODB_URI,
-    mongodb_collection=constants.COLLECTION_EMAIL_QUEUE,
-    mongodb_database=settings.MONGODB_NAME,
-    queue_maxsize=1000
-)
 
 
 class Application(tornado.web.Application):
@@ -86,9 +74,6 @@ def main():
     else:
         application.listen(options.port)
         logging.info('SSL DISABLED FOR API')
-
-    # Add email queue callback to IOLoop
-    IOLoop.current().add_callback(EMAIL_QUEUE.worker)
 
     logging.info(settings.DEPLOY_API)
 
