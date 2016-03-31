@@ -51,7 +51,7 @@ class UsosCrawler:
             try:
                 class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
             except Exception, ex:
-                logging.error("fail to recreate_dictionaries for {0}: {1}".format(usos[constants.USOS_ID], ex.message))
+                logging.error("fail to recreate_dictionaries for {0}: {1}.".format(usos[constants.USOS_ID], ex.message))
                 continue
             if len(class_types) > 0:
                 for class_type in class_types.values():
@@ -60,8 +60,7 @@ class UsosCrawler:
                     class_type[constants.UPDATE_TIME] = recreate_time
                     inserts.append(class_type)
                 self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
-                logging.debug(
-                    "dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+                logging.debug("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
             else:
                 logging.error("fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                 usos[constants.USOS_ID]))
