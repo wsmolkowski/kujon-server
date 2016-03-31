@@ -1,5 +1,9 @@
+# coding=UTF-8
+
 import logging
 import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 from datetime import timedelta, datetime
 
 import email_factory
@@ -25,8 +29,8 @@ class MongoEmailQueue(object):
 
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
-        self._db[constants.COLLECTION_EMAIL_QUEUE].insert(
-            email_factory.email_job('test subject', 'kujondev@kujon.mobi', ['dzizes451@gmail.com'], 'test message'))
+        #self._db[constants.COLLECTION_EMAIL_QUEUE].insert(
+        #    email_factory.email_job('test subject', 'kujondev@kujon.mobi', ['dzizes451@gmail.com'], 'wiadomość'))
 
     @gen.coroutine
     def __load_work(self):
@@ -72,7 +76,12 @@ class MongoEmailQueue(object):
     def process_job(self, job):
         logging.debug("processing job: {0}".format(job[constants.MONGO_ID]))
 
-        self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], job[constants.SMTP_TEXT])
+        msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), 'plain', constants.ENCODING)
+        msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
+        msg['From'] = job[constants.SMTP_FROM]
+        msg['To'] = ','.join(job[constants.SMTP_TO])
+
+        self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
 
         logging.debug("processed job: {0}".format(job[constants.MONGO_ID]))
 
@@ -97,7 +106,7 @@ class MongoEmailQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = "Exception while executing job {0} with: {0}".format(job[constants.MONGO_ID], ex.message)
+                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
                     logging.exception(msg)
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)

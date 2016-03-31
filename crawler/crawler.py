@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import logging
 from datetime import timedelta, datetime
 
@@ -98,7 +100,7 @@ class MongoDbQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = "Exception while executing job {0} with: {0}".format(job[constants.MONGO_ID], ex.message)
+                    msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
                     logging.exception(msg)
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)
