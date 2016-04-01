@@ -93,15 +93,15 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 self._COOKIE_FIELDS)
 
             if not user_doc:
-                userToInsert = dict()
-                userToInsert[constants.USER_TYPE] = 'google'
-                userToInsert[constants.USER_NAME] = user['name']
-                userToInsert[constants.USER_PICTURE] = user['picture']
-                userToInsert[constants.USER_EMAIL] = user['email']
-                userToInsert[constants.USOS_PAIRED] = False
-                userToInsert[constants.USER_CREATED] = datetime.now()
+                insert_doc = dict()
+                insert_doc[constants.USER_TYPE] = 'google'
+                insert_doc[constants.USER_NAME] = user['name']
+                insert_doc[constants.USER_PICTURE] = user['picture']
+                insert_doc[constants.USER_EMAIL] = user['email']
+                insert_doc[constants.USOS_PAIRED] = False
+                insert_doc[constants.USER_CREATED] = datetime.now()
 
-                user_doc = yield motor.Op(self.db.users.insert, userToInsert)
+                user_doc = yield motor.Op(self.db.users.insert, insert_doc)
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},

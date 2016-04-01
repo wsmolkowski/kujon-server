@@ -1,6 +1,7 @@
 # coding=UTF-8
 
 import tornado.web
+import tornado.gen
 from bson.objectid import ObjectId
 
 from base import BaseHandler
@@ -47,14 +48,14 @@ class FriendsApi(BaseHandler):
         parameters = yield self.get_parameters()
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                           constants.MONGO_ID]),
+                                                                                                           constants.MONGO_ID]),
                                                                            constants.FRIEND_ID: user_info_id})
         if not friend_doc:
 
             # check if user_info exists
             user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id,
                                                                                  constants.USOS_ID: parameters[
-                                                                                 constants.USOS_ID]})
+                                                                                     constants.USOS_ID]})
 
             if user_info:
                 result = dict()
@@ -80,11 +81,11 @@ class FriendsApi(BaseHandler):
             return
 
         friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                             constants.MONGO_ID]),
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
         if friend_in_db:
             friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[
-                                                                             constants.MONGO_ID]),
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
             if friend_doc:
                 self.success(user_info_id)

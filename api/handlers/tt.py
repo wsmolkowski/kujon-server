@@ -1,8 +1,10 @@
 # coding=UTF-8
 
-import tornado.web
-from bson.objectid import ObjectId
 from datetime import date, timedelta
+
+import tornado.web
+import tornado.gen
+from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants
@@ -22,8 +24,8 @@ class TTApi(BaseHandler):
         try:
             given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-            next_monday = monday + timedelta(days=7)
-        except Exception, ex:
+            # next_monday = monday + timedelta(days=7)
+        except Exception:
             self.error("Niepoprawny format daty: %r.", given_date)
             return
 
@@ -55,8 +57,8 @@ class TTApi(BaseHandler):
                 if not result:
                     result = list()
                 tt_doc['tts'] = result
-                tt_id = yield self.db[constants.COLLECTION_TT].insert(tt_doc)
-            except Exception, ex:
+                yield self.db[constants.COLLECTION_TT].insert(tt_doc)
+            except Exception:
                 self.error("Błąd podczas pobierania TT z USOS for {0}.".format(given_date))
                 return
 

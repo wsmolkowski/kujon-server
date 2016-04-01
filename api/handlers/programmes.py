@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 

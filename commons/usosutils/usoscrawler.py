@@ -385,7 +385,6 @@ class UsosCrawler:
                     if unit not in units_found:
                         units_found.append(unit)
 
-                units = result['course_units_ids']
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.USER_ID] = user_id
                 if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):

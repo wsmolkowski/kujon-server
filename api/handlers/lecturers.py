@@ -1,6 +1,7 @@
 # coding=UTF-8
 
 import tornado.web
+import tornado.gen
 from bson.objectid import ObjectId
 
 from base import BaseHandler
@@ -45,7 +46,6 @@ class LecturersApi(BaseHandler):
                     lecturers_returned[lecturer_id] = lecturer
 
             lecturers_returned = lecturers_returned.values()
-            #lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
             self.error("Poczekaj szukamy nauczycieli.")
         else:
@@ -78,7 +78,6 @@ class LecturerByIdApi(BaseHandler):
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
 
-
         # change course_editions_conducted to list of courses
         course_editions = []
         if user_info['course_editions_conducted']:
@@ -88,7 +87,7 @@ class LecturerByIdApi(BaseHandler):
                     {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
                      constants.USOS_ID: parameters[constants.USOS_ID]})
                 if course_doc:
-                    course=dict()
+                    course = dict()
                     course['course_name'] = course_doc['course_name']['pl']
                     course['course_id'] = course_doc['course_id']
                     course['term_id'] = course_doc['term_id']
@@ -97,7 +96,7 @@ class LecturerByIdApi(BaseHandler):
                     course_editions.append("Dont have data for course and term..")
             user_info['course_editions_conducted'] = course_editions
 
-        #show url to photo
+        # show url to photo
         if user_info['has_photo']:
             user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 

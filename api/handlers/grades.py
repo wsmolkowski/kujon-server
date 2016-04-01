@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -16,8 +17,6 @@ class GradesForUserApi(BaseHandler):
         if not parameters:
             return
 
-        grades = list()
-
         # get class_types
         classtypes = dict()
         cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
@@ -26,9 +25,10 @@ class GradesForUserApi(BaseHandler):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
-                                                           ('grades', constants.TERM_ID, constants.COURSE_ID,
-                                                            'course_name')).sort([(constants.TERM_ID, -1)])
+        cursor = self.db[constants.COLLECTION_GRADES].find(
+            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
+            ('grades', constants.TERM_ID, constants.COURSE_ID,
+             'course_name')).sort([(constants.TERM_ID, -1)])
         new_grades = []
 
         while (yield cursor.fetch_next):
@@ -38,7 +38,7 @@ class GradesForUserApi(BaseHandler):
 
             # if there is no grades -> pass
             if len(grades_courseedition['grades']['course_grades']) == 0 and \
-               len(grades_courseedition['grades']['course_units_grades']) == 0:
+                            len(grades_courseedition['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}
