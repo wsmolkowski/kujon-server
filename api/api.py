@@ -26,10 +26,6 @@ class Application(tornado.web.Application):
             self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         return self._db[settings.MONGODB_NAME]
 
-    @property
-    def email_queue(self):
-        return EMAIL_QUEUE
-
     def __init__(self):
         _settings = dict(
             debug=settings.DEBUG,
