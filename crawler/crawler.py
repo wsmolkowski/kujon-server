@@ -8,6 +8,7 @@ from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
+from commons.mixins.DatabaseMixin import DatabaseMixin
 from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
@@ -22,6 +23,7 @@ class MongoDbQueue(object):
         self._queue = queues.Queue(maxsize=queue_maxsize)
 
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self._db_mix = DatabaseMixin()
 
         #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(ObjectId("56dad1dec4f9d23e009ca27c")))
         #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(ObjectId("56e295c8c4f9d21760d60922")))
@@ -74,6 +76,8 @@ class MongoDbQueue(object):
             yield self.crawler.initial_user_crawl(job[constants.USER_ID])
         elif job[constants.JOB_TYPE] == 'update_user_crawl':
             yield self.crawler.update_user_crawl(job[constants.USER_ID])
+        elif job[constants.JOB_TYPE] == 'remove_user':
+            yield self._db_mix.remove_user_data(job[constants.USER_ID])
         else:
             raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
 

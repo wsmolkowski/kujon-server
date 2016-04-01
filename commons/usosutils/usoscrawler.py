@@ -39,8 +39,6 @@ class UsosCrawler:
 
         return data
 
-
-
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
 

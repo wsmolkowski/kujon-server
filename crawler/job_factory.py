@@ -20,3 +20,7 @@ def initial_user_job(user_id):
 
 def update_user_job(user_id):
     return user_job(user_id, 'update_user_crawl')
+
+
+def remove_user_job(user_id):
+    return user_job(user_id, 'remove_user')
