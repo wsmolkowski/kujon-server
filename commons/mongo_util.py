@@ -24,10 +24,7 @@ def get_client():
 
 def create_indexes():
     db = get_client()
-    for collection in db.collection_names():
-        if 'system' in collection:
-            continue
-
+    for collection in db.collection_names(include_system_collections=False):
         for field in INDEXED_FIELDS:
             if db[collection].find_one({field: {'$exists': True, '$ne': False}}):
                 index = db[collection].create_index(field)
@@ -37,9 +34,7 @@ def create_indexes():
 def reindex():
     db = get_client()
 
-    for collection in db.collection_names():
-        if 'system' in collection:
-            continue
+    for collection in db.collection_names(include_system_collections=False):
         ri = db[collection].reindex()
         pprint(ri)
         logging.info('collection {0} reindexed'.format(collection))
