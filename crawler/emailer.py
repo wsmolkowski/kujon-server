@@ -29,8 +29,6 @@ class MongoEmailQueue(object):
 
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
-        #self._db[constants.COLLECTION_EMAIL_QUEUE].insert(
-        #    email_factory.email_job('test subject', 'kujondev@kujon.mobi', ['dzizes451@gmail.com'], 'wiadomość'))
 
     @gen.coroutine
     def __load_work(self):

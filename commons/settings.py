@@ -45,6 +45,7 @@ LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 SMTP_HOST = config.get('email', 'SMTP_HOST')
 SMTP_PORT = config.getint('email', 'SMTP_PORT')
 SMTP_USER = config.get('email', 'SMTP_USER')
+SMTP_EMAIL = config.get('email', 'SMTP_EMAIL')
 SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
 SSL_CERT = config.get('ssl', 'SSL_CERT') if config.get('ssl', 'SSL_CERT') else None

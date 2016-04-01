@@ -105,7 +105,7 @@ class CommonHandler(RequestHandler):
 
         email_job = email_factory.email_job(
             'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
-            settings.SMTP_USER,
+            settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,'
             '\nRejestracja w USOS {0} zakończona pomyślnie.'
