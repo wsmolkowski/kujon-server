@@ -46,15 +46,3 @@ class DatabaseMixin(object):
 
         logging.debug('removed user data for user_id {0}'.format(user_id))
 
-
-@gen.coroutine
-def do_remove():
-    dm = DatabaseMixin()
-    yield dm.remove_user(ObjectId('56fe3526c4f9d224441c8868'))
-
-
-if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.DEBUG)
-
-    IOLoop.current().run_sync(do_remove)
-    # io_loop.run_sync(dm.remove_user(ObjectId('56fe3526c4f9d224441c8868')))
