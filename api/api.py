@@ -18,13 +18,6 @@ define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
-    _db = None
-
-    @property
-    def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
 
     def __init__(self):
         _settings = dict(
@@ -40,8 +33,6 @@ class Application(tornado.web.Application):
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
-
-        self.db
 
 
 def prepare_environment():
