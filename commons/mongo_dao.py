@@ -25,16 +25,6 @@ class Dao:
         logging.debug("Connecting do MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
         self._db = pymongo.Connection(self._dburi)[self._dbname]
 
-    def drop_collection(self, collection):
-        logging.warn("Cleaning collection: {0}".format(collection))
-        self._db.drop_collection(collection)
-
-    def drop_collections(self):
-        for collection in self._db.collection_names():
-            if 'system' in collection:
-                continue
-            self.drop_collection(collection)
-
     def find_usos(self, usos_id):
         return self._db.usosinstances.find_one({constants.USOS_ID: usos_id})
 

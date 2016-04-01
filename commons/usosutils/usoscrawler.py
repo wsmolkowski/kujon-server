@@ -5,7 +5,6 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from datetime import timedelta, date
 
-import usosinstances
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.helpers import log_execution_time
@@ -40,43 +39,7 @@ class UsosCrawler:
 
         return data
 
-    @tornado.gen.coroutine
-    def recreate_dictionaries(self):
 
-        recreate_time = datetime.now()
-
-        self.dao.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
-        for usos in self.dao.get_usoses():
-            inserts = list()
-            try:
-                class_types = yield self.usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
-            except Exception, ex:
-                logging.error("fail to recreate_dictionaries for {0}: {1}.".format(usos[constants.USOS_ID], ex.message))
-                continue
-            if len(class_types) > 0:
-                for class_type in class_types.values():
-                    class_type[constants.USOS_ID] = usos[constants.USOS_ID]
-                    class_type[constants.CREATED_TIME] = recreate_time
-                    class_type[constants.UPDATE_TIME] = recreate_time
-                    inserts.append(class_type)
-                self.dao.insert(constants.COLLECTION_COURSES_CLASSTYPES, inserts)
-                logging.debug("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
-            else:
-                logging.error("fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                usos[constants.USOS_ID]))
-        raise tornado.gen.Return(True)
-
-    def drop_collections(self):
-        self.dao.drop_collections()
-
-    @log_execution_time
-    def recreate_usos(self):
-        self.dao.drop_collection(constants.COLLECTION_USOSINSTANCES)
-        for usos in usosinstances.USOSINSTANCES:
-            logging.info("adding usos: %r ", usos[constants.USOS_ID])
-            doc = self.dao.find_usos(usos[constants.USOS_ID])
-            if not doc:
-                self.dao.insert(constants.COLLECTION_USOSINSTANCES, self.aes.encrypt_usos(usos))
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):

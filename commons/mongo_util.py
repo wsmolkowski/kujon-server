@@ -1,6 +1,4 @@
 import logging
-import sys
-import traceback
 from pprint import pprint
 
 import pymongo
@@ -10,10 +8,10 @@ from datetime import datetime
 
 import constants
 import settings
-import utils
-from usosutils.usoscrawler import UsosCrawler
-
-log = logging.getLogger(__name__)
+from crawler import job_factory
+from commons.usosutils import usosinstances
+from commons.AESCipher import AESCipher
+from commons.usosutils.usosasync import UsosAsync
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
@@ -24,7 +22,7 @@ def get_client():
     return pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
 
-def ensure_indexes():
+def create_indexes():
     db = get_client()
     for collection in db.collection_names():
         if 'system' in collection:
@@ -122,30 +120,70 @@ def save_statistics():
         constants.COLLECTION_STATISTICS_HISTORY, sh_doc))
 
 
+def drop_collections(skip_collections=[]):
+    db = get_client()
+
+    for collection in db.collection_names():
+        if 'system' in collection:
+            continue
+        if collection in skip_collections:
+            continue
+        db.drop_collection(collection)
+
+
 @tornado.gen.coroutine
-def clean_database():
-    uc = UsosCrawler()
+def recreate_dictionaries():
+    usosAsync = UsosAsync()
+    db = get_client()
+    recreate_time = datetime.now()
 
+    db.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
+    for usos in db[constants.COLLECTION_USOSINSTANCES].find():
+        inserts = list()
+        try:
+            class_types = yield usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
+        except Exception, ex:
+            logging.error("fail to recreate_dictionaries for {0}: {1}.".format(usos[constants.USOS_ID], ex.message))
+            continue
+        if len(class_types) > 0:
+            for class_type in class_types.values():
+                class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+                class_type[constants.CREATED_TIME] = recreate_time
+                class_type[constants.UPDATE_TIME] = recreate_time
+                inserts.append(class_type)
+            db[constants.COLLECTION_COURSES_CLASSTYPES].insert(inserts)
+            logging.debug("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+        else:
+            logging.error("fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                                                             usos[constants.USOS_ID]))
+    raise tornado.gen.Return(True)
+
+
+def recreate_usos():
+    aes = AESCipher()
+    db = get_client()
+    db.drop_collection(constants.COLLECTION_USOSINSTANCES)
+    for usos in usosinstances.USOSINSTANCES:
+        logging.info("adding usos: %r ", usos[constants.USOS_ID])
+        doc = db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
+        if not doc:
+            db[constants.COLLECTION_USOSINSTANCES].insert(aes.encrypt_usos(usos))
+
+
+@tornado.gen.coroutine
+def recreate_database():
     try:
-        uc.drop_collections()
-        uc.recreate_usos()
-        yield uc.recreate_dictionaries()
+        recreate_usos()
+        yield recreate_dictionaries()
     except Exception, ex:
-        print "Problem during database cleanup: {0}".format(ex.message)
-        traceback.print_exc()
-        sys.exit(-1)
+        msg = "Problem during database recreate: {0}".format(ex.message)
+        logging.exception(msg, ex)
+        raise tornado.gen.Return(False)
+    raise tornado.gen.Return(True)
 
 
-def clean():
-    io_loop = tornado.ioloop.IOLoop.current()
-    io_loop.run_sync(clean_database)
-
-
-if __name__ == "__main__":
-    utils.initialize_logging('mongo_utils')
-
-    clean()
-    ensure_indexes()
-    reindex()
-    # print_statistics()
-    # save_statistics()
+def create_user_jobs():
+    db = get_client()
+    for user_doc in db[constants.COLLECTION_USERS].find():
+        logging.info('creating initial job for user {0}'.format(user_doc[constants.MONGO_ID]))
+        db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
