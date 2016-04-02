@@ -481,8 +481,7 @@ class UsosCrawler:
         self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
 
         # user_info_id = self.dao.user_info_id(user_id)
-
-        self.__build_faculties(client, usos, crawl_time)
+        # self.__build_faculties(client, usos, crawl_time)
 
     @tornado.gen.coroutine
     def update_time_tables(self):
