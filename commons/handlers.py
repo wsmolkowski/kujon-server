@@ -9,8 +9,8 @@ from tornado.web import RequestHandler
 import constants
 import settings
 import utils
-from crawler import email_factory
 from AESCipher import AESCipher
+from crawler import email_factory
 
 
 class CommonHandler(RequestHandler):
@@ -45,6 +45,7 @@ class CommonHandler(RequestHandler):
 
         return {
             'PROJECT_TITLE': settings.PROJECT_TITLE,
+            'WEB_VERSION': settings.WEB_VERSION,
             'DEPLOY_URL': settings.DEPLOY_WEB,
             'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
@@ -59,6 +60,7 @@ class CommonHandler(RequestHandler):
         }
 
     _aes = None
+
     @property
     def aes(self):
         if not self._aes:
@@ -67,6 +69,7 @@ class CommonHandler(RequestHandler):
 
     _usoses = list()
     _usoses_encrypted = list()
+
     @tornado.gen.coroutine
     def get_usoses(self, show_encrypted):
 

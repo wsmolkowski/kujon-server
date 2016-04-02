@@ -37,6 +37,7 @@ SITE_DOMAIN = config.get('deployment', 'SITE_DOMAIN')
 API_PORT = config.getint('deployment', 'API_PORT')
 DEPLOY_API = config.get('deployment', 'DEPLOY_API')
 
+WEB_VERSION = config.get('deployment', 'WEB_VERSION')
 WEB_PORT = config.getint('deployment', 'WEB_PORT')
 DEPLOY_WEB = config.get('deployment', 'DEPLOY_WEB')
 CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
