@@ -30,11 +30,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         }
 
         function buildApiUrl(api){
-            return applicationConfig['API_URL'] + api;
-        };
-
-        function buildWebUrl(url){
-            return applicationConfig['DEPLOY_URL'] + url;
+            return applicationConfig.API_URL + api;
         };
 
         function buildConfig(){
@@ -209,6 +205,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             getConfig: function(){
                 return config;
             },
+            applicationConfig: function(){
+                return applicationConfig;
+            },
             callUsoses: function(callback){
                 usoses(callback);
             },
@@ -246,14 +245,14 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 lecturerDetails(lecturerId, callback);
             },
             isUserLoggedIn: function(){
-                if (! $.cookie('KUJON_SECURE_COOKIE')){
+                if (! $.cookie(applicationConfig.KUJON_SECURE_COOKIE)){
                     return false;
                 } else {
                     return true;
                 }
             },
             isUserRegistered: function(){
-                return config['USOS_PAIRED'];
+                return config.USOS_PAIRED;
             },
             callTT: function(start, callback){
                 TT(start, callback);

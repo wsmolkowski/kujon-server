@@ -14,12 +14,12 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
                     main.hideSpinner();
                 });
             }
-            else if (config['USER_LOGGED'] == true && config['USOS_PAIRED'] == false){
+            else if (config.USER_LOGGED == true && config.USOS_PAIRED == false){
                 require(['lib/pages/register'], function(page) {
                     page.render();
                     main.hideSpinner();
                 });
-            } else if (config['USER_LOGGED'] == false) {
+            } else if (config.USER_LOGGED == false) {
                 require(['lib/pages/index'], function(page) {
                     page.render();
                     main.hideSpinner();

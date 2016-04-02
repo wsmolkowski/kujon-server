@@ -1,27 +1,34 @@
 import tornado.gen
 import tornado.web
 from bson import json_util
+from tornado.web import RequestHandler
 
+from commons import constants, settings
 from commons.mixins.JSendMixin import JSendMixin
-from commons.handlers import CommonHandler
-from commons import constants
 
 CONFIG_COOKIE_EXPIRATION = 1
 
+CONFIG = {
+    'PROJECT_TITLE': settings.PROJECT_TITLE,
+    'KUJON_SECURE_COOKIE': constants.KUJON_SECURE_COOKIE,
+    'API_URL': settings.DEPLOY_API,
+    'WEB_VERSION': settings.WEB_VERSION,
+}
 
-class MainHandler(CommonHandler, JSendMixin):
+
+class MainHandler(RequestHandler, JSendMixin):
     @tornado.web.asynchronous
     def get(self):
         self.set_cookie(constants.KUJON_CONFIG_COOKIE,
-                        tornado.escape.url_escape(json_util.dumps(self.config_data())),
+                        tornado.escape.url_escape(json_util.dumps(CONFIG)),
                         expires_days=CONFIG_COOKIE_EXPIRATION)
-        self.render("index.html", **self.config_data())
+        self.render("index.html", **CONFIG)
 
 
-class DefaultErrorHandler(CommonHandler, JSendMixin):
+class DefaultErrorHandler(RequestHandler, JSendMixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = self.config_data()
-        data['message'] = 'Przepraszamy ale strona o podanym adresie nie istnieje.'
+        data = CONFIG
+        data['MESSAGE'] = 'Przepraszamy, ale strona o podanym adresie nie istnieje.'
         self.render('error.html', **data)

@@ -44,12 +44,8 @@ class CommonHandler(RequestHandler):
             usos_paired = False
 
         return {
-            'PROJECT_TITLE': settings.PROJECT_TITLE,
-            'WEB_VERSION': settings.WEB_VERSION,
-            'DEPLOY_URL': settings.DEPLOY_WEB,
             'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
-            'KUJON_SECURE_COOKIE': constants.KUJON_SECURE_COOKIE,
             'USER_LOGGED': True if user else False
         }
 

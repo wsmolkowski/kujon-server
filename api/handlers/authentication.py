@@ -29,7 +29,6 @@ class RemoveHandler(BaseHandler):
         if user_doc:
             yield self.remove_user(user_doc[constants.MONGO_ID])
 
-        self.clear_cookie(constants.KUJON_CONFIG_COOKIE)
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.redirect(settings.DEPLOY_WEB)
 
