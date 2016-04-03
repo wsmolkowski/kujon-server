@@ -2,7 +2,6 @@ import logging
 import ssl
 import sys
 
-import motor
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -10,6 +9,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
 from commons import settings, constants
+from commons.mongo_dao import Dao
 from handlers.base import DefaultErrorHandler
 from handlers_list import HANDLERS
 
@@ -18,6 +18,13 @@ define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
+    _dao = None
+
+    @property
+    def dao(self):
+        if not self._dao:
+            self._dao = Dao()
+        return self._dao
 
     def __init__(self):
         _settings = dict(

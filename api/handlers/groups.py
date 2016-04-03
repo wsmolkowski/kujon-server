@@ -4,22 +4,19 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 
 LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
 
 
 class GroupsApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                                                    {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+                                                    {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         programmes = []
         for program in user_info['student_programmes']:

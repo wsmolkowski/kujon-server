@@ -42,6 +42,10 @@ class Dao:
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
 
+    def get_user(self, atk, ats):
+        return self._db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
+                                                              constants.ACCESS_TOKEN_SECRET: ats})
+
     def get_users_info(self, user_id):
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
 

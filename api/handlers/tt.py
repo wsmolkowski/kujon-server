@@ -7,18 +7,15 @@ import tornado.gen
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 from commons.usosutils.usosclient import UsosClient
 
 
 class TTApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, given_date):
-
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
 
         # checking if date is correct
         try:
@@ -31,13 +28,13 @@ class TTApi(BaseHandler):
 
         # get user data
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: ObjectId(parameters[constants.MONGO_ID])})
+            {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
         # get usosdata for
-        usos = yield self.get_usos(constants.USOS_ID, parameters[constants.USOS_ID])
+        usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]),
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
              constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
             # fetch TT from USOS
@@ -51,8 +48,8 @@ class TTApi(BaseHandler):
 
                 # insert TT to mongo
                 tt_doc = dict()
-                tt_doc[constants.USOS_ID] = parameters[constants.USOS_ID]
-                tt_doc[constants.USER_ID] = parameters[constants.MONGO_ID]
+                tt_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+                tt_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
                 tt_doc[constants.TT_STARTDATE] = str(monday)
                 if not result:
                     result = list()

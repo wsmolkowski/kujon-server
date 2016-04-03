@@ -1,11 +1,11 @@
 # coding=UTF-8
 
-import tornado.web
 import tornado.gen
+import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
@@ -17,17 +17,13 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 
 class CourseEditionApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
-
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
+        usos_id = self.user_doc[constants.USOS_ID]
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                                           constants.USOS_ID: parameters[
-                                                                               constants.USOS_ID]}, LIMIT_FIELDS)
+                                                                           constants.USOS_ID: usos_id}, LIMIT_FIELDS)
 
         if not course_doc:
             self.error("Nie znaleźliśmy kursu {0} w semestrze {1}".format(course_id, term_id))
@@ -39,22 +35,21 @@ class CourseEditionApi(BaseHandler):
 
         # get courses_classtypes
         classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
-            constants.USOS_ID]})
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos_id})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
         # change faculty_id to faculty name
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-            constants.FACULTY_ID], constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
+            constants.FACULTY_ID], constants.USOS_ID: usos_id}, LIMIT_FIELDS_FACULTY)
         course_doc.pop(constants.FACULTY_ID)
         course_doc[constants.FACULTY_ID] = fac_doc
         course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
+            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id,
              constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
         if not course_edition_doc:
             self.error("Bląd podczas pobierania course_edition.")
@@ -80,7 +75,7 @@ class CourseEditionApi(BaseHandler):
             for unit in course_doc['course_units_ids']:
                 # groups
                 group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
-                    {constants.COURSE_ID: course_id, constants.USOS_ID: parameters[constants.USOS_ID],
+                    {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id,
                      constants.TERM_ID: term_id, 'course_unit_id': int(unit)}, LIMIT_FIELDS_GROUPS)
                 if not group_doc:
                     continue
@@ -92,7 +87,7 @@ class CourseEditionApi(BaseHandler):
 
         # terms
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.USOS_ID: parameters[constants.USOS_ID],
+            {constants.USOS_ID: usos_id,
              constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
         if not term_doc:
             pass
@@ -104,16 +99,13 @@ class CourseEditionApi(BaseHandler):
 
 
 class CoursesApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                                           constants.USOS_ID: parameters[
+                                                                           constants.USOS_ID: self.user_doc[
                                                                                constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
@@ -126,7 +118,7 @@ class CoursesApi(BaseHandler):
 
         # change faculty_id to faculty name
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
-            constants.FACULTY_ID], constants.USOS_ID: parameters[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
+            constants.FACULTY_ID], constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
         course_doc.pop(constants.FACULTY_ID)
         course_doc[constants.FACULTY_ID] = fac_doc
         course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
@@ -135,16 +127,13 @@ class CoursesApi(BaseHandler):
 
 
 class CoursesEditionsApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
             ('course_editions', constants.MONGO_ID)
         )
 
@@ -154,7 +143,7 @@ class CoursesEditionsApi(BaseHandler):
 
         # get courses_classtypes
         classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
             constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
@@ -176,7 +165,7 @@ class CoursesEditionsApi(BaseHandler):
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: course[constants.TERM_ID],
-                     constants.USOS_ID: parameters[constants.USOS_ID]},
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
                 groups = list()

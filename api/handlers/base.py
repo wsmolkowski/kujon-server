@@ -15,24 +15,6 @@ class BaseHandler(handlers.CommonHandler, DatabaseMixin, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
-    @tornado.gen.coroutine
-    def get_parameters(self):
-
-        user_doc = self.get_current_user()
-
-        if not user_doc:
-            # usos_id = self.get_argument(constants.USOS_ID, default=None, strip=True)
-            # mobile_id = self.get_argument(constants.MOBILE_ID, default=None, strip=True)
-            atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
-            ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
-
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_SECRET: atk,
-                                                                           constants.ACCESS_TOKEN_KEY: ats})
-        if not user_doc or not user_doc['usos_paired']:
-            raise tornado.gen.Return(self.fail("Request not authenticated."))
-
-        raise tornado.gen.Return(user_doc)
-
     @staticmethod
     def validate_usos(usos, parameters):
         if not usos:
