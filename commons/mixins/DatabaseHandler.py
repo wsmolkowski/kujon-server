@@ -3,20 +3,16 @@
 from datetime import datetime
 import logging
 
-import motor
 from tornado import gen
+from tornado.web import RequestHandler
 
-from commons import constants, settings
+from commons import constants
 
 
-class DatabaseMixin(object):
-    _db = None
-
+class DatabaseHandler(RequestHandler):
     @property
     def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
+        return self.application.db
 
     @gen.coroutine
     def remove_user(self, user_id):

@@ -7,11 +7,11 @@ import tornado.gen
 from bson import json_util
 
 from commons import handlers, constants
-from commons.mixins.DatabaseMixin import DatabaseMixin
+from commons.mixins.DatabaseHandler import DatabaseHandler
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class BaseHandler(handlers.CommonHandler, DatabaseMixin, JSendMixin):
+class BaseHandler(handlers.CommonHandler, DatabaseHandler, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 

@@ -3,19 +3,18 @@
 import logging
 from datetime import timedelta, datetime
 
-import motor
 from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
-from commons.mixins.DatabaseMixin import DatabaseMixin
+from commons.mixins.DatabaseHandler import DatabaseHandler
 from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 SLEEP = 1
 
 
-class MongoDbQueue(DatabaseMixin):
+class MongoDbQueue(DatabaseHandler):
     def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
         super(MongoDbQueue, self).__init__()
 

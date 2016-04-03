@@ -2,6 +2,7 @@ import logging
 import ssl
 import sys
 
+import motor
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -18,6 +19,14 @@ define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
+    _db = None
+
+    @property
+    def db(self):
+        if not self._db:
+            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
+        return self._db[settings.MONGODB_NAME]
+
     _dao = None
 
     @property
