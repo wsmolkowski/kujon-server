@@ -9,9 +9,9 @@ from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 
-from commons.AESCipher import AESCipher
 from commons import constants, settings, utils
-from commons.mixins.DatabaseHandler import DatabaseHandler
+from commons.AESCipher import AESCipher
+from commons.handlers import DatabaseHandler
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
 

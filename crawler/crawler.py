@@ -7,7 +7,7 @@ from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
-from commons.mixins.DatabaseHandler import DatabaseHandler
+from commons.handlers import DatabaseHandler
 from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
