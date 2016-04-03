@@ -58,6 +58,7 @@ ALERT_MESSAGE = "alert_message"
 GRADE_FINAL = "Końcowa"
 
 COLLECTION_USERS = "users"
+COLLECTION_USERS_ARCHIVE = "users_archive"
 COLLECTION_USOSINSTANCES = "usosinstances"
 COLLECTION_COURSES_CLASSTYPES = "courses_classtypes"
 COLLECTION_COURSES_UNITS = "courses_units"

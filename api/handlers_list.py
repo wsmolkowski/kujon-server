@@ -12,7 +12,7 @@ from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 
 HANDLERS = [
     (r"/config", ApplicationConfigHandler),
-    (r"/authentication/remove", authentication.RemoveHandler),
+    (r"/authentication/archive", authentication.ArchiveHandler),
     (r"/authentication/logout", authentication.LogoutHandler),
     (r"/authentication/register", authentication.UsosRegisterHandler),
     (r"/authentication/verify", authentication.UsosVerificationHandler),
