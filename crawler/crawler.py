@@ -5,21 +5,24 @@ from datetime import timedelta, datetime
 
 from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
+import motor
 
 from commons import settings, constants
-from commons.handlers import DatabaseHandler
 from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 SLEEP = 1
 
 
-class MongoDbQueue(DatabaseHandler):
+class MongoDbQueue(object):
     def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
         super(MongoDbQueue, self).__init__()
 
         self.crawler = UsosCrawler()
         self._queue = queues.Queue(maxsize=queue_maxsize)
+
+        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+
 
     @gen.coroutine
     def __load_work(self):
@@ -60,6 +63,20 @@ class MongoDbQueue(DatabaseHandler):
                 {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.debug("updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
+
+    @gen.coroutine
+    def remove_user_data(self, user_id):
+        logging.debug('removing user data for user_id {0}'.format(user_id))
+
+        collections = yield self.db.collection_names()
+        for collection in collections:
+            exists = yield self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            if exists:
+                result = yield self.db[collection].remove({constants.USER_ID: user_id})
+                logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
+                    collection, user_id, result))
+
+        logging.debug('removed user data for user_id {0}'.format(user_id))
 
     @gen.coroutine
     def process_job(self, job):

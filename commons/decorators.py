@@ -17,7 +17,7 @@ def authenticated(method):
                     atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
                     ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
-                    user_doc = self.dao.get_user(atk, ats)
+                    user_doc = self.dao.get_user_by_tokens(atk, ats)
 
                 if not user_doc or not user_doc['usos_paired']:
                     self.fail("Request not authenticated.")

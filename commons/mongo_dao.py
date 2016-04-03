@@ -22,8 +22,8 @@ class Dao:
         else:
             self._dbname = dbname
 
-        logging.debug("Connecting do MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
         self._db = pymongo.Connection(self._dburi)[self._dbname]
+        logging.debug("Connected to MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
 
     def find_usos(self, usos_id):
         return self._db.usosinstances.find_one({constants.USOS_ID: usos_id})
@@ -42,7 +42,7 @@ class Dao:
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
 
-    def get_user(self, atk, ats):
+    def get_user_by_tokens(self, atk, ats):
         return self._db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
                                                               constants.ACCESS_TOKEN_SECRET: ats})
 
