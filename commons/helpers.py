@@ -1,13 +1,18 @@
 import logging
 import os
 import traceback
-from datetime import datetime
 from functools import wraps
 
+from datetime import datetime
+
+
+def search_key_value_onlist(list, key, value):
+    for item in list:
+        if item[key] == value:
+            return item
 
 def in_dictlist((key, value), my_dictlist):
     """
-
     :param my_dictlist:
     :return:
     """
