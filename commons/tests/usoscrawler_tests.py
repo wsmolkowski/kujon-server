@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from tornado.testing import AsyncTestCase, gen_test
 
 from commons import constants
-from commons.mongo_dao import Dao
+from commons.Dao import Dao
 from commons.usosutils.usosclient import UsosClient
 from commons.usosutils.usoscrawler import UsosCrawler
 

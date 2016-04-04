@@ -50,6 +50,8 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
+        self.db
+        self.dao
 
 def prepare_environment():
     # change encoding to utf-8

@@ -9,7 +9,7 @@ from commons import settings, constants
 log = logging.getLogger(__name__)
 
 
-class Dao:
+class Dao(object):
     def __init__(self, dburi=None, dbname=None):
         self.aes = AESCipher()
         if not dburi and not dbname:
