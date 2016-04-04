@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants, decorators
+from commons import helpers
 from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
@@ -22,12 +23,44 @@ class CourseEditionApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
         usos_id = self.user_doc[constants.USOS_ID]
-        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                                           constants.USOS_ID: usos_id}, LIMIT_FIELDS)
+        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
+            {constants.COURSE_ID: course_id,
+             constants.USOS_ID: usos_id}, LIMIT_FIELDS)
 
         if not course_doc:
             self.error("Nie znaleźliśmy kursu {0} w semestrze {1}".format(course_id, term_id))
             return
+
+        # get information about course_edition
+        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id,
+             constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
+        if not course_edition_doc:
+            self.error("Bląd podczas pobierania edycji kursu.")
+            return
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: self.user_doc[constants.MONGO_ID]})
+        if not user_info_doc:
+            self.error("Bląd podczas pobierania danych użytkownika")
+            return
+
+        # checking if user is on this course, so have access to this course
+        if 'participants' in course_edition_doc:
+            # sort participants
+            course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
+
+            # check if user can see this course_edition (is on participant list)
+            if not helpers.search_key_value_onlist(course_doc['participants'], constants.USER_ID,
+                                                   user_info_doc[constants.ID]):
+                self.error("Nie masz uprawnień do wyświetlenie tej edycji kursu..")
+                return
+            else:
+                # remove from participant list current user
+                course_doc['participants'] = [participant for participant in course_doc['participants'] if
+                                              participant[constants.USER_ID] != user_info_doc[constants.ID]]
+        else:
+            pass
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -46,20 +79,6 @@ class CourseEditionApi(BaseHandler):
         course_doc.pop(constants.FACULTY_ID)
         course_doc[constants.FACULTY_ID] = fac_doc
         course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
-
-        # get information about course_edition
-        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id,
-             constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
-        if not course_edition_doc:
-            self.error("Bląd podczas pobierania course_edition.")
-            return
-
-        # sort participant
-        if 'participants' in course_edition_doc:
-            course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
-        else:
-            pass
 
         # make lecurers uniqe list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
