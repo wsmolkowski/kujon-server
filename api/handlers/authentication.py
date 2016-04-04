@@ -11,7 +11,7 @@ import tornado.gen
 import tornado.web
 
 from base import BaseHandler
-from commons import constants, settings
+from commons import constants, settings, decorators
 from crawler import job_factory
 
 
@@ -22,6 +22,7 @@ class LogoutHandler(BaseHandler):
 
 
 class ArchiveHandler(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
