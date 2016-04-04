@@ -25,19 +25,12 @@ class Dao:
         self._db = pymongo.Connection(self._dburi)[self._dbname]
         logging.debug("Connected to MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
 
-    def find_usos(self, usos_id):
-        return self._db.usosinstances.find_one({constants.USOS_ID: usos_id})
-
     def insert(self, collection, document):
         return self._db[collection].insert(document)
 
     def get_usos(self, usos_id):
         usos = self._db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
         return self.aes.decrypt_usos(usos)
-
-    def get_usoses(self):
-        usoses = self._db[constants.COLLECTION_USOSINSTANCES].find()
-        return self.aes.decrypt_usoses(usoses)
 
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
@@ -46,19 +39,12 @@ class Dao:
         return self._db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
                                                               constants.ACCESS_TOKEN_SECRET: ats})
 
-    def get_users_info(self, user_id):
-        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
-
     def get_users_info(self, user_id, usos):
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
                                                                    constants.USOS_ID: usos[constants.USOS_ID]})
 
     def get_users_info_photo(self, user_id, usos_id):
         return self._db[constants.COLLECTION_PHOTOS].find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
-
-    def get_group(self, group_id, usos_id):
-        return self._db[constants.COLLECTION_COURSES_UNITS].find_one(
-            {constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
 
     def get_units(self, unit_it, usos_id):
         return self._db[constants.COLLECTION_COURSES_UNITS].find_one(
