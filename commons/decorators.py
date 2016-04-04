@@ -1,7 +1,8 @@
+import functools
+
+from tornado.web import HTTPError
 
 import constants
-import functools
-from tornado.web import HTTPError
 
 
 def authenticated(method):
@@ -17,7 +18,8 @@ def authenticated(method):
                     atk = self.get_argument(constants.ACCESS_TOKEN_KEY, default=None, strip=True)
                     ats = self.get_argument(constants.ACCESS_TOKEN_SECRET, default=None, strip=True)
 
-                    user_doc = self.dao.get_user_by_tokens(atk, ats)
+                    user_doc = self.dao[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
+                                                                              constants.ACCESS_TOKEN_SECRET: ats})
 
                 if not user_doc or not user_doc['usos_paired']:
                     self.fail("Request not authenticated.")
@@ -29,4 +31,5 @@ def authenticated(method):
             self.user_doc = self.get_current_user()
 
         return method(self, *args, **kwargs)
+
     return wrapper

@@ -12,14 +12,11 @@ log = logging.getLogger(__name__)
 class Dao:
     def __init__(self, dburi=None, dbname=None):
         self.aes = AESCipher()
-        if not dburi:
+        if not dburi and not dbname:
             self._dburi = settings.MONGODB_URI
-        else:
-            self._dburi = dburi
-
-        if not dbname:
             self._dbname = settings.MONGODB_NAME
         else:
+            self._dburi = dburi
             self._dbname = dbname
 
         self._db = pymongo.Connection(self._dburi)[self._dbname]
@@ -34,10 +31,6 @@ class Dao:
 
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
-
-    def get_user_by_tokens(self, atk, ats):
-        return self._db[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
-                                                              constants.ACCESS_TOKEN_SECRET: ats})
 
     def get_users_info(self, user_id, usos):
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
