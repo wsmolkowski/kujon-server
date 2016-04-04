@@ -1,4 +1,3 @@
-tornado
 oauth2
 pycurl
 pycrypto
