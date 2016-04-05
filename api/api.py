@@ -3,6 +3,7 @@ import ssl
 import sys
 
 import motor
+import pymongo
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -26,6 +27,14 @@ class Application(tornado.web.Application):
             self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         return self._db[settings.MONGODB_NAME]
 
+    _dao = None
+
+    @property
+    def dao(self):
+        if not self._dao:
+            self._dao = pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        return self._dao
+
     def __init__(self):
         _settings = dict(
             debug=settings.DEBUG,
@@ -42,7 +51,7 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
         self.db
-
+        self.dao
 
 def prepare_environment():
     # change encoding to utf-8

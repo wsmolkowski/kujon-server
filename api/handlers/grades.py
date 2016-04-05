@@ -1,34 +1,31 @@
 # coding=UTF-8
 
+import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 
 
 class GradesForUserApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
-        grades = list()
-
         # get class_types
         classtypes = dict()
         cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-            {constants.USOS_ID: parameters[constants.USOS_ID]})
+            {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
 
-        cursor = self.db[constants.COLLECTION_GRADES].find({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])},
-                                                           ('grades', constants.TERM_ID, constants.COURSE_ID,
-                                                            'course_name')).sort([(constants.TERM_ID, -1)])
+        cursor = self.db[constants.COLLECTION_GRADES].find(
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
+            ('grades', constants.TERM_ID, constants.COURSE_ID,
+             'course_name')).sort([(constants.TERM_ID, -1)])
         new_grades = []
 
         while (yield cursor.fetch_next):
@@ -38,12 +35,12 @@ class GradesForUserApi(BaseHandler):
 
             # if there is no grades -> pass
             if len(grades_courseedition['grades']['course_grades']) == 0 and \
-               len(grades_courseedition['grades']['course_units_grades']) == 0:
+                            len(grades_courseedition['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}
             for unit in grades_courseedition['grades']['course_units_grades']:
-                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: parameters[constants.USOS_ID]}}, {
+                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: self.user_doc[constants.USOS_ID]}}, {
                     '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
                                 'as': 'courses_classtypes'}}]
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
@@ -88,20 +85,17 @@ class GradesForUserApi(BaseHandler):
 
 
 class GradesForCourseAndTermApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id, term_id):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
-        pipeline = {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID]), constants.COURSE_ID: course_id,
-                    constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}
+        pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.COURSE_ID: course_id,
+                    constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         limit_fields = ('course_name', 'course_id', 'grades')
 
         classtypes = {}
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: parameters[
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
             constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
@@ -111,7 +105,7 @@ class GradesForCourseAndTermApi(BaseHandler):
         units = {}
         if grades and len(grades) > 0:
             for unit in grades['grades']['course_units_grades']:
-                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: parameters[constants.USOS_ID]}}, {
+                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: self.user_doc[constants.USOS_ID]}}, {
                     '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
                                 'as': 'courses_classtypes'}}]
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)

@@ -1,32 +1,30 @@
 # coding=UTF-8
 
-import tornado.web
-from bson.objectid import ObjectId
 from datetime import date, datetime
 
+import tornado.web
+from bson.objectid import ObjectId
+
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 
 class TermsApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         terms = []
         terms_doc = []
         courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         if courses_editions_doc:
             for term in courses_editions_doc['course_editions']:
                 terms.append(term)
-                cursor = self.db.terms.find({constants.TERM_ID: term, constants.USOS_ID: parameters[constants.USOS_ID]},
+                cursor = self.db.terms.find({constants.TERM_ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
                                             ('name', 'end_date', 'finish_date', 'start_date', 'name'))
                 while (yield cursor.fetch_next):
                     term_data = cursor.next_object()
@@ -45,16 +43,13 @@ class TermsApi(BaseHandler):
 
 
 class TermApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, term_id):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.TERM_ID: term_id, constants.USOS_ID: parameters[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+            {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
 
         if not term_doc:
             self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))

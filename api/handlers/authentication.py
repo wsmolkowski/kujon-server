@@ -2,21 +2,34 @@
 
 import json
 import logging
-from datetime import datetime
 
 import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
+from datetime import datetime
 
 from base import BaseHandler
-from commons import constants, settings
+from commons import constants, settings, decorators
 from crawler import job_factory
 
 
 class LogoutHandler(BaseHandler):
     def get(self):
+        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.redirect(settings.DEPLOY_WEB)
+
+
+class ArchiveHandler(BaseHandler):
+    @decorators.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        user_doc = self.get_current_user()
+        if user_doc:
+            yield self.archive_user(user_doc[constants.MONGO_ID])
+
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.redirect(settings.DEPLOY_WEB)
 
@@ -58,7 +71,8 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
-                scope=['public_profile', 'email', 'user_friends'],
+                scope=['public_profile', 'email', 'user_friends', 'user_managed_groups', 'user_birthday',
+                       'user_education_history', 'read_custom_friendlists'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
 
@@ -80,15 +94,15 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 self._COOKIE_FIELDS)
 
             if not user_doc:
-                userToInsert = dict()
-                userToInsert[constants.USER_TYPE] = 'google'
-                userToInsert[constants.USER_NAME] = user['name']
-                userToInsert[constants.USER_PICTURE] = user['picture']
-                userToInsert[constants.USER_EMAIL] = user['email']
-                userToInsert[constants.USOS_PAIRED] = False
-                userToInsert[constants.USER_CREATED] = datetime.now()
+                insert_doc = dict()
+                insert_doc[constants.USER_TYPE] = 'google'
+                insert_doc[constants.USER_NAME] = user['name']
+                insert_doc[constants.USER_PICTURE] = user['picture']
+                insert_doc[constants.USER_EMAIL] = user['email']
+                insert_doc[constants.USOS_PAIRED] = False
+                insert_doc[constants.USER_CREATED] = datetime.now()
 
-                user_doc = yield motor.Op(self.db.users.insert, userToInsert)
+                user_doc = yield motor.Op(self.db.users.insert, insert_doc)
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},

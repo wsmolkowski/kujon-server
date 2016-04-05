@@ -1,9 +1,11 @@
+# coding=UTF-8
+
 import logging
 from datetime import timedelta, datetime
 
-import motor
 from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
+import motor
 
 from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
@@ -19,10 +21,8 @@ class MongoDbQueue(object):
         self.crawler = UsosCrawler()
         self._queue = queues.Queue(maxsize=queue_maxsize)
 
-        self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
-        #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.update_user_job(ObjectId("56dad1dec4f9d23e009ca27c")))
-        #self._db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(ObjectId("56e295c8c4f9d21760d60922")))
 
     @gen.coroutine
     def __load_work(self):
@@ -30,7 +30,7 @@ class MongoDbQueue(object):
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
 
-        cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find(
+        cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find(
             {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
         ).sort([(constants.UPDATE_TIME, -1)])
 
@@ -39,7 +39,7 @@ class MongoDbQueue(object):
             yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
-        cursor = self._db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
+        cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
@@ -52,17 +52,31 @@ class MongoDbQueue(object):
         # insert current job to history collection
         old = job.copy()
         old.pop(constants.MONGO_ID)
-        yield self._db[constants.COLLECTION_JOBS_LOG].insert(old)
+        yield self.db[constants.COLLECTION_JOBS_LOG].insert(old)
 
         # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
         job[constants.JOB_MESSAGE] = message
 
-        update = yield self._db[constants.COLLECTION_JOBS_QUEUE].update(
+        update = yield self.db[constants.COLLECTION_JOBS_QUEUE].update(
                 {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.debug("updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
+
+    @gen.coroutine
+    def remove_user_data(self, user_id):
+        logging.debug('removing user data for user_id {0}'.format(user_id))
+
+        collections = yield self.db.collection_names()
+        for collection in collections:
+            exists = yield self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            if exists:
+                result = yield self.db[collection].remove({constants.USER_ID: user_id})
+                logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
+                    collection, user_id, result))
+
+        logging.debug('removed user data for user_id {0}'.format(user_id))
 
     @gen.coroutine
     def process_job(self, job):
@@ -72,6 +86,8 @@ class MongoDbQueue(object):
             yield self.crawler.initial_user_crawl(job[constants.USER_ID])
         elif job[constants.JOB_TYPE] == 'update_user_crawl':
             yield self.crawler.update_user_crawl(job[constants.USER_ID])
+        elif job[constants.JOB_TYPE] == 'archive_user':
+            yield self.remove_user_data(job[constants.USER_ID])
         else:
             raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
 
@@ -98,7 +114,7 @@ class MongoDbQueue(object):
                     yield self.update_job(job, constants.JOB_FINISH)
 
                 except Exception, ex:
-                    msg = "Exception while executing job {0} with: {0}".format(job[constants.MONGO_ID], ex.message)
+                    msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
                     logging.exception(msg)
 
                     yield self.update_job(job, constants.JOB_FAIL, msg)

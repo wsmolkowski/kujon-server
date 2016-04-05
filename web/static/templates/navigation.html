@@ -37,6 +37,7 @@
             <ul class="nav navbar-nav navbar-right">
                 <li id="spinner"><a class="fa fa-spinner fa-pulse"></a></li>
                 {{#if USER_LOGGED }}
+                <li><a href="{{API_URL}}/authentication/archive"><i class="fa fa-times"></i> Skasuj konto</a></li>
                 <li><a href="{{API_URL}}/authentication/logout" class="login-button"><i class="fa fa-sign-out"></i> Wyloguj</a></li>
                 {{else}}
                 <li class="dropdown" href="#login">

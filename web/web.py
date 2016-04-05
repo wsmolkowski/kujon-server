@@ -2,15 +2,13 @@ import logging
 import os
 import ssl
 
-import motor
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
 from commons import settings
-from handlers import web
-from handlers.base import DefaultErrorHandler
+from handlers import MainHandler, DefaultErrorHandler
 
 define("port", default=settings.WEB_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
@@ -18,17 +16,9 @@ define('cookie_secret', default=settings.COOKIE_SECRET)
 
 class Application(tornado.web.Application):
 
-    _db = None
-
-    @property
-    def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
-
     def __init__(self):
         __handlers = [
-            (r"/", web.MainHandler),
+            (r"/", MainHandler),
         ]
 
         __settings = dict(
@@ -47,8 +37,6 @@ class Application(tornado.web.Application):
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)
-
-        self.db
 
 
 if __name__ == "__main__":

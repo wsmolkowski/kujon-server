@@ -28,7 +28,6 @@ pip install tornado
 pip install oauth2
 pip install pycurl
 pip install pycrypto
-pip install emailqueue
 pip install pymongo
 pip install motor
 pip install tornado

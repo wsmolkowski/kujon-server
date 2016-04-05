@@ -1,93 +1,53 @@
-import tornado.gen
-from bson import json_util
-from tornado import httpclient
-from tornado.escape import json_decode
+# coding=UTF-8
+
+from datetime import datetime
+import logging
+
+from tornado import gen
 from tornado.web import RequestHandler
 
-import constants
-import settings
-import utils
-from AESCipher import AESCipher
+from commons import constants
 
 
-class CommonHandler(RequestHandler):
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        self.set_header("Access-Control-Allow-Credentials", "true")
-        self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
-
-    @staticmethod
-    def get_auth_http_client():
-        if settings.PROXY_URL and settings.PROXY_PORT:
-            httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                                 defaults=dict(proxy_host=settings.PROXY_URL,
-                                                               proxy_port=settings.PROXY_PORT,
-                                                               validate_cert=False))
-
-        return httpclient.AsyncHTTPClient()
-
-    def get_current_user(self):
-        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-        if cookie:
-            cookie = json_decode(cookie)
-            return json_util.loads(cookie)
-        return None
-
-    def config_data(self):
-        user = self.get_current_user()
-        if user and constants.USOS_PAIRED in user.keys():
-            usos_paired = user[constants.USOS_PAIRED]
-        else:
-            usos_paired = False
-
-        return {
-            'PROJECT_TITLE': settings.PROJECT_TITLE,
-            'DEPLOY_URL': settings.DEPLOY_WEB,
-            'API_URL': settings.DEPLOY_API,
-            'USOS_PAIRED': usos_paired,
-            'KUJON_SECURE_COOKIE': constants.KUJON_SECURE_COOKIE,
-            'USER_LOGGED': True if user else False
-        }
+class DatabaseHandler(RequestHandler):
+    @property
+    def db(self):
+        return self.application.db
 
     @property
-    def oauth_parameters(self):
-        return {
-            'proxy_info': utils.get_proxy(),
-        }
+    def dao(self):
+        return self.application.dao
 
-    _aes = None
-    @property
-    def aes(self):
-        if not self._aes:
-            self._aes = AESCipher()
-        return self._aes
+    @gen.coroutine
+    def archive_user(self, user_id):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
+        user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
-    _usoses = list()
-    _usoses_encrypted = list()
-    @tornado.gen.coroutine
-    def get_usoses(self, show_encrypted):
+        user_archive = yield self.db[constants.COLLECTION_USERS_ARCHIVE].insert(user_doc)
+        logging.debug('archived user data with id {0}'.format(user_archive))
 
-        if not self._usoses or not self._usoses_encrypted:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-            while (yield cursor.fetch_next):
-                usos_encrypted = cursor.next_object()
+        result = yield self.db[constants.COLLECTION_USERS].remove({constants.MONGO_ID: user_id})
 
-                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
-                usos = usos_encrypted.copy()
-                usos = dict(self.aes.decrypt_usos(usos))
+        logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
+            constants.COLLECTION_USERS, user_id, result))
 
-                self._usoses.append(usos)
-                self._usoses_encrypted.append(usos_encrypted)
-        if show_encrypted:
-            raise tornado.gen.Return(self._usoses_encrypted)
-        else:
-            raise tornado.gen.Return(self._usoses)
+        result = yield self.db[constants.COLLECTION_JOBS_QUEUE].insert({
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            constants.UPDATE_TIME: None,
+            constants.JOB_MESSAGE: None,
+            constants.JOB_STATUS: constants.JOB_PENDING,
+            constants.JOB_TYPE: 'archive_user'
+        })
 
-    @tornado.gen.coroutine
-    def get_usos(self, key, value):
-        usoses = yield self.get_usoses(show_encrypted=False)
+        logging.debug('created job for removing user data {0}'.format(result))
 
-        for u in usoses:
-            if u[key] == value:
-                raise tornado.gen.Return(u)
-        raise tornado.gen.Return(None)
+
+    @gen.coroutine
+    def log_exception(self, arguments, trace):
+        yield self.db[constants.COLLECTION_EXCEPTIONS].insert({
+            constants.CREATED_TIME: datetime.now(),
+            'file': file,
+            'arguments': arguments,
+            'trace': trace
+        })

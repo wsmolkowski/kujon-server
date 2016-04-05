@@ -9,34 +9,18 @@ from commons import settings, constants
 log = logging.getLogger(__name__)
 
 
-class Dao:
+class Dao(object):
     def __init__(self, dburi=None, dbname=None):
         self.aes = AESCipher()
-        if not dburi:
+        if not dburi and not dbname:
             self._dburi = settings.MONGODB_URI
-        else:
-            self._dburi = dburi
-
-        if not dbname:
             self._dbname = settings.MONGODB_NAME
         else:
+            self._dburi = dburi
             self._dbname = dbname
 
-        logging.debug("Connecting do MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
         self._db = pymongo.Connection(self._dburi)[self._dbname]
-
-    def drop_collection(self, collection):
-        logging.warn("Cleaning collection: {0}".format(collection))
-        self._db.drop_collection(collection)
-
-    def drop_collections(self):
-        for collection in self._db.collection_names():
-            if 'system' in collection:
-                continue
-            self.drop_collection(collection)
-
-    def find_usos(self, usos_id):
-        return self._db.usosinstances.find_one({constants.USOS_ID: usos_id})
+        logging.debug("Connected to MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
 
     def insert(self, collection, document):
         return self._db[collection].insert(document)
@@ -45,15 +29,8 @@ class Dao:
         usos = self._db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
         return self.aes.decrypt_usos(usos)
 
-    def get_usoses(self):
-        usoses = self._db[constants.COLLECTION_USOSINSTANCES].find()
-        return self.aes.decrypt_usoses(usoses)
-
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
-
-    def get_users_info(self, user_id):
-        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
 
     def get_users_info(self, user_id, usos):
         return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
@@ -61,10 +38,6 @@ class Dao:
 
     def get_users_info_photo(self, user_id, usos_id):
         return self._db[constants.COLLECTION_PHOTOS].find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
-
-    def get_group(self, group_id, usos_id):
-        return self._db[constants.COLLECTION_COURSES_UNITS].find_one(
-            {constants.GROUP_ID: group_id, constants.USOS_ID: usos_id})
 
     def get_units(self, unit_it, usos_id):
         return self._db[constants.COLLECTION_COURSES_UNITS].find_one(

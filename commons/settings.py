@@ -37,6 +37,7 @@ SITE_DOMAIN = config.get('deployment', 'SITE_DOMAIN')
 API_PORT = config.getint('deployment', 'API_PORT')
 DEPLOY_API = config.get('deployment', 'DEPLOY_API')
 
+WEB_VERSION = config.get('deployment', 'WEB_VERSION')
 WEB_PORT = config.getint('deployment', 'WEB_PORT')
 DEPLOY_WEB = config.get('deployment', 'DEPLOY_WEB')
 CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
@@ -45,6 +46,7 @@ LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 SMTP_HOST = config.get('email', 'SMTP_HOST')
 SMTP_PORT = config.getint('email', 'SMTP_PORT')
 SMTP_USER = config.get('email', 'SMTP_USER')
+SMTP_EMAIL = config.get('email', 'SMTP_EMAIL')
 SMTP_PASSWORD = config.get('email', 'SMTP_PASSWORD')
 
 SSL_CERT = config.get('ssl', 'SSL_CERT') if config.get('ssl', 'SSL_CERT') else None

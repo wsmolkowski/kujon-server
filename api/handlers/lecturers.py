@@ -1,11 +1,11 @@
 # coding=UTF-8
 
 import tornado.web
+import tornado.gen
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
-from commons import settings
+from commons import constants, settings, decorators
 from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = (
@@ -14,19 +14,16 @@ LIMIT_FIELDS = (
 
 
 class LecturersApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
 
         courses = {}
         lecturers_returned = {}
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
         if course_doc:
             for term in course_doc['course_editions']:
                 for course in course_doc['course_editions'][term]:
@@ -35,7 +32,7 @@ class LecturersApi(BaseHandler):
             for course in courses:
                 course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
                     {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                     constants.USOS_ID: parameters[constants.USOS_ID]})
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
 
                 if not course_doc:
                     continue
@@ -45,7 +42,6 @@ class LecturersApi(BaseHandler):
                     lecturers_returned[lecturer_id] = lecturer
 
             lecturers_returned = lecturers_returned.values()
-            #lecturers_returned = sorted(lecturers_returned, key=lambda k: k['last_name'])
         if not lecturers_returned:
             self.error("Poczekaj szukamy nauczycieli.")
         else:
@@ -53,15 +49,12 @@ class LecturersApi(BaseHandler):
 
 
 class LecturerByIdApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, user_info_id):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
-        user_info = yield self.db.users_info.find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id}, LIMIT_FIELDS)
         if not user_info:
             self.error("Poczekaj szukamy informacji o nauczycielu.")
             return
@@ -78,7 +71,6 @@ class LecturerByIdApi(BaseHandler):
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
 
-
         # change course_editions_conducted to list of courses
         course_editions = []
         if user_info['course_editions_conducted']:
@@ -86,9 +78,9 @@ class LecturerByIdApi(BaseHandler):
                 course_id, term_id = courseterm['id'].split('|')
                 course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
                     {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
-                     constants.USOS_ID: parameters[constants.USOS_ID]})
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
                 if course_doc:
-                    course=dict()
+                    course = dict()
                     course['course_name'] = course_doc['course_name']['pl']
                     course['course_id'] = course_doc['course_id']
                     course['term_id'] = course_doc['term_id']
@@ -97,7 +89,7 @@ class LecturerByIdApi(BaseHandler):
                     course_editions.append("Dont have data for course and term..")
             user_info['course_editions_conducted'] = course_editions
 
-        #show url to photo
+        # show url to photo
         if user_info['has_photo']:
             user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 

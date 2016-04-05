@@ -1,8 +1,6 @@
-tornado
 oauth2
 pycurl
 pycrypto
-emailqueue
 pymongo
 motor
 tornado

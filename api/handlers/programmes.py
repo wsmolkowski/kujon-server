@@ -1,20 +1,20 @@
 # coding=UTF-8
 
+import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants
+from commons import constants, decorators
 
 LIMIT_FIELDS = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration')
 
 
 class ProgrammesByIdApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, programme_id):
-
-        yield self.get_parameters()
 
         programme = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id},
                                                                             LIMIT_FIELDS)
@@ -26,16 +26,13 @@ class ProgrammesByIdApi(BaseHandler):
 
 
 class ProgrammesApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         if not user_info:
             self.error("Poczekaj szukamy danych o kursach użytkownika.")

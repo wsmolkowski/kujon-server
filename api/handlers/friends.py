@@ -1,24 +1,22 @@
 # coding=UTF-8
 
+import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
-from commons import constants, helpers
+from commons import constants, helpers, decorators
 
 
 class FriendsApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
         friends = []
         friends_returned = []
-        pipeline = [{'$match': {'user_id': ObjectId(parameters[constants.MONGO_ID])}},
+        pipeline = [{'$match': {'user_id': ObjectId(self.user_doc[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
 
@@ -40,26 +38,25 @@ class FriendsApi(BaseHandler):
         else:
             self.error("Poczekaj szukamy przyjaciół.")
 
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self, user_info_id):
 
-        parameters = yield self.get_parameters()
-
-        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                           constants.MONGO_ID]),
+        friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(self.user_doc[
+                                                                                                           constants.MONGO_ID]),
                                                                            constants.FRIEND_ID: user_info_id})
         if not friend_doc:
 
             # check if user_info exists
             user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id,
-                                                                                 constants.USOS_ID: parameters[
-                                                                                 constants.USOS_ID]})
+                                                                                 constants.USOS_ID: self.user_doc[
+                                                                                     constants.USOS_ID]})
 
             if user_info:
                 result = dict()
-                result[constants.USOS_ID] = parameters[constants.USOS_ID]
-                result[constants.USER_ID] = ObjectId(parameters[constants.MONGO_ID])
+                result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+                result[constants.USER_ID] = ObjectId(self.user_doc[constants.MONGO_ID])
                 result[constants.FRIEND_ID] = str(user_info_id)
                 friend_doc = self.db[constants.COLLECTION_FRIENDS].insert(result)
                 if friend_doc:
@@ -71,20 +68,16 @@ class FriendsApi(BaseHandler):
         else:
             self.fail(user_info_id)
 
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def delete(self, user_info_id):
-
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
-        friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(parameters[
-                                                                             constants.MONGO_ID]),
+        friend_in_db = yield self.db[constants.COLLECTION_FRIENDS].find_one({constants.USER_ID: ObjectId(self.user_doc[
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
         if friend_in_db:
-            friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(parameters[
-                                                                             constants.MONGO_ID]),
+            friend_doc = yield self.db[constants.COLLECTION_FRIENDS].remove({constants.USER_ID: ObjectId(self.user_doc[
+                                                                                                             constants.MONGO_ID]),
                                                                              constants.FRIEND_ID: user_info_id})
             if friend_doc:
                 self.success(user_info_id)
@@ -93,21 +86,19 @@ class FriendsApi(BaseHandler):
 
 
 class FriendsSuggestionsApi(BaseHandler):
+    @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
 
-        parameters = yield self.get_parameters()
-        if not parameters:
-            return
-
-        user_info = yield self.db.users_info.find_one({constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         courses = {}
         suggested_participants = {}
 
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(parameters[constants.MONGO_ID])})
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
         if course_doc:
             for term in course_doc['course_editions']:
                 for course in course_doc['course_editions'][term]:
@@ -116,7 +107,7 @@ class FriendsSuggestionsApi(BaseHandler):
             for course in courses:
                 course_participants = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
                     {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                     constants.USOS_ID: parameters[constants.USOS_ID]})
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
 
                 if not course_participants:
                     continue
