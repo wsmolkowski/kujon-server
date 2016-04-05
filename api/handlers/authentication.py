@@ -2,13 +2,13 @@
 
 import json
 import logging
-from datetime import datetime
 
 import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
+from datetime import datetime
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -71,7 +71,8 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
-                scope=['public_profile', 'email', 'user_friends'],
+                scope=['public_profile', 'email', 'user_friends', 'user_managed_groups', 'user_birthday',
+                       'user_education_history', 'read_custom_friendlists'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
 
