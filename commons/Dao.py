@@ -40,8 +40,25 @@ class Dao(object):
         return self._db[constants.COLLECTION_PHOTOS].find_one({constants.UNIT_ID: user_id, constants.USOS_ID: usos_id})
 
     def get_units(self, unit_it, usos_id):
+        if not isinstance(unit_it, int):
+            try:
+                unit_it = int(unit_it)
+            except ValueError:
+                raise Exception('Provided unit_it {0} is not integer'.format(unit_it))
+
         return self._db[constants.COLLECTION_COURSES_UNITS].find_one(
             {constants.UNIT_ID: unit_it, constants.USOS_ID: usos_id})
+
+    def get_group(self, course_id, usos_id):
+        if not isinstance(course_id, int):
+            try:
+                course_id = int(course_id)
+            except ValueError:
+                raise Exception('Provided course_id {0} is not integer'.format(course_id))
+
+        return self._db[constants.COLLECTION_GROUPS].find_one(
+            {constants.GROUP_ID: course_id, constants.USOS_ID: usos_id})
+
 
     def update(self, collection, key, key_value, document):
         return self._db[collection].update({key: key_value}, document)

@@ -1,14 +1,14 @@
 import logging
-
-import tornado.gen
-from bson.objectid import ObjectId
 from datetime import datetime
 from datetime import timedelta, date
 
+import tornado.gen
+from bson.objectid import ObjectId
+
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.helpers import log_execution_time
 from commons.Dao import Dao
+from commons.helpers import log_execution_time
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
@@ -227,6 +227,14 @@ class UsosCrawler:
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
             existing_doc = self.dao.get_course_edition(course_edition[constants.COURSE_ID],
                                                        course_edition[constants.TERM_ID], usos[constants.USOS_ID])
+
+            if existing_doc:
+                logging.debug('course_edition for usos: %r course: %r and term: %r already exists',
+                              usos[constants.USOS_ID], course_edition[constants.TERM_ID],
+                              course_edition[constants.COURSE_ID]
+                              )
+                continue
+
             try:
                 result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
                                                fetch_participants=True)
@@ -314,14 +322,14 @@ class UsosCrawler:
                 logging.debug("no faculty for fac_id: %r.", faculty)
 
     @tornado.gen.coroutine
-    def __build_users_info(self, client, crawl_time, users, usos):
+    def __build_users_info(self, client, crawl_time, users, usos_id):
         for user in users:
-            if not self.dao.get_users_info(user[constants.ID], usos):
+            if not self.dao.get_users_info(user[constants.ID], usos_id):
                 # build user_info
-                self.__build_user_info(client, None, user[constants.ID], crawl_time, usos)
+                self.__build_user_info(client, None, user[constants.ID], crawl_time, usos_id)
 
                 # build programme for given user
-                self.__build_programmes(client, user[constants.ID], crawl_time, usos)
+                self.__build_programmes(client, user[constants.ID], crawl_time, usos_id)
 
     @tornado.gen.coroutine
     def __build_units(self, client, crawl_time, units, usos):
@@ -348,6 +356,9 @@ class UsosCrawler:
     def __build_groups(self, client, crawl_time, units, usos):
 
         for unit in units:
+            if self.dao.get_group(unit, usos[constants.USOS_ID]):
+                continue
+
             try:
                 result = client.groups(unit)
             except Exception, ex:
