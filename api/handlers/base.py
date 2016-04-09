@@ -163,7 +163,7 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('Przepraszamy, ale strona o podanym adresie nie istnieje.')
+        self.fail('Strona o podanym adresie nie istnieje..')
 
 
 class ApplicationConfigHandler(BaseHandler):

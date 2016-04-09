@@ -30,5 +30,5 @@ class DefaultErrorHandler(RequestHandler, JSendMixin):
     @tornado.gen.coroutine
     def get(self):
         data = CONFIG
-        data['MESSAGE'] = 'Przepraszamy, ale strona o podanym adresie nie istnieje.'
+        data['MESSAGE'] = 'Strona o podanym adresie nie istnieje..'
         self.render('error.html', **data)
