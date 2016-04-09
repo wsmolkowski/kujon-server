@@ -1,7 +1,7 @@
 # coding=UTF-8
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from tornado import gen
 from tornado.web import RequestHandler
@@ -21,6 +21,11 @@ class DatabaseHandler(RequestHandler):
     @gen.coroutine
     def archive_user(self, user_id):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
+
+        if not user_doc:
+            logging.debug('cannot archive user which does not exists {0}'.format(user_id))
+            return
+
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
         user_archive = yield self.db[constants.COLLECTION_USERS_ARCHIVE].insert(user_doc)
