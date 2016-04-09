@@ -32,8 +32,22 @@ class Dao(object):
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
 
-    def get_users_info(self, user_id, usos):
-        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
+    def get_users_info_by_user_id(self, user_id, usos):
+        """
+        :param user_id: id from users table
+        :param usos:
+        :return:
+        """
+        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: ObjectId(user_id),
+                                                                   constants.USOS_ID: usos[constants.USOS_ID]})
+
+    def get_users_info(self, id, usos):
+        """
+        :param id: id usera z USOSa
+        :param usos: usos_id
+        :return: users_info record
+        """
+        return self._db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: id,
                                                                    constants.USOS_ID: usos[constants.USOS_ID]})
 
     def get_users_info_photo(self, user_id, usos_id):
@@ -58,7 +72,6 @@ class Dao(object):
 
         return self._db[constants.COLLECTION_GROUPS].find_one(
             {constants.GROUP_ID: course_id, constants.USOS_ID: usos_id})
-
 
     def update(self, collection, key, key_value, document):
         return self._db[collection].update({key: key_value}, document)
@@ -88,7 +101,7 @@ class Dao(object):
             {constants.USOS_ID: usos_id})
 
     def get_courses_editions(self, user_id, usos_id):
-        return self._db[constants.COLLECTION_COURSES_EDITIONS].find(
+        return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USOS_ID: usos_id, constants.USER_ID: user_id})
 
     def get_courses_conducted_by_lecturers(self, usos_id):
@@ -181,28 +194,12 @@ class Dao(object):
     def count(self, collection):
         return self._db[collection].count()
 
-    def user_info_exists(self, user_id):
-        if self._db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id}):
-            return True
-        return False
-
     def courses_conducted(self, user_id):
         course_editions_conducted = self._db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: user_id}, ('course_editions_conducted',))
         if course_editions_conducted:
             return course_editions_conducted['course_editions_conducted']
         return list()
-
-    def user_info_id(self, user_id):
-        doc_id = self._db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: user_id}, (constants.MONGO_ID,))
-        return doc_id[constants.MONGO_ID]
-
-    def curseseditions_id(self, user_id):
-        ce_doc = self._db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
-        if ce_doc:
-            return ce_doc[constants.MONGO_ID]
-        return False
 
     def delete_doc(self, collection, doc_id):
         self._db[collection].remove({constants.MONGO_ID: doc_id})

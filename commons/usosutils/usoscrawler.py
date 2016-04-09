@@ -1,13 +1,13 @@
 import logging
-from datetime import datetime
-from datetime import timedelta, date
 
 import tornado.gen
 from bson.objectid import ObjectId
+from datetime import datetime
+from datetime import timedelta, date
 
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.Dao import Dao
+from commons.dao import Dao
 from commons.helpers import log_execution_time
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
@@ -22,6 +22,7 @@ class UsosCrawler:
 
         self.aes = AESCipher()
         self.usosAsync = UsosAsync()
+
 
     @staticmethod
     def append(data, usos_id, create_time, update_time):
@@ -58,7 +59,7 @@ class UsosCrawler:
                 logging.debug("no photo for user_id: %r", user_id)
 
     def __build_user_info(self, client, user_id, user_info_id, crawl_time, usos):
-        if user_id and self.dao.user_info_exists(user_id):
+        if user_id and self.dao.get_users_info_by_user_id(user_id, usos):
             logging.debug("not building user info - it already exists for %r", user_id)
             return
 
@@ -171,55 +172,54 @@ class UsosCrawler:
                 logging.debug("no programme: %r.", programme[constants.ID])
 
     def __build_curseseditions(self, client, crawl_time, user_id, usos):
-        if self.dao.curseseditions_id(user_id):
-            logging.debug("courses_editions exists for user_id: %r", user_id)
-            return
+
+        update = False
+        course_edition = self.dao.get_courses_editions(user_id, usos[constants.USOS_ID])
+        if course_edition:
+            update = True
 
         try:
             result = client.courseeditions_info()
         except Exception, ex:
-            logging.exception('Could not find courseeditions_info due to {0}'.format(ex.message))
+            logging.exception("Could not find courseeditions_info due to {0}".format(ex.message))
             return
 
         if result:
             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
             result[constants.USER_ID] = user_id
+
+            # checking if update differs from version from mango
+            if update:
+                if cmp(result[constants.COURSE_EDITIONS], course_edition[constants.COURSE_EDITIONS]) == 0:
+                    logging.debug("course_editions not changed..")
+                    return False
+                else:
+                    logging.debug("course_editions changed - updating and moving old to archive.")
+                    self.db[constants.COLLECTION_COURSES_EDITIONS_ARCHIVE].insert(course_edition)
+                    self.db[constants.COLLECTION_COURSES_EDITIONS].remove({constants.MONGO_ID: course_edition[constants.MONGO_ID]})
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
         else:
-            logging.debug("no course_editions for user_id: %r", user_id)
+            logging.debug("no course_editions for user_id: %r in USOS.", user_id)
 
-    def __update_curseseditions(self, client, crawl_time, user_id, usos):
-
-        existing_id = self.dao.curseseditions_id(user_id)
-
-        try:
-            result = client.courseeditions_info()
-        except Exception, ex:
-            logging.exception('Could not find courseeditions_info due to {0}'.format(ex.message))
-            return
-
-        result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-        result[constants.USER_ID] = user_id
-
-        ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-        logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
-
-        if existing_id and ce_doc:
-            self.dao.delete_doc(constants.COLLECTION_COURSES_EDITIONS, existing_id)
-
-    @tornado.gen.coroutine
-    def __build_terms(self, user_id, usos, crawl_time):
+    def __build_terms(self, client, user_id, usos, crawl_time):
 
         for term_id in self.dao.get_user_terms(user_id):
 
             if self.dao.get_term(term_id, usos[constants.USOS_ID]):
-                continue  # term already exists
+                continue  # this term_id already exists
 
-            result = yield self.usosAsync.get_term_info(usos[constants.USOS_URL], term_id)
-            result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-            t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-            logging.debug("terms for term_id: %r inserted %r", term_id, str(t_doc))
+            try:
+                result = client.get_term_info(term_id)
+            except Exception, ex:
+                logging.exception('Could not find term_id for {0} due to {1}'.format(term_id, ex.message))
+                continue
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
+                logging.debug("terms for term_id: %r inserted %r", term_id, str(t_doc))
+            else:
+                logging.debug("no term_id: %r found!", term_id)
 
     @tornado.gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crawl_time):
@@ -231,8 +231,7 @@ class UsosCrawler:
             if existing_doc:
                 logging.debug('course_edition for usos: %r course: %r and term: %r already exists',
                               usos[constants.USOS_ID], course_edition[constants.TERM_ID],
-                              course_edition[constants.COURSE_ID]
-                              )
+                              course_edition[constants.COURSE_ID])
                 continue
 
             try:
@@ -322,14 +321,14 @@ class UsosCrawler:
                 logging.debug("no faculty for fac_id: %r.", faculty)
 
     @tornado.gen.coroutine
-    def __build_users_info(self, client, crawl_time, users, usos_id):
-        for user in users:
-            if not self.dao.get_users_info(user[constants.ID], usos_id):
+    def __build_users_info(self, client, crawl_time, user_info_ids, usos_id):
+        for user_info_id in user_info_ids:
+            if not self.dao.get_users_info(user_info_id[constants.ID], usos_id):
                 # build user_info
-                self.__build_user_info(client, None, user[constants.ID], crawl_time, usos_id)
+                self.__build_user_info(client, None, user_info_id[constants.ID], crawl_time, usos_id)
 
                 # build programme for given user
-                self.__build_programmes(client, user[constants.ID], crawl_time, usos_id)
+                self.__build_programmes(client, user_info_id[constants.ID], crawl_time, usos_id)
 
     @tornado.gen.coroutine
     def __build_units(self, client, crawl_time, units, usos):
@@ -440,28 +439,45 @@ class UsosCrawler:
         if not user:
             raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-        client, usos = self.__build_client(user)
-
-        user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
+        client, usos_id = self.__build_client(user)
+        user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos_id)
 
         # fetch time_table for current and next week
         monday = self.__get_monday()
-        self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
-        self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
+        self.__build_time_table(client, user_id, usos_id[constants.USOS_ID], monday)
+        self.__build_time_table(client, user_id, usos_id[constants.USOS_ID], self.__get_next_monday(monday))
 
-        self.__build_programmes(client, user_info_id, crawl_time, usos)
+        self.__build_programmes(client, user_info_id, crawl_time, usos_id)
 
-        self.__build_curseseditions(client, crawl_time, user_id, usos)
+        self.__build_curseseditions(client, crawl_time, user_id, usos_id)
 
-        yield self.__build_terms(user_id, usos, crawl_time)
+        self.__build_terms(client, user_id, usos_id, crawl_time)
 
-        self.__build_course_edition(client, user_id, usos, crawl_time)
+        self.__build_course_edition(client, user_id, usos_id, crawl_time)
 
-        yield self.__process_user_data(client, user_id, usos, crawl_time)
+        self.__process_user_data(client, user_id, usos_id, crawl_time)
 
-        self.__build_courses(client, usos, crawl_time)
+        self.__build_courses(client, usos_id, crawl_time)
 
-        self.__build_faculties(client, usos, crawl_time)
+        self.__build_faculties(client, usos_id, crawl_time)
+
+    @log_execution_time
+    @tornado.gen.coroutine
+    def daily_crawl(self):
+
+        crawl_time = datetime.now()
+
+        for user in self.dao.get_users():
+            try:
+                logging.debug(
+                    'updating daily crawl for user: {0}'.format(user[constants.MONGO_ID]))
+                client, usos = self.__build_client(user)
+
+                self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos)
+
+            except Exception, ex:
+                logging.exception('Exception in daily_crawl {0}'.format(ex.message))
+
 
     @staticmethod
     def __get_next_monday(monday):
@@ -491,8 +507,6 @@ class UsosCrawler:
 
         self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
 
-        # user_info_id = self.dao.user_info_id(user_id)
-        # self.__build_faculties(client, usos, crawl_time)
 
     @tornado.gen.coroutine
     def update_time_tables(self):
