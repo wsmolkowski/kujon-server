@@ -1,13 +1,13 @@
 import logging
-from datetime import datetime
-from datetime import timedelta, date
 
 import tornado.gen
 from bson.objectid import ObjectId
+from datetime import datetime
+from datetime import timedelta, date
 
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.Dao import Dao
+from commons.dao import Dao
 from commons.helpers import log_execution_time
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
@@ -189,14 +189,20 @@ class UsosCrawler:
             result[constants.USER_ID] = user_id
 
             # checking if update differs from version from mango
+
             if update:
-                if cmp(result[constants.COURSE_EDITIONS], course_edition[constants.COURSE_EDITIONS]) == 0:
+                try:
+                    compare = cmp(result[constants.COURSE_EDITIONS], course_edition[constants.COURSE_EDITIONS])
+                except Exception, ex:
+                    compare = 1
+                    logging.exception("Could not find compare old and new courseedition: %r", ex.message)
+                if compare == 0:
                     logging.debug("course_editions not changed..")
                     return False
                 else:
                     logging.debug("course_editions changed - updating and moving old to archive.")
-                    self.db[constants.COLLECTION_COURSES_EDITIONS_ARCHIVE].insert(course_edition)
-                    self.db[constants.COLLECTION_COURSES_EDITIONS].remove({constants.MONGO_ID: course_edition[constants.MONGO_ID]})
+                    self.dao.insert(constants.COLLECTION_COURSES_EDITIONS_ARCHIVE, course_edition)
+                    self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, course_edition[constants.MONGO_ID])
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
             return True
@@ -208,13 +214,14 @@ class UsosCrawler:
 
         for term_id in self.dao.get_user_terms(user_id):
 
-            if self.dao.get_term(term_id, usos[constants.USOS_ID]):
-                continue  # this term_id already exists
+            term_in_db = self.dao.get_term(term_id, usos[constants.USOS_ID])
+            if term_in_db:
+                continue
 
             try:
                 result = client.get_term_info(term_id)
             except Exception, ex:
-                logging.exception('Could not find term_id for {0} due to {1}'.format(term_id, ex.message))
+                logging.exception("Could not find term_id for %r due to %r", term_id, ex.message)
                 continue
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -231,9 +238,6 @@ class UsosCrawler:
                                                        course_edition[constants.TERM_ID], usos[constants.USOS_ID])
 
             if existing_doc:
-                logging.debug('course_edition for usos: %r course: %r and term: %r already exists',
-                              usos[constants.USOS_ID], course_edition[constants.TERM_ID],
-                              course_edition[constants.COURSE_ID])
                 continue
 
             try:
@@ -274,8 +278,9 @@ class UsosCrawler:
                         courses.append(course_id)
 
         # get courses that exists in mongo and remove from list to fetch
-        for existing_course in self.dao.get_courses(courses, usos[constants.USOS_ID]):
-            courses.remove(existing_course[constants.COURSE_ID])
+        existing_courses = self.dao.get_courses(courses, usos[constants.USOS_ID])
+        for existing in existing_courses:
+            courses.remove(existing[constants.COURSE_ID])
 
         # get the rest of courses on course list from usos
         for course in courses:
@@ -441,27 +446,20 @@ class UsosCrawler:
         if not user:
             raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-        client, usos_id = self.__build_client(user)
-        user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos_id)
+        client, usos = self.__build_client(user)
+        user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
 
         # fetch time_table for current and next week
         monday = self.__get_monday()
-        self.__build_time_table(client, user_id, usos_id[constants.USOS_ID], monday)
-        self.__build_time_table(client, user_id, usos_id[constants.USOS_ID], self.__get_next_monday(monday))
-
-        self.__build_programmes(client, user_info_id, crawl_time, usos_id)
-
-        self.__build_curseseditions(client, crawl_time, user_id, usos_id)
-
-        self.__build_terms(client, user_id, usos_id, crawl_time)
-
-        self.__build_course_edition(client, user_id, usos_id, crawl_time)
-
-        self.__process_user_data(client, user_id, usos_id, crawl_time)
-
-        self.__build_courses(client, usos_id, crawl_time)
-
-        self.__build_faculties(client, usos_id, crawl_time)
+        self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
+        self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
+        self.__build_programmes(client, user_info_id, crawl_time, usos)
+        self.__build_curseseditions(client, crawl_time, user_id, usos)
+        self.__build_terms(client, user_id, usos, crawl_time)
+        self.__build_course_edition(client, user_id, usos, crawl_time)
+        self.__process_user_data(client, user_id, usos, crawl_time)
+        self.__build_courses(client, usos, crawl_time)
+        self.__build_faculties(client, usos, crawl_time)
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -477,6 +475,12 @@ class UsosCrawler:
 
                 # if courseseditions are updated - process update
                 if self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos):
+                    self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
+                    self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
+                    self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
+                    self.__build_courses(client, usos, crawl_time)
+                    self.__build_faculties(client, usos, crawl_time)
+
                     print "need to update terms, course_editions, user_data, courses, faculties..."
                     continue
 
