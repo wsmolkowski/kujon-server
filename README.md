@@ -1,2 +1,2 @@
-# kujon.mobi test
+# kujon.mobi
 
