@@ -29,4 +29,5 @@ if __name__ == '__main__':
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    init()
+    update_daily()
+    # init()

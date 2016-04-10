@@ -199,8 +199,10 @@ class UsosCrawler:
                     self.db[constants.COLLECTION_COURSES_EDITIONS].remove({constants.MONGO_ID: course_edition[constants.MONGO_ID]})
             ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
+            return True
         else:
             logging.debug("no course_editions for user_id: %r in USOS.", user_id)
+            return False
 
     def __build_terms(self, client, user_id, usos, crawl_time):
 
@@ -473,7 +475,10 @@ class UsosCrawler:
                     'updating daily crawl for user: {0}'.format(user[constants.MONGO_ID]))
                 client, usos = self.__build_client(user)
 
-                self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos)
+                # if courseseditions are updated - process update
+                if self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos):
+                    print "need to update terms, course_editions, user_data, courses, faculties..."
+                    continue
 
             except Exception, ex:
                 logging.exception('Exception in daily_crawl {0}'.format(ex.message))
