@@ -1,5 +1,4 @@
 import logging
-import os
 import ssl
 import sys
 
@@ -42,7 +41,6 @@ class Application(tornado.web.Application):
             autoreload=settings.RELOAD,
             login_url=settings.LOGIN_URL,
             compress_response=settings.COMPRESS_RESPONSE,
-            static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret=options.cookie_secret,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
