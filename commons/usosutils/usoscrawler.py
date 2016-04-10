@@ -7,7 +7,7 @@ from datetime import timedelta, date
 
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.dao import Dao
+from commons.Dao import Dao
 from commons.helpers import log_execution_time
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
@@ -278,9 +278,8 @@ class UsosCrawler:
                         courses.append(course_id)
 
         # get courses that exists in mongo and remove from list to fetch
-        existing_courses = self.dao.get_courses(courses, usos[constants.USOS_ID])
-        for existing in existing_courses:
-            courses.remove(existing[constants.COURSE_ID])
+        existing_courses = self.dao.get_courses(usos[constants.USOS_ID], constants.COURSE_ID)
+        courses = list(set(courses) - set(existing_courses))
 
         # get the rest of courses on course list from usos
         for course in courses:
@@ -480,12 +479,8 @@ class UsosCrawler:
                     self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_courses(client, usos, crawl_time)
                     self.__build_faculties(client, usos, crawl_time)
-
-                    print "need to update terms, course_editions, user_data, courses, faculties..."
-                    continue
-
             except Exception, ex:
-                logging.exception('Exception in daily_crawl {0}'.format(ex.message))
+                logging.exception("Exception in daily_crawl %r with user: %r", user[constants.ID], ex.message)
 
 
     @staticmethod

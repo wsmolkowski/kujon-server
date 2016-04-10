@@ -84,7 +84,7 @@ class Dao(object):
                                                                       courses_editions)
 
     def get_term(self, term_id, usos_id):
-        return self._db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
+        return self._db[constants.COLLECTION_TERMS].find_one({constants.ID: term_id, constants.USOS_ID: usos_id})
 
     def get_courses_editions(self, course_id, term_id, usos_id):
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
@@ -124,10 +124,12 @@ class Dao(object):
         return self._db[constants.COLLECTION_COURSES].find_one(
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos_id})
 
-    def get_courses(self, courses, usos_id):
-        courses_comma_separated_string = u",".join(courses).encode(constants.ENCODING).strip()
-        return self._db[constants.COLLECTION_COURSES].find(
-            {constants.COURSE_ID: {'$in': [courses_comma_separated_string]}, constants.USOS_ID: usos_id})
+    def get_courses(self, usos_id, fields):
+        courses = list()
+        cursor = self._db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}, [fields])
+        for elem in cursor:
+            courses.append(elem[fields])
+        return courses
 
     def get_grades(self, course_id, term_id, user_id, usos_id):
         return self._db[constants.COLLECTION_GRADES].find_one(
