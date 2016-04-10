@@ -251,4 +251,3 @@ class UsosVerificationHandler(BaseHandler):
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
             self.redirect(settings.DEPLOY_WEB)
-
