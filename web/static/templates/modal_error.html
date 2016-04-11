@@ -1,0 +1,25 @@
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="errorModalLabel">{{status}}</h4>
+            </div>
+
+            <div class="media-body">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="alert alert-warning fade in" role="alert">
+                            <strong>Upss! </strong>{{data}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
+    </div>
+</div>
