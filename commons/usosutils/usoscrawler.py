@@ -1,9 +1,9 @@
 import logging
+from datetime import datetime
+from datetime import timedelta, date
 
 import tornado.gen
 from bson.objectid import ObjectId
-from datetime import datetime
-from datetime import timedelta, date
 
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -214,8 +214,7 @@ class UsosCrawler:
 
         for term_id in self.dao.get_user_terms(user_id):
 
-            term_in_db = self.dao.get_term(term_id, usos[constants.USOS_ID])
-            if term_in_db:
+            if self.dao.get_term(term_id, usos[constants.USOS_ID]):
                 continue
 
             try:
@@ -225,6 +224,7 @@ class UsosCrawler:
                 continue
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                result[constants.TERM_ID] = result.pop(constants.ID)
                 t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
                 logging.debug("terms for term_id: %r inserted %r", term_id, str(t_doc))
             else:
