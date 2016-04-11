@@ -113,7 +113,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
     @staticmethod
     def get_token(content):
         arr = dict(urlparse.parse_qsl(content))
-        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
+        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUxTH_TOKEN_SECRET])
 
     @tornado.gen.coroutine
     def reset_user_cookie(self, user_doc=None):

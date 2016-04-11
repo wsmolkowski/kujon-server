@@ -1,9 +1,8 @@
 # coding=UTF-8
 
-from datetime import date, datetime
-
 import tornado.web
 from bson.objectid import ObjectId
+from datetime import date, datetime
 
 from base import BaseHandler
 from commons import constants, decorators
@@ -26,7 +25,7 @@ class TermsApi(BaseHandler):
             for term in courses_editions_doc['course_editions']:
                 terms.append(term)
                 cursor = self.db[constants.COLLECTION_TERMS].find(
-                    {constants.TERM_ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
+                    {constants.ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
                     ('name', 'end_date', 'finish_date', 'start_date', 'name'))
                 while (yield cursor.fetch_next):
                     term_data = cursor.next_object()
