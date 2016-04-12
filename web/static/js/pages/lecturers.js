@@ -1,12 +1,13 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
-    'text!templates/error.html', 'datatables','text!templates/modal_lecturer.html'],
-    function($, Handlebars, main, tplLecturers, tplError, datatables, tplModalLecturer) {
+    'text!templates/error.html', 'datatables', 'text!templates/modal_lecturer.html', 'text!templates/modal_error.html'],
+    function($, Handlebars, main, tplLecturers, tplError, datatables, tplModalLecturer, tplModalError) {
     'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tplLecturers);
             var templateError = Handlebars.compile(tplError);
             var templateModalLecturer = Handlebars.compile(tplModalLecturer);
+            var templateModalError = Handlebars.compile(tplModalError);
 
             main.callLecturers(function(data){
                 if (data.status == 'success'){
@@ -24,28 +25,28 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
                 $('.lecturer-btn').click(function(){
                     var lecturerId = $(this).attr("data-lecturerId");
                     var modalId = '#lecturerModal' + lecturerId;
+                    $('#errorModal').modal();
 
                     $(modalId).modal();
+                    $(modalId).on('hidden.bs.modal', function (e) {
+                        $(this).remove();
+                        $('#modalWrapper').html();
+                        $(modalId).hide();
+                    });
 
                     main.callLecturerDetails(lecturerId, function(lecturerInfo){
                         if (lecturerInfo.status == 'success'){
 
                             lecturerInfo.data['lecturer_id'] = lecturerId;
-                            var htmlModal = templateModalLecturer(lecturerInfo.data);
 
-                            $('#modalWrapper').html(htmlModal);
+                            $('#modalWrapper').html(templateModalLecturer(lecturerInfo.data));
 
                             $(modalId).modal('show');
-
-                            $(modalId).on('hidden.bs.modal', function (e) {
-                                $(this).remove();
-                                $('#modalWrapper').html();
-                                $(modalId).hide();
-                            });
 
                         } else {
-                            $(modalId).modal('show');
-                            $(modalBodyId).html(templateError({'message': userInfo.message}));
+                            $('#modalWrapper').html(templateModalError(lecturerInfo));
+
+                            $('#errorModal').modal('show');
                         }
                     });
 

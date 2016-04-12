@@ -19,6 +19,7 @@ URI_COURSES_UNITS = u"services/courses/unit?fields=id|course_id|term_id|groups|c
 URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement"
 URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]"
 URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number"
+URI_TERM_INFO = u"services/terms/term?term_id={0}"
 
 
 class UsosClient:
@@ -157,3 +158,11 @@ class UsosClient:
         if code['status'] == '200':
             return json.loads(body)
         raise Exception(u"Error while fetching faculty: {0}. Response code: {1} body: {2}".format(fac_id, code, body))
+
+    def get_term_info(self, term_id):
+        request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(term_id))
+        code, body = self.client.request(request)
+        if code['status'] == '200':
+            return json.loads(body)
+        raise Exception(u"Error while fetching term_id: {0}. Response code: {1} body: {2}".format(term_id, code, body))
+

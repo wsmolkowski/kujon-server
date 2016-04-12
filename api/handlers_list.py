@@ -21,30 +21,30 @@ HANDLERS = [
 
     (r"/usoses", UsosesApi),
 
-    (r"/users/", UserInfoApi),
+    (r"/users", UserInfoApi),
     (r"/users/([^/]+)", UsersInfoByIdApi),
     (r"/users_info_photos/([^/]+)", UserInfoPhotoApi),
 
-    (r"/courseseditions/", CoursesEditionsApi),
+    (r"/courseseditions", CoursesEditionsApi),
     (r"/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
     (r"/courses/([^/]+)", CoursesApi),
 
     (r"/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
-    (r"/grades/", GradesForUserApi),
+    (r"/grades", GradesForUserApi),
 
-    (r"/terms/", TermsApi),
+    (r"/terms", TermsApi),
     (r"/terms/([^/]+)", TermApi),
 
-    (r"/friends/suggestions/", FriendsSuggestionsApi),
+    (r"/friends/suggestions", FriendsSuggestionsApi),
     (r"/friends/([^/]+)", FriendsApi),
-    (r"/friends/", FriendsApi),
+    (r"/friends", FriendsApi),
 
-    (r"/lecturers/", LecturersApi),
+    (r"/lecturers", LecturersApi),
     (r"/lecturers/([^/]+)", LecturerByIdApi),
 
     (r"/tt/([^/]+)", TTApi),
 
-    (r"/programmes/", ProgrammesApi),
+    (r"/programmes", ProgrammesApi),
     (r"/programmes/([^/]+)", ProgrammesByIdApi),
 
     (r"/faculties/([^/]+)", FacultyByIdApi),
