@@ -2,7 +2,7 @@ import os
 from ConfigParser import RawConfigParser
 
 config = RawConfigParser(allow_no_value=True)
-PRODUCTION = False
+PRODUCTION = True
 
 
 def parent_dir():
