@@ -1,11 +1,12 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/modal_course.html', 'datatables'],
-    function($, Handlebars, main, tpl, tplError, tplCourseModal, datatables) {
+define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/modal_course.html', 'datatables', 'text!templates/modal_error.html'],
+    function($, Handlebars, main, tpl, tplError, tplCourseModal, datatables, tplModalError) {
     'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
             var templateCourseModal = Handlebars.compile(tplCourseModal);
+            var templateModalError = Handlebars.compile(tplModalError);
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
@@ -21,26 +22,26 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
                     var courseId = $(this).attr("data-courseId");
                     var termId = $(this).attr("data-termId");
                     var modalId = '#courseModal' + courseId;
+                    $('#errorModal').modal();
 
                     $(modalId).modal();
+                    $(modalId).on('hidden.bs.modal', function (e) {
+                        $(this).remove();
+                        $('#modalWrapper').html();
+                        $(modalId).hide();
+                    });
 
                     main.callCourseEditionDetails(courseId, termId, function(courseInfo){
                         if (courseInfo.status == 'success'){
                             courseInfo.data['courseId'] = courseId;
-                            var htmlModal = templateCourseModal(courseInfo.data);
 
-                            $('#modalWrapper').html(htmlModal);
+                            $('#modalWrapper').html(templateCourseModal(courseInfo.data));
 
                             $(modalId).modal('show');
-
-                            $(modalId).on('hidden.bs.modal', function (e) {
-                                $(this).remove();
-                                $('#modalWrapper').html();
-                                $(modalId).hide();
-                            });
                         } else {
-                            $(modalId).modal('show');
-                            $(modalBodyId).html(templateError({'message': userInfo.message}));
+                            $('#modalWrapper').html(templateModalError(courseInfo));
+
+                            $('#errorModal').modal('show');
                         }
                     });
                 });

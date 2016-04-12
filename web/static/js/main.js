@@ -114,15 +114,15 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function friendssuggestion(callback){
-            callAjaxGet(buildApiUrl('/friends/suggestions/'), callback);
+            callAjaxGet(buildApiUrl('/friends/suggestions'), callback);
         };
 
         function friends(callback){
-            callAjaxGet(buildApiUrl('/friends/'), callback);
+            callAjaxGet(buildApiUrl('/friends'), callback);
         };
 
         function users(callback){
-            callAjaxGet(buildApiUrl('/users/'), callback);
+            callAjaxGet(buildApiUrl('/users'), callback);
         };
 
         function userInfo(userId, callback){
@@ -131,23 +131,23 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function terms(callback){
-            callAjaxGet(buildApiUrl('/terms/'), callback);
+            callAjaxGet(buildApiUrl('/terms'), callback);
         };
 
         function programmes(callback){
-            callAjaxGet(buildApiUrl('/programmes/'), callback);
+            callAjaxGet(buildApiUrl('/programmes'), callback);
         };
 
         function grades(callback){
-            callAjaxGet(buildApiUrl('/grades/'), callback);
+            callAjaxGet(buildApiUrl('/grades'), callback);
         };
 
         function courseseditions(callback){
-            callAjaxGet(buildApiUrl('/courseseditions/'), callback);
+            callAjaxGet(buildApiUrl('/courseseditions'), callback);
         };
 
         function lecturers(callback){
-            callAjaxGet(buildApiUrl('/lecturers/'), callback);
+            callAjaxGet(buildApiUrl('/lecturers'), callback);
         };
 
         function lecturerDetails(lecturerId, callback){

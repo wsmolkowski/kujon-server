@@ -81,6 +81,11 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
+
+        if self.get_argument('error', False):
+            self.redirect(settings.DEPLOY_WEB + '/')
+            return
+
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
                 redirect_uri=settings.DEPLOY_API + '/authentication/google',
@@ -205,10 +210,8 @@ class UsosVerificationHandler(BaseHandler):
 
             logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
                                                                                         user_doc_updated))
-
             yield self.reset_user_cookie()
-
-            self.fail('Autoryzacja z wybranym systemem USOS nie powiodła się.')
+            self.redirect(settings.DEPLOY_WEB + '/#register')
             return
 
         oauth_verifier = self.get_argument('oauth_verifier')

@@ -1,5 +1,50 @@
 # coding=UTF-8
 USOSINSTANCES = [
+    {'usos_id': 'PWSZ-Kalisz',
+     'name': 'Państwowa Wyższa Szkoła Zawodowa w Kaliszu',
+     'url': 'https://apps.pwsz.kalisz.pl/',
+     'logo': '/static/img/logo/logo-pwsz-kalisz-64x64.jpg',
+     'consumer_key': 'CYKqXGzT2jwpHQqbRjKJ',
+     'consumer_secret': '8rCBFP4M3Lh6Rq6nRudEGP9ywXwnDwyvLh95gCFg',
+     'contact': 'wdrozenia@usos.edu.pl',
+     'enabled': True
+     },
+    {'usos_id': 'PWSZ-Krosno',
+     'name': 'Państwowa Wyższa Szkoła Zawodowa w Krośnie',
+     'url': 'https://usosapps.pwsz.krosno.pl/',
+     'logo': '/static/img/logo/logo-pwsz-krosno-64x64.jpg',
+     'consumer_key': 'kNBmFG6vvEN6kN265qwB',
+     'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
+     'contact': 'mateusz.lorenc@pwsz.krosno.pl',
+     'enabled': True
+     },
+    {'usos_id': 'UKSW',
+     'name': 'Uniwersytet Kardynała Stefana Wyszyńskiego',
+     'url': 'https://apps.usos.uksw.edu.pl/',
+     'logo': '/static/img/logo/logo-uksw-64x64.jpg',
+     'consumer_key': 'qbf7G7SUTpd7ygkCCp9q',
+     'consumer_secret': '2RwFA9Qs3MVB86eAkgPXHZJ6pmMTrnL69r8TKFZV',
+     'contact': 'auto.aos@csi.uksw.edu.pl',
+     'enabled': True
+     },
+    {'usos_id': 'WSE',
+     'name': 'Wyższa Szkoła Ekonomiczna w Białymstoku',
+     'url': 'https://usosapps.wse.edu.pl/',
+     'logo': '/static/img/logo/logo-wse-64x64.jpg',
+     'consumer_key': 'WzynWZFyEYPbnxndt9hw',
+     'consumer_secret': 'vXNnptJNrc4wGFSvmsteyZeVRV3AKGsDnsNbSRjV',
+     'contact': 'usosweb@wse.edu.pl',
+     'enabled': True
+     },
+    {'usos_id': 'PWSIP',
+     'name': 'Państwowa Wyższa Szkoła Informatyki i Przedsiębiorczości w Łomży',
+     'url': 'https://api.pwsip.edu.pl/usosapps/',
+     'logo': '/static/img/logo/logo-pwsip-64x64.jpg',
+     'consumer_key': 'ydYepCBkkcPRNzFcaEAp',
+     'consumer_secret': 'QHw8B3dYYM5fvbXQRK8xQQbNBLGLY3gMrEAG2Z7P',
+     'contact': 'mdabrowski@pwsip.edu.pl',
+     'enabled': True
+     },
     {'usos_id': 'SGH',  # z palca dodane, brak danych!
      'name': 'Szkoła Głowna Handlowa w Warszawie',
      'url': 'https://usosapps.sgh.waw.pl/',
@@ -9,7 +54,7 @@ USOSINSTANCES = [
      'contact': 'usosadmin@sgh.waw.pl, jinowol@sgh.waw.pl',
      'enabled': False
      },
-    {'usos_id': 'CHAT',  # z palca dodane
+     {'usos_id': 'CHAT',  # z palca dodane
      'name': 'Chrześcijańska Akademia Teologiczna w Warszawie',
      'url': 'https://usosapps.chat.edu.pl/',
      'logo': '/static/img/logo/logo-chat-64x64.jpg',
@@ -36,7 +81,7 @@ USOSINSTANCES = [
      'contact': 'maksymilian.szpura@adm.uw.edu.pl',
      'enabled': True
      },
-    {'usos_id': 'DEMO',  # z mother servera
+    {'usos_id': 'DEMO',
      'name': 'Uniwersytet DEMO w Nibylandi',
      'url': 'https://usosapps.demo.usos.edu.pl/',
      'logo': '/static/img/logo/logo-demo-64x64.jpg',
@@ -45,10 +90,10 @@ USOSINSTANCES = [
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'enabled': True
      },
-    {'usos_id': 'PWSZ',
+    {'usos_id': 'PWSZ-Elblag',
      'name': 'Państwowa Wyższa Szkoła Zawodowa w Elblągu',
      'url': 'https://usosapps.pwsz.elblag.pl/',
-     'logo': '/static/img/logo/logo-pwsz-64x64.jpg',
+     'logo': '/static/img/logo/logo-pwsz-elblag-64x64.jpg',
      'consumer_key': '7eUrXU8cytknXXKQSgJj',
      'consumer_secret': 'DB7HGw4EvNsUU9nwUE3jrLPfFTHw6zGbYPe3KRVp',
      'contact': 'l.grzybek@pwsz.elblag.pl, p.kwasniewski@pwsz.elblag.pl',

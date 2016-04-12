@@ -9,43 +9,53 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#home">{{PROJECT_TITLE}} <small>beta</small></a>
+            <a class="navbar-brand" href="#home">{{PROJECT_TITLE}}
+                <small>beta</small>
+            </a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 {{#if USER_LOGGED}}
-                    {{#if USOS_PAIRED}}
-                    <li><a href="#user">Użytkownik</a></li>
-                    <li><a href="#tt">Plan</a></li>
-                    <li><a href="#courses">Przedmioty</a></li>
-                    <li><a href="#grades">Oceny</a></li>
-                    <li><a href="#lecturers">Nauczyciele</a></li>
-                    <!--<li><a href="#friends">Znajomi</a></li>-->
+                {{#if USOS_PAIRED}}
+                <li><a href="#user">Użytkownik</a></li>
+                <li><a href="#tt">Plan</a></li>
+                <li><a href="#courses">Przedmioty</a></li>
+                <li><a href="#grades">Oceny</a></li>
+                <li><a href="#lecturers">Nauczyciele</a></li>
+                <!--<li><a href="#friends">Znajomi</a></li>-->
 
-                    <li class="dropdown">
-                          <a class="dropdown-toggle" data-toggle="dropdown" role="button"
-                             aria-haspopup="true" aria-expanded="false">Uczelnia<span class="caret"></span></a>
-                          <ul class="dropdown-menu">
-                              <li><a href="#terms">Cykle</a></li>
-                              <li><a href="#programmes">Kierunki</a></li>
-                          </ul>
-                    </li>
-                    {{/if}}
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" role="button"
+                       aria-haspopup="true" aria-expanded="false">Uczelnia<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#terms">Cykle</a></li>
+                        <li><a href="#programmes">Kierunki</a></li>
+                    </ul>
+                </li>
+                {{/if}}
                 {{/if}}
 
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li id="spinner"><a class="fa fa-spinner fa-pulse"></a></li>
                 {{#if USER_LOGGED }}
-                <li><a href="{{API_URL}}/authentication/archive"><i class="fa fa-times"></i> Skasuj konto</a></li>
-                <li><a href="{{API_URL}}/authentication/logout" class="login-button"><i class="fa fa-sign-out"></i> Wyloguj</a></li>
+
+                <li><a data-toggle="modal" data-target="#modalArchiveUser" class="btn btn-link"><i
+                        class="fa fa-times"></i> Skasuj konto</a></li>
+
+                <li><a href="{{API_URL}}/authentication/logout" class="login-button"><i class="fa fa-sign-out"></i>
+                    Wyloguj</a></li>
                 {{else}}
                 <li class="dropdown" href="#login">
-                    <a href="{{API_URL}}/authentication/login" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                       aria-haspopup="true" aria-expanded="false"><i class="fa fa-sign-in"></i> Zaloguj <span class="caret"></span></a>
+                    <a href="{{API_URL}}/authentication/login" class="dropdown-toggle" data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true" aria-expanded="false"><i class="fa fa-sign-in"></i> Zaloguj <span
+                            class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="{{API_URL}}/authentication/google" class="fa fa-google-plus login-button"> przez Google</a></li>
-                        <li><a href="{{API_URL}}/authentication/facebook" class="fa fa-facebook-official login-button"> przez Facebook</a></li>
+                        <li><a href="{{API_URL}}/authentication/google" class="fa fa-google-plus login-button"> przez
+                            Google</a></li>
+                        <li><a href="{{API_URL}}/authentication/facebook" class="fa fa-facebook-official login-button">
+                            przez Facebook</a></li>
                     </ul>
                 </li>
                 {{/if}}
@@ -53,3 +63,24 @@
         </div>
     </div>
 </nav>
+
+<div id="modalArchiveUser" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz usunąć konto?</p>
+                <form action="{{API_URL}}/authentication/archive" method="get">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-default">Tak</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

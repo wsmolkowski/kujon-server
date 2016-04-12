@@ -11,9 +11,8 @@ from tornado.escape import json_decode
 
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
-from commons.handlers import DatabaseHandler
 from commons.mixins.JSendMixin import JSendMixin
-from crawler import email_factory
+from database import DatabaseHandler
 
 
 class BaseHandler(DatabaseHandler, JSendMixin):
@@ -100,28 +99,6 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
 
-    @tornado.gen.coroutine
-    def email_registration(self):
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
-
-        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
-        recipient = user_doc[constants.USER_EMAIL]
-
-        email_job = email_factory.email_job(
-            'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
-            settings.SMTP_EMAIL,
-            recipient if type(recipient) is list else [recipient],
-            '\nCześć,'
-            '\nRejestracja w USOS {0} zakończona pomyślnie.'
-            '\nW razie pytań, bądź wątpliwości pozostajemy do Twojej dyspozycji.'
-            '\nNapisz do nas {1}'
-            '\nPozdrawiamy,'
-            '\nZespół {2}\n'.format(usos_doc['name'], settings.SMTP_USER, settings.PROJECT_TITLE)
-        )
-
-        yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
-
     @staticmethod
     def validate_usos(usos, parameters):
         if not usos:
@@ -136,7 +113,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
     @staticmethod
     def get_token(content):
         arr = dict(urlparse.parse_qsl(content))
-        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
+        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUxTH_TOKEN_SECRET])
 
     @tornado.gen.coroutine
     def reset_user_cookie(self, user_doc=None):
@@ -163,7 +140,7 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('Przepraszamy, ale strona o podanym adresie nie istnieje.')
+        self.fail('Strona o podanym adresie nie istnieje.')
 
 
 class ApplicationConfigHandler(BaseHandler):
