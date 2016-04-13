@@ -21,6 +21,14 @@ def authenticated(method):
                     user_doc = self.dao[constants.COLLECTION_USERS].find_one({constants.ACCESS_TOKEN_KEY: atk,
                                                                               constants.ACCESS_TOKEN_SECRET: ats})
 
+                if not user_doc:
+                    header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+                    header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+                    print 'header_email: %s header_token: %s'.format(header_email, header_token)
+
+                    # TODO: validate agains db and construct user_doc
+                    # user_doc = ...
+
                 if not user_doc or not user_doc['usos_paired']:
                     self.fail("Request not authenticated.")
                 else:

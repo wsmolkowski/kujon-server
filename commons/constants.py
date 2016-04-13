@@ -93,3 +93,6 @@ SMTP_TO = 'to'
 SMTP_TEXT = 'text'
 SMTP_MIME_TYPE = 'mime_type'
 SMTP_CHARSET = 'charset'
+
+MOBILE_X_HEADER_EMAIL = 'X-kujon.mobi-email'
+MOBILE_X_HEADER_TOKEN = 'X-kujon.mobi-token'
