@@ -93,3 +93,8 @@ SMTP_TO = 'to'
 SMTP_TEXT = 'text'
 SMTP_MIME_TYPE = 'mime_type'
 SMTP_CHARSET = 'charset'
+
+GAUTH_ACCESS_TOKEN = 'gauth_access_token'
+GAUTH_EXPIRES_IN = 'gauth_expires_in'
+GAUTH_ID_TOKEN = 'gauth_id_token'
+GAUTH_TOKEN_TYPE = 'gauth_token_type'
