@@ -94,5 +94,10 @@ SMTP_TEXT = 'text'
 SMTP_MIME_TYPE = 'mime_type'
 SMTP_CHARSET = 'charset'
 
+GAUTH_ACCESS_TOKEN = 'gauth_access_token'
+GAUTH_EXPIRES_IN = 'gauth_expires_in'
+GAUTH_ID_TOKEN = 'gauth_id_token'
+GAUTH_TOKEN_TYPE = 'gauth_token_type'
+
 MOBILE_X_HEADER_EMAIL = 'X-kujon.mobi-email'
 MOBILE_X_HEADER_TOKEN = 'X-kujon.mobi-token'

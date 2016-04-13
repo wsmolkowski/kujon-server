@@ -8,7 +8,7 @@ import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -95,8 +95,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 access_token=access['access_token'])
 
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'email': user['email']},
-                self._COOKIE_FIELDS)
+                {'email': user['email']})
 
             if not user_doc:
                 insert_doc = dict()
@@ -107,13 +106,26 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 insert_doc[constants.USOS_PAIRED] = False
                 insert_doc[constants.USER_CREATED] = datetime.now()
 
-                user_doc = yield motor.Op(self.db.users.insert, insert_doc)
-                logging.debug('saved new user in database: {0}'.format(user_doc))
+                insert_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
+                insert_doc[constants.GAUTH_EXPIRES_IN] = datetime.now() + timedelta(seconds=access['expires_in'])
+                insert_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
+                insert_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
 
+                user_doc = yield motor.Op(self.db.users.insert, insert_doc)
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               self._COOKIE_FIELDS)
-            yield self.reset_user_cookie(user_doc)
+                logging.debug('saved new user in database: {0}'.format(user_doc))
+            else:
+                user_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
+                user_doc[constants.GAUTH_EXPIRES_IN] = datetime.now() + timedelta(seconds=access['expires_in'])
+                user_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
+                user_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
 
+                user_doc = yield self.db[constants.COLLECTION_USERS].update(
+                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, user_doc)
+                logging.debug('updated user in database: {0}'.format(user_doc))
+
+            yield self.reset_user_cookie(user_doc)
             self.redirect(settings.DEPLOY_WEB + '/#home')
 
         else:
