@@ -18,6 +18,8 @@ HANDLERS = [
     (r"/authentication/verify", authentication.UsosVerificationHandler),
     (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
     (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
+    (r"/authentication/mobi", authentication.MobiAuthHandler),
+    (r"/authentication/verifymobi", authentication.UsosMobiVerificationHandler),
 
     (r"/usoses", UsosesApi),
 

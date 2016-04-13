@@ -40,7 +40,7 @@ DEPLOY_API = config.get('deployment', 'DEPLOY_API')
 WEB_VERSION = config.get('deployment', 'WEB_VERSION')
 WEB_PORT = config.getint('deployment', 'WEB_PORT')
 DEPLOY_WEB = config.get('deployment', 'DEPLOY_WEB')
-CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
+CALLBACK_MOBI_URL = config.get('deployment', 'CALLBACK_MOBI_URL')
 LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
 SMTP_HOST = config.get('email', 'SMTP_HOST')
