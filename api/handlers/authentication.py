@@ -150,15 +150,14 @@ class UsosRegisterHandler(BaseHandler):
 
         usos_doc = yield self.get_usos(constants.USOS_ID, data[constants.USOS_ID])
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
+        user_doc = yield self.find_user()
 
         if not user_doc:
             self.error('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
             return
 
         if user_doc[constants.USOS_PAIRED]:
-            self.error('Użytkownik już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
+            self.error('Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
             return
 
         try:

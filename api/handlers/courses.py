@@ -119,8 +119,8 @@ class CourseEditionApi(BaseHandler):
 
 
 class CoursesApi(BaseHandler):
-    @decorators.application_json
     @decorators.authenticated
+    @decorators.application_json
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id):
