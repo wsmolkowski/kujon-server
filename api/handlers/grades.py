@@ -9,6 +9,7 @@ from commons import constants, decorators
 
 
 class GradesForUserApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -85,6 +86,7 @@ class GradesForUserApi(BaseHandler):
 
 
 class GradesForCourseAndTermApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

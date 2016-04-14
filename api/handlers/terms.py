@@ -1,8 +1,9 @@
 # coding=UTF-8
 
+from datetime import date, datetime
+
 import tornado.web
 from bson.objectid import ObjectId
-from datetime import date, datetime
 
 from base import BaseHandler
 from commons import constants, decorators
@@ -11,6 +12,7 @@ TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 't
 
 
 class TermsApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -44,6 +46,7 @@ class TermsApi(BaseHandler):
 
 
 class TermApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

@@ -21,7 +21,7 @@ def authenticated(method):
                         constants.USER_EMAIL: header_email,
                         constants.MOBI_TOKEN: header_token,
                     })
-                    #
+
                 if not user_doc or not user_doc['usos_paired']:
                     self.fail("Request not authenticated.")
                 else:
@@ -30,6 +30,16 @@ def authenticated(method):
             raise HTTPError(403)
         else:
             self.user_doc = self.get_current_user()
+
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+def application_json(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self.set_header('Content-Type', 'application/json')
 
         return method(self, *args, **kwargs)
 

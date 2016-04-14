@@ -20,16 +20,19 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                       constants.USOS_PAIRED)
 
     def set_default_headers(self):
-        # if not self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
-        #         and not self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
-        #     # web client access
-        #     self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        #     self.set_header("Access-Control-Allow-Credentials", "true")
-        # else:
-        #     # mobile access
-        #     self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        self.set_header("Access-Control-Allow-Credentials", "true")
+        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
+                and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
+            # mobile access
+            self.set_header("Access-Control-Allow-Origin", "*")
+            self.set_header("Access-Control-Allow-Credentials", "false")
+        else:
+            # web client access
+            self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+            self.set_header("Access-Control-Allow-Credentials", "true")
+
+        # self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+        # self.set_header("Access-Control-Allow-Credentials", "true")
+
         self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @staticmethod
