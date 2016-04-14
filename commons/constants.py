@@ -51,7 +51,7 @@ KUJON_CONFIG_COOKIE = "KUJON_CONFIG_COOKIE"
 COOKIE_EXPIRES_DAYS = 10
 OAUTH_TOKEN = "oauth_token"
 OAUTH_TOKEN_SECRET = "oauth_token_secret"
-TOKEN = "mobitoken"
+MOBI_TOKEN = "mobi_token"
 LECTURER_STATUS = "staff_status"
 LECTURER_STATUS_ACTIVE = 2
 
@@ -98,3 +98,6 @@ GAUTH_ACCESS_TOKEN = 'gauth_access_token'
 GAUTH_EXPIRES_IN = 'gauth_expires_in'
 GAUTH_ID_TOKEN = 'gauth_id_token'
 GAUTH_TOKEN_TYPE = 'gauth_token_type'
+
+MOBILE_X_HEADER_EMAIL = 'X-kujon.mobi-email'
+MOBILE_X_HEADER_TOKEN = 'X-kujon.mobi-token'

@@ -10,6 +10,7 @@ LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers
 
 
 class GroupsApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

@@ -1,7 +1,7 @@
 # coding=UTF-8
 
-import tornado.web
 import tornado.gen
+import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
@@ -14,6 +14,7 @@ LIMIT_FIELDS = (
 
 
 class LecturersApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -49,6 +50,7 @@ class LecturersApi(BaseHandler):
 
 
 class LecturerByIdApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

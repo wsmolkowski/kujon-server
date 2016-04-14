@@ -18,6 +18,7 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 
 class CourseEditionApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -119,6 +120,7 @@ class CourseEditionApi(BaseHandler):
 
 class CoursesApi(BaseHandler):
     @decorators.authenticated
+    @decorators.application_json
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id):
@@ -146,6 +148,7 @@ class CoursesApi(BaseHandler):
 
 
 class CoursesEditionsApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

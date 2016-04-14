@@ -20,9 +20,20 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                       constants.USOS_PAIRED)
 
     def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        self.set_header("Access-Control-Allow-Credentials", "true")
-        self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
+        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
+                and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
+            # mobile access
+            self.set_header("Access-Control-Allow-Origin", "*")
+            # self.set_header("Access-Control-Allow-Credentials", "false")
+        else:
+            # web client access
+            self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+            self.set_header("Access-Control-Allow-Credentials", "true")
+
+        # self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+        # self.set_header("Access-Control-Allow-Credentials", "true")
+
+            # self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @staticmethod
     def get_auth_http_client():
@@ -39,6 +50,21 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         if cookie:
             cookie = json_decode(cookie)
             return json_util.loads(cookie)
+
+        header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+        header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+
+        if header_email and header_token:
+            user_doc = self.dao[constants.COLLECTION_USERS].find_one({
+                constants.USOS_PAIRED: True,
+                constants.USER_EMAIL: header_email,
+                constants.MOBI_TOKEN: header_token,
+            }, (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+                constants.USOS_PAIRED)
+            )
+
+            return user_doc
+
         return None
 
     def config_data(self):
@@ -115,12 +141,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-    @tornado.gen.coroutine
-    def reset_user_cookie(self, user_doc=None):
-        if not user_doc:
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, self._COOKIE_FIELDS)
-
+    def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE,
                                tornado.escape.json_encode(json_util.dumps(user_doc)),

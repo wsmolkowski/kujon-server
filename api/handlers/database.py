@@ -95,6 +95,22 @@ class DatabaseHandler(RequestHandler):
 
         raise gen.Return(user_doc)
 
+    @gen.coroutine
+    def cookie_user_id(self, user_id):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
+                                                                      self._COOKIE_FIELDS)
+        raise gen.Return(user_doc)
+
+    @gen.coroutine
+    def cookie_user_email(self, email):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
+                                                                      self._COOKIE_FIELDS)
+        raise gen.Return(user_doc)
+
+    @gen.coroutine
+    def find_user_email(self, email):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email})
+        raise gen.Return(user_doc)
 
     @gen.coroutine
     def log_exception(self, arguments, trace):

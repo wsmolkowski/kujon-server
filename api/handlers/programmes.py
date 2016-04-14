@@ -11,6 +11,7 @@ LIMIT_FIELDS = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', '
 
 
 class ProgrammesByIdApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -26,6 +27,7 @@ class ProgrammesByIdApi(BaseHandler):
 
 
 class ProgrammesApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

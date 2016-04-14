@@ -2,8 +2,8 @@
 
 from datetime import date, timedelta
 
-import tornado.web
 import tornado.gen
+import tornado.web
 from bson.objectid import ObjectId
 
 from base import BaseHandler
@@ -12,6 +12,7 @@ from commons.usosutils.usosclient import UsosClient
 
 
 class TTApi(BaseHandler):
+    @decorators.application_json
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
