@@ -2,13 +2,13 @@
 
 import json
 import logging
+from datetime import datetime, timedelta
 
 import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
-from datetime import datetime, timedelta
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -46,9 +46,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 code=self.get_argument('code'),
                 extra_fields={'email', 'id'})
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'email': access['email']},
-                self._COOKIE_FIELDS)
+            user_doc = yield self.find_user_email(access['email'])
 
             if not user_doc:
                 user = dict()
@@ -62,9 +60,9 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user_doc = yield motor.Op(self.db.users.insert, user)
                 logging.debug('saved new user in database: {0}'.format(user_doc))
 
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
-                                                                              self._COOKIE_FIELDS)
-            yield self.reset_user_cookie(user_doc)
+                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+
+            self.reset_user_cookie(user_doc)
 
             self.redirect(settings.DEPLOY_WEB + '/#home')
         else:
@@ -94,8 +92,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {'email': user['email']})
+            user_doc = yield self.find_user_email(user['email'])
 
             if not user_doc:
                 insert_doc = dict()
@@ -115,17 +112,23 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
                                                                               self._COOKIE_FIELDS)
                 logging.debug('saved new user in database: {0}'.format(user_doc))
+
+                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+
             else:
                 user_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
                 user_doc[constants.GAUTH_EXPIRES_IN] = datetime.now() + timedelta(seconds=access['expires_in'])
                 user_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
                 user_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
+                user_doc[constants.UPDATE_TIME] = datetime.now()
 
-                user_doc = yield self.db[constants.COLLECTION_USERS].update(
+                update_user_doc = yield self.db[constants.COLLECTION_USERS].update(
                     {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, user_doc)
-                logging.debug('updated user in database: {0}'.format(user_doc))
+                logging.debug('updated user in database: {0}'.format(update_user_doc))
 
-            yield self.reset_user_cookie(user_doc)
+                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+
+            self.reset_user_cookie(user_doc)
             self.redirect(settings.DEPLOY_WEB + '/#home')
 
         else:
@@ -205,9 +208,8 @@ class UsosVerificationHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        # oauth_token_key = self.get_argument('oauth_token') # TODO: dlaczego to jest nieuzywane?
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
+        # oauth_token_key = self.get_argument('oauth_token')
+        user_doc = yield self.find_user()
 
         if self.get_argument('error', False):
             updated_user = user_doc
@@ -222,7 +224,9 @@ class UsosVerificationHandler(BaseHandler):
 
             logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
                                                                                         user_doc_updated))
-            yield self.reset_user_cookie()
+            user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+
+            self.reset_user_cookie(user_doc)
             self.redirect(settings.DEPLOY_WEB + '/#register')
             return
 
@@ -257,7 +261,9 @@ class UsosVerificationHandler(BaseHandler):
 
             logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
 
-            yield self.reset_user_cookie()
+            user_doc = yield self.cookie_user_id(updated_user[constants.MONGO_ID])
+
+            self.reset_user_cookie(user_doc)
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
@@ -273,19 +279,18 @@ class MobiAuthHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        if self.request.method in ("GET", "POST", "HEAD"):
-            email = self.get_argument("email", default=None, strip=True)
-            token = self.get_argument("token", default=None, strip=True)
-            usos_id = self.get_argument("usos_id", default=None, strip=True)
+        email = self.get_argument("email", default=None, strip=True)
+        token = self.get_argument("token", default=None, strip=True)
+        usos_id = self.get_argument("usos_id", default=None, strip=True)
 
-        if email is None or token is None or usos_id is None:
-            self.error("Incorect params.")
+        if not email or not token or not usos_id:
+            self.error("One of the provided parameters is incorrect.")
             return
-        else:
-            usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.USER_EMAIL: email})
+        usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
+
+        user_doc = yield self.cookie_user_email(email)
+        # weryfikacja czy istnieje już zarejestrowany uzytkownik z takim email oraz usos
 
         # weryfikacja usera po tokenie w google
         # h = httplib2.Http()
@@ -322,24 +327,29 @@ class MobiAuthHandler(BaseHandler):
         access_token_secret = request_token.secret
 
         # update = user_doc
-        if user_doc is None:
+        if not user_doc:
             new_user = True
             user_doc = dict()
             user_doc[constants.USER_EMAIL] = email
         else:
             new_user = False
+
         update = user_doc
+        update[constants.MOBI_TOKEN] = token
+        update[constants.USER_EMAIL] = email
         update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
         update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
         update[constants.ACCESS_TOKEN_KEY] = access_token_key
+        update[constants.CREATED_TIME] = datetime.now()
         update[constants.UPDATE_TIME] = datetime.now()
-        update[constants.TOKEN] = token
 
         if new_user:
             user_doc = yield self.db[constants.COLLECTION_USERS].insert(update)
+            logging.debug("new mobile user saved with id {0}".format(str(user_doc)))
         else:
             user_doc = yield self.db[constants.COLLECTION_USERS].update(
                 {constants.USER_EMAIL: email}, update)
+            logging.debug("mobile user updated with id {0}".format(str(user_doc)))
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
         url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
@@ -351,13 +361,12 @@ class UsosMobiVerificationHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        # TODO: dlaczego oauth_token_key jest nieuzywany?
-        oauth_token_key = self.get_argument('oauth_token')
+        # oauth_token_key = self.get_argument('oauth_token')
         oauth_verifier = self.get_argument('oauth_verifier')
         token = self.get_argument('token')
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.TOKEN: token})
+            {constants.MOBI_TOKEN: token})
 
         if self.get_argument('error', False):
             updated_user = user_doc
@@ -372,7 +381,7 @@ class UsosMobiVerificationHandler(BaseHandler):
 
             logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
                                                                                         user_doc_updated))
-            yield self.reset_user_cookie()
+            self.reset_user_cookie()
             self.redirect(settings.DEPLOY_WEB + '/#register')
             return
 
@@ -389,6 +398,7 @@ class UsosMobiVerificationHandler(BaseHandler):
             esp, content = client.request(access_token_url, 'GET')
             if esp['status'] != "200":
                 self.error("Bład podczas oauth USOS")
+
             access_token = self.get_token(content)
 
             updated_user = user_doc
@@ -404,9 +414,6 @@ class UsosMobiVerificationHandler(BaseHandler):
             logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
-
-            # TODO: to nie działa bo działa po cookisach
-            # yield self.email_registration()
 
             self.success("Usos paired successfully.")
         else:

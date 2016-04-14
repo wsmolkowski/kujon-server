@@ -20,15 +20,16 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                       constants.USOS_PAIRED)
 
     def set_default_headers(self):
-        if not self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
-                and not self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
-            # web client access
-            self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-            self.set_header("Access-Control-Allow-Credentials", "true")
-        else:
-            # mobile access
-            self.set_header("Access-Control-Allow-Origin", "*")
-
+        # if not self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
+        #         and not self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
+        #     # web client access
+        #     self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+        #     self.set_header("Access-Control-Allow-Credentials", "true")
+        # else:
+        #     # mobile access
+        #     self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+        self.set_header("Access-Control-Allow-Credentials", "true")
         self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @staticmethod
@@ -122,12 +123,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
-    @tornado.gen.coroutine
-    def reset_user_cookie(self, user_doc=None):
-        if not user_doc:
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]}, self._COOKIE_FIELDS)
-
+    def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE,
                                tornado.escape.json_encode(json_util.dumps(user_doc)),

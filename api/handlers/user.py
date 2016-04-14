@@ -60,7 +60,7 @@ class UserInfoApi(BaseHandler):
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, LIMIT_FIELDS)
 
         if not user_info:
-            self.error('Poczekaj szukamy informacji o użytkowniku..')
+            self.error('Poczekaj szukamy informacji o użytkowniku.')
             return
 
         if 'email' in user_info:
