@@ -242,7 +242,7 @@ class UsosVerificationHandler(BaseHandler):
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
             access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, 'GET')
-            if content != "200":
+            if esp.status != 200:
                 self.error("Bład podczas oauth USOS")
                 return
 
