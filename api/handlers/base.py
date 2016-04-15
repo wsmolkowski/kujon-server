@@ -30,8 +30,8 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
 
-        # self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        # self.set_header("Access-Control-Allow-Credentials", "true")
+            # self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+            # self.set_header("Access-Control-Allow-Credentials", "true")
 
             # self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
@@ -124,12 +124,6 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             if u[key] == value:
                 raise tornado.gen.Return(u)
         raise tornado.gen.Return(None)
-
-    @staticmethod
-    def validate_usos(usos, parameters):
-        if not usos:
-            raise tornado.web.HTTPError(400, "Usos {0} nie jest wspierany. Skontaktuj się z administratorem.".format(
-                parameters.usos_id))
 
     @staticmethod
     def get_token(content):
