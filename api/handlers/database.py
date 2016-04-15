@@ -138,6 +138,14 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(user_doc)
 
     @gen.coroutine
+    def user_exists(self, email, usos_id):
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            {constants.USER_EMAIL: email, constants.USOS_ID: usos_id})
+        if user_doc:
+            raise gen.Return(True)
+        raise gen.Return(False)
+
+    @gen.coroutine
     def log_exception(self, arguments, trace):
         yield self.db[constants.COLLECTION_EXCEPTIONS].insert({
             constants.CREATED_TIME: datetime.now(),

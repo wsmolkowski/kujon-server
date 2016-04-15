@@ -257,7 +257,7 @@ class UsosVerificationHandler(BaseHandler):
             self.redirect(settings.DEPLOY_WEB)
 
 
-class MobiAuthHandler(BaseHandler):
+class MobiAuthHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -273,7 +273,10 @@ class MobiAuthHandler(BaseHandler):
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
         user_doc = yield self.cookie_user_email(email)
-        # weryfikacja czy istnieje już zarejestrowany uzytkownik z takim email oraz usos
+
+        if self.user_exists(email, usos_id):
+            self.error('User already registered with email: {0} and USOS: {1}'.format(email, usos_id))
+            return
 
         # weryfikacja usera po tokenie w google
         # h = httplib2.Http()
