@@ -2,6 +2,8 @@ import functools
 
 from tornado.web import HTTPError
 
+from commons import constants, settings
+
 
 def authenticated(method):
     @functools.wraps(method)
@@ -19,11 +21,22 @@ def authenticated(method):
     return wrapper
 
 
-def application_json(method):
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        self.set_header('Content-Type', 'application/json')
+def extra_headers(cache_age=None):
+    def decorator(method):
+        @functools.wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if settings.DEBUG:
+                self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            else:
+                if not cache_age:
+                    self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                else:
+                    self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
 
-        return method(self, *args, **kwargs)
+            self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
 
-    return wrapper
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator

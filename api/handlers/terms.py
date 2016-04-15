@@ -12,7 +12,7 @@ TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 't
 
 
 class TermsApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -46,7 +46,7 @@ class TermsApi(BaseHandler):
 
 
 class TermApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

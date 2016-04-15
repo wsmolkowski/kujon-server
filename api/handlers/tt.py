@@ -12,7 +12,7 @@ from commons.usosutils.usosclient import UsosClient
 
 
 class TTApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers(None)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
