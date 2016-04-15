@@ -257,7 +257,7 @@ class UsosVerificationHandler(BaseHandler):
             self.redirect(settings.DEPLOY_WEB)
 
 
-class MobiAuthHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
+class MobiAuthHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -274,18 +274,17 @@ class MobiAuthHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
         user_doc = yield self.cookie_user_email(email)
 
-        if self.user_exists(email, usos_id):
+        user_exists = yield self.user_exists(email, usos_id)
+        if user_exists:
             self.error('User already registered with email: {0} and USOS: {1}'.format(email, usos_id))
             return
 
-        # weryfikacja usera po tokenie w google
-        # h = httplib2.Http()
-        # resp, cont = h.request('https://www.googleapis.com/oauth2/v2/userinfo',
-        #                        headers={'Host': 'www.googleapis.com',
-        #                                 'Authorization': token})
-        # if not resp['status'] == '200':
-        #     self.error('Niepoprawny token.')
-        #     return
+        try:
+            http_client = self.get_auth_http_client()
+            yield http_client.fetch('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' + token)
+        except (Exception, tornado.web.HTTPError), ex:
+            self.error('Google token verification failure. {0}'.format(ex.message))
+            return
 
         try:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
