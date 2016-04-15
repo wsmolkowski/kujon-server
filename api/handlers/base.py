@@ -4,12 +4,12 @@ import urlparse
 
 import oauth2 as oauth
 import tornado.gen
-import tornado.gen
+import tornado.web
 from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 
-from commons import constants, settings, utils
+from commons import constants, settings, utils, decorators
 from commons.AESCipher import AESCipher
 from commons.mixins.JSendMixin import JSendMixin
 from database import DatabaseHandler
@@ -56,9 +56,9 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
         if header_email and header_token:
             user_doc = self.dao[constants.COLLECTION_USERS].find_one({
-                constants.USOS_PAIRED: True,
+                # constants.USOS_PAIRED: True,
                 constants.USER_EMAIL: header_email,
-                constants.MOBI_TOKEN: header_token,
+                # constants.MOBI_TOKEN: header_token,
             }, (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                 constants.USOS_PAIRED)
             )
@@ -153,7 +153,6 @@ class UsosesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         data = yield self.get_usoses(show_encrypted=True)
-
         self.success(data)
 
 
@@ -165,6 +164,7 @@ class DefaultErrorHandler(BaseHandler):
 
 
 class ApplicationConfigHandler(BaseHandler):
+    @decorators.extra_headers(cache_age=None)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):

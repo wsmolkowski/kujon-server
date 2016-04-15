@@ -14,7 +14,7 @@ LIMIT_FIELDS = (
 
 
 class LecturersApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers('day')
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -50,7 +50,7 @@ class LecturersApi(BaseHandler):
 
 
 class LecturerByIdApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers('day')
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

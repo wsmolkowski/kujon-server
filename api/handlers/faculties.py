@@ -7,7 +7,7 @@ from commons import constants, decorators
 
 
 class FacultyByIdApi(BaseHandler):
-    @decorators.application_json
+    @decorators.extra_headers('day')
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
