@@ -20,7 +20,7 @@ LIMIT_FIELDS_USER = (
 
 
 class UsersInfoByIdApi(BaseHandler):
-    @decorators.extra_headers('day')
+    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -49,7 +49,7 @@ class UsersInfoByIdApi(BaseHandler):
 
 
 class UserInfoApi(BaseHandler):
-    @decorators.extra_headers('day')
+    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

@@ -36,8 +36,6 @@ def extra_headers(cache_age=None):
                     self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 elif cache_age == 'day':
                     self.set_header('Cache-Control', 'public, max-age={0}'.format(CACHE_AGE_DAY))
-                elif cache_age == 'month':
-                    self.set_header('Cache-Control', 'public, max-age={0}'.format(CACHE_AGE_MONTH))
 
             self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
 
