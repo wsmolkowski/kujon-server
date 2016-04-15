@@ -4,7 +4,6 @@ import json
 import logging
 from datetime import datetime, timedelta
 
-import motor
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
@@ -57,8 +56,7 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 user[constants.USOS_PAIRED] = False
                 user[constants.USER_CREATED] = datetime.now()
 
-                user_doc = yield motor.Op(self.db.users.insert, user)
-                logging.debug('saved new user in database: {0}'.format(user_doc))
+                yield self.insert_user(user)
 
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
@@ -108,11 +106,9 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 insert_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
                 insert_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
 
-                user_doc = yield motor.Op(self.db.users.insert, insert_doc)
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc},
-                                                                              self._COOKIE_FIELDS)
-                logging.debug('saved new user in database: {0}'.format(user_doc))
-
+                user_doc = yield self.insert_user(insert_doc)
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: user_doc}, self._COOKIE_FIELDS)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             else:
@@ -122,10 +118,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 user_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
                 user_doc[constants.UPDATE_TIME] = datetime.now()
 
-                update_user_doc = yield self.db[constants.COLLECTION_USERS].update(
-                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, user_doc)
-                logging.debug('updated user in database: {0}'.format(update_user_doc))
-
+                yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
@@ -191,10 +184,7 @@ class UsosRegisterHandler(BaseHandler):
         update[constants.ACCESS_TOKEN_KEY] = access_token_key
         update[constants.UPDATE_TIME] = datetime.now()
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].update(
-            {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, update)
-
-        logging.debug('updated user with usos base info: %r', user_doc)
+        yield self.update_user(user_doc[constants.MONGO_ID], update)
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
         url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
@@ -218,11 +208,8 @@ class UsosVerificationHandler(BaseHandler):
             updated_user[constants.UPDATE_TIME] = datetime.now()
             updated_user[constants.OAUTH_VERIFIER] = None
 
-            user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
+            yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
 
-            logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
-                                                                                        user_doc_updated))
             user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
@@ -243,7 +230,7 @@ class UsosVerificationHandler(BaseHandler):
             access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, 'GET')
             if esp.status != 200:
-                self.error("Bład podczas oauth USOS")
+                self.error('Bład podczas oauth USOS')
                 return
 
             access_token = self.get_token(content)
@@ -255,10 +242,7 @@ class UsosVerificationHandler(BaseHandler):
             updated_user[constants.UPDATE_TIME] = datetime.now()
             updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
-            user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
-
-            logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
+            yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
 
             user_doc = yield self.cookie_user_id(updated_user[constants.MONGO_ID])
 
@@ -278,12 +262,12 @@ class MobiAuthHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        email = self.get_argument("email", default=None, strip=True)
-        token = self.get_argument("token", default=None, strip=True)
-        usos_id = self.get_argument("usos_id", default=None, strip=True)
+        email = self.get_argument('email', default=None, strip=True)
+        token = self.get_argument('token', default=None, strip=True)
+        usos_id = self.get_argument('usos_id', default=None, strip=True)
 
         if not email or not token or not usos_id:
-            self.error("One of the provided parameters is incorrect.")
+            self.error('One of the provided parameters is incorrect.')
             return
 
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
@@ -293,11 +277,11 @@ class MobiAuthHandler(BaseHandler):
 
         # weryfikacja usera po tokenie w google
         # h = httplib2.Http()
-        # resp, cont = h.request("https://www.googleapis.com/oauth2/v2/userinfo",
+        # resp, cont = h.request('https://www.googleapis.com/oauth2/v2/userinfo',
         #                        headers={'Host': 'www.googleapis.com',
         #                                 'Authorization': token})
         # if not resp['status'] == '200':
-        #     self.error("Niepoprawny token.")
+        #     self.error('Niepoprawny token.')
         #     return
 
         try:
@@ -305,7 +289,7 @@ class MobiAuthHandler(BaseHandler):
 
             request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-                settings.CALLBACK_MOBI_URL+"?token=" + token)
+                settings.CALLBACK_MOBI_URL + '?token=' + token)
 
             client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)
@@ -343,12 +327,9 @@ class MobiAuthHandler(BaseHandler):
         update[constants.UPDATE_TIME] = datetime.now()
 
         if new_user:
-            user_doc = yield self.db[constants.COLLECTION_USERS].insert(update)
-            logging.debug("new mobile user saved with id {0}".format(str(user_doc)))
+            yield self.insert_user(update)
         else:
-            user_doc = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.USER_EMAIL: email}, update)
-            logging.debug("mobile user updated with id {0}".format(str(user_doc)))
+            yield self.update_user_email(email, update)
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
         url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
@@ -375,11 +356,8 @@ class UsosMobiVerificationHandler(BaseHandler):
             updated_user[constants.UPDATE_TIME] = datetime.now()
             updated_user[constants.OAUTH_VERIFIER] = None
 
-            user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
+            yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
 
-            logging.error('user usos veryfication error {0} db updated with {1}'.format(self.get_argument('error'),
-                                                                                        user_doc_updated))
             self.reset_user_cookie()
             self.redirect(settings.DEPLOY_WEB + '/#register')
             return
@@ -395,8 +373,8 @@ class UsosMobiVerificationHandler(BaseHandler):
             client = oauth.Client(consumer, request_token, **self.oauth_parameters)
             access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, 'GET')
-            if esp['status'] != "200":
-                self.error("Bład podczas oauth USOS")
+            if esp['status'] != '200':
+                self.error('Bład podczas oauth USOS')
 
             access_token = self.get_token(content)
 
@@ -407,13 +385,10 @@ class UsosMobiVerificationHandler(BaseHandler):
             updated_user[constants.UPDATE_TIME] = datetime.now()
             updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
 
-            user_doc_updated = yield self.db[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, updated_user)
-
-            logging.debug('user usos veryfication ok and db updated with {0}'.format(user_doc_updated))
+            yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-            self.success("Usos paired successfully.")
+            self.success('Usos paired successfully.')
         else:
-            self.error("Usos paired failed.")
+            self.error('Usos paired failed.')

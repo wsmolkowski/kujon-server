@@ -113,6 +113,31 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(user_doc)
 
     @gen.coroutine
+    def update(self, collection, _id, document):
+        updated = yield self.db[collection].update({constants.MONGO_ID: _id}, document)
+        logging.debug('collection: {0} updated: {1}'.format(collection, updated))
+
+    @gen.coroutine
+    def update_user(self, _id, document):
+        yield self.update(constants.COLLECTION_USERS, _id, document)
+
+    @gen.coroutine
+    def update_user_email(self, email, document):
+        user_doc = yield self.find_user_email(email)
+        yield self.update(constants.COLLECTION_USERS, user_doc[constants.MONGO_ID], document)
+
+    @gen.coroutine
+    def insert(self, collection, document):
+        doc = yield self.db[collection].insert(document)
+        logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
+        raise gen.Return(doc)
+
+    @gen.coroutine
+    def insert_user(self, document):
+        user_doc = yield self.insert(constants.COLLECTION_USERS, document)
+        raise gen.Return(user_doc)
+
+    @gen.coroutine
     def log_exception(self, arguments, trace):
         yield self.db[constants.COLLECTION_EXCEPTIONS].insert({
             constants.CREATED_TIME: datetime.now(),
