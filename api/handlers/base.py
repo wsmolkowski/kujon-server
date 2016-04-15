@@ -24,7 +24,6 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                 and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
             # mobile access
             self.set_header("Access-Control-Allow-Origin", "*")
-            # self.set_header("Access-Control-Allow-Credentials", "false")
         else:
             # web client access
             self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
