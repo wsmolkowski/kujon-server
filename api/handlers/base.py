@@ -149,6 +149,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
 
 class UsosesApi(BaseHandler):
+    @decorators.extra_headers(cache_age=2592000)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
