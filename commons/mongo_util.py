@@ -1,21 +1,21 @@
 import logging
+from datetime import datetime
 from pprint import pprint
 
 import pymongo
 import tornado.gen
 import tornado.ioloop
-from datetime import datetime
 
 import constants
 import settings
-from crawler import job_factory
-from commons.usosutils import usosinstances
 from commons.AESCipher import AESCipher
+from commons.usosutils import usosinstances
 from commons.usosutils.usosasync import UsosAsync
+from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
-                  constants.USOS_PAIRED)
+                  constants.USOS_PAIRED, constants.USER_EMAIL)
 
 
 def get_client():
