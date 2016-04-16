@@ -25,7 +25,7 @@ def extra_headers(cache_age=None):
     def decorator(method):
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
-            if settings.DEBUG:
+            if settings.DEVELOPMENT:
                 self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             else:
                 if not cache_age:
