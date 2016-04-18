@@ -99,5 +99,5 @@ GAUTH_EXPIRES_IN = 'gauth_expires_in'
 GAUTH_ID_TOKEN = 'gauth_id_token'
 GAUTH_TOKEN_TYPE = 'gauth_token_type'
 
-MOBILE_X_HEADER_EMAIL = 'x-kujonmobiemail'
-MOBILE_X_HEADER_TOKEN = 'x-kujonmobitoken'
+MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
+MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'

@@ -25,7 +25,7 @@ class ArchiveHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        user_doc = self.get_current_user()
+        user_doc = yield self.get_current_user()
         if user_doc:
             yield self.archive_user(user_doc[constants.MONGO_ID])
 
@@ -281,7 +281,9 @@ class MobiAuthHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
             return
 
         try:
-            yield self.oauth2_request('https://www.googleapis.com/oauth2/v1/userinfo', access_token=token)
+            tokeninfo = yield self.oauth2_request('https://www.googleapis.com/oauth2/v3/tokeninfo',
+                                                  id_token=token)
+            logging.info(tokeninfo)
         except (Exception, tornado.web.HTTPError), ex:
             self.error('Google token verification failure. {0}'.format(ex.message))
             return
