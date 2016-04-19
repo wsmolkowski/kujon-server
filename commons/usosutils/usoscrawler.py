@@ -44,7 +44,7 @@ class UsosCrawler(object):
             exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
             exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
 
-        logging.exception(exception.message)
+        logging.error(exception.message)
         self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
