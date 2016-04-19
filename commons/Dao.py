@@ -88,7 +88,7 @@ class Dao(object):
                                                                       courses_editions)
 
     def get_term(self, term_id, usos_id):
-        return self._db[constants.COLLECTION_TERMS].find_one({constants.ID: term_id, constants.USOS_ID: usos_id})
+        return self._db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_courses_editions(self, course_id, term_id, usos_id):
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(

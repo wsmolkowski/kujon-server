@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-#git config --global user.name "kujonmobi"
-#git config --global user.email "wsmo@protonmail.com"
-
 APPDIR=/home/appuser/kujon.mobi/current
 export PYTHONPATH=$PYTHONPATH:$APPDIR
 
@@ -13,8 +10,9 @@ echo 'services stopped'
 
 echo 'cloning code'
 rm -rf $APPDIR
-git clone https://github.com/kujonmobi/kujon-server.git $APPDIR
-chmod g+w -R $APPDIR
+mkdir $APPDIR
+cd $APPDIR
+git clone https://github.com/kujonmobi/kujon-server.git .
 ln -s /home/appuser/kujon.mobi/bower_components/ $APPDIR/web/static/
 
 echo 'starting services...'
