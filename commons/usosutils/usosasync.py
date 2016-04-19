@@ -43,8 +43,8 @@ class UsosAsync(object):
         response = yield tornado.gen.Task(self.client.fetch, request)
         if self.validate_response(response):
             raise tornado.gen.Return(json.loads(response.body))
-
-        raise UsosAsyncError(response, response, uri=request)
+        else:
+            raise UsosAsyncError(response, response, uri=request)
 
     @tornado.gen.coroutine
     def get_courses_units(self, usos_base_url, unit_id, validate_cert=False):
@@ -57,8 +57,8 @@ class UsosAsync(object):
             unit = json.loads(response.body)
             unit[constants.UNIT_ID] = unit.pop('id')
             raise tornado.gen.Return(unit)
-
-        raise UsosAsyncError(response, response, uri=request, parameters=[unit_id])
+        else:
+            raise UsosAsyncError(response, response, uri=request, parameters=[unit_id])
 
     @tornado.gen.coroutine
     def get_term_info(self, usos_base_url, term_id, validate_cert=False):
@@ -70,7 +70,6 @@ class UsosAsync(object):
         if self.validate_response(response):
             term = json.loads(response.body)
             term[constants.TERM_ID] = term.pop('id')
-
             raise tornado.gen.Return(term)
-
-        raise UsosAsyncError(response, response, uri=request, parameters=[term_id])
+        else:
+            raise UsosAsyncError(response, response, uri=request, parameters=[term_id])

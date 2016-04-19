@@ -1,7 +1,5 @@
 import json
 
-import utils
-
 
 class Error(Exception):
     """Base error for this module."""
@@ -38,7 +36,7 @@ class HttpError(Error):
         reason['uri'] = self.uri
         reason['parameters'] = self.parameters
 
-        return json.dumps(utils.serialize(reason))
+        return reason
 
     @property
     def message(self):
