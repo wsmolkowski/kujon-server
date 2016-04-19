@@ -28,6 +28,9 @@ class HttpError(Error):
             }
 
     def __repr__(self):
+        return self._message()
+
+    def _message(self):
         reason = self._get_reason()
         reason.update(self.extras)
         reason['resp'] = self.resp
@@ -36,6 +39,10 @@ class HttpError(Error):
         reason['parameters'] = self.parameters
 
         return json.dumps(utils.serialize(reason))
+
+    @property
+    def message(self):
+        return self._message()
 
     def append(self, key, value):
         self.extras[key] = value
