@@ -161,7 +161,7 @@ class DatabaseHandler(RequestHandler):
         indexes = yield self.db[collection].index_information()
         if field not in indexes:
             index = yield self.db[collection].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
-            logging.info('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
+            logging.debug('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
         raise gen.Return()
 
     @gen.coroutine
