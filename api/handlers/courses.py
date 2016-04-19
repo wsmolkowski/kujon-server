@@ -193,7 +193,7 @@ class CoursesEditionsApi(BaseHandler):
                 groups = list()
                 while (yield cursor.fetch_next):
                     group = cursor.next_object()
-                    group['class_type_id'] = classtypes[group['class_type_id']]  # changing class_type_id to name
+                    group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
                 course['course_name'] = course['course_name']['pl']
