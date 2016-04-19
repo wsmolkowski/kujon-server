@@ -162,7 +162,10 @@ def recreate_usos():
         logging.info("adding usos: %r ", usos[constants.USOS_ID])
         doc = db.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
         if not doc:
-            db[constants.COLLECTION_USOSINSTANCES].insert(aes.encrypt_usos(usos))
+            if settings.ENCRYPT_USOSES_KEYS:
+                db[constants.COLLECTION_USOSINSTANCES].insert(aes.encrypt_usos(usos))
+            else:
+                db[constants.COLLECTION_USOSINSTANCES].insert(usos)
 
 
 @tornado.gen.coroutine

@@ -1,23 +1,22 @@
 import functools
 
-from tornado.web import HTTPError
+import tornado.gen
 
 from commons import constants, settings
 
 
 def authenticated(method):
-    @functools.wraps(method)
+    @tornado.gen.coroutine
     def wrapper(self, *args, **kwargs):
-        if not self.get_current_user():
-            if self.request.method in ("GET", "POST", "HEAD"):
-                self.fail("Request not authenticated.")
-                return
-            raise HTTPError(403)
+        current_user = yield self.get_current_user()
+        if not current_user:
+            self.fail("Request not authenticated.")
+            return
         else:
-            self.user_doc = self.get_current_user()
-
-        return method(self, *args, **kwargs)
-
+            self.user_doc = current_user
+            result = method(self, *args, **kwargs)  # updates
+            if result is not None:
+                yield result
     return wrapper
 
 

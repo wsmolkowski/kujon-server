@@ -82,6 +82,7 @@ COLLECTION_STATISTICS_HISTORY = 'statistic_history'
 COLLECTION_EMAIL_QUEUE = 'email_queue'
 COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 COLLECTION_EXCEPTIONS = 'exceptions'
+COLLECTION_TOKENS = 'tokens'
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
@@ -99,5 +100,5 @@ GAUTH_EXPIRES_IN = 'gauth_expires_in'
 GAUTH_ID_TOKEN = 'gauth_id_token'
 GAUTH_TOKEN_TYPE = 'gauth_token_type'
 
-MOBILE_X_HEADER_EMAIL = 'x-kujonmobiemail'
-MOBILE_X_HEADER_TOKEN = 'x-kujonmobitoken'
+MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
+MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'

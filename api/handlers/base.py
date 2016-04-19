@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import copy
 import urlparse
 
 import oauth2 as oauth
@@ -39,40 +40,46 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
         return httpclient.AsyncHTTPClient()
 
+    @tornado.gen.coroutine
     def get_current_user(self):
-        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-        if cookie:
-            cookie = json_decode(cookie)
-            return json_util.loads(cookie)
+        response = None
+        if hasattr(self, 'user_doc') and self.user_doc:
+            response = self.user_doc
 
-        header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-        header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+        if not response:
+            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+            if cookie:
+                cookie = json_decode(cookie)
+                response = json_util.loads(cookie)
 
-        if header_email and header_token:
-            user_doc = self.dao[constants.COLLECTION_USERS].find_one({
-                # constants.USOS_PAIRED: True,
-                constants.USER_EMAIL: header_email,
-                # constants.MOBI_TOKEN: header_token,
-            }, (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                constants.USOS_PAIRED)
-            )
+        if not response:
+            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-            return user_doc
+            if header_email and header_token:
+                token_exists = yield self.find_token(header_email)
 
-        return None
+                if token_exists:
+                    user_doc = yield self.current_user(header_email)
+                    response = user_doc
 
+        raise tornado.gen.Return(response)
+
+    @tornado.gen.coroutine
     def config_data(self):
-        user = self.get_current_user()
+        user = yield self.get_current_user()
         if user and constants.USOS_PAIRED in user.keys():
             usos_paired = user[constants.USOS_PAIRED]
         else:
             usos_paired = False
 
-        return {
+        config = {
             'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False
         }
+
+        raise tornado.gen.Return(config)
 
     @property
     def oauth_parameters(self):
@@ -89,30 +96,35 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         return self._aes
 
     _usoses = list()
-    _usoses_encrypted = list()
 
     @tornado.gen.coroutine
-    def get_usoses(self, show_encrypted):
+    def get_usoses(self, showtokens):
 
-        if not self._usoses or not self._usoses_encrypted:
+        if not self._usoses:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-            while (yield cursor.fetch_next):
-                usos_encrypted = cursor.next_object()
 
-                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
-                usos = usos_encrypted.copy()
-                usos = dict(self.aes.decrypt_usos(usos))
+            while (yield cursor.fetch_next):
+                usos = cursor.next_object()
+                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+
+                if settings.ENCRYPT_USOSES_KEYS:
+                    usos = dict(self.aes.decrypt_usos(usos))
 
                 self._usoses.append(usos)
-                self._usoses_encrypted.append(usos_encrypted)
-        if show_encrypted:
-            raise tornado.gen.Return(self._usoses_encrypted)
-        else:
-            raise tornado.gen.Return(self._usoses)
+
+        result_usoses = copy.deepcopy(self._usoses)
+        if not showtokens:
+            for usos in result_usoses:
+                usos.pop("consumer_secret")
+                usos.pop("consumer_key")
+                usos.pop("enabled")
+                usos.pop("contact")
+                usos.pop("url")
+        raise tornado.gen.Return(result_usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):
-        usoses = yield self.get_usoses(show_encrypted=False)
+        usoses = yield self.get_usoses(showtokens=True)
 
         for u in usoses:
             if u[key] == value:
@@ -141,7 +153,7 @@ class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = yield self.get_usoses(show_encrypted=True)
+        data = yield self.get_usoses(showtokens=False)
         self.success(data)
 
 
@@ -149,7 +161,7 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('Strona o podanym adresie nie istnieje.')
+        self.fail('404 - Strona o podanym adresie nie istnieje.')
 
 
 class ApplicationConfigHandler(BaseHandler):
@@ -157,4 +169,5 @@ class ApplicationConfigHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.success(data=self.config_data())
+        config = yield self.config_data()
+        self.success(data=config)
