@@ -26,8 +26,12 @@ class Dao(object):
         return self._db[collection].insert(document)
 
     def get_usos(self, usos_id):
+
         usos = self._db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
-        return self.aes.decrypt_usos(usos)
+        if settings.ENCRYPT_USOSES_KEYS:
+            return self.aes.decrypt_usos(usos)
+        else:
+            return usos
 
     def get_user(self, user_id):
         return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})

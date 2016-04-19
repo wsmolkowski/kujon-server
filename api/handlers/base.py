@@ -99,23 +99,28 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def get_usoses(self, showtokens):
+
         if not self._usoses:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
+
             while (yield cursor.fetch_next):
                 usos = cursor.next_object()
                 usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+
+                if settings.ENCRYPT_USOSES_KEYS:
+                    usos = dict(self.aes.decrypt_usos(usos))
+
                 self._usoses.append(usos)
+
+        result_usoses = copy.deepcopy(self._usoses)
         if not showtokens:
-            new_usoses = copy.deepcopy(self._usoses)
-            for usos in new_usoses:
+            for usos in result_usoses:
                 usos.pop("consumer_secret")
                 usos.pop("consumer_key")
                 usos.pop("enabled")
                 usos.pop("contact")
                 usos.pop("url")
-            raise tornado.gen.Return(new_usoses)
-        else:
-            raise tornado.gen.Return(self._usoses)
+        raise tornado.gen.Return(result_usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):

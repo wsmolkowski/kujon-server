@@ -8,7 +8,6 @@ DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 if DEVELOPMENT:
     config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
 else:
@@ -19,7 +18,7 @@ MONGODB_NAME = config.get('database', 'MONGODB_NAME')
 
 COOKIE_SECRET = config.get('application', 'COOKIE_SECRET')
 AES_SECRET = config.get('application', 'AES_SECRET')
-
+ENCRYPT_USOSES_KEYS = config.getboolean('application', 'ENCRYPT_USOSES_KEYS')
 PROJECT_TITLE = config.get('application', 'PROJECT_TITLE')
 DEBUG = config.getboolean('application', 'DEBUG')
 RELOAD = config.getboolean('application', 'RELOAD')
