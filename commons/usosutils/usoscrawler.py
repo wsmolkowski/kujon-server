@@ -8,12 +8,12 @@ from bson.objectid import ObjectId
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
+from commons.errors import UsosClientError
 from commons.helpers import log_execution_time
-from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
 
-class UsosCrawler:
+class UsosCrawler(object):
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
@@ -21,7 +21,6 @@ class UsosCrawler:
             self.dao = dao
 
         self.aes = AESCipher()
-        self.usosAsync = UsosAsync()
 
 
     @staticmethod
@@ -40,14 +39,21 @@ class UsosCrawler:
 
         return data
 
+    def _exc(self, exception):
+        if hasattr(self, 'user') and isinstance(exception, UsosClientError):
+            exception.append('user', self.user)
+
+        logging.exception(exception)
+        # FIXME enhance with usos_id, user_id
+        # self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception)
+
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
 
             try:
                 photo = client.user_info_photo(user_info_id)
-            except Exception, ex:
-                logging.exception('Could not find user_info_photo for user_info_photo: {0} due to {1}'.format(
-                    user_info_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 return
 
             if photo:
@@ -65,9 +71,8 @@ class UsosCrawler:
 
         try:
             result = client.user_info(user_info_id)
-        except Exception, ex:
-            logging.exception('Could not find user_info_id for user_info_id: {0} due to {1}'.format(
-                user_info_id, ex.message))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -109,9 +114,8 @@ class UsosCrawler:
 
             try:
                 course_result = client.course_edition(course_id, term_id, fetch_participants=False)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for course: {0} term: {1) due to {2}'.format(
-                    course_id, term_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -120,12 +124,11 @@ class UsosCrawler:
                           str(course_doc))
 
     def __build_time_table(self, client, user_id, usos_id, given_date):
-        existing_tt = self.dao.get_time_table(user_id, usos_id)
+        # existing_tt = self.dao.get_time_table(user_id, usos_id)
         try:
             result = client.time_table(given_date)
-        except Exception, ex:
-            logging.exception('Exception {0} while fetching time table for: {1} and {2}'.format(
-                ex.message, user_id, given_date))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         if result:
@@ -151,8 +154,8 @@ class UsosCrawler:
 
             try:
                 result = client.programme(programme['programme'][constants.ID])
-            except Exception, ex:
-                logging.exception('Could not find programme for {0} due to {1}'.format(programme, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -180,8 +183,8 @@ class UsosCrawler:
 
         try:
             result = client.courseeditions_info()
-        except Exception, ex:
-            logging.exception("Could not find courseeditions_info due to {0}".format(ex.message))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         if result:
@@ -219,9 +222,10 @@ class UsosCrawler:
 
             try:
                 result = client.get_term_info(term_id)
-            except Exception, ex:
-                logging.exception("Could not find term_id for %r due to %r", term_id, ex.message)
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
+
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.TERM_ID] = result.pop(constants.ID)
@@ -243,8 +247,8 @@ class UsosCrawler:
             try:
                 result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
                                                fetch_participants=True)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for {0} due to {1}'.format(course_edition, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -285,8 +289,8 @@ class UsosCrawler:
         for course in courses:
             try:
                 result = client.course(course)
-            except Exception, ex:
-                logging.exception('Could not find course for {0} due to {1}'.format(course, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -314,8 +318,8 @@ class UsosCrawler:
 
             try:
                 result = client.faculty(faculty)
-            except Exception, ex:
-                logging.exception('Could not find faculty for {0} due to {1}'.format(faculty, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -345,8 +349,8 @@ class UsosCrawler:
 
             try:
                 result = client.units(unit_id)
-            except Exception, ex:
-                logging.exception('Could not find units for {0} due to {1}'.format(unit_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -366,8 +370,8 @@ class UsosCrawler:
 
             try:
                 result = client.groups(unit)
-            except Exception, ex:
-                logging.exception('Could not find groups for {0} due to {1}'.format(unit, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -388,9 +392,8 @@ class UsosCrawler:
 
             try:
                 result = client.course_edition(course_id, term_id, fetch_participants=True)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for course: {0} and term {1} due to {2}'.format(
-                    course_id, term_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 return
 
             self.__find_users_related(users_found, result)
@@ -427,6 +430,7 @@ class UsosCrawler:
                     users.append(l)
 
     def __build_client(self, user):
+        self.user = user
         usos = self.dao.get_usos(user[constants.USOS_ID])
         client = UsosClient(usos[constants.USOS_URL], usos[constants.CONSUMER_KEY],
                             usos[constants.CONSUMER_SECRET],

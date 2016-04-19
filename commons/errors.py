@@ -1,5 +1,7 @@
 import json
 
+import utils
+
 
 class Error(Exception):
     """Base error for this module."""
@@ -9,33 +11,43 @@ class Error(Exception):
 class HttpError(Error):
     """HTTP data was invalid or unexpected."""
 
-    def __init__(self, resp, content, uri=None):
+    def __init__(self, resp, content, uri=None, parameters=None):
         self.resp = resp
         self.content = content
         self.uri = uri
+        self.parameters = parameters
+        self.extras = dict()
 
     def _get_reason(self):
         """Calculate the reason for the error from the response content."""
-        reason = self.resp.reason
         try:
-            data = json.loads(self.content)
-            reason = data['error']['message']
+            return json.loads(self.content)
         except (ValueError, KeyError):
-            pass
-        if reason is None:
-            reason = ''
-        return reason
+            return {
+                'content': self.content
+            }
 
     def __repr__(self):
-        if self.uri:
-            return '<HttpError %s when requesting %s returned "%s">' % (
-                self.resp.status, self.uri, self._get_reason().strip())
-        else:
-            return '<HttpError %s "%s">' % (self.resp.status, self._get_reason())
+        reason = self._get_reason()
+        reason.update(self.extras)
+        reason['resp'] = self.resp
+        reason['status'] = self.resp.status
+        reason['uri'] = self.uri
+        reason['parameters'] = self.parameters
+
+        return json.dumps(utils.serialize(reason))
+
+    def append(self, key, value):
+        self.extras[key] = value
 
     __str__ = __repr__
 
 
-class UsosError(HttpError):
+class UsosClientError(HttpError):
+    """USOS exceptions"""
+    pass
+
+
+class UsosAsyncError(HttpError):
     """USOS exceptions"""
     pass

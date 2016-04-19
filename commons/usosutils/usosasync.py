@@ -3,16 +3,16 @@ import urllib
 
 import tornado.gen
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient
-from tornado.web import HTTPError
 
 from commons import settings, constants
+from commons.errors import UsosAsyncError
 
 URL_TERM_INFO = '{0}services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 
 
-class UsosAsync:
+class UsosAsync(object):
     def __init__(self):
         self.client = self.build_client()
 
@@ -30,10 +30,10 @@ class UsosAsync:
                            proxy_host=settings.PROXY_URL, proxy_port=settings.PROXY_PORT)
 
     @staticmethod
-    def validate_response(fetch_type, response):
-        if response.code is not 200:
-            raise HTTPError(response.code, "Error while fetching {0}. Response body: {1}".format(fetch_type,
-                                                                                                 response.error))
+    def validate_response(response):
+        if response.code is 200 and response.reason == 'OK':
+            return True
+        return False
 
     @tornado.gen.coroutine
     def get_courses_classtypes(self, usos_base_url, validate_cert=False):
@@ -41,9 +41,10 @@ class UsosAsync:
         request = self.build_request(url=url, validate_cert=validate_cert)
 
         response = yield tornado.gen.Task(self.client.fetch, request)
-        self.validate_response('courses_classtypes', response)
+        if self.validate_response(response):
+            raise tornado.gen.Return(json.loads(response.body))
 
-        raise tornado.gen.Return(json.loads(response.body))
+        raise UsosAsyncError(response, response, uri=request)
 
     @tornado.gen.coroutine
     def get_courses_units(self, usos_base_url, unit_id, validate_cert=False):
@@ -51,12 +52,13 @@ class UsosAsync:
         request = self.build_request(url=url, validate_cert=validate_cert)
 
         response = yield tornado.gen.Task(self.client.fetch, request)
-        self.validate_response('courses_units', response)
 
-        unit = json.loads(response.body)
-        unit[constants.UNIT_ID] = unit.pop('id')
+        if self.validate_response(response):
+            unit = json.loads(response.body)
+            unit[constants.UNIT_ID] = unit.pop('id')
+            raise tornado.gen.Return(unit)
 
-        raise tornado.gen.Return(unit)
+        raise UsosAsyncError(response, response, uri=request, parameters=[unit_id])
 
     @tornado.gen.coroutine
     def get_term_info(self, usos_base_url, term_id, validate_cert=False):
@@ -65,9 +67,10 @@ class UsosAsync:
 
         response = yield tornado.gen.Task(self.client.fetch, request)
 
-        self.validate_response('term_info', response)
+        if self.validate_response(response):
+            term = json.loads(response.body)
+            term[constants.TERM_ID] = term.pop('id')
 
-        term = json.loads(response.body)
-        term[constants.TERM_ID] = term.pop('id')
+            raise tornado.gen.Return(term)
 
-        raise tornado.gen.Return(term)
+        raise UsosAsyncError(response, response, uri=request, parameters=[term_id])

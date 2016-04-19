@@ -5,6 +5,7 @@ from base64 import b64encode
 import oauth2 as oauth
 
 from commons import utils
+from commons.errors import UsosClientError
 
 URI_USER_INFO = u"services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
 URI_USER_INFO_PHOTO = u"services/photos/photo?user_id={0}"
@@ -22,7 +23,7 @@ URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|typ
 URI_TERM_INFO = u"services/terms/term?term_id={0}"
 
 
-class UsosClient:
+class UsosClient(object):
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
         self.base_url = base_url
         self.access_token_key = access_token_key
@@ -39,25 +40,30 @@ class UsosClient:
 
         self.client = oauth.Client(consumer=self.consumer, token=self.token, **self.parameters)
 
+    def _validate(self, code):
+        if code.status is 200 and code.reason == 'OK':  # response.code is not 200
+            return True
+        return False
+
     def user_info(self, user_info_id):
         if user_info_id:
-            code, body = self.client.request(
-                u"{0}{1}{2}{3}".format(self.base_url, URI_USER_INFO, u"&user_id=", user_info_id))
+            request = u"{0}{1}{2}{3}".format(self.base_url, URI_USER_INFO, u"&user_id=", user_info_id)
         else:
-            code, body = self.client.request(u"{0}{1}".format(self.base_url, URI_USER_INFO))
-        if code['status'] == '200':
+            request = u"{0}{1}".format(self.base_url, URI_USER_INFO)
+
+        code, body = self.client.request(request)
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(u"Error while fetching user info. Response code: {0} body: {1}".format(code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[user_info_id])
 
     def user_info_photo(self, user_id):
         request = u"{0}{1}".format(self.base_url, URI_USER_INFO_PHOTO.format(user_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             result = {'user_id': user_id,
                       'photo': b64encode(body)}
             return result
-        raise Exception(
-            u"Error while fetching photo for request: {0}. Response code: {1} body: {2}".format(request, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[user_id])
 
     def programme(self, programme_id):
         if not programme_id:
@@ -65,11 +71,9 @@ class UsosClient:
 
         request = u"{0}{1}".format(self.base_url, URI_PROGRAMMES.format(programme_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching programmes for requesst: {0}. Response code: {1} body: {2}".format(request, code,
-                                                                                                      body))
+        raise UsosClientError(code, body, uri=request, parameters=[programme_id])
 
     def time_table(self, start_date):
         if not start_date:
@@ -77,36 +81,30 @@ class UsosClient:
 
         request = "{0}{1}".format(self.base_url, URI_TT.format(start_date))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(u"Error while fetching time tables for request: {0}. Response code: {1} body: {2}".
-                        format(request, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[start_date])
 
     def groups(self, course_unit_id):
         request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching groups for request: {0}. Response code: {1} body: {2}".format(request, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[course_unit_id])
 
     def units(self, unit_id):
         request = u"{0}{1}".format(self.base_url, URI_COURSES_UNITS.format(unit_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching units for request {0}. Response code: {1} body: {2}".format(request, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[unit_id])
 
     def courseeditions_info(self):
         request = u"{0}{1}".format(self.base_url, URI_COURSES_EDITIONS_INFO)
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching courseeditions_info for request: {0}. Response code: {1} body: {2}".format(request,
-                                                                                                              code,
-                                                                                                              body))
+        raise UsosClientError(code, body, uri=request)
 
     def course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
@@ -118,51 +116,44 @@ class UsosClient:
                                                                                                               term_id,
                                                                                                               safe='')))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching course_info for request: {0}. Response code: {1} body: {2}".format(request,
-                                                                                                      course_id, code,
-                                                                                                      body))
+
+        raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id, fetch_participants])
 
     def course(self, course_id):
         request = u"{0}{1}".format(self.base_url, URI_COURSE.format(course_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching course_id for request: {0}. Response code: {1} body: {2}".format(request, code,
-                                                                                                    body))
+
+        raise UsosClientError(code, body, uri=request, parameters=[course_id])
 
     def grades(self, course_id, term_id):
         request = "{0}{1}".format(self.base_url,
                                   URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, urllib.quote(term_id, safe='')))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching grades for request: {0}. Response code: {1} body: {2}".format(request, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[course_id])
 
     def class_types(self):
         request = "{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES)
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(
-            u"Error while fetching class_types for request {0}. Response code: {1} body: {2}".format(request, code,
-                                                                                                     body))
+        raise UsosClientError(code, body, uri=request)
 
     def faculty(self, fac_id):
         request = "{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(u"Error while fetching faculty: {0}. Response code: {1} body: {2}".format(fac_id, code, body))
+        raise UsosClientError(code, body, uri=request, parameters=[fac_id])
 
     def get_term_info(self, term_id):
         request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(term_id))
         code, body = self.client.request(request)
-        if code['status'] == '200':
+        if self._validate(code):
             return json.loads(body)
-        raise Exception(u"Error while fetching term_id: {0}. Response code: {1} body: {2}".format(term_id, code, body))
-
+        raise UsosClientError(code, body, uri=request, parameters=[term_id])

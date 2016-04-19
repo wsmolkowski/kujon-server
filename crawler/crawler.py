@@ -3,9 +3,9 @@
 import logging
 from datetime import timedelta, datetime
 
+import motor
 from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
-import motor
 
 from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
@@ -22,7 +22,6 @@ class MongoDbQueue(object):
         self._queue = queues.Queue(maxsize=queue_maxsize)
 
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
-
 
     @gen.coroutine
     def __load_work(self):
@@ -60,9 +59,10 @@ class MongoDbQueue(object):
         job[constants.JOB_MESSAGE] = message
 
         update = yield self.db[constants.COLLECTION_JOBS_QUEUE].update(
-                {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
+            {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.debug("updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
+        logging.debug(
+            "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
     @gen.coroutine
     def remove_user_data(self, user_id):
