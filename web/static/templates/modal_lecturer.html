@@ -8,15 +8,15 @@
                 <h4 class="modal-title" id="lecturerModalLabel">{{first_name}} {{last_name}}</h4>
             </div>
             <div class="modal-body">
-                <div class="media">
-                    <div class="media-left">
+                <div class="row">
+                    <div class="col-xs-2">
                         <a href="#">
                             {{#if has_photo}}
-                            <img class="media-object" src="{{has_photo}}" alt="...">
+                            <img src="{{has_photo}}" class="img-responsive" alt="{{first_name}} {{last_name}}"/>
                             {{/if}}
                         </a>
                     </div>
-                    <div class="media-body">
+                    <div class="col-xs-10">
                         <table class="table table-strip table-responsive">
                             <tr>
                                 <td>Tytuł</td>

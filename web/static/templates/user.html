@@ -1,12 +1,10 @@
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="media">
-            <div class="media-left">
-                <a href="#">
-                    <img class="media-object" src="{{picture}}" alt="{{name}}">
-                </a>
+        <div class="row">
+            <div class="col-xs-2">
+                <img class="img-responsive" src="{{picture}}" alt="{{name}}" >
             </div>
-            <div class="media-body">
+            <div class="col-xs-10">
                 <h3 class="media-heading">{{name}} {{given_name}}</h3>
                 <table class="table table-hover table-responsive">
                     <thead>
@@ -35,15 +33,15 @@
         </div>
 
 
-        <div class="media">
-            <div class="media-left">
+        <div class="row">
+            <div class="col-xs-2">
                 <a href="#">
                     {{#if has_photo}}
-                    <img class="media-object" src="{{has_photo}}" alt="{{first_name}}">
+                    <img class="img-responsive" src="{{has_photo}}" alt="{{first_name}}">
                     {{/if}}
                 </a>
             </div>
-            <div class="media-body">
+            <div class="col-xs-10">
                 <h3 class="media-heading">Informacje z USOS</h3>
                 <table class="table table-hover table-responsive">
                     <thead>

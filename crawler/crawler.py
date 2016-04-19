@@ -69,7 +69,12 @@ class MongoDbQueue(object):
         logging.debug('removing user data for user_id {0}'.format(user_id))
 
         collections = yield self.db.collection_names()
+
         for collection in collections:
+
+            if collection == constants.COLLECTION_USERS_ARCHIVE:
+                continue
+
             exists = yield self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
             if exists:
                 result = yield self.db[collection].remove({constants.USER_ID: user_id})

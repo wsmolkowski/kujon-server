@@ -408,7 +408,7 @@ class UsosCrawler(object):
                 if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
                     continue  # grades for course and term already exists
 
-            if result:
+            if result and (len(result['grades']['course_grades'])>0 or len(result['grades']['course_units_grades'])>0):
                 g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
                 logging.debug("grades for course_id: %r and term_id: %r inserted %r", course_id, term_id, str(g_doc))
 
