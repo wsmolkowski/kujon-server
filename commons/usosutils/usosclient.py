@@ -54,7 +54,8 @@ class UsosClient(object):
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[user_info_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[user_info_id])
 
     def user_info_photo(self, user_id):
         request = u"{0}{1}".format(self.base_url, URI_USER_INFO_PHOTO.format(user_id))
@@ -63,7 +64,8 @@ class UsosClient(object):
             result = {'user_id': user_id,
                       'photo': b64encode(body)}
             return result
-        raise UsosClientError(code, body, uri=request, parameters=[user_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[user_id])
 
     def programme(self, programme_id):
         if not programme_id:
@@ -73,7 +75,8 @@ class UsosClient(object):
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[programme_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[programme_id])
 
     def time_table(self, start_date):
         if not start_date:
@@ -83,28 +86,32 @@ class UsosClient(object):
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[start_date])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[start_date])
 
     def groups(self, course_unit_id):
         request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[course_unit_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[course_unit_id])
 
     def units(self, unit_id):
         request = u"{0}{1}".format(self.base_url, URI_COURSES_UNITS.format(unit_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[unit_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[unit_id])
 
     def courseeditions_info(self):
         request = u"{0}{1}".format(self.base_url, URI_COURSES_EDITIONS_INFO)
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request)
+        else:
+            raise UsosClientError(code, body, uri=request)
 
     def course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
@@ -118,16 +125,16 @@ class UsosClient(object):
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-
-        raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id, fetch_participants])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id, fetch_participants])
 
     def course(self, course_id):
         request = u"{0}{1}".format(self.base_url, URI_COURSE.format(course_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-
-        raise UsosClientError(code, body, uri=request, parameters=[course_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[course_id])
 
     def grades(self, course_id, term_id):
         request = "{0}{1}".format(self.base_url,
@@ -135,25 +142,29 @@ class UsosClient(object):
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[course_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[course_id])
 
     def class_types(self):
         request = "{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES)
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request)
+        else:
+            raise UsosClientError(code, body, uri=request)
 
     def faculty(self, fac_id):
         request = "{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[fac_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[fac_id])
 
     def get_term_info(self, term_id):
         request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(term_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
-        raise UsosClientError(code, body, uri=request, parameters=[term_id])
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[term_id])

@@ -44,8 +44,7 @@ class UsosCrawler(object):
             exception.append('user', self.user)
 
         logging.exception(exception)
-        # FIXME enhance with usos_id, user_id
-        # self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception)
+        self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
