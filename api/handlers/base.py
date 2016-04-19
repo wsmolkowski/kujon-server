@@ -95,30 +95,27 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         return self._aes
 
     _usoses = list()
-    _usoses_encrypted = list()
 
     @tornado.gen.coroutine
-    def get_usoses(self, show_encrypted):
-
-        if not self._usoses or not self._usoses_encrypted:
+    def get_usoses(self, showtokens):
+        if not self._usoses:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
             while (yield cursor.fetch_next):
-                usos_encrypted = cursor.next_object()
-
-                usos_encrypted['logo'] = settings.DEPLOY_WEB + usos_encrypted['logo']
-                usos = usos_encrypted.copy()
-                usos = dict(self.aes.decrypt_usos(usos))
-
+                usos = cursor.next_object()
+                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
                 self._usoses.append(usos)
-                self._usoses_encrypted.append(usos_encrypted)
-        if show_encrypted:
-            raise tornado.gen.Return(self._usoses_encrypted)
+        if not showtokens:
+            usoses = list(self._usoses)
+            for usos in usoses:
+                usos.pop("consumer_secret")
+                usos.pop("consumer_key")
+            raise tornado.gen.Return(usoses)
         else:
             raise tornado.gen.Return(self._usoses)
 
     @tornado.gen.coroutine
     def get_usos(self, key, value):
-        usoses = yield self.get_usoses(show_encrypted=False)
+        usoses = yield self.get_usoses(showtokens=True)
 
         for u in usoses:
             if u[key] == value:
@@ -152,7 +149,7 @@ class UsosesApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = yield self.get_usoses(show_encrypted=True)
+        data = yield self.get_usoses(showtokens=False)
         self.success(data)
 
 
@@ -160,7 +157,7 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('Strona o podanym adresie nie istnieje.')
+        self.fail('404 - Strona o podanym adresie nie istnieje.')
 
 
 class ApplicationConfigHandler(BaseHandler):
