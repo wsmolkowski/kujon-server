@@ -9,6 +9,8 @@ from tornado.web import RequestHandler
 from commons import constants, settings
 from crawler import email_factory
 
+TOKEN_EXPIRATION_TIMEOUT = 3600
+
 
 class DatabaseHandler(RequestHandler):
     @property
@@ -153,6 +155,31 @@ class DatabaseHandler(RequestHandler):
         if user_doc:
             raise gen.Return(True)
         raise gen.Return(False)
+
+    @gen.coroutine
+    def ttl_index(self, collection, field):
+        indexes = yield self.db[collection].index_information()
+        if field not in indexes:
+            index = yield self.db[collection].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
+            logging.info('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
+        raise gen.Return()
+
+    @gen.coroutine
+    def insert_token(self, token):
+        result = yield self.db[constants.COLLECTION_TOKENS].remove({'email': token['email']})
+
+        logging.debug('removed data from collection {0} for email {1} with result {2}'.format(
+            constants.COLLECTION_TOKENS, token['email'], result))
+
+        user_doc = yield self.insert(constants.COLLECTION_TOKENS, token)
+
+        yield self.ttl_index(constants.COLLECTION_TOKENS, 'exp')
+        raise gen.Return(user_doc)
+
+    @gen.coroutine
+    def find_token(self, email):
+        token_doc = yield self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
+        raise gen.Return(token_doc)
 
     @gen.coroutine
     def log_exception(self, arguments, trace):

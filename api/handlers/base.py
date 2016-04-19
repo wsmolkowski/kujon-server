@@ -1,11 +1,11 @@
 # coding=UTF-8
 
+import copy
 import urlparse
 
 import oauth2 as oauth
 import tornado.gen
 import tornado.web
-import copy
 from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
@@ -57,11 +57,11 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
             if header_email and header_token:
-                user_doc = yield self.current_user(header_email)
-                # constants.USOS_PAIRED: True,
-                # constants.MOBI_TOKEN: header_token,
+                token_exists = yield self.find_token(header_email)
 
-                response = user_doc
+                if token_exists:
+                    user_doc = yield self.current_user(header_email)
+                    response = user_doc
 
         raise tornado.gen.Return(response)
 
