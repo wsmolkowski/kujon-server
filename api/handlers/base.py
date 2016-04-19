@@ -5,6 +5,7 @@ import urlparse
 import oauth2 as oauth
 import tornado.gen
 import tornado.web
+import copy
 from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
@@ -56,9 +57,9 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
         if header_email and header_token:
             user_doc = self.dao[constants.COLLECTION_USERS].find_one({
-                # constants.USOS_PAIRED: True,
+                constants.USOS_PAIRED: True,
                 constants.USER_EMAIL: header_email,
-                # constants.MOBI_TOKEN: header_token,
+                constants.MOBI_TOKEN: header_token,
             }, (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                 constants.USOS_PAIRED)
             )
@@ -105,11 +106,14 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                 usos['logo'] = settings.DEPLOY_WEB + usos['logo']
                 self._usoses.append(usos)
         if not showtokens:
-            usoses = list(self._usoses)
-            for usos in usoses:
+            new_usoses = copy.deepcopy(self._usoses)
+            for usos in new_usoses:
                 usos.pop("consumer_secret")
                 usos.pop("consumer_key")
-            raise tornado.gen.Return(usoses)
+                usos.pop("enabled")
+                usos.pop("contact")
+                usos.pop("url")
+            raise tornado.gen.Return(new_usoses)
         else:
             raise tornado.gen.Return(self._usoses)
 
