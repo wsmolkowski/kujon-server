@@ -4,7 +4,7 @@ USOSINSTANCES = [
      'name': 'Uniwersytet Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
      'logo': '/static/img/logo/logo-uw-64x64.jpg',
-     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',  # jeszcze stary nie zmieniony na Kujon.mobi
+     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',                         # jeszcze stary nie zmieniony na Kujon.mobi
      'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',  # jeszcze stary nie zmieniony na Kujon.mobi
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'enabled': True,
