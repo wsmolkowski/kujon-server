@@ -25,16 +25,10 @@ class BaseHandler(DatabaseHandler, JSendMixin):
                 and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
             # mobile access
             self.set_header("Access-Control-Allow-Origin", "*")
-            # self.set_header("Access-Control-Allow-Credentials", "false")
         else:
             # web client access
             self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
-
-        # self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
-        # self.set_header("Access-Control-Allow-Credentials", "true")
-
-            # self.set_header("Access-Control-Allow-Methods", "GET,POST")  # "GET,PUT,POST,DELETE,OPTIONS"
 
     @staticmethod
     def get_auth_http_client():
@@ -46,40 +40,46 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
         return httpclient.AsyncHTTPClient()
 
+    @tornado.gen.coroutine
     def get_current_user(self):
-        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-        if cookie:
-            cookie = json_decode(cookie)
-            return json_util.loads(cookie)
+        response = None
+        if hasattr(self, 'user_doc') and self.user_doc:
+            response = self.user_doc
 
-        header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-        header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+        if not response:
+            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+            if cookie:
+                cookie = json_decode(cookie)
+                response = json_util.loads(cookie)
 
-        if header_email and header_token:
-            user_doc = self.dao[constants.COLLECTION_USERS].find_one({
-                constants.USOS_PAIRED: True,
-                constants.USER_EMAIL: header_email,
-                constants.MOBI_TOKEN: header_token,
-            }, (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                constants.USOS_PAIRED)
-            )
+        if not response:
+            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-            return user_doc
+            if header_email and header_token:
+                user_doc = yield self.current_user(header_email)
+                # constants.USOS_PAIRED: True,
+                # constants.MOBI_TOKEN: header_token,
 
-        return None
+                response = user_doc
 
+        raise tornado.gen.Return(response)
+
+    @tornado.gen.coroutine
     def config_data(self):
-        user = self.get_current_user()
+        user = yield self.get_current_user()
         if user and constants.USOS_PAIRED in user.keys():
             usos_paired = user[constants.USOS_PAIRED]
         else:
             usos_paired = False
 
-        return {
+        config = {
             'API_URL': settings.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False
         }
+
+        raise tornado.gen.Return(config)
 
     @property
     def oauth_parameters(self):
@@ -127,12 +127,6 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         raise tornado.gen.Return(None)
 
     @staticmethod
-    def validate_usos(usos, parameters):
-        if not usos:
-            raise tornado.web.HTTPError(400, "Usos {0} nie jest wspierany. Skontaktuj się z administratorem.".format(
-                parameters.usos_id))
-
-    @staticmethod
     def get_token(content):
         arr = dict(urlparse.parse_qsl(content))
         return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
@@ -150,6 +144,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
 
 class UsosesApi(BaseHandler):
+    @decorators.extra_headers(cache_age=2592000)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -169,4 +164,5 @@ class ApplicationConfigHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.success(data=self.config_data())
+        config = yield self.config_data()
+        self.success(data=config)
