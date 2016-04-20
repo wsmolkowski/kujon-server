@@ -23,7 +23,9 @@ class Dao(object):
         logging.debug("Connected to MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
 
     def insert(self, collection, document):
-        return self._db[collection].insert(document)
+        doc = self._db[collection].insert(document)
+        logging.debug("document inserted into collection {0} with id {1}".format(collection, doc))
+        return doc
 
     def get_usos(self, usos_id):
 
