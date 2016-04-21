@@ -62,6 +62,9 @@ class JSendMixin(object):
 
     def __write_json(self, data):
         data = utils.serialize(data)
+        if settings.DEVELOPMENT:
+            self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
         self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
         self.write(json_util.dumps(data))
         self.finish()
