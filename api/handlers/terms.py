@@ -17,29 +17,32 @@ class TermsApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        terms = []
-        terms_doc = []
-        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+        try:
+            terms = []
+            terms_doc = []
+            courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
-        if courses_editions_doc:
-            for term in courses_editions_doc['course_editions']:
-                terms.append(term)
-                term_data = yield self.db[constants.COLLECTION_TERMS].find_one(
-                    {constants.TERM_ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                    ('name', 'end_date', 'finish_date', 'start_date', 'name'))
-                term_data[constants.TERM_ID] = term
-                today = date.today()
-                end_date = datetime.strptime(term_data['finish_date'], "%Y-%m-%d").date()
-                if today <= end_date:
-                    term_data['active'] = True
-                else:
-                    term_data['active'] = False
-                terms_doc.append(term_data)
-        if not terms_doc:
-            self.error("Poczekaj szukamy semestrów.")
-        else:
-            self.success(terms_doc, 2592000)
+            if courses_editions_doc:
+                for term in courses_editions_doc['course_editions']:
+                    terms.append(term)
+                    term_data = yield self.db[constants.COLLECTION_TERMS].find_one(
+                        {constants.TERM_ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
+                        ('name', 'end_date', 'finish_date', 'start_date', 'name'))
+                    term_data[constants.TERM_ID] = term
+                    today = date.today()
+                    end_date = datetime.strptime(term_data['finish_date'], "%Y-%m-%d").date()
+                    if today <= end_date:
+                        term_data['active'] = True
+                    else:
+                        term_data['active'] = False
+                    terms_doc.append(term_data)
+            if not terms_doc:
+                self.error("Poczekaj szukamy semestrów.")
+            else:
+                self.success(terms_doc, 2592000)
+        except Exception, ex:
+            yield self.exc(ex)
 
 
 class TermApi(BaseHandler):
@@ -48,10 +51,13 @@ class TermApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self, term_id):
 
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+        try:
+            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+                {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
 
-        if not term_doc:
-            self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
-        else:
-            self.success(term_doc, cache_age=2592000)
+            if not term_doc:
+                self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
+            else:
+                self.success(term_doc, cache_age=2592000)
+        except Exception, ex:
+            yield self.exc(ex)
