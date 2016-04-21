@@ -20,7 +20,6 @@ LIMIT_FIELDS_USER = (
 
 
 class UsersInfoByIdApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -45,11 +44,10 @@ class UsersInfoByIdApi(BaseHandler):
         if user_info['has_photo']:
             user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
-        self.success(user_info)
+        self.success(user_info, cache_age=2592000)
 
 
 class UserInfoApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -82,7 +80,7 @@ class UserInfoApi(BaseHandler):
         if not user:
             self.error('Poczekaj szukamy informacji o użytkowniku.')
         else:
-            self.success(user)
+            self.success(user, cache_age=2592000)
 
 
 class UserInfoPhotoApi(BaseHandler):

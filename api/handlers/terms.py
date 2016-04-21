@@ -12,7 +12,6 @@ TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 't
 
 
 class TermsApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -40,11 +39,10 @@ class TermsApi(BaseHandler):
         if not terms_doc:
             self.error("Poczekaj szukamy semestrów.")
         else:
-            self.success(terms_doc)
+            self.success(terms_doc, 2592000)
 
 
 class TermApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -56,4 +54,4 @@ class TermApi(BaseHandler):
         if not term_doc:
             self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
         else:
-            self.success(term_doc)
+            self.success(term_doc, cache_age=2592000)

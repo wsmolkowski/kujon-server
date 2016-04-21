@@ -10,7 +10,6 @@ LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers
 
 
 class GroupsApi(BaseHandler):
-    @decorators.extra_headers(86400)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -28,4 +27,4 @@ class GroupsApi(BaseHandler):
         if not programmes:
             self.error("Poczekaj szukamy grup.")
         else:
-            self.success(programmes)
+            self.success(programmes, cache_age=86400)

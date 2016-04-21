@@ -10,7 +10,7 @@ from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 
-from commons import constants, settings, utils, decorators
+from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
 from commons.mixins.JSendMixin import JSendMixin
 from database import DatabaseHandler
@@ -149,12 +149,12 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
 
 class UsosesApi(BaseHandler):
-    @decorators.extra_headers(cache_age=2592000)
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         data = yield self.get_usoses(showtokens=False)
-        self.success(data)
+        self.success(data, cache_age=2592000)
 
 
 class DefaultErrorHandler(BaseHandler):
@@ -165,7 +165,6 @@ class DefaultErrorHandler(BaseHandler):
 
 
 class ApplicationConfigHandler(BaseHandler):
-    @decorators.extra_headers(cache_age=None)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):

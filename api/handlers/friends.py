@@ -9,7 +9,6 @@ from commons import constants, helpers, decorators
 
 
 class FriendsApi(BaseHandler):
-    @decorators.extra_headers(None)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

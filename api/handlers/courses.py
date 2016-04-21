@@ -18,7 +18,7 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 
 class CourseEditionApi(BaseHandler):
-    @decorators.extra_headers(86400)
+
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -115,12 +115,12 @@ class CourseEditionApi(BaseHandler):
             term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
-        self.success(course_doc)
+        self.success(course_doc, cache_age=86400)
 
 
 class CoursesApi(BaseHandler):
+
     @decorators.authenticated
-    @decorators.extra_headers(86400)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self, course_id):
@@ -144,11 +144,10 @@ class CoursesApi(BaseHandler):
         course_doc[constants.FACULTY_ID] = fac_doc
         course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
-        self.success(course_doc)
+        self.success(course_doc, cache_age=86400)
 
 
 class CoursesEditionsApi(BaseHandler):
-    @decorators.extra_headers(86400)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -200,4 +199,4 @@ class CoursesEditionsApi(BaseHandler):
                 del course['course_units_ids']
                 courses.append(course)
 
-        self.success(courses)
+        self.success(courses, cache_age=86400)

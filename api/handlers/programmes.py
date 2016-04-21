@@ -11,7 +11,6 @@ LIMIT_FIELDS = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', '
 
 
 class ProgrammesByIdApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -23,11 +22,10 @@ class ProgrammesByIdApi(BaseHandler):
         if not programme:
             self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
         else:
-            self.success(programme)
+            self.success(programme, cache_age=2592000)
 
 
 class ProgrammesApi(BaseHandler):
-    @decorators.extra_headers(2592000)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -52,4 +50,4 @@ class ProgrammesApi(BaseHandler):
         if not programmes:
             self.error("Poczekaj szukamy kierunków.")
         else:
-            self.success(programmes)
+            self.success(programmes, cache_age=2592000)

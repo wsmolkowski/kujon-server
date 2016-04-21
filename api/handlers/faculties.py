@@ -7,7 +7,6 @@ from commons import constants, decorators
 
 
 class FacultyByIdApi(BaseHandler):
-    @decorators.extra_headers(86400)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -19,4 +18,4 @@ class FacultyByIdApi(BaseHandler):
         if not fac_doc:
             self.fail("Nie możemy znaleźć jednostki: {0}.".format(fac_id))
         else:
-            self.success(fac_doc)
+            self.success(fac_doc, cache_age=86400)

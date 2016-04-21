@@ -12,7 +12,6 @@ from commons.usosutils.usosclient import UsosClient
 
 
 class TTApi(BaseHandler):
-    @decorators.extra_headers(None)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
