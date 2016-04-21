@@ -17,10 +17,6 @@ class DatabaseHandler(RequestHandler):
     def db(self):
         return self.application.db
 
-    @property
-    def dao(self):
-        return self.application.dao
-
     @gen.coroutine
     def archive_user(self, user_id):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
