@@ -6,9 +6,32 @@ class Error(Exception):
     pass
 
 
-class HttpError(Error):
-    """HTTP data was invalid or unexpected."""
+class ApiError(Exception):
+    """Api Errors"""
 
+    def __init__(self, msg, parameters):
+        self.msg = msg
+        self.parameters = parameters
+
+    def data(self):
+        return {
+            'message': self.msg,
+            'parameters': self.parameters
+        }
+
+    def message(self):
+        if self.parameters:
+            return "{0} - {1}".format(self.msg, "; ".join(self.parameters))
+        else:
+            return self.msg
+
+    def __repr__(self):
+        return self.message
+
+    __str__ = __repr__
+
+
+class HttpError(Error):
     def __init__(self, resp, content, uri=None, parameters=None):
         self.resp = resp
         self.content = content

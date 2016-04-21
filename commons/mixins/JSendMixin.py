@@ -27,18 +27,19 @@ class JSendMixin(object):
             self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
         self.__write_json({'status': 'success', 'data': data})
 
-    def fail(self, data):
+    def fail(self, message):
         '''
         There was a problem with the data submitted, or some pre-condition
         of the API call wasn't satisfied.
         :param data:
         :return:
         '''
-        if data:
-            data = unicode(data, settings.UNICODE)
+
+        if message:
+            message = unicode(message, settings.UNICODE)
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json({'status': 'fail', 'data': data})
+        self.__write_json({'status': 'fail', 'message': message})
 
     def error(self, message, data=None, code=None):
         '''

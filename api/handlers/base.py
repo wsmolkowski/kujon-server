@@ -10,13 +10,13 @@ from bson import json_util
 from tornado import httpclient
 from tornado.escape import json_decode
 
+from apidao import ApiDaoHandler
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
 from commons.mixins.JSendMixin import JSendMixin
-from database import DatabaseHandler
 
 
-class BaseHandler(DatabaseHandler, JSendMixin):
+class BaseHandler(ApiDaoHandler, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
@@ -161,7 +161,7 @@ class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        self.fail('404 - Strona o podanym adresie nie istnieje.')
+        self.fail(message='404 - Strona o podanym adresie nie istnieje.')
 
 
 class ApplicationConfigHandler(BaseHandler):

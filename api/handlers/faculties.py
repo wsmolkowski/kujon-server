@@ -16,6 +16,6 @@ class FacultyByIdApi(BaseHandler):
                                                                           constants.USOS_ID: self.user_doc[
                                                                               constants.USOS_ID]})
         if not fac_doc:
-            self.fail("Nie możemy znaleźć jednostki: {0}.".format(fac_id))
+            self.fail(message="Nie możemy znaleźć jednostki: {0}.".format(fac_id))
         else:
             self.success(fac_doc, cache_age=86400)
