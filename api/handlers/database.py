@@ -193,7 +193,9 @@ class DatabaseHandler(RequestHandler):
 
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
-        yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+
+        logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
             self.fail(exception.message())
