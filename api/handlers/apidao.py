@@ -3,7 +3,7 @@
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, helpers
+from commons import constants, helpers, settings
 from commons.errors import ApiError
 from commons.usosutils import usoshelper
 from database import DatabaseHandler
@@ -14,6 +14,10 @@ LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'cou
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
+
+LIMIT_FIELDS_USER = (
+    'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
+    'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 
 
 class ApiDaoHandler(DatabaseHandler):
@@ -286,3 +290,74 @@ class ApiDaoHandler(DatabaseHandler):
                 del grades['grades']['course_units_grades']
 
         raise gen.Return(grades)
+
+    @gen.coroutine
+    def api_lecturers(self):
+        courses = {}
+        lecturers_returned = {}
+
+        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+        if course_doc:
+            for term in course_doc['course_editions']:
+                for course in course_doc['course_editions'][term]:
+                    courses[course[constants.COURSE_ID]] = course
+
+            for course in courses:
+                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+
+                if not course_doc:
+                    continue
+
+                for lecturer in course_doc[constants.LECTURERS]:
+                    lecturer_id = lecturer[constants.USER_ID]
+                    lecturers_returned[lecturer_id] = lecturer
+
+            lecturers_returned = lecturers_returned.values()
+
+        raise gen.Return(lecturers_returned)
+
+    @gen.coroutine
+    def api_lecturer(self, user_info_id):
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
+                                                                            LIMIT_FIELDS_USER)
+        if not user_info:
+            raise ApiError("Poczekaj szukamy informacji o nauczycielu.", (user_info_id,))
+
+        # change ObjectId to str for photo
+        if user_info['has_photo']:
+            user_info['has_photo'] = str(user_info['has_photo'])
+
+        # change staff_status to dictionary
+        user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
+
+        # strip employment_positions from english names
+        for position in user_info['employment_positions']:
+            position['position']['name'] = position['position']['name']['pl']
+            position['faculty']['name'] = position['faculty']['name']['pl']
+
+        # change course_editions_conducted to list of courses
+        course_editions = []
+        if user_info['course_editions_conducted']:
+            for courseterm in user_info['course_editions_conducted']:
+                course_id, term_id = courseterm['id'].split('|')
+                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course_id, constants.TERM_ID: term_id,
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+                if course_doc:
+                    course = dict()
+                    course['course_name'] = course_doc['course_name']['pl']
+                    course['course_id'] = course_doc['course_id']
+                    course['term_id'] = course_doc['term_id']
+                    course_editions.append(course)
+                else:
+                    course_editions.append("Dont have data for course and term..")
+            user_info['course_editions_conducted'] = course_editions
+
+        # show url to photo
+        if user_info['has_photo']:
+            user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
+
+        raise gen.Return(user_info)
