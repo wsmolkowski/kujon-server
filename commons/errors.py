@@ -6,36 +6,76 @@ class Error(Exception):
     pass
 
 
-class HttpError(Error):
-    """HTTP data was invalid or unexpected."""
+class ApiError(Exception):
+    """Api Errors"""
 
-    def __init__(self, resp, content, uri=None):
-        self.resp = resp
-        self.content = content
-        self.uri = uri
+    def __init__(self, msg, parameters):
+        self.msg = msg
+        self.parameters = parameters
 
-    def _get_reason(self):
-        """Calculate the reason for the error from the response content."""
-        reason = self.resp.reason
-        try:
-            data = json.loads(self.content)
-            reason = data['error']['message']
-        except (ValueError, KeyError):
-            pass
-        if reason is None:
-            reason = ''
-        return reason
+    def data(self):
+        return {
+            'message': self.msg,
+            'parameters': self.parameters
+        }
+
+    def message(self):
+        if self.parameters:
+            return "{0} - {1}".format(self.msg, "; ".join(self.parameters))
+        else:
+            return self.msg
 
     def __repr__(self):
-        if self.uri:
-            return '<HttpError %s when requesting %s returned "%s">' % (
-                self.resp.status, self.uri, self._get_reason().strip())
-        else:
-            return '<HttpError %s "%s">' % (self.resp.status, self._get_reason())
+        return self.message
 
     __str__ = __repr__
 
 
-class UsosError(HttpError):
+class HttpError(Error):
+    def __init__(self, resp, content, uri=None, parameters=None):
+        self.resp = resp
+        self.content = content
+        self.uri = uri
+        self.parameters = parameters
+        self.extras = dict()
+
+    def _get_reason(self):
+        """Calculate the reason for the error from the response content."""
+        try:
+            return json.loads(self.content)
+        except (ValueError, KeyError):
+            return {
+                'content': self.content
+            }
+
+    def __repr__(self):
+        return self._message()
+
+    def _message(self):
+        reason = self._get_reason()
+        reason.update(self.extras)
+        reason['resp'] = self.resp
+        reason['status'] = self.resp.status
+        reason['uri'] = self.uri
+        reason['parameters'] = self.parameters
+
+        return reason
+
+    @property
+    def message(self):
+        return self._message()
+
+    def append(self, key, value):
+        self.extras[key] = value
+
+    __str__ = __repr__
+
+
+class UsosClientError(HttpError):
+    """USOS exceptions"""
+    pass
+
+
+class UsosAsyncError(HttpError):
     """USOS exceptions"""
     pass

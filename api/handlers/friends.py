@@ -9,7 +9,6 @@ from commons import constants, helpers, decorators
 
 
 class FriendsApi(BaseHandler):
-    @decorators.extra_headers(None)
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -63,11 +62,11 @@ class FriendsApi(BaseHandler):
                 if friend_doc:
                     self.success(user_info_id)
                 else:
-                    self.fail(user_info_id)
+                    self.fail(message=user_info_id)
             else:
-                self.fail(user_info_id)
+                self.fail(message=user_info_id)
         else:
-            self.fail(user_info_id)
+            self.fail(message=user_info_id)
 
     @decorators.authenticated
     @tornado.web.asynchronous
@@ -83,7 +82,7 @@ class FriendsApi(BaseHandler):
             if friend_doc:
                 self.success(user_info_id)
         else:
-            self.fail(user_info_id)
+            self.fail(message=user_info_id)
 
 
 class FriendsSuggestionsApi(BaseHandler):

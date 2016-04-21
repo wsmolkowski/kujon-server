@@ -8,12 +8,12 @@ from bson.objectid import ObjectId
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
+from commons.errors import UsosClientError
 from commons.helpers import log_execution_time
-from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
 
-class UsosCrawler:
+class UsosCrawler(object):
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
@@ -21,7 +21,6 @@ class UsosCrawler:
             self.dao = dao
 
         self.aes = AESCipher()
-        self.usosAsync = UsosAsync()
 
 
     @staticmethod
@@ -40,23 +39,29 @@ class UsosCrawler:
 
         return data
 
+    def _exc(self, exception):
+        if hasattr(self, 'user') and isinstance(exception, UsosClientError):
+            exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
+            exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
+
+        logging.error(exception.message)
+        self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
+
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
 
             try:
                 photo = client.user_info_photo(user_info_id)
-            except Exception, ex:
-                logging.exception('Could not find user_info_photo for user_info_photo: {0} due to {1}'.format(
-                    user_info_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 return
 
             if photo:
                 photo = self.append(photo, usos[constants.USOS_ID], crawl_time, crawl_time)
                 photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
-                logging.debug("photo for user_id: %r inserted %r", photo[constants.USER_ID], str(photo_doc))
                 return photo_doc
             else:
-                logging.debug("no photo for user_id: %r", user_id)
+                logging.warn("no photo for user_id: %r", user_id)
 
     def __build_user_info(self, client, user_id, user_info_id, crawl_time, usos):
         if user_id and self.dao.get_users_info_by_user_id(user_id, usos):
@@ -65,9 +70,8 @@ class UsosCrawler:
 
         try:
             result = client.user_info(user_info_id)
-        except Exception, ex:
-            logging.exception('Could not find user_info_id for user_info_id: {0} due to {1}'.format(
-                user_info_id, ex.message))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
@@ -91,8 +95,7 @@ class UsosCrawler:
         for programme in result['student_programmes']:
             programme['programme']['description'] = programme['programme']['description']['pl']
 
-        ui_doc = self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-        logging.debug("user_info for %r inserted: %r", result[constants.ID], str(ui_doc))
+        self.dao.insert(constants.COLLECTION_USERS_INFO, result)
 
         # if user conducts courses - fetch courses
         if result['course_editions_conducted']:
@@ -109,23 +112,20 @@ class UsosCrawler:
 
             try:
                 course_result = client.course_edition(course_id, term_id, fetch_participants=False)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for course: {0} term: {1) due to {2}'.format(
-                    course_id, term_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
-            course_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
-            logging.debug("course_edition for course_id: %r term_id: %r inserted: %r", course_id, term_id,
-                          str(course_doc))
+            self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
+
 
     def __build_time_table(self, client, user_id, usos_id, given_date):
-        existing_tt = self.dao.get_time_table(user_id, usos_id)
+        # existing_tt = self.dao.get_time_table(user_id, usos_id)
         try:
             result = client.time_table(given_date)
-        except Exception, ex:
-            logging.exception('Exception {0} while fetching time table for: {1} and {2}'.format(
-                ex.message, user_id, given_date))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         if result:
@@ -134,8 +134,7 @@ class UsosCrawler:
             tt[constants.TT_STARTDATE] = str(given_date)
             tt['tts'] = result
             tt[constants.USER_ID] = user_id
-            tt_doc = self.dao.insert(constants.COLLECTION_TT, tt)
-            logging.debug("time tables for date: %r inserted: %r", given_date, tt_doc)
+            self.dao.insert(constants.COLLECTION_TT, tt)
 
             # if existing_tt:
             #     self.dao.remove(constants.COLLECTION_TT, existing_tt)
@@ -151,8 +150,8 @@ class UsosCrawler:
 
             try:
                 result = client.programme(programme['programme'][constants.ID])
-            except Exception, ex:
-                logging.exception('Could not find programme for {0} due to {1}'.format(programme, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -166,10 +165,9 @@ class UsosCrawler:
                 result['duration'] = result['duration']['pl']
                 result['description'] = result['description']['pl']
 
-                prog_doc = self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-                logging.debug("programme %r inserted: %r.", programme[constants.ID], str(prog_doc))
+                self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
             else:
-                logging.debug("no programme: %r.", programme[constants.ID])
+                logging.warn("no programme: %r.", programme[constants.ID])
 
     def __build_curseseditions(self, client, crawl_time, user_id, usos):
 
@@ -180,8 +178,8 @@ class UsosCrawler:
 
         try:
             result = client.courseeditions_info()
-        except Exception, ex:
-            logging.exception("Could not find courseeditions_info due to {0}".format(ex.message))
+        except UsosClientError, ex:
+            self._exc(ex)
             return
 
         if result:
@@ -197,17 +195,16 @@ class UsosCrawler:
                     compare = 1
                     logging.exception("Could not find compare old and new courseedition: %r", ex.message)
                 if compare == 0:
-                    logging.debug("course_editions not changed..")
+                    logging.debug("course_editions not changed.")
                     return False
                 else:
                     logging.debug("course_editions changed - updating and moving old to archive.")
                     self.dao.insert(constants.COLLECTION_COURSES_EDITIONS_ARCHIVE, course_edition)
                     self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, course_edition[constants.MONGO_ID])
-            ce_doc = self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            logging.debug("course_editions for user_id: %r inserted: %r", str(user_id), str(ce_doc))
+            self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             return True
         else:
-            logging.debug("no course_editions for user_id: %r in USOS.", user_id)
+            logging.warn("no course_editions for user_id: %r in USOS.", user_id)
             return False
 
     def __build_terms(self, client, user_id, usos, crawl_time):
@@ -219,16 +216,16 @@ class UsosCrawler:
 
             try:
                 result = client.get_term_info(term_id)
-            except Exception, ex:
-                logging.exception("Could not find term_id for %r due to %r", term_id, ex.message)
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
+
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.TERM_ID] = result.pop(constants.ID)
-                t_doc = self.dao.insert(constants.COLLECTION_TERMS, result)
-                logging.debug("terms for term_id: %r inserted %r", term_id, str(t_doc))
+                self.dao.insert(constants.COLLECTION_TERMS, result)
             else:
-                logging.debug("no term_id: %r found!", term_id)
+                logging.warn("no term_id: %r found!", term_id)
 
     @tornado.gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crawl_time):
@@ -243,20 +240,18 @@ class UsosCrawler:
             try:
                 result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
                                                fetch_participants=True)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for {0} due to {1}'.format(course_edition, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                c_doc = self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-                logging.debug("course_edition for course_id: %r term_id: %r inserted %r", course_edition[
-                    constants.COURSE_ID], course_edition[constants.TERM_ID], str(c_doc))
+                self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
 
                 if existing_doc:
                     self.dao.delete_doc(constants.COLLECTION_COURSE_EDITION, existing_doc[constants.MONGO_ID])
             else:
-                logging.debug("no course_edition for course_id: %r term_id: %r", course_edition[
+                logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[
                     constants.COURSE_ID], course_edition[constants.TERM_ID])
 
     @tornado.gen.coroutine
@@ -285,8 +280,8 @@ class UsosCrawler:
         for course in courses:
             try:
                 result = client.course(course)
-            except Exception, ex:
-                logging.exception('Could not find course for {0} due to {1}'.format(course, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
@@ -300,11 +295,9 @@ class UsosCrawler:
                 result['assessment_criteria'] = result['assessment_criteria']['pl']
                 result['bibliography'] = result['bibliography']['pl']
 
-                c_doc = self.dao.insert(constants.COLLECTION_COURSES, result)
-
-                logging.debug("course for course_id: %r inserted %r", course, str(c_doc))
+                self.dao.insert(constants.COLLECTION_COURSES, result)
             else:
-                logging.debug("no course for course_id: %r.", course)
+                logging.warn("no course for course_id: %r.", course)
 
     @tornado.gen.coroutine
     def __build_faculties(self, client, usos, crawl_time):
@@ -314,17 +307,16 @@ class UsosCrawler:
 
             try:
                 result = client.faculty(faculty)
-            except Exception, ex:
-                logging.exception('Could not find faculty for {0} due to {1}'.format(faculty, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.FACULTY_ID] = faculty
-                fac_doc = self.dao.insert(constants.COLLECTION_FACULTIES, result)
-                logging.debug("faculty for fac_id: %r inserted %r", faculty, str(fac_doc))
+                self.dao.insert(constants.COLLECTION_FACULTIES, result)
             else:
-                logging.debug("no faculty for fac_id: %r.", faculty)
+                logging.warn("no faculty for fac_id: %r.", faculty)
 
     @tornado.gen.coroutine
     def __build_users_info(self, client, crawl_time, user_info_ids, usos_id):
@@ -345,17 +337,16 @@ class UsosCrawler:
 
             try:
                 result = client.units(unit_id)
-            except Exception, ex:
-                logging.exception('Could not find units for {0} due to {1}'.format(unit_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.UNIT_ID] = result.pop(constants.ID)
-                u_doc = self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-                logging.debug("unit %r inserted %r.", unit_id, str(u_doc))
+                self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
             else:
-                logging.debug("no unit %r.", format(unit_id))
+                logging.warn("no unit %r.", format(unit_id))
 
     @tornado.gen.coroutine
     def __build_groups(self, client, crawl_time, units, usos):
@@ -366,16 +357,15 @@ class UsosCrawler:
 
             try:
                 result = client.groups(unit)
-            except Exception, ex:
-                logging.exception('Could not find groups for {0} due to {1}'.format(unit, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                grp_doc = self.dao.insert(constants.COLLECTION_GROUPS, result)
-                logging.debug("group for unit: %r inserted: %r", unit, str(grp_doc))
+                self.dao.insert(constants.COLLECTION_GROUPS, result)
             else:
-                logging.debug("no group for unit: %r.", unit)
+                logging.warn("no group for unit: %r.", unit)
 
     @tornado.gen.coroutine
     def __process_user_data(self, client, user_id, usos, crawl_time):
@@ -388,9 +378,8 @@ class UsosCrawler:
 
             try:
                 result = client.course_edition(course_id, term_id, fetch_participants=True)
-            except Exception, ex:
-                logging.exception('Could not find course_edition for course: {0} and term {1} due to {2}'.format(
-                    course_id, term_id, ex.message))
+            except UsosClientError, ex:
+                self._exc(ex)
                 return
 
             self.__find_users_related(users_found, result)
@@ -406,9 +395,9 @@ class UsosCrawler:
                 if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
                     continue  # grades for course and term already exists
 
-            if result:
-                g_doc = self.dao.insert(constants.COLLECTION_GRADES, result)
-                logging.debug("grades for course_id: %r and term_id: %r inserted %r", course_id, term_id, str(g_doc))
+            if result and (
+                    len(result['grades']['course_grades']) > 0 or len(result['grades']['course_units_grades']) > 0):
+                self.dao.insert(constants.COLLECTION_GRADES, result)
 
         self.__build_users_info(client, crawl_time, users_found, usos)
         self.__build_units(client, crawl_time, units_found, usos)
@@ -427,6 +416,7 @@ class UsosCrawler:
                     users.append(l)
 
     def __build_client(self, user):
+        self.user = user
         usos = self.dao.get_usos(user[constants.USOS_ID])
         client = UsosClient(usos[constants.USOS_URL], usos[constants.CONSUMER_KEY],
                             usos[constants.CONSUMER_SECRET],

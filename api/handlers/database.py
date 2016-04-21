@@ -7,6 +7,7 @@ from tornado import gen
 from tornado.web import RequestHandler
 
 from commons import constants, settings
+from commons.errors import ApiError
 from crawler import email_factory
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
@@ -16,10 +17,6 @@ class DatabaseHandler(RequestHandler):
     @property
     def db(self):
         return self.application.db
-
-    @property
-    def dao(self):
-        return self.application.dao
 
     @gen.coroutine
     def archive_user(self, user_id):
@@ -161,7 +158,7 @@ class DatabaseHandler(RequestHandler):
         indexes = yield self.db[collection].index_information()
         if field not in indexes:
             index = yield self.db[collection].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
-            logging.info('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
+            logging.debug('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
         raise gen.Return()
 
     @gen.coroutine
@@ -182,10 +179,27 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(token_doc)
 
     @gen.coroutine
-    def log_exception(self, arguments, trace):
-        yield self.db[constants.COLLECTION_EXCEPTIONS].insert({
-            constants.CREATED_TIME: datetime.now(),
-            'file': file,
-            'arguments': arguments,
-            'trace': trace
-        })
+    def exc(self, exception):
+        if isinstance(exception, ApiError):
+            exc_doc = exception.data()
+        else:
+            exc_doc = {
+                'exception': str(exception)
+            }
+
+        if hasattr(self, 'user_doc'):
+            exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+            exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+
+        exc_doc[constants.CREATED_TIME] = datetime.now()
+
+        ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+
+        logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+
+        if isinstance(exception, ApiError):
+            self.fail(exception.message())
+        else:
+            self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+
+        raise gen.Return()

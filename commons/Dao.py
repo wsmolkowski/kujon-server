@@ -23,7 +23,9 @@ class Dao(object):
         logging.debug("Connected to MongoDB instance at uri:{0} dbname: {1}".format(self._dburi, self._dbname))
 
     def insert(self, collection, document):
-        return self._db[collection].insert(document)
+        doc = self._db[collection].insert(document)
+        logging.debug("document inserted into collection {0} with id {1}".format(collection, doc))
+        return doc
 
     def get_usos(self, usos_id):
 
@@ -88,7 +90,7 @@ class Dao(object):
                                                                       courses_editions)
 
     def get_term(self, term_id, usos_id):
-        return self._db[constants.COLLECTION_TERMS].find_one({constants.ID: term_id, constants.USOS_ID: usos_id})
+        return self._db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
     def get_courses_editions(self, course_id, term_id, usos_id):
         return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(

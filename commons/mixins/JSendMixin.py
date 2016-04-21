@@ -1,6 +1,6 @@
 from bson import json_util
 
-from commons import utils, settings
+from commons import utils, settings, constants
 
 
 class JSendMixin(object):
@@ -13,7 +13,7 @@ class JSendMixin(object):
     REST-style applications and APIs.
     '''
 
-    def success(self, data):
+    def success(self, data, cache_age=None):
         '''
         When an API call is successful, the JSend object is used as a simple
         envelope for the results, using the data key.
@@ -21,20 +21,25 @@ class JSendMixin(object):
         :param data:
         :return:
         '''
-
+        if not cache_age:
+            self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        else:
+            self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
         self.__write_json({'status': 'success', 'data': data})
 
-    def fail(self, data):
+    def fail(self, message):
         '''
         There was a problem with the data submitted, or some pre-condition
         of the API call wasn't satisfied.
         :param data:
         :return:
         '''
-        if data:
-            data = unicode(data, settings.UNICODE)
 
-        self.__write_json({'status': 'fail', 'data': data})
+        if message:
+            message = unicode(message, settings.UNICODE)
+
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.__write_json({'status': 'fail', 'message': message})
 
     def error(self, message, data=None, code=None):
         '''
@@ -53,10 +58,14 @@ class JSendMixin(object):
         if code:
             result['code'] = code
 
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json(result)
 
     def __write_json(self, data):
         data = utils.serialize(data)
-        self.set_header("Content-Type", "application/json")
+        if settings.DEVELOPMENT:
+            self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
+        self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
         self.write(json_util.dumps(data))
         self.finish()
