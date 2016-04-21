@@ -18,6 +18,7 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
+LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration')
 
 
 class ApiDaoHandler(DatabaseHandler):
@@ -361,3 +362,22 @@ class ApiDaoHandler(DatabaseHandler):
             user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
         raise gen.Return(user_info)
+
+    @gen.coroutine
+    def api_programmes(self):
+        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+
+        if not user_info:
+            raise ApiError("Poczekaj, szukamy danych o Twoich kursach.")
+
+        programmes = []
+        for program in user_info['student_programmes']:
+            result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
+                {constants.PROGRAMME_ID: program['programme']['id']}, LIMIT_FIELDS_PROGRAMMES)
+            program['programme']['mode_of_studies'] = result['mode_of_studies']
+            program['programme']['level_of_studies'] = result['level_of_studies']
+            program['programme']['duration'] = result['duration']
+            programmes.append(program)
+
+        raise gen.Return(programmes)
