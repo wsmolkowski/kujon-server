@@ -83,6 +83,7 @@ COLLECTION_EMAIL_QUEUE = 'email_queue'
 COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 COLLECTION_EXCEPTIONS = 'exceptions'
 COLLECTION_TOKENS = 'tokens'
+COLLECTION_SUBSCRIPTION = 'subscriptions'
 
 EXCEPTION_TYPE = 'exception_type'
 

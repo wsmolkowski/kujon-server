@@ -4,7 +4,7 @@ from base64 import b64encode
 
 import oauth2 as oauth
 
-from commons import utils
+from commons import utils, settings
 from commons.errors import UsosClientError
 
 URI_USER_INFO = u"services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
@@ -21,9 +21,14 @@ URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url
 URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]"
 URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number"
 URI_TERM_INFO = u"services/terms/term?term_id={0}"
+URI_SUBSCRIBE_EVENT = 'services/events/subscribe_event?event_type={0}&callback_url={1}&verify_token={2}'
+URI_SUBSCRIPTIONS = 'services/events/subscriptions?id|event_type|callback_url'
+URI_UNSUBSCRIBE = 'services/events/unsubscribe'
 
 
 class UsosClient(object):
+    SUBSCRIPTION_CALLBACK = settings.DEPLOY_EVENT
+
     def __init__(self, base_url, consumer_key, consumer_secret, access_token_key, access_token_secret):
         self.base_url = base_url
         self.access_token_key = access_token_key
@@ -41,9 +46,12 @@ class UsosClient(object):
         self.client = oauth.Client(consumer=self.consumer, token=self.token, **self.parameters)
 
     def _validate(self, code):
-        if code.status is 200 and code.reason == 'OK':  # response.code is not 200
+        if code.status is 200 and code.reason == 'OK':
             return True
         return False
+
+    def _request(self, uri):
+        return "{0}{1}".format(self.base_url, uri)
 
     def user_info(self, user_info_id):
         if user_info_id:
@@ -168,3 +176,29 @@ class UsosClient(object):
             return json.loads(body)
         else:
             raise UsosClientError(code, body, uri=request, parameters=[term_id])
+
+    def subscribe(self, event_type, verify_token):
+        # crstests/user_grade, grades/grade, crstests/user_point
+        request = self._request(URI_SUBSCRIBE_EVENT.format(event_type, self.SUBSCRIPTION_CALLBACK, verify_token))
+
+        code, body = self.client.request(request)
+        if self._validate(code):
+            return json.loads(body)
+        else:
+            raise UsosClientError(code, body, uri=request, parameters=[event_type, verify_token])
+
+    def subscriptions(self):
+        request = self._request(URI_SUBSCRIPTIONS)
+        code, body = self.client.request(request)
+        if self._validate(code):
+            return json.loads(body)
+        else:
+            raise UsosClientError(code, body, uri=request)
+
+    def unsubscribe(self):
+        request = self._request(URI_UNSUBSCRIBE)
+        code, body = self.client.request(request)
+        if self._validate(code):
+            return json.loads(body)
+        else:
+            raise UsosClientError(code, body, uri=request)
