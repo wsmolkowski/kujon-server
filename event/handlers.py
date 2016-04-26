@@ -115,10 +115,10 @@ class VerifyHandler(MainHandler):
     @gen.coroutine
     def get(self):
         try:
-            user_exists = yield self.user_exists(self.argument_verify_token)
-            if not user_exists:
-                self.fail('Token verification failure.')
-                return
+            # user_exists = yield self.user_exists(self.argument_verify_token)
+            # if not user_exists:
+            #     self.fail('Token verification failure.')
+            #     return
 
             logging.debug('token verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
                 self.argument_mode, self.argument_challenge, self.argument_verify_token))
