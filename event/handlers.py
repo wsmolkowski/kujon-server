@@ -50,12 +50,22 @@ class MainHandler(RequestHandler, JSendMixin):
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
-        ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
 
         logging.debug(exc_doc)
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+
+        raise gen.Return()
+
+    @gen.coroutine
+    def process_event(self, event_data):
+        self.event_data = event_data
+
+        logging.debug(self.event_data)
+        logging.debug('entry: {0}'.format(self.event_data['entry']))
+        logging.debug('event_type: {0}'.format(self.event_data['event_type']))
 
         raise gen.Return()
 
@@ -71,8 +81,8 @@ class EventHandler(MainHandler):
     @gen.coroutine
     def post(self):
         try:
-            self.event_data = json.loads(self.request.body)
-            logging.debug(self.event_data)
+            event_data = json.loads(self.request.body)
+            yield self.process_event(event_data)
 
             self.success(data='ok')
         except Exception, ex:
