@@ -1,4 +1,8 @@
+# coding=UTF-8
+
+import json
 import logging
+from datetime import datetime
 
 from bson.objectid import ObjectId
 from tornado import gen
@@ -10,7 +14,8 @@ from commons.mixins.JSendMixin import JSendMixin
 
 
 class MainHandler(RequestHandler, JSendMixin):
-    SUPPORTED_METHODS = ('GET',)
+    SUPPORTED_METHODS = ('GET', 'POST')
+    EXCEPTION_TYPE = 'event'
 
     @property
     def db(self):
@@ -26,6 +31,52 @@ class MainHandler(RequestHandler, JSendMixin):
             raise gen.Return(True)
         else:
             raise gen.Return(False)
+
+    @gen.coroutine
+    def exc(self, exception):
+        exc_doc = {
+            'exception': str(exception)
+        }
+
+        if hasattr(self, 'argument_mode'):
+            exc_doc['argument_mode'] = self.argument_mode
+        if hasattr(self, 'argument_challenge'):
+            exc_doc['argument_challenge'] = self.argument_challenge
+        if hasattr(self, 'argument_mode'):
+            exc_doc['argument_verify_token'] = self.argument_verify_token
+        if hasattr(self, 'self.event_data'):
+            exc_doc['event_data'] = self.event_data
+
+        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
+        exc_doc[constants.CREATED_TIME] = datetime.now()
+
+        ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+
+        logging.debug(exc_doc)
+        logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+
+        self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+
+        raise gen.Return()
+
+
+class EventHandler(MainHandler):
+    @web.asynchronous
+    def prepare(self):
+        if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
+            self.fail('Required headers not passed.')
+            return
+
+    @web.asynchronous
+    @gen.coroutine
+    def post(self):
+        try:
+            self.event_data = json.loads(self.request.body)
+            logging.debug(self.event_data)
+
+            self.success(data='ok')
+        except Exception, ex:
+            yield self.exc(ex)
 
 
 class VerifyHandler(MainHandler):
@@ -66,7 +117,7 @@ class VerifyHandler(MainHandler):
             self.finish()
 
         except Exception, ex:
-            self.fail(ex.message)
+            yield self.exc(ex)
 
 
 class DefaultErrorHandler(RequestHandler, JSendMixin):

@@ -14,6 +14,8 @@ TOKEN_EXPIRATION_TIMEOUT = 3600
 
 
 class DatabaseHandler(RequestHandler):
+    EXCEPTION_TYPE = 'api'
+
     @property
     def db(self):
         return self.application.db
@@ -191,6 +193,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
+        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)

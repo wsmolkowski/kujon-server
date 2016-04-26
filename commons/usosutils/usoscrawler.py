@@ -14,6 +14,8 @@ from commons.usosutils.usosclient import UsosClient
 
 
 class UsosCrawler(object):
+    EXCEPTION_TYPE = 'usoscrawler'
+
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
@@ -44,6 +46,10 @@ class UsosCrawler(object):
             exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
             exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
 
+        exception.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
+        exception.append(constants.CREATED_TIME, datetime.now())
+
+        logging.debug(exception)
         logging.error(exception.message)
         self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
 
