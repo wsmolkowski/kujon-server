@@ -26,6 +26,13 @@ environment=HOME="/home/appuser/kujon.mobi",USER="appuser",PYTHONPATH=/home/appu
 stderr_logfile = /home/appuser/kujon.mobi/log/kujon-web-stderr.log
 stdout_logfile = /home/appuser/kujon.mobi/log/kujon-web-stdout.log
 
+[program:kujon-event-8004]
+command=python /home/appuser/kujon.mobi/current/event/event.py --port=8004
+user=appuser
+environment=HOME="/home/appuser/kujon.mobi",USER="appuser",PYTHONPATH=/home/appuser/kujon.mobi/current
+stderr_logfile = /home/appuser/kujon.mobi/log/kujon-event-stderr.log
+stdout_logfile = /home/appuser/kujon.mobi/log/kujon-event-stdout.log
+
 [program:kujon-scheduler]
 command=python /home/appuser/kujon.mobi/current/scheduler/scheduler.py
 user=appuser

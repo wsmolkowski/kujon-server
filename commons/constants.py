@@ -84,6 +84,8 @@ COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 COLLECTION_EXCEPTIONS = 'exceptions'
 COLLECTION_TOKENS = 'tokens'
 
+EXCEPTION_TYPE = 'exception_type'
+
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
 CRAWL_TYPE = "crawl_type"
@@ -102,3 +104,4 @@ GAUTH_TOKEN_TYPE = 'gauth_token_type'
 
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
+EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
