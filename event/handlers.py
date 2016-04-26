@@ -71,11 +71,11 @@ class MainHandler(RequestHandler, JSendMixin):
 
 
 class EventHandler(MainHandler):
-    @web.asynchronous
-    def prepare(self):
-        if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
-            self.fail('Required headers not passed.')
-            return
+    # @web.asynchronous
+    # def prepare(self):
+    #     if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
+    #         self.fail('Required headers not passed.')
+    #         return
 
     @web.asynchronous
     @gen.coroutine
@@ -92,9 +92,9 @@ class EventHandler(MainHandler):
 class VerifyHandler(MainHandler):
     @web.asynchronous
     def prepare(self):
-        if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
-            self.fail('Required headers not passed.')
-            return
+        # if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
+        #    self.fail('Required headers not passed.')
+        #    return
 
         mode = self.get_argument('hub.mode', default=None, strip=True)
         challenge = self.get_argument('hub.challenge', default=None, strip=True)
@@ -129,6 +129,16 @@ class VerifyHandler(MainHandler):
         except Exception, ex:
             yield self.exc(ex)
 
+    @web.asynchronous
+    @gen.coroutine
+    def post(self):
+        try:
+            event_data = json.loads(self.request.body)
+            yield self.process_event(event_data)
+
+            self.success(data='ok')
+        except Exception, ex:
+            yield self.exc(ex)
 
 class DefaultErrorHandler(RequestHandler, JSendMixin):
     @web.asynchronous

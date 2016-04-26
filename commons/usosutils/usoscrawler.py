@@ -15,7 +15,7 @@ from commons.usosutils.usosclient import UsosClient
 
 class UsosCrawler(object):
     EXCEPTION_TYPE = 'usoscrawler'
-
+    EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
@@ -125,6 +125,16 @@ class UsosCrawler(object):
             course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
             self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
 
+    def __subscribe(self, client, user_id, usos):
+        for event_type in self.EVENT_TYPES:
+            try:
+                subscribe_doc = client.subscribe(event_type, str(user_id))
+                subscribe_doc = self.append(subscribe_doc, usos[constants.USOS_ID], datetime.now())
+                subscribe_doc[constants.USER_ID] = user_id
+                self.dao.insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+            except UsosClientError, ex:
+                self._exc(ex)
+                continue
 
     def __build_time_table(self, client, user_id, usos_id, given_date):
         # existing_tt = self.dao.get_time_table(user_id, usos_id)
@@ -443,6 +453,8 @@ class UsosCrawler(object):
 
         client, usos = self.__build_client(user)
         user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
+
+        self.__subscribe(client, user_id, usos)
 
         # fetch time_table for current and next week
         monday = self.__get_monday()
