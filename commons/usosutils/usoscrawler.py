@@ -129,7 +129,7 @@ class UsosCrawler(object):
         for event_type in self.EVENT_TYPES:
             try:
                 subscribe_doc = client.subscribe(event_type, str(user_id))
-                subscribe_doc = self.append(subscribe_doc, usos[constants.USOS_ID], datetime.now())
+                subscribe_doc = self.append(subscribe_doc, usos[constants.USOS_ID], datetime.now(), datetime.now())
                 subscribe_doc[constants.USER_ID] = user_id
                 self.dao.insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except UsosClientError, ex:
