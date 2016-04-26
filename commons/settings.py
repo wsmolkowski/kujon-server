@@ -44,6 +44,9 @@ CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
 CALLBACK_MOBI_URL = config.get('deployment', 'CALLBACK_MOBI_URL')
 LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
+EVENT_PORT = config.getint('deployment', 'EVENT_PORT')
+DEPLOY_EVENT = config.get('deployment', 'DEPLOY_EVENT')
+
 SMTP_HOST = config.get('email', 'SMTP_HOST')
 SMTP_PORT = config.getint('email', 'SMTP_PORT')
 SMTP_USER = config.get('email', 'SMTP_USER')

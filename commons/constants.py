@@ -102,3 +102,4 @@ GAUTH_TOKEN_TYPE = 'gauth_token_type'
 
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
+EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
