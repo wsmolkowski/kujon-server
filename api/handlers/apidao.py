@@ -21,7 +21,7 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
-LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration')
+LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
 
 
 class ApiDaoHandler(DatabaseHandler):
@@ -382,6 +382,7 @@ class ApiDaoHandler(DatabaseHandler):
             program['programme']['mode_of_studies'] = result['mode_of_studies']
             program['programme']['level_of_studies'] = result['level_of_studies']
             program['programme']['duration'] = result['duration']
+            program['programme']['name'] = result['name']
             programmes.append(program)
 
         raise gen.Return(programmes)

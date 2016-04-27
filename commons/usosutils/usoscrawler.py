@@ -180,7 +180,6 @@ class UsosCrawler(object):
                 result['mode_of_studies'] = result['mode_of_studies']['pl']
                 result['level_of_studies'] = result['level_of_studies']['pl']
                 result['duration'] = result['duration']['pl']
-                result['description'] = result['description']['pl']
 
                 self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
             else:
@@ -331,6 +330,7 @@ class UsosCrawler(object):
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
                 result[constants.FACULTY_ID] = faculty
+                result['name'] = result['name']['pl']
                 self.dao.insert(constants.COLLECTION_FACULTIES, result)
             else:
                 logging.warn("no faculty for fac_id: %r.", faculty)
