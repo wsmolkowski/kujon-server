@@ -22,3 +22,4 @@ echo 'services started'
 
 sudo chown -R appuser:appuser $APPDIR
 sudo chmod +x $APPDIR/scripts/deploy.sh
+sudo chmod +x $APPDIR/scripts/manage.sh
