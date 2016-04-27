@@ -6,7 +6,7 @@ import tornado.web
 from base import BaseHandler
 from commons import constants, decorators
 
-LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration')
+LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studies', 'level_of_studies', 'duration')
 
 
 class ProgrammesByIdApi(BaseHandler):

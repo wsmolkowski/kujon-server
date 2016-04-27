@@ -1,7 +1,7 @@
 from handlers import authentication
 from handlers.base import UsosesApi, ApplicationConfigHandler
 from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi
-from handlers.faculties import FacultyByIdApi
+from handlers.faculties import FacultyByIdApi, FacultiesApi
 from handlers.friends import FriendsSuggestionsApi, FriendsApi
 from handlers.grades import GradesForCourseAndTermApi, GradesForUserApi
 from handlers.lecturers import LecturersApi, LecturerByIdApi
@@ -50,6 +50,7 @@ HANDLERS = [
     (r"/programmes/([^/]+)", ProgrammesByIdApi),
 
     (r"/faculties/([^/]+)", FacultyByIdApi),
+    (r"/faculties", FacultiesApi),
 
 ]
 

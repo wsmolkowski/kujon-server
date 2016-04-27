@@ -74,6 +74,10 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('terms');
     });
 
+    crossroads.addRoute('faculties', function() {
+        setActiveLink('faculties');
+    });
+
     crossroads.addRoute('programmes', function() {
         setActiveLink('programmes');
     });

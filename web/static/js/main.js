@@ -134,6 +134,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(buildApiUrl('/terms'), callback);
         };
 
+        function faculties(callback){
+            callAjaxGet(buildApiUrl('/faculties'), callback);
+        };
+
         function programmes(callback){
             callAjaxGet(buildApiUrl('/programmes'), callback);
         };
@@ -225,6 +229,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             callTerms: function(callback){
                 terms(callback);
+            },
+            callFaculties: function(callback){
+                faculties(callback);
             },
             callProgrammes: function(callback){
                 programmes(callback);
