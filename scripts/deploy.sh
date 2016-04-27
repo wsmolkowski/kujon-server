@@ -21,3 +21,4 @@ sudo supervisorctl start all
 echo 'services started'
 
 sudo chown -R appuser:appuser $APPDIR
+sudo chmod +x $APPDIR/scripts/deploy.sh
