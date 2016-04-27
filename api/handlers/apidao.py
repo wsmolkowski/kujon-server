@@ -134,8 +134,9 @@ class ApiDaoHandler(DatabaseHandler):
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
             constants.FACULTY_ID], constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
         course_doc.pop(constants.FACULTY_ID)
-        course_doc[constants.FACULTY_ID] = fac_doc
-        course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
+        if constants.FACULTY_ID in fac_doc:
+            course_doc[constants.FACULTY_ID] = fac_doc
+            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         raise gen.Return(course_doc)
 
