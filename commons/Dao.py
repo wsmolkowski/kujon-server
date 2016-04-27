@@ -35,8 +35,14 @@ class Dao(object):
         else:
             return usos
 
+    def get_usoses(self, enabled=True):
+        return self._db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
+
     def get_user(self, user_id):
-        return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
+        return self._db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
+
+    def get_archive_user(self, user_id):
+        return self._db[constants.COLLECTION_USERS_ARCHIVE].find_one({constants.USER_ID: user_id})
 
     def get_users_info_by_user_id(self, user_id, usos):
         """

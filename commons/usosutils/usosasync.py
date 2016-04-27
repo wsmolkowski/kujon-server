@@ -10,6 +10,7 @@ from commons.errors import UsosAsyncError
 URL_TERM_INFO = '{0}services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
 URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
+URL_NOTIFIER_STATUS = "{0}services/events/notifier_status"
 
 
 class UsosAsync(object):
@@ -73,3 +74,15 @@ class UsosAsync(object):
             raise tornado.gen.Return(term)
         else:
             raise UsosAsyncError(response, response, uri=request, parameters=[term_id])
+
+    @tornado.gen.coroutine
+    def notifier_status(self, usos_base_url, validate_cert=False):
+        url = URL_NOTIFIER_STATUS.format(usos_base_url)
+        request = self.build_request(url=url, validate_cert=validate_cert)
+
+        response = yield tornado.gen.Task(self.client.fetch, request)
+
+        if self.validate_response(response):
+            raise tornado.gen.Return(json.loads(response.body))
+        else:
+            raise UsosAsyncError(response, response, uri=request)
