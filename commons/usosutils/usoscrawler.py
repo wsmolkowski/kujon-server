@@ -16,6 +16,7 @@ from commons.usosutils.usosclient import UsosClient
 class UsosCrawler(object):
     EXCEPTION_TYPE = 'usoscrawler'
     EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
+
     def __init__(self, dao=None):
         if not dao:
             self.dao = Dao()
@@ -23,7 +24,6 @@ class UsosCrawler(object):
             self.dao = dao
 
         self.aes = AESCipher()
-
 
     @staticmethod
     def append(data, usos_id, create_time, update_time):
@@ -45,6 +45,11 @@ class UsosCrawler(object):
         if hasattr(self, 'user') and isinstance(exception, UsosClientError):
             exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
             exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
+        else:
+            exception = {
+                'exception': exception,
+                'message': exception.message
+            }
 
         exception.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
         exception.append(constants.CREATED_TIME, datetime.now())
@@ -538,3 +543,19 @@ class UsosCrawler(object):
                 logging.debug('updating time table for user: {0}'.format(user[constants.MONGO_ID]))
             except Exception, ex:
                 logging.exception('Exception in update_time_tables {0}'.format(ex.message))
+
+    @tornado.gen.coroutine
+    def unsubscribe(self, user_id):
+        try:
+            if isinstance(user_id, str):
+                user_id = ObjectId(user_id)
+            user = self.dao.get_archive_user(user_id)
+            if not user:
+                raise Exception("Unsubscribe process not started. Unknown user with id: %r.", user_id)
+
+            client, usos = self.__build_client(user)
+
+            client.unsubscribe()
+            raise tornado.gen.Return()
+        except Exception, ex:
+            self._exc(ex)
