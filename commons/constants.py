@@ -84,6 +84,7 @@ COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 COLLECTION_EXCEPTIONS = 'exceptions'
 COLLECTION_TOKENS = 'tokens'
 COLLECTION_SUBSCRIPTION = 'subscriptions'
+COLLECTION_NOTIFIER_STATUS = 'notifier_status'
 
 EXCEPTION_TYPE = 'exception_type'
 

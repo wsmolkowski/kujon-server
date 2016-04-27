@@ -10,6 +10,7 @@ from commons.AESCipher import AESCipher
 from commons.Dao import Dao
 from commons.errors import UsosClientError
 from commons.helpers import log_execution_time
+from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
 
@@ -561,6 +562,23 @@ class UsosCrawler(object):
             client, usos = self.__build_client(user)
 
             client.unsubscribe()
+            raise tornado.gen.Return()
+        except Exception, ex:
+            self._exc(ex)
+
+    @tornado.gen.coroutine
+    def notifier_status(self):
+        try:
+            usosAsync = UsosAsync()
+            timestamp = datetime.now()
+
+            for usos in self.dao.get_usoses():
+                data = yield usosAsync.notifier_status(usos[constants.USOS_URL])
+                data[constants.CREATED_TIME] = timestamp
+                data[constants.USOS_ID] = usos[constants.USOS_ID]
+
+                self.dao.insert(constants.COLLECTION_NOTIFIER_STATUS, data)
+
             raise tornado.gen.Return()
         except Exception, ex:
             self._exc(ex)

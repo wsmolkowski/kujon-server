@@ -12,15 +12,22 @@ def update_daily():
     uc = UsosCrawler()
     uc.daily_crawl()
 
-def init():
 
+def notifier_status():
+    uc = UsosCrawler()
+    uc.notifier_status()
+
+
+def init():
     # bind a ioloop or use default ioloop
     chronos.setup()  # chronos.setup(tornado.ioloop.IOLoop())
-    chronos.schedule('update_daily', chronos.every_second(604800), update_daily)   # 604800 => 7 days
-    chronos.schedule('reindex', chronos.every_second(86400), reindex)   # 86400 => 1 day
-    chronos.schedule('save_statistics', chronos.every_second(86400), save_statistics)   # 86400 => 1 day
+    chronos.schedule('update_daily', chronos.every_second(604800), update_daily)  # 604800 => 7 days
+    chronos.schedule('reindex', chronos.every_second(86400), reindex)  # 86400 => 1 day
+    chronos.schedule('save_statistics', chronos.every_second(86400), save_statistics)  # 86400 => 1 day
+    chronos.schedule('notifier_status', chronos.every_second(10), notifier_status)  # 14400 => 4 hours
 
     chronos.start(True)
+
 
 if __name__ == '__main__':
 
