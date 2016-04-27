@@ -222,7 +222,8 @@ class UsosCrawler(object):
                 else:
                     logging.debug("course_editions changed - updating and moving old to archive.")
                     self.dao.insert(constants.COLLECTION_COURSES_EDITIONS_ARCHIVE, course_edition)
-                    self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, course_edition[constants.MONGO_ID])
+                    self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID,
+                                    course_edition[constants.MONGO_ID])
             self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             return True
         else:
@@ -418,7 +419,8 @@ class UsosCrawler(object):
                     continue  # grades for course and term already exists
 
             if result and (
-                    len(result['grades']['course_grades']) > 0 or len(result['grades']['course_units_grades']) > 0):
+                            len(result['grades']['course_grades']) > 0 or len(
+                        result['grades']['course_units_grades']) > 0):
                 self.dao.insert(constants.COLLECTION_GRADES, result)
 
         self.__build_users_info(client, crawl_time, users_found, usos)
@@ -498,7 +500,6 @@ class UsosCrawler(object):
             except Exception, ex:
                 self._exc(ex)
 
-
     @staticmethod
     def __get_next_monday(monday):
         return monday + timedelta(days=7)
@@ -529,7 +530,6 @@ class UsosCrawler(object):
             self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
         except Exception, ex:
             self._exc(ex)
-
 
     @tornado.gen.coroutine
     def update_time_tables(self):
