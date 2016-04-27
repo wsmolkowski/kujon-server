@@ -1,4 +1,5 @@
 import logging
+import traceback
 from datetime import datetime
 from datetime import timedelta, date
 
@@ -46,17 +47,19 @@ class UsosCrawler(object):
         if hasattr(self, 'user') and isinstance(exception, UsosClientError):
             exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
             exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
+            exception.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
+            exception.append(constants.CREATED_TIME, datetime.now())
         else:
             exception = {
                 'exception': exception,
-                'message': exception.message
+                'message': exception.message,
+                constants.TRACEBACK: traceback.format_exc(),
+                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
+                constants.CREATED_TIME: datetime.now()
             }
 
-        exception.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
-        exception.append(constants.CREATED_TIME, datetime.now())
-
         logging.debug(exception)
-        logging.error(exception.message)
+        logging.error(exception)
         self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):

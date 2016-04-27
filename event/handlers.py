@@ -2,6 +2,7 @@
 
 import json
 import logging
+import traceback
 from datetime import datetime
 
 from bson.objectid import ObjectId
@@ -47,6 +48,7 @@ class MainHandler(RequestHandler, JSendMixin):
         if hasattr(self, 'self.event_data'):
             exc_doc['event_data'] = self.event_data
 
+        exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 

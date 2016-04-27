@@ -1,6 +1,7 @@
 # coding=UTF-8
 
 import logging
+import traceback
 from datetime import datetime
 
 from tornado import gen
@@ -204,6 +205,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
+        exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
