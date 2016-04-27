@@ -45,21 +45,22 @@ class UsosCrawler(object):
 
     def _exc(self, exception):
         if hasattr(self, 'user') and isinstance(exception, UsosClientError):
-            exception.append(constants.USER_ID, self.user[constants.MONGO_ID])
-            exception.append(constants.USOS_ID, self.user[constants.USOS_ID])
-            exception.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
-            exception.append(constants.CREATED_TIME, datetime.now())
+            exc_doc = exception
+            exc_doc.append(constants.USER_ID, self.user[constants.MONGO_ID])
+            exc_doc.append(constants.USOS_ID, self.user[constants.USOS_ID])
+            exc_doc.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
+            exc_doc.append(constants.CREATED_TIME, datetime.now())
         else:
-            exception = {
-                'exception': exception,
-                'message': exception.message,
+            exc_doc = {
+                'args': exception.args,
+                'message': str(exception),
                 constants.TRACEBACK: traceback.format_exc(),
                 constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
                 constants.CREATED_TIME: datetime.now()
             }
 
-        logging.error(exception)
-        self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
+        logging.error(exc_doc)
+        self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
@@ -559,11 +560,14 @@ class UsosCrawler(object):
                 user_id = ObjectId(user_id)
             user = self.dao.get_archive_user(user_id)
             if not user:
-                raise Exception("Unsubscribe process not started. Unknown user with id: %r.", user_id)
+                raise Exception(
+                    "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
+                    user_id)
 
-            client, usos = self.__build_client(user)
+            if constants.USOS_ID in user:
+                client, usos = self.__build_client(user)
+                client.unsubscribe()
 
-            client.unsubscribe()
             raise tornado.gen.Return()
         except Exception, ex:
             self._exc(ex)
