@@ -22,7 +22,7 @@ URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_n
 URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number"
 URI_TERM_INFO = u"services/terms/term?term_id={0}"
 URI_SUBSCRIBE_EVENT = u"services/events/subscribe_event?event_type={0}&callback_url={1}&verify_token={2}"
-URI_SUBSCRIPTIONS = u"services/events/subscriptions?id|event_type|callback_url"
+URI_SUBSCRIPTIONS = u"services/events/subscriptions"
 URI_UNSUBSCRIBE = u"services/events/unsubscribe"
 
 
