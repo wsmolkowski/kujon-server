@@ -448,31 +448,34 @@ class UsosCrawler(object):
     @log_execution_time
     @tornado.gen.coroutine
     def initial_user_crawl(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
+        try:
+            if isinstance(user_id, str):
+                user_id = ObjectId(user_id)
 
-        crawl_time = datetime.now()
+            crawl_time = datetime.now()
 
-        user = self.dao.get_user(user_id)
-        if not user:
-            raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
+            user = self.dao.get_user(user_id)
+            if not user:
+                raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-        client, usos = self.__build_client(user)
-        user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
+            client, usos = self.__build_client(user)
+            user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
 
-        self.__subscribe(client, user_id, usos)
+            self.__subscribe(client, user_id, usos)
 
-        # fetch time_table for current and next week
-        monday = self.__get_monday()
-        self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
-        self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
-        self.__build_programmes(client, user_info_id, crawl_time, usos)
-        self.__build_curseseditions(client, crawl_time, user_id, usos)
-        self.__build_terms(client, user_id, usos, crawl_time)
-        self.__build_course_edition(client, user_id, usos, crawl_time)
-        self.__process_user_data(client, user_id, usos, crawl_time)
-        self.__build_courses(client, usos, crawl_time)
-        self.__build_faculties(client, usos, crawl_time)
+            # fetch time_table for current and next week
+            monday = self.__get_monday()
+            self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
+            self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
+            self.__build_programmes(client, user_info_id, crawl_time, usos)
+            self.__build_curseseditions(client, crawl_time, user_id, usos)
+            self.__build_terms(client, user_id, usos, crawl_time)
+            self.__build_course_edition(client, user_id, usos, crawl_time)
+            self.__process_user_data(client, user_id, usos, crawl_time)
+            self.__build_courses(client, usos, crawl_time)
+            self.__build_faculties(client, usos, crawl_time)
+        except Exception, ex:
+            self._exc(ex)
 
     @log_execution_time
     @tornado.gen.coroutine
@@ -482,8 +485,7 @@ class UsosCrawler(object):
 
         for user in self.dao.get_users():
             try:
-                logging.debug(
-                    'updating daily crawl for user: {0}'.format(user[constants.MONGO_ID]))
+                logging.debug('updating daily crawl for user: {0}'.format(user[constants.MONGO_ID]))
                 client, usos = self.__build_client(user)
 
                 # if courseseditions are updated - process update
@@ -494,7 +496,7 @@ class UsosCrawler(object):
                     self.__build_courses(client, usos, crawl_time)
                     self.__build_faculties(client, usos, crawl_time)
             except Exception, ex:
-                logging.exception("Exception in daily_crawl %r with user: %r", user[constants.ID], ex.message)
+                self._exc(ex)
 
 
     @staticmethod
@@ -510,20 +512,23 @@ class UsosCrawler(object):
     @log_execution_time
     @tornado.gen.coroutine
     def update_user_crawl(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
+        try:
+            if isinstance(user_id, str):
+                user_id = ObjectId(user_id)
 
-        crawl_time = datetime.now()
+            crawl_time = datetime.now()
 
-        user = self.dao.get_user(user_id)
-        if not user:
-            raise Exception("Update crawler not started. Unknown user with id: %r", user_id)
+            user = self.dao.get_user(user_id)
+            if not user:
+                raise Exception("Update crawler not started. Unknown user with id: %r", user_id)
 
-        client, usos = self.__build_client(user)
+            client, usos = self.__build_client(user)
 
-        courses_conducted = self.dao.courses_conducted(user_id)
+            courses_conducted = self.dao.courses_conducted(user_id)
 
-        self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
+            self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
+        except Exception, ex:
+            self._exc(ex)
 
 
     @tornado.gen.coroutine
@@ -542,7 +547,7 @@ class UsosCrawler(object):
 
                 logging.debug('updating time table for user: {0}'.format(user[constants.MONGO_ID]))
             except Exception, ex:
-                logging.exception('Exception in update_time_tables {0}'.format(ex.message))
+                self._exc(ex)
 
     @tornado.gen.coroutine
     def unsubscribe(self, user_id):
