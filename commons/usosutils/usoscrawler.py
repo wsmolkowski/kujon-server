@@ -58,7 +58,6 @@ class UsosCrawler(object):
                 constants.CREATED_TIME: datetime.now()
             }
 
-        logging.debug(exception)
         logging.error(exception)
         self.dao.insert(constants.COLLECTION_EXCEPTIONS, exception.message)
 
