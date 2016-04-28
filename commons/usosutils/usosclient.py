@@ -14,16 +14,16 @@ URI_COURSE_EDITION_INFO = u"services/courses/course_edition?course_id={0}&term_i
 URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|coordinators|course_units_ids|lecturers"
 URI_GRADES_FOR_COURSE_AND_TERM = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = u"services/courses/classtypes_index"
-URI_PROGRAMMES = u"services/progs/programme?programme_id={0}&fields=id|description|name|mode_of_studies|level_of_studies|duration"
+URI_PROGRAMMES = u"services/progs/programme?programme_id={0}&fields=id|name|mode_of_studies|level_of_studies|duration|professional_status"
 URI_GROUPS = u"services/groups/group?course_unit_id={0}&group_number=1&fields=course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria"
 URI_COURSES_UNITS = u"services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}"
 URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement"
-URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|logo_urls[100x100]"
+URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]"
 URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number"
 URI_TERM_INFO = u"services/terms/term?term_id={0}"
-URI_SUBSCRIBE_EVENT = 'services/events/subscribe_event?event_type={0}&callback_url={1}&verify_token={2}'
-URI_SUBSCRIPTIONS = 'services/events/subscriptions?id|event_type|callback_url'
-URI_UNSUBSCRIBE = 'services/events/unsubscribe'
+URI_SUBSCRIBE_EVENT = u"services/events/subscribe_event?event_type={0}&callback_url={1}&verify_token={2}"
+URI_SUBSCRIPTIONS = u"services/events/subscriptions"
+URI_UNSUBSCRIBE = u"services/events/unsubscribe"
 
 
 class UsosClient(object):
@@ -45,7 +45,8 @@ class UsosClient(object):
 
         self.client = oauth.Client(consumer=self.consumer, token=self.token, **self.parameters)
 
-    def _validate(self, code):
+    @staticmethod
+    def _validate(code):
         if code.status is 200 and code.reason == 'OK':
             return True
         return False

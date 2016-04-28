@@ -1,0 +1,29 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>Jednostki</h4>
+    </div>
+    <div class="panel-body">
+        <table id="faculties-table" class="table table-hover table-responsive">
+            <thead>
+            <th>Nazwa</th>
+            <th>Strona www</th>
+            <th>Adres na mapie</th>
+            <th>Numer telefonu</th>
+            <th>Statystyki</th>
+            </thead>
+            <tbody>
+            {{#data}}
+            <tr>
+                <td>{{name}}</td>
+                <td><a href="{{homepage_url}}" target="_blank"><img src="{{logo_urls.100x100}}"></a></td>
+                <td><a href="https://maps.google.pl/?q={{postal_address}}" target="_blank">{{postal_address}}</a></td>
+                <th>{{phone_numbers}}</th>
+                <td>przedmioty: {{stats.course_count}}<br>
+                    kierunki: {{stats.programme_count}}<br>
+                    personel: {{stats.staff_count}}</td>
+            </tr>
+            {{/data}}
+            </tbody>
+        </table>
+    </div>
+</div>

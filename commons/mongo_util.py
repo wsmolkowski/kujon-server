@@ -122,6 +122,7 @@ def drop_collections(skip_collections=[]):
         if 'system' in collection:
             continue
         if collection in skip_collections:
+            logging.info('skipping collection: {0}'.format(collection))
             continue
         db.drop_collection(collection)
 

@@ -6,7 +6,7 @@ def authenticated(method):
     def wrapper(self, *args, **kwargs):
         current_user = yield self.get_current_user()
         if not current_user:
-            self.fail("Request not authenticated.")
+            self.fail(message="Request not authenticated.", code=401)
             return
         else:
             self.user_doc = current_user

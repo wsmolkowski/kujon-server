@@ -16,9 +16,9 @@ def drop():
     logging.info('drop_collections end')
 
 
-def clean():
+def clean(skip_collection=[]):
     logging.info('clean_database start')
-    mongo_util.drop_collections([constants.COLLECTION_USERS, ])
+    mongo_util.drop_collections(skip_collection)
     logging.info('clean_database end')
 
 
@@ -51,8 +51,11 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 
-parser.add_argument('-d', '--drop', action='store_const', dest='option', const='drop',
-                    help="drop all database collection")
+
+parser.add_argument('-c', '--clean', action='store_const', dest='option', const='clean',
+                    help="clean all database collection without usosinstances and course_class_types")
+parser.add_argument('-ca', '--cleanall', action='store_const', dest='option', const='cleanall',
+                    help="clean all database collection")
 parser.add_argument('-r', '--recreate', action='store_const', dest='option', const='recreate',
                     help="recreate dictionaries")
 parser.add_argument('-i', '--index', action='store_const', dest='option', const='index',
@@ -67,12 +70,13 @@ def main():
 
     args = parser.parse_args()
 
-    if args.option == 'drop':
+    if args.option == 'recreate':
         drop()
-    elif args.option == 'recreate':
-        clean()
         recreate()
-        create_user_jobs()
+    elif args.option == 'clean':
+        clean([constants.COLLECTION_USOSINSTANCES, constants.COLLECTION_COURSES_CLASSTYPES])
+    elif args.option == 'cleanall':
+        clean()
     elif args.option == 'index':
         index()
     elif args.option == 'statistics':

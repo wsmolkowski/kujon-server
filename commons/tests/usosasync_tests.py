@@ -45,3 +45,14 @@ class UsosAsyncTest(AsyncTestCase):
 
         # then
         self.assertNotEqual(0, result)
+
+    @gen_test(timeout=100)
+    def testNotifierStatus(self):
+        # assume
+        base_url = "https://usosapps.uw.edu.pl/"
+
+        # when
+        result = yield self.usosAsync.notifier_status(base_url)
+
+        # then
+        self.assertNotEqual(0, result)

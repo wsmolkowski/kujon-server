@@ -35,8 +35,15 @@ class Dao(object):
         else:
             return usos
 
+    def get_usoses(self, enabled=True):
+        return self._db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
+
     def get_user(self, user_id):
-        return self._db[constants.COLLECTION_USERS].find_one({"_id": user_id})
+        return self._db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
+
+    def get_archive_user(self, user_id):
+        return self._db[constants.COLLECTION_USERS_ARCHIVE].find_one(
+            {constants.USER_ID: user_id, constants.USOS_PAIRED: True})
 
     def get_users_info_by_user_id(self, user_id, usos):
         """
@@ -214,7 +221,8 @@ class Dao(object):
 
     def get_users(self):
         return self._db[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True},
-                    (constants.MONGO_ID, constants.USOS_ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET))
+                                                         (constants.MONGO_ID, constants.USOS_ID,
+                                                          constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET))
 
     def get_time_table(self, user_id, usos_id):
         tt_doc = self._db[constants.COLLECTION_TT].find_one({constants.USER_ID: user_id, constants.USOS_ID: usos_id})

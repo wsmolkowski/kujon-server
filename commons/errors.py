@@ -49,7 +49,7 @@ class HttpError(Error):
             }
 
     def __repr__(self):
-        return self._message()
+        return str(self._message())
 
     def _message(self):
         reason = self._get_reason()

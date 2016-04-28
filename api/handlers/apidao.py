@@ -21,7 +21,7 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
-LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration')
+LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
 
 
 class ApiDaoHandler(DatabaseHandler):
@@ -134,8 +134,9 @@ class ApiDaoHandler(DatabaseHandler):
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
             constants.FACULTY_ID], constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
         course_doc.pop(constants.FACULTY_ID)
-        course_doc[constants.FACULTY_ID] = fac_doc
-        course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
+        if constants.FACULTY_ID in fac_doc:
+            course_doc[constants.FACULTY_ID] = fac_doc
+            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         raise gen.Return(course_doc)
 
@@ -381,6 +382,7 @@ class ApiDaoHandler(DatabaseHandler):
             program['programme']['mode_of_studies'] = result['mode_of_studies']
             program['programme']['level_of_studies'] = result['level_of_studies']
             program['programme']['duration'] = result['duration']
+            program['programme']['name'] = result['name']
             programmes.append(program)
 
         raise gen.Return(programmes)

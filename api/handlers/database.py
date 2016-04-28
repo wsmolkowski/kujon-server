@@ -1,6 +1,7 @@
 # coding=UTF-8
 
 import logging
+import traceback
 from datetime import datetime
 
 from tornado import gen
@@ -26,7 +27,7 @@ class DatabaseHandler(RequestHandler):
 
         if not user_doc:
             logging.debug('cannot archive user which does not exists {0}'.format(user_id))
-            return
+            gen.Return()
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
@@ -37,6 +38,17 @@ class DatabaseHandler(RequestHandler):
 
         logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
             constants.COLLECTION_USERS, user_id, result))
+
+        result = yield self.db[constants.COLLECTION_JOBS_QUEUE].insert({
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            constants.UPDATE_TIME: None,
+            constants.JOB_MESSAGE: None,
+            constants.JOB_STATUS: constants.JOB_PENDING,
+            constants.JOB_TYPE: 'unsubscribe_usos'
+        })
+
+        logging.debug('created job for un subscribe USOS {0}'.format(result))
 
         result = yield self.db[constants.COLLECTION_JOBS_QUEUE].insert({
             constants.USER_ID: user_id,
@@ -193,6 +205,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
+        exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
@@ -201,8 +214,8 @@ class DatabaseHandler(RequestHandler):
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
-            self.fail(exception.message())
+            self.fail(message=exception.message(), code=501)
         else:
-            self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+            self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.', code=501)
 
         raise gen.Return()
