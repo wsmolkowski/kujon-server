@@ -85,6 +85,8 @@ COLLECTION_EXCEPTIONS = 'exceptions'
 COLLECTION_TOKENS = 'tokens'
 COLLECTION_SUBSCRIPTION = 'subscriptions'
 COLLECTION_NOTIFIER_STATUS = 'notifier_status'
+COLLECTION_NOTIFICATION_QUEUE = 'notification_queue'
+COLLECTION_NOTIFICATION_QUEUE_LOG = 'notification_queue_log'
 
 EXCEPTION_TYPE = 'exception_type'
 TRACEBACK = 'traceback'
