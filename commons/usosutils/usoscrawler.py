@@ -3,8 +3,8 @@ import traceback
 from datetime import datetime
 from datetime import timedelta, date
 
-import tornado.gen
 from bson.objectid import ObjectId
+from tornado import gen
 
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -60,7 +60,10 @@ class UsosCrawler(object):
             }
 
         logging.error(exc_doc)
-        self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        try:
+            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        except Exception, ex:
+            logging.exception(ex)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
@@ -253,7 +256,7 @@ class UsosCrawler(object):
             else:
                 logging.warn("no term_id: %r found!", term_id)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crawl_time):
 
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
@@ -280,7 +283,7 @@ class UsosCrawler(object):
                 logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[
                     constants.COURSE_ID], course_edition[constants.TERM_ID])
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_courses(self, client, usos, crawl_time):
 
         courses = list()
@@ -325,7 +328,7 @@ class UsosCrawler(object):
             else:
                 logging.warn("no course for course_id: %r.", course)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_faculties(self, client, usos, crawl_time):
         for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
             if self.dao.get_faculty(faculty, usos[constants.USOS_ID]):
@@ -345,7 +348,7 @@ class UsosCrawler(object):
             else:
                 logging.warn("no faculty for fac_id: %r.", faculty)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_users_info(self, client, crawl_time, user_info_ids, usos_id):
         for user_info_id in user_info_ids:
             if not self.dao.get_users_info(user_info_id[constants.ID], usos_id):
@@ -355,7 +358,7 @@ class UsosCrawler(object):
                 # build programme for given user
                 self.__build_programmes(client, user_info_id[constants.ID], crawl_time, usos_id)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_units(self, client, crawl_time, units, usos):
 
         for unit_id in units:
@@ -375,7 +378,7 @@ class UsosCrawler(object):
             else:
                 logging.warn("no unit %r.", format(unit_id))
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __build_groups(self, client, crawl_time, units, usos):
 
         for unit in units:
@@ -394,7 +397,7 @@ class UsosCrawler(object):
             else:
                 logging.warn("no group for unit: %r.", unit)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def __process_user_data(self, client, user_id, usos, crawl_time):
 
         users_found = list()
@@ -452,7 +455,7 @@ class UsosCrawler(object):
         return client, usos
 
     @log_execution_time
-    @tornado.gen.coroutine
+    @gen.coroutine
     def initial_user_crawl(self, user_id):
         try:
             if isinstance(user_id, str):
@@ -484,7 +487,7 @@ class UsosCrawler(object):
             self._exc(ex)
 
     @log_execution_time
-    @tornado.gen.coroutine
+    @gen.coroutine
     def daily_crawl(self):
 
         crawl_time = datetime.now()
@@ -515,7 +518,7 @@ class UsosCrawler(object):
         return monday
 
     @log_execution_time
-    @tornado.gen.coroutine
+    @gen.coroutine
     def update_user_crawl(self, user_id):
         try:
             if isinstance(user_id, str):
@@ -535,7 +538,7 @@ class UsosCrawler(object):
         except Exception, ex:
             self._exc(ex)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def update_time_tables(self):
         monday = self.__get_monday()
         next_monday = self.__get_next_monday(monday)
@@ -553,7 +556,7 @@ class UsosCrawler(object):
             except Exception, ex:
                 self._exc(ex)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def unsubscribe(self, user_id):
         try:
             if isinstance(user_id, str):
@@ -568,11 +571,10 @@ class UsosCrawler(object):
                 client, usos = self.__build_client(user)
                 client.unsubscribe()
 
-            raise tornado.gen.Return()
         except Exception, ex:
             self._exc(ex)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def notifier_status(self):
         try:
             usosAsync = UsosAsync()
@@ -584,7 +586,5 @@ class UsosCrawler(object):
                 data[constants.USOS_ID] = usos[constants.USOS_ID]
 
                 self.dao.insert(constants.COLLECTION_NOTIFIER_STATUS, data)
-
-            raise tornado.gen.Return()
         except Exception, ex:
             self._exc(ex)
