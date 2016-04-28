@@ -102,7 +102,7 @@ class UsosCrawler(object):
                                                                crawl_time, usos)
 
         # strip english values and if value is empty change to None
-        result['office_hours'] = result['interests']['pl']
+        result['office_hours'] = result['office_hours']['pl']
         result['interests'] = result['interests']['pl']
 
         # strip empty values
