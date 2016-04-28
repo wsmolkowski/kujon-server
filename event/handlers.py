@@ -2,6 +2,7 @@
 
 import json
 import logging
+import traceback
 from datetime import datetime
 
 from bson.objectid import ObjectId
@@ -47,6 +48,7 @@ class MainHandler(RequestHandler, JSendMixin):
         if hasattr(self, 'self.event_data'):
             exc_doc['event_data'] = self.event_data
 
+        exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
@@ -101,8 +103,10 @@ class VerifyHandler(MainHandler):
         verify_token = self.get_argument('hub.verify_token', default=None, strip=True)
 
         if not mode or not challenge or not verify_token:
+            logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
+                mode, challenge, verify_token))
             self.fail('Required parameters not passed.')
-            return
+            raise gen.Return()
 
         self.argument_mode = mode
         self.argument_challenge = challenge
@@ -115,12 +119,13 @@ class VerifyHandler(MainHandler):
     @gen.coroutine
     def get(self):
         try:
-            # user_exists = yield self.user_exists(self.argument_verify_token)
-            # if not user_exists:
-            #     self.fail('Token verification failure.')
-            #     return
+            user_exists = yield self.user_exists(self.argument_verify_token)
+            if not user_exists:
+                logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
+                self.fail('Token verification failure.')
+                raise gen.Return()
 
-            logging.debug('token verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
+            logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
                 self.argument_mode, self.argument_challenge, self.argument_verify_token))
 
             self.write(self.argument_challenge)
@@ -139,6 +144,7 @@ class VerifyHandler(MainHandler):
             self.success(data='ok')
         except Exception, ex:
             yield self.exc(ex)
+
 
 class DefaultErrorHandler(RequestHandler, JSendMixin):
     @web.asynchronous

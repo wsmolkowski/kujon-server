@@ -87,6 +87,7 @@ COLLECTION_SUBSCRIPTION = 'subscriptions'
 COLLECTION_NOTIFIER_STATUS = 'notifier_status'
 
 EXCEPTION_TYPE = 'exception_type'
+TRACEBACK = 'traceback'
 
 DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_USER_UPDATE = 120   #   minutes after crawler updates user data
