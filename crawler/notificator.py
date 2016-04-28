@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 
 import motor
 from tornado import queues, gen, ioloop
+from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 from tornado.options import parse_command_line
 
@@ -28,6 +29,13 @@ class NotificatorQueue(object):
 
     @gen.coroutine
     def __load_work(self):
+
+        # not_all = notification_all()
+        # try:
+        #     d = yield self._db[constants.COLLECTION_NOTIFICATION_QUEUE].insert(not_all)
+        #     logging.debug(d)
+        # except Exception, ex:
+        #     print ex
 
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
@@ -73,7 +81,7 @@ class NotificatorQueue(object):
         client = utils.http_client()
 
         headers = HTTPHeaders({
-            'Authorization: Basic': 'M2Q0NmNkNDUtOTFiMy00OTA2LTlkZGMtNWVhZDFjNGM4ODcw',
+            'Authorization': 'Basic M2Q0NmNkNDUtOTFiMy00OTA2LTlkZGMtNWVhZDFjNGM4ODcw',
             'Content-Type': 'application/json',
             'User-Agent': self._PROJECT_TITLE
         })
@@ -84,13 +92,12 @@ class NotificatorQueue(object):
             'contents': {'en': 'Testowa notyfikacja'}
         }
 
-        request = client.HTTPRequest(self._NOTIFICATION_URL, body=json.dumps(body), method='POST', headers=headers)
+        request = HTTPRequest(self._NOTIFICATION_URL, body=json.dumps(body), method='POST', headers=headers)
 
         response = yield client.fetch(request)
+        response = json.loads(response.body)
 
-        logging.debug(response)
-
-        logging.debug("processed job: {0}".format(job[constants.MONGO_ID]))
+        logging.info("processed job: {0} with result {1}".format(job[constants.MONGO_ID], response))
 
     @gen.coroutine
     def worker(self):
@@ -119,6 +126,26 @@ class NotificatorQueue(object):
                     yield self.update_job(job, constants.JOB_FAIL, msg)
                 finally:
                     self._queue.task_done()
+
+
+def notification_user(user_id, message=None):
+    return {
+        constants.USER_ID: user_id,
+        constants.CREATED_TIME: datetime.now(),
+        constants.UPDATE_TIME: None,
+        constants.JOB_MESSAGE: message,
+        constants.JOB_STATUS: constants.JOB_PENDING,
+    }
+
+
+def notification_all(message=None):
+    return {
+        constants.USER_ID: None,
+        constants.CREATED_TIME: datetime.now(),
+        constants.UPDATE_TIME: None,
+        constants.JOB_MESSAGE: message,
+        constants.JOB_STATUS: constants.JOB_PENDING,
+    }
 
 
 if __name__ == '__main__':
