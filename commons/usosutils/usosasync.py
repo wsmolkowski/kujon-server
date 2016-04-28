@@ -2,9 +2,9 @@ import json
 import urllib
 
 import tornado.gen
-from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+from tornado.httpclient import HTTPRequest
 
-from commons import settings, constants
+from commons import settings, constants, utils
 from commons.errors import UsosAsyncError
 
 URL_TERM_INFO = '{0}services/terms/term?term_id={1}'
@@ -19,11 +19,7 @@ class UsosAsync(object):
 
     @staticmethod
     def build_client():
-        if settings.PROXY_URL and settings.PROXY_PORT:
-            tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                                         defaults=dict(proxy_host=settings.PROXY_URL,
-                                                                       proxy_port=settings.PROXY_PORT))
-        return AsyncHTTPClient()
+        return utils.http_client()
 
     @staticmethod
     def build_request(url, validate_cert=False):

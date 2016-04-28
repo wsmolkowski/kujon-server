@@ -7,7 +7,6 @@ import oauth2 as oauth
 import tornado.gen
 import tornado.web
 from bson import json_util
-from tornado import httpclient
 from tornado.escape import json_decode
 
 from apidao import ApiDaoHandler
@@ -32,13 +31,7 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
 
     @staticmethod
     def get_auth_http_client():
-        if settings.PROXY_URL and settings.PROXY_PORT:
-            httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                                 defaults=dict(proxy_host=settings.PROXY_URL,
-                                                               proxy_port=settings.PROXY_PORT,
-                                                               validate_cert=False))
-
-        return httpclient.AsyncHTTPClient()
+        return utils.http_client()
 
     @tornado.gen.coroutine
     def get_current_user(self):

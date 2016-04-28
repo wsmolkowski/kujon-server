@@ -7,6 +7,7 @@ import traceback
 
 import httplib2
 from bson.objectid import ObjectId
+from tornado import httpclient
 
 try:
     import socks
@@ -126,3 +127,13 @@ def cookie_secret():
     import uuid
 
     print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+
+
+def http_client():
+    if settings.PROXY_URL and settings.PROXY_PORT:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(proxy_host=settings.PROXY_URL,
+                                                           proxy_port=settings.PROXY_PORT,
+                                                           validate_cert=False))
+
+    return httpclient.AsyncHTTPClient()
