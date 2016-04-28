@@ -2,11 +2,10 @@
 
 import logging
 import smtplib
-from email.mime.text import MIMEText
-from email.header import Header
 from datetime import timedelta, datetime
+from email.header import Header
+from email.mime.text import MIMEText
 
-import email_factory
 import motor
 from tornado import queues, gen, ioloop
 from tornado.options import parse_command_line
@@ -28,7 +27,6 @@ class MongoEmailQueue(object):
         self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
-
 
     @gen.coroutine
     def __load_work(self):
