@@ -1,5 +1,7 @@
 # coding=UTF-8
 
+# https://documentation.onesignal.com/docs/notifications-create-notification
+
 import json
 import logging
 from datetime import timedelta, datetime
