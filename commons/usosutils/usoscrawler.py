@@ -50,6 +50,8 @@ class UsosCrawler(object):
             exc_doc.append(constants.USOS_ID, self.user[constants.USOS_ID])
             exc_doc.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
             exc_doc.append(constants.CREATED_TIME, datetime.now())
+
+            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc.message)
         else:
             exc_doc = {
                 'args': exception.args,
@@ -59,11 +61,9 @@ class UsosCrawler(object):
                 constants.CREATED_TIME: datetime.now()
             }
 
-        logging.error(exc_doc)
-        try:
             self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
-        except Exception, ex:
-            logging.exception(ex)
+
+        logging.error(exc_doc)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
