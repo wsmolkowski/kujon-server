@@ -62,11 +62,11 @@ class FriendsApi(BaseHandler):
                 if friend_doc:
                     self.success(user_info_id)
                 else:
-                    self.fail(message=user_info_id)
+                    self.fail(message=user_info_id, code=501)
             else:
-                self.fail(message=user_info_id)
+                self.fail(message=user_info_id, code=501)
         else:
-            self.fail(message=user_info_id)
+            self.fail(message=user_info_id, code=501)
 
     @decorators.authenticated
     @tornado.web.asynchronous
@@ -82,7 +82,7 @@ class FriendsApi(BaseHandler):
             if friend_doc:
                 self.success(user_info_id)
         else:
-            self.fail(message=user_info_id)
+            self.fail(message=user_info_id, code=501)
 
 
 class FriendsSuggestionsApi(BaseHandler):

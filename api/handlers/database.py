@@ -214,8 +214,8 @@ class DatabaseHandler(RequestHandler):
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
-            self.fail(exception.message())
+            self.fail(message=exception.message(), code=501)
         else:
-            self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+            self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.', code=501)
 
         raise gen.Return()

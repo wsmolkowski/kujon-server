@@ -57,7 +57,7 @@ class MainHandler(RequestHandler, JSendMixin):
         logging.debug(exc_doc)
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
-        self.fail('Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+        self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.', code=501)
 
         raise gen.Return()
 
@@ -105,7 +105,7 @@ class VerifyHandler(MainHandler):
         if not mode or not challenge or not verify_token:
             logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
                 mode, challenge, verify_token))
-            self.fail('Required parameters not passed.')
+            self.fail(message='Required parameters not passed.', code=501)
             raise gen.Return()
 
         self.argument_mode = mode
@@ -122,7 +122,7 @@ class VerifyHandler(MainHandler):
             user_exists = yield self.user_exists(self.argument_verify_token)
             if not user_exists:
                 logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
-                self.fail('Token verification failure.')
+                self.fail(message='Token verification failure.', code=501)
                 raise gen.Return()
 
             logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
