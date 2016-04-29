@@ -379,11 +379,14 @@ class ApiDaoHandler(DatabaseHandler):
         for program in user_info['student_programmes']:
             result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
                 {constants.PROGRAMME_ID: program['programme']['id']}, LIMIT_FIELDS_PROGRAMMES)
-            program['programme']['mode_of_studies'] = result['mode_of_studies']
-            program['programme']['level_of_studies'] = result['level_of_studies']
-            program['programme']['duration'] = result['duration']
-            program['programme']['name'] = result['name']
-            programmes.append(program)
+            if result:
+                program['programme']['mode_of_studies'] = result['mode_of_studies']
+                program['programme']['level_of_studies'] = result['level_of_studies']
+                program['programme']['duration'] = result['duration']
+                program['programme']['name'] = result['name']
+                programmes.append(program)
+            else:
+                ApiError("Nie znaleziono programu dla", program['programme']['id'])
 
         raise gen.Return(programmes)
 
