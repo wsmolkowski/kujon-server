@@ -148,7 +148,7 @@ class ApiDaoHandler(DatabaseHandler):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów.")
+            raise ApiError("Poczekaj szukamy przedmiotów", "brak")
 
         # get courses_classtypes
         classtypes = dict()
@@ -373,7 +373,7 @@ class ApiDaoHandler(DatabaseHandler):
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         if not user_info:
-            raise ApiError("Poczekaj, szukamy danych o Twoich kursach.")
+            raise ApiError("Szukamy danych o Twoich kursach", "brak")
 
         programmes = []
         for program in user_info['student_programmes']:
