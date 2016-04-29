@@ -148,7 +148,7 @@ class ApiDaoHandler(DatabaseHandler):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów.")
+            raise ApiError("Poczekaj szukamy przedmiotów", 'brak')
 
         # get courses_classtypes
         classtypes = dict()
@@ -188,6 +188,54 @@ class ApiDaoHandler(DatabaseHandler):
                 courses.append(course)
 
         raise gen.Return(courses)
+
+    @gen.coroutine
+    def api_courses_by_term(self):
+        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
+            ('course_editions', constants.MONGO_ID)
+        )
+
+        if not course_doc:
+            raise ApiError("Poczekaj szukamy przedmiotów", ["brak"])
+
+        # get courses_classtypes
+        classtypes = dict()
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
+            constants.USOS_ID]})
+        while (yield cursor.fetch_next):
+            ct = cursor.next_object()
+            classtypes[ct['id']] = ct['name']['pl']
+
+        # get terms
+        terms = list()
+        for term in course_doc['course_editions']:
+            year = {
+                'term': term,
+                'term_data': course_doc['course_editions'][term]
+            }
+            terms.append(year)
+
+        # add groups to courses
+        courses = list()
+        for term in course_doc['course_editions']:
+            for course in course_doc['course_editions'][term]:
+                cursor = self.db[constants.COLLECTION_GROUPS].find(
+                    {constants.COURSE_ID: course[constants.COURSE_ID],
+                     constants.TERM_ID: term,
+                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
+                    LIMIT_FIELDS_GROUPS
+                )
+                groups = list()
+                while (yield cursor.fetch_next):
+                    group = cursor.next_object()
+                    group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
+                    groups.append(group)
+                course['groups'] = groups
+                course['course_name'] = course['course_name']['pl']
+                del course['course_units_ids']
+                del course['term_id']
+        raise gen.Return(course_doc['course_editions'])
 
     @gen.coroutine
     def api_grades(self):
@@ -373,17 +421,20 @@ class ApiDaoHandler(DatabaseHandler):
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         if not user_info:
-            raise ApiError("Poczekaj, szukamy danych o Twoich kursach.")
+            raise ApiError("Szukamy danych o Twoich kursach", "brak")
 
         programmes = []
         for program in user_info['student_programmes']:
             result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
                 {constants.PROGRAMME_ID: program['programme']['id']}, LIMIT_FIELDS_PROGRAMMES)
-            program['programme']['mode_of_studies'] = result['mode_of_studies']
-            program['programme']['level_of_studies'] = result['level_of_studies']
-            program['programme']['duration'] = result['duration']
-            program['programme']['name'] = result['name']
-            programmes.append(program)
+            if result:
+                program['programme']['mode_of_studies'] = result['mode_of_studies']
+                program['programme']['level_of_studies'] = result['level_of_studies']
+                program['programme']['duration'] = result['duration']
+                program['programme']['name'] = result['name']
+                programmes.append(program)
+            else:
+                ApiError("Nie znaleziono programu dla", program['programme']['id'])
 
         raise gen.Return(programmes)
 
