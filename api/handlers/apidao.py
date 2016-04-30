@@ -1,15 +1,14 @@
 # coding=UTF-8
 
 from datetime import date, timedelta
-
 from bson.objectid import ObjectId
 from tornado import gen
-
 from commons import constants, helpers, settings
 from commons.errors import ApiError
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
+import collections
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -236,7 +235,10 @@ class ApiDaoHandler(DatabaseHandler):
                 course['course_name'] = course['course_name']['pl']
                 del course['course_units_ids']
                 del course['term_id']
-        raise gen.Return(course_doc['course_editions'])
+
+        course_doc_editions = collections.OrderedDict(course_doc['course_editions'])
+        rev = collections.OrderedDict(reversed(list(course_doc_editions.items())))
+        raise gen.Return(rev)
 
     @gen.coroutine
     def api_grades(self):
