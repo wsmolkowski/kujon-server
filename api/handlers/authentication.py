@@ -161,7 +161,13 @@ class UsosRegisterHandler(BaseHandler):
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
                 settings.CALLBACK_URL)
 
-            client = oauth.Client(consumer, **self.oauth_parameters)
+            # is USOS have disabled SSL validation
+            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
+                params = self.oauth_parameters
+                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
+                client = oauth.Client(consumer, **params)
+            else:
+                client = oauth.Client(consumer, **self.oauth_parameters)
             resp, content = client.request(request_token_url)
         except Exception, ex:
             msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
