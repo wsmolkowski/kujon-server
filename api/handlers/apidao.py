@@ -79,7 +79,8 @@ class ApiDaoHandler(DatabaseHandler):
             constants.FACULTY_ID], constants.USOS_ID: usos_id}, LIMIT_FIELDS_FACULTY)
         course_doc.pop(constants.FACULTY_ID)
         course_doc[constants.FACULTY_ID] = fac_doc
-        course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
+        if 'pl' in course_doc['fac_id']['name']:
+            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
         # make lecurers uniqe list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
