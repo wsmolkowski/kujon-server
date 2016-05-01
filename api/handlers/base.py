@@ -19,7 +19,7 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
-    def set_defaddlt_headers(self):
+    def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
                 and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
             # mobile access

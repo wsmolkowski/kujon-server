@@ -454,7 +454,7 @@ class ApiDaoHandler(DatabaseHandler):
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
                                                                             LIMIT_FIELDS_USER)
         if not user_info:
-            raise ApiError("Poczekaj szukamy informacji o nauczycielu.", (user_info_id,))
+            raise ApiError("Poczekaj szukamy informacji o nauczycielu", (user_info_id,))
 
         # change ObjectId to str for photo
         if user_info['has_photo']:
@@ -511,7 +511,7 @@ class ApiDaoHandler(DatabaseHandler):
                 program['programme']['name'] = result['name']
                 programmes.append(program)
             else:
-                ApiError("Nie znaleziono programu dla", program['programme']['id'])
+                ApiError("Nie znaleziono programu", program['programme']['id'])
 
         raise gen.Return(programmes)
 
