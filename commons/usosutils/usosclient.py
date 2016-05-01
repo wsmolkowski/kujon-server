@@ -19,7 +19,7 @@ URI_GROUPS = u"services/groups/group?course_unit_id={0}&group_number=1&fields=co
 URI_COURSES_UNITS = u"services/courses/unit?fields=id|course_id|term_id|groups|classtype_id&unit_id={0}"
 URI_COURSE = u"services/courses/course?course_id={0}&fields=id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement"
 URI_FACULTY = u"services/fac/faculty?fac_id={0}&fields=name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]"
-URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number"
+URI_TT = u"services/tt/user?start={0}&days=7&fields=start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids"
 URI_TERM_INFO = u"services/terms/term?term_id={0}"
 URI_SUBSCRIBE_EVENT = u"services/events/subscribe_event?event_type={0}&callback_url={1}&verify_token={2}"
 URI_SUBSCRIPTIONS = u"services/events/subscriptions"

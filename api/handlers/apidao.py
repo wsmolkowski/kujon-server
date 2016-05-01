@@ -8,7 +8,6 @@ from commons.errors import ApiError
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
-import collections
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -32,7 +31,7 @@ class ApiDaoHandler(DatabaseHandler):
              constants.USOS_ID: usos_id}, LIMIT_FIELDS)
 
         if not course_doc:
-            raise ApiError("Przepraszamy, nie znaleźliśmy kursu", (course_id, term_id))
+            raise ApiError("Niestety nie znaleźliśmy kursu", (course_id, term_id))
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
@@ -100,8 +99,8 @@ class ApiDaoHandler(DatabaseHandler):
                 if not group_doc:
                     continue
                 else:
-                    group_doc['class_type'] = classtypes[group_doc['class_type_id']]
-                    del (group_doc['class_type_id'])
+                    group_doc[constants.CLASS_TYPE] = classtypes[group_doc[constants.CLASS_TYPE_ID]]
+                    del (group_doc[constants.CLASS_TYPE_ID])
                     groups.append(group_doc)
         course_doc['groups'] = groups
 
@@ -217,7 +216,6 @@ class ApiDaoHandler(DatabaseHandler):
             terms.append(year)
 
         # add groups to courses
-        courses = list()
         for term in course_doc['course_editions']:
             for course in course_doc['course_editions'][term]:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
@@ -229,16 +227,14 @@ class ApiDaoHandler(DatabaseHandler):
                 groups = list()
                 while (yield cursor.fetch_next):
                     group = cursor.next_object()
-                    group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
+                    group['class_type_id'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
-                course['course_name'] = course['course_name']['pl']
+                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
-                del course['term_id']
+                del course[constants.TERM_ID]
 
-        course_doc_editions = collections.OrderedDict(course_doc['course_editions'])
-        rev = collections.OrderedDict(reversed(list(course_doc_editions.items())))
-        raise gen.Return(rev)
+        raise gen.Return(course_doc['course_editions'])
 
     @gen.coroutine
     def api_grades(self):
@@ -253,13 +249,13 @@ class ApiDaoHandler(DatabaseHandler):
         cursor = self.db[constants.COLLECTION_GRADES].find(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
             ('grades', constants.TERM_ID, constants.COURSE_ID,
-             'course_name')).sort([(constants.TERM_ID, -1)])
+             constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
         new_grades = []
 
         while (yield cursor.fetch_next):
             grades_courseedition = cursor.next_object()
             grades_courseedition.pop(constants.MONGO_ID)
-            grades_courseedition['course_name'] = grades_courseedition['course_name']['pl']
+            grades_courseedition[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]['pl']
 
             # if there is no grades -> pass
             if len(grades_courseedition['grades']['course_grades']) == 0 and \
@@ -274,15 +270,15 @@ class ApiDaoHandler(DatabaseHandler):
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
                 u = yield unit_coursor.to_list(None)
                 for elem in u:
-                    unit_id = elem['unit_id']
-                    elem.pop('unit_id')
-                    elem.pop('created_time')
-                    elem.pop('update_time')
-                    elem.pop('term_id')
-                    elem.pop('usos_id')
+                    unit_id = elem[constants.UNIT_ID]
+                    elem.pop(constants.UNIT_ID)
+                    elem.pop(constants.CREATED_TIME)
+                    elem.pop(constants.UPDATE_TIME)
+                    elem.pop(constants.TERM_ID)
+                    elem.pop(constants.USOS_ID)
                     elem.pop('courses_classtypes')
                     elem.pop('groups')
-                    elem['classtype_id'] = classtypes[(elem['classtype_id'])]
+                    elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
                     units[unit_id] = elem
 
             if len(units) > 0:  # oceny czeciowe
@@ -291,22 +287,22 @@ class ApiDaoHandler(DatabaseHandler):
                     for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
                         elem = grades_courseedition['grades']['course_units_grades'][egzam][termin]
                         if int(egzam) in units:
-                            elem['class_type'] = units[int(egzam)]['classtype_id']
+                            elem[constants.CLASS_TYPE] = units[int(egzam)][constants.CLASS_TYPE_ID]
                         else:
-                            elem['class_type'] = None
-                        elem['value_description'] = elem['value_description']['pl']
+                            elem[constants.CLASS_TYPE] = None
+                        elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
                         elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                        elem['course_name'] = grades_courseedition['course_name']
-                        elem['term_id'] = grades_courseedition['term_id']
+                        elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
+                        elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
                         new_grades.append(elem)
             else:  # ocena koncowa bez czesciowych
                 for egzam in grades_courseedition['grades']['course_grades']:
                     elem = grades_courseedition['grades']['course_grades'][egzam]
-                    elem['value_description'] = elem['value_description']['pl']
-                    elem['class_type'] = constants.GRADE_FINAL
+                    elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
+                    elem[constants.CLASS_TYPE] = constants.GRADE_FINAL
                     elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                    elem['course_name'] = grades_courseedition['course_name']
-                    elem['term_id'] = grades_courseedition['term_id']
+                    elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
+                    elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
                     new_grades.append(elem)
 
         raise gen.Return(new_grades)
@@ -324,13 +320,13 @@ class ApiDaoHandler(DatabaseHandler):
         cursor = self.db[constants.COLLECTION_GRADES].find(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
             ('grades', constants.TERM_ID, constants.COURSE_ID,
-             'course_name')).sort([(constants.TERM_ID, -1)])
+             constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
         new_grades = []
 
         while (yield cursor.fetch_next):
             grades_courseedition = cursor.next_object()
             grades_courseedition.pop(constants.MONGO_ID)
-            grades_courseedition['course_name'] = grades_courseedition['course_name']['pl']
+            grades_courseedition[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]['pl']
 
             # if there is no grades -> pass
             if len(grades_courseedition['grades']['course_grades']) == 0 and \
@@ -345,15 +341,15 @@ class ApiDaoHandler(DatabaseHandler):
                 unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
                 u = yield unit_coursor.to_list(None)
                 for elem in u:
-                    unit_id = elem['unit_id']
-                    elem.pop('unit_id')
-                    elem.pop('created_time')
-                    elem.pop('update_time')
-                    elem.pop('term_id')
-                    elem.pop('usos_id')
+                    unit_id = elem[constants.UNIT_ID]
+                    elem.pop(constants.UNIT_ID)
+                    elem.pop(constants.CREATED_TIME)
+                    elem.pop(constants.UPDATE_TIME)
+                    elem.pop(constants.TERM_ID)
+                    elem.pop(constants.USOS_ID)
                     elem.pop('courses_classtypes')
                     elem.pop('groups')
-                    elem['classtype_id'] = classtypes[(elem['classtype_id'])]
+                    elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
                     units[unit_id] = elem
 
             if len(units) > 0:  # oceny czeciowe
@@ -362,25 +358,32 @@ class ApiDaoHandler(DatabaseHandler):
                     for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
                         elem = grades_courseedition['grades']['course_units_grades'][egzam][termin]
                         if int(egzam) in units:
-                            elem['class_type'] = units[int(egzam)]['classtype_id']
+                            elem[constants.CLASS_TYPE] = units[int(egzam)][constants.CLASS_TYPE_ID]
                         else:
-                            elem['class_type'] = None
-                        elem['value_description'] = elem['value_description']['pl']
+                            elem[constants.CLASS_TYPE] = None
+                        elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
                         elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                        elem['course_name'] = grades_courseedition['course_name']
-                        elem['term_id'] = grades_courseedition['term_id']
+                        elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
+                        elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
                         new_grades.append(elem)
             else:  # ocena koncowa bez czesciowych
                 for egzam in grades_courseedition['grades']['course_grades']:
                     elem = grades_courseedition['grades']['course_grades'][egzam]
-                    elem['value_description'] = elem['value_description']['pl']
-                    elem['class_type'] = constants.GRADE_FINAL
+                    elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
+                    elem[constants.CLASS_TYPE] = constants.GRADE_FINAL
                     elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                    elem['course_name'] = grades_courseedition['course_name']
-                    elem['term_id'] = grades_courseedition['term_id']
+                    elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
+                    elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
                     new_grades.append(elem)
 
-        raise gen.Return(new_grades)
+        # grouping grades by term
+        terms = dict()
+        for grade in new_grades:
+            if grade[constants.TERM_ID] not in terms:
+                terms[grade[constants.TERM_ID]] = list()
+            terms[grade[constants.TERM_ID]].append(grade)
+
+        raise gen.Return(terms)
 
     @gen.coroutine
     def api_grade(self, course_id, term_id):
@@ -408,7 +411,7 @@ class ApiDaoHandler(DatabaseHandler):
                 for elem in u:
                     unit_id = elem['unit_id']
                     elem.pop('unit_id')
-                    elem['classtype_id'] = classtypes[(elem['classtype_id'])]
+                    elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
                     units[unit_id] = elem
             if len(units) > 0:
                 grades['grades']['course_units'] = units
@@ -475,9 +478,9 @@ class ApiDaoHandler(DatabaseHandler):
                      constants.USOS_ID: self.user_doc[constants.USOS_ID]})
                 if course_doc:
                     course = dict()
-                    course['course_name'] = course_doc['course_name']['pl']
-                    course['course_id'] = course_doc['course_id']
-                    course['term_id'] = course_doc['term_id']
+                    course[constants.COURSE_NAME] = course_doc[constants.COURSE_NAME]['pl']
+                    course[constants.COURSE_ID] = course_doc[constants.COURSE_ID]
+                    course[constants.TERM_ID] = course_doc[constants.TERM_ID]
                     course_editions.append(course)
                 else:
                     course_editions.append("Dont have data for course and term..")
@@ -514,10 +517,12 @@ class ApiDaoHandler(DatabaseHandler):
 
     @gen.coroutine
     def api_tt(self, given_date):
-        given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
-        monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-        # next_monday = monday + timedelta(days=7)
-
+        try:
+            given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
+            monday = given_date - timedelta(days=(given_date.weekday()) % 7)
+        except Exception, ex:
+            self.error("Niepoprawny format daty - RRRR-MM-DD)")
+            return
 
         # get user data
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
@@ -555,11 +560,22 @@ class ApiDaoHandler(DatabaseHandler):
         # remove english names
         for t in tt_doc['tts']:
             t['name'] = t['name']['pl']
-            t['course_name'] = t['course_name']['pl']
+            t[constants.COURSE_NAME] = t[constants.COURSE_NAME]['pl']
             t['building_name'] = t['building_name']['pl']
             if t['type'] == 'classgroup':
                 t['type'] = 'zajęcia'
             elif t['type'] == 'exam':
                 t['type'] = 'egzamin'
 
+        # add lecturer information
+        for tt in tt_doc['tts']:
+            for lecturer in tt['lecturer_ids']:
+                lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+                    {constants.ID: str(lecturer)}, ('id','first_name','last_name','titles'))
+                if not lecturer_info:
+                    self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
+                else:
+                    tt['lecturers'] = list()
+                    tt['lecturers'].append(lecturer_info)
+            del(tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])

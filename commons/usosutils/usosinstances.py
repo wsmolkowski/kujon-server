@@ -99,14 +99,15 @@ USOSINSTANCES = [
      'contact': 'usosadmin@sgh.waw.pl, jinowol@sgh.waw.pl',
      'enabled': False
      },
-    {'usos_id': 'UP',   # z palca dodane
+    {'usos_id': 'UP',                   # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
-     'consumer_key': 'G7rJcLJeARevmqfTjB3R',
-     'consumer_secret': 'j339BwrnreUJynsCkrCQDEuYnfF4ZtkS6gqGsjea',
+     'consumer_key': 'rc3EFkbrSaTKD8fVbTPC',
+     'consumer_secret': 'z8ywNGmCYNdYB9JDHU6EAH2HSGgXebLZkytWGAcN',
      'contact': 'usos@up.wroc.pl',
-     'enabled': True
+     'enabled': False,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'PRZ',
      'name': 'Politechnika Rzeszowska',

@@ -126,6 +126,11 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(user_doc)
 
     @gen.coroutine
+    def find_user_info(self, id):
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: id})
+        raise gen.Return(user_info_doc)
+
+    @gen.coroutine
     def update(self, collection, _id, document):
         updated = yield self.db[collection].update({constants.MONGO_ID: _id}, document)
         logging.debug('collection: {0} updated: {1}'.format(collection, updated))
