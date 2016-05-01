@@ -99,8 +99,8 @@ class ApiDaoHandler(DatabaseHandler):
                 if not group_doc:
                     continue
                 else:
-                    group_doc[constants.CLASS_TYPE] = classtypes[group_doc[constants.CLASS_TYPE_ID]]
-                    del (group_doc[constants.CLASS_TYPE_ID])
+                    group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
+                    del (group_doc['class_type_id'])
                     groups.append(group_doc)
         course_doc['groups'] = groups
 
