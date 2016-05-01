@@ -161,7 +161,14 @@ class UsosRegisterHandler(BaseHandler):
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
                 settings.CALLBACK_URL)
 
-            client = oauth.Client(consumer, **self.oauth_parameters)
+            # is USOS have disabled SSL validation
+            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
+                params = self.oauth_parameters
+                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
+                client = oauth.Client(consumer, **params)
+            else:
+                client = oauth.Client(consumer, **self.oauth_parameters)
+
             resp, content = client.request(request_token_url)
         except Exception, ex:
             msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
@@ -227,7 +234,14 @@ class UsosVerificationHandler(BaseHandler):
             request_token.set_verifier(oauth_verifier)
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+            # is USOS have disabled SSL validation
+            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
+                params = self.oauth_parameters
+                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
+                client = oauth.Client(consumer, request_token,  **params)
+            else:
+                client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+
             access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, 'GET')
             if esp.status != 200:
@@ -298,7 +312,14 @@ class MobiAuthHandler(BaseHandler):
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
                 settings.CALLBACK_MOBI_URL + '?token=' + token)
 
-            client = oauth.Client(consumer, **self.oauth_parameters)
+            # is USOS have disabled SSL validation
+            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
+                params = self.oauth_parameters
+                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
+                client = oauth.Client(consumer, **params)
+            else:
+                client = oauth.Client(consumer, **self.oauth_parameters)
+
             resp, content = client.request(request_token_url)
         except Exception, ex:
             msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
@@ -377,7 +398,14 @@ class UsosMobiVerificationHandler(BaseHandler):
             request_token.set_verifier(oauth_verifier)
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+            # is USOS have disabled SSL validation
+            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
+                params = self.oauth_parameters
+                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
+                client = oauth.Client(consumer, request_token, **params)
+            else:
+                client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+
             access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
             esp, content = client.request(access_token_url, 'GET')
             if esp['status'] != '200':

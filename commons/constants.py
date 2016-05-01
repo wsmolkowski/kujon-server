@@ -7,6 +7,7 @@ USOS_ID = "usos_id"
 USER_ID = "user_id"
 MOBILE_ID = "mobile_id"
 COURSE_ID = "course_id"
+COURSE_NAME = "course_name"
 TERM_ID = "term_id"
 UNIT_ID = "unit_id"
 GROUP_ID = "course_unit_id"
@@ -15,6 +16,9 @@ PROGRAMME_ID = "programme_id"
 FACULTY_ID = "fac_id"
 TT_STARTDATE = "start_date"
 COURSE_EDITIONS = "course_editions"
+CLASS_TYPE = "class_type"
+CLASS_TYPE_ID = "classtype_id"
+VALUE_DESCRIPTION = "value_description"
 
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
@@ -110,3 +114,5 @@ GAUTH_TOKEN_TYPE = 'gauth_token_type'
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
 EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
+
+DISABLE_SSL_CERT_VALIDATION = 'disable_ssl_certificate_validation'

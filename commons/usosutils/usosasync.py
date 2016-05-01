@@ -9,9 +9,9 @@ from commons.errors import UsosAsyncError
 
 URL_TERM_INFO = '{0}services/terms/term?term_id={1}'
 URL_COURSES_UNITS = '{0}services/courses/unit?fields=id|course_name|course_id|term_id|groups|classtype_id|learning_outcomes|topics&unit_id={1}'
-URI_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
+URL_COURSES_CLASSTYPES = "{0}services/courses/classtypes_index"
 URL_NOTIFIER_STATUS = "{0}services/events/notifier_status"
-
+URL_FACULTIES_SEARCH = "{0}services/fac/search?lang=pl&fields=name|homepage_url|phone_numbers|postal_address"
 
 class UsosAsync(object):
     def __init__(self):
@@ -34,7 +34,18 @@ class UsosAsync(object):
 
     @tornado.gen.coroutine
     def get_courses_classtypes(self, usos_base_url, validate_cert=False):
-        url = URI_COURSES_CLASSTYPES.format(usos_base_url)
+        url = URL_COURSES_CLASSTYPES.format(usos_base_url)
+        request = self.build_request(url=url, validate_cert=validate_cert)
+
+        response = yield tornado.gen.Task(self.client.fetch, request)
+        if self.validate_response(response):
+            raise tornado.gen.Return(json.loads(response.body))
+        else:
+            raise UsosAsyncError(response, response, uri=request)
+
+    @tornado.gen.coroutine
+    def get_faculties(self, usos_base_url, validate_cert=False):
+        url = URL_FACULTIES_SEARCH.format(usos_base_url)
         request = self.build_request(url=url, validate_cert=validate_cert)
 
         response = yield tornado.gen.Task(self.client.fetch, request)

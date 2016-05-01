@@ -9,18 +9,18 @@ USOSINSTANCES = [
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'enabled': True,
     },
-    {'usos_id': 'UJ',
+    {'usos_id': 'UJ',             #fiuty zablokowali dostep dla zewnetrznych aplikacji
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
-     'consumer_key': 'wHSnLgXLQHaZWsu4rPyK',
-     'consumer_secret': 'AEdQnnZpeNUYNjNuw4AtRvvXBxsuJMkWqEACxwU6',
+     'consumer_key': 'QbYhMjzfXUmZr77nQ2KM',
+     'consumer_secret': 'rhJnuea4gPbqHJSw5Qy2JFwjeP3ZmyhtwhwTeWtm',
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
-     'enabled': True,
+     'enabled': False,
     },
     {'usos_id': 'UAM',
      'name': 'Uniwersytet im Adama Mickiewicza w Poznaniu',
-     'url': 'https://api.usos.tu.kielce.pl/',
+     'url': 'https://usosapps.amu.edu.pl/',
      'logo': '/static/img/logo/logo-uam-64x64.jpg',
      'consumer_key': 'aUvvxdTH9kLj7VqNxqcy',
      'consumer_secret': 'RSE9tqZpEdzqQxjQBVvqxJPCjy44e6JDY6LtZ3HH',
@@ -99,14 +99,15 @@ USOSINSTANCES = [
      'contact': 'usosadmin@sgh.waw.pl, jinowol@sgh.waw.pl',
      'enabled': False
      },
-    {'usos_id': 'UP',   # z palca dodane
+    {'usos_id': 'UP',                   # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
-     'consumer_key': 'G7rJcLJeARevmqfTjB3R',
-     'consumer_secret': 'j339BwrnreUJynsCkrCQDEuYnfF4ZtkS6gqGsjea',
+     'consumer_key': 'rc3EFkbrSaTKD8fVbTPC',
+     'consumer_secret': 'z8ywNGmCYNdYB9JDHU6EAH2HSGgXebLZkytWGAcN',
      'contact': 'usos@up.wroc.pl',
-     'enabled': True
+     'enabled': False,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'PRZ',
      'name': 'Politechnika Rzeszowska',
@@ -193,10 +194,11 @@ USOSINSTANCES = [
      'name': 'Akademia Wychowania Fizycznego w Katowicach',
      'url': 'https://usosapps.awf.katowice.pl/',
      'logo': '/static/img/logo/logo-awfkat-64x64.jpg',
-     'consumer_key': 'sqG8C6qpcfeP7WxRfY5Q',
-     'consumer_secret': 'TchQmJhquFhgYs2aZWrRHgZQjkc87h4gzSuNdeWw',
+     'consumer_key': 'QdKazkhftM2Zj2CBXeYB',
+     'consumer_secret': 'mSMbUrdHKXq9RA8NKcz5ZPUQZ932UW9bKPV7wek3',
      'contact': 's.kwiatkowski@awf.katowice.pl, b.czerwinski@awf.katowice.pl',
      'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'CHAT',  # z palca dodane
      'name': 'Chrześcijańska Akademia Teologiczna w Warszawie',

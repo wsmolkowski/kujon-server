@@ -20,6 +20,19 @@ class GradesForUserApi(BaseHandler):
             yield self.exc(ex)
 
 
+class GradesForUserByTermApi(BaseHandler):
+    @decorators.authenticated
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+
+        try:
+            grades_doc = yield self.api_grades_byterm()
+            self.success(grades_doc, cache_age=86400)
+        except Exception, ex:
+            yield self.exc(ex)
+
+
 class GradesForCourseAndTermApi(BaseHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
