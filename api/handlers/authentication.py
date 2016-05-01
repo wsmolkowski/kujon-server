@@ -2,12 +2,12 @@
 
 import json
 import logging
-from datetime import datetime, timedelta
 
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
+from datetime import datetime, timedelta
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -287,13 +287,6 @@ class MobiAuthHandler(BaseHandler):
 
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
-        user_doc = yield self.cookie_user_email(email)
-
-        user_exists = yield self.user_exists(email, usos_id)
-        if user_exists:
-            self.error('User already registered with email: {0} and USOS: {1}'.format(email, usos_id))
-            return
-
         try:
             http_client = self.get_auth_http_client()
             tokeninfo = yield http_client.fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token)
@@ -304,6 +297,12 @@ class MobiAuthHandler(BaseHandler):
         except (Exception, tornado.web.HTTPError), ex:
             self.error('Google token verification failure. {0}'.format(ex.message))
             return
+
+        user_doc = yield self.user_exists(email, usos_id)
+        if user_doc:
+            if 'usos_paired' in user_doc and user_doc['usos_paired']:
+                self.success('User already paired with {0}.'.format(usos_id))
+                return
 
         try:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
