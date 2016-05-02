@@ -118,9 +118,9 @@ class ApiDaoHandler(DatabaseHandler):
 
     @gen.coroutine
     def api_course(self, course_id):
-        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({constants.COURSE_ID: course_id,
-                                                                           constants.USOS_ID: self.user_doc[
-                                                                               constants.USOS_ID]}, LIMIT_FIELDS)
+
+        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({
+                constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             raise ApiError("Nie znaleźliśmy danych kursu.", (course_id,))
