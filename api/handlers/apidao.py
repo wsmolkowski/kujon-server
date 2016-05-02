@@ -40,39 +40,42 @@ class ApiDaoHandler(DatabaseHandler):
                             access_token_secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
 
         if not course_doc:
-            # try to fetch from usos..
-            try:
-                course_doc = client.course(course_id)
-                if course_doc:
-                    course_doc[constants.COURSE_ID] = course_doc.pop(constants.ID)
-                    course_doc[constants.CREATED_TIME] = datetime.now()
-                    course_doc[constants.UPDATE_TIME] = datetime.now()
-                    course_doc[constants.USOS_ID] = usos[constants.USOS_ID]
-                    yield self.db[constants.COLLECTION_COURSES].insert(course_doc)
-                else:
-                    raise ApiError("Nie znaleźliśmy kursu", course_id)
-            except Exception, ex:
-                raise ApiError("Nie znaleźliśmy kursu błąd {0}".format(ex.message), course_id)
-                return
+            raise ApiError("Nie znaleźliśmy kursu ", course_id)
+            return
+            # TODO: Jeżeli nie ma kursu ściągnietego crawlerem - pobrać go jak poniżej ale nie tak tylko jakoś wywołać crawler i czekać na zwrotkę
+            # try:
+            #     course_doc = client.course(course_id)
+            #     if course_doc:
+            #         course_doc[constants.COURSE_ID] = course_doc.pop(constants.ID)
+            #         course_doc[constants.CREATED_TIME] = datetime.now()
+            #         course_doc[constants.UPDATE_TIME] = datetime.now()
+            #         course_doc[constants.USOS_ID] = usos[constants.USOS_ID]
+            #         yield self.db[constants.COLLECTION_COURSES].insert(course_doc)
+            #     else:
+            #         raise ApiError("Nie znaleźliśmy kursu", course_id)
+            # except Exception, ex:
+            #     raise ApiError("Nie znaleźliśmy kursu błąd {0}".format(ex.message), course_id)
+            #     return
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos[constants.USOS_ID],
              constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
         if not course_edition_doc:
-            # try to fetch from usos
-            try:
-                course_edition_doc = client.course_edition(course_id, term_id, fetch_participants=False)
-                if course_edition_doc:
-                    course_edition_doc[constants.CREATED_TIME] = datetime.now()
-                    course_edition_doc[constants.UPDATE_TIME] = datetime.now()
-                    course_edition_doc[constants.USOS_ID] = usos[constants.USOS_ID]
-                    yield self.db[constants.COLLECTION_COURSE_EDITION].insert(course_edition_doc)
-                else:
-                    raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
-            except Exception:
-                raise ApiError("Nie znaleźliśmy edycji kursu bład", (course_id, term_id))
-                return
+            raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
+            # # TODO: Jeżeli nie ma kursu edycji ściągniąć crawlerem - pobrać go jak poniżej ale nie tak tylko jakoś wywołać crawler i czekać na zwrotkę
+            # try:
+            #     course_edition_doc = client.course_edition(course_id, term_id, fetch_participants=False)
+            #     if course_edition_doc:
+            #         course_edition_doc[constants.CREATED_TIME] = datetime.now()
+            #         course_edition_doc[constants.UPDATE_TIME] = datetime.now()
+            #         course_edition_doc[constants.USOS_ID] = usos[constants.USOS_ID]
+            #         yield self.db[constants.COLLECTION_COURSE_EDITION].insert(course_edition_doc)
+            #     else:
+            #         raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
+            # except Exception:
+            #     raise ApiError("Nie znaleźliśmy edycji kursu bład", (course_id, term_id))
+            #     return
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: self.user_doc[constants.MONGO_ID]})
