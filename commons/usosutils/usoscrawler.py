@@ -284,28 +284,37 @@ class UsosCrawler(object):
                     constants.COURSE_ID], course_edition[constants.TERM_ID])
 
     @gen.coroutine
-    def __build_courses(self, client, usos, crawl_time):
+    def __build_courses_and_rest_of_existing_courses(self, client, usos, crawl_time):
 
         courses = list()
+        courses_editions = list()
+        existing_courses_editions = list()
 
-        # get course_edition
-        for course_edition in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
-            if course_edition[constants.COURSE_ID] not in courses:
-                courses.append(course_edition[constants.COURSE_ID])
+        # get courses that exists in mongo and remove from list to fetch
+        existing_courses = self.dao.get_courses(usos[constants.USOS_ID], constants.COURSE_ID)
 
-        # get courses conducted by all lecturers
+        # get courses from course_edition
+        for ce in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
+            if ce[constants.COURSE_ID] not in existing_courses:
+                existing_courses.append(ce[constants.COURSE_ID])
+                courses.append(ce[constants.COURSE_ID])
+            if {ce[constants.COURSE_ID]: ce[constants.TERM_ID]} not in existing_courses_editions:
+                existing_courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
+                courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
+
+        # get courses_editions conducted by all lecturers
         for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
             if len(course_conducted['course_editions_conducted']) > 0:
                 for courseedition in course_conducted['course_editions_conducted']:
                     course_id, term_id = courseedition['id'].split('|')
-                    if course_id not in courses:
+                    if course_id not in existing_courses:
+                        existing_courses.append(course_id)
                         courses.append(course_id)
+                    if {course_id: term_id} not in existing_courses_editions:
+                        existing_courses_editions.append({course_id: term_id})
+                        courses_editions.append({course_id: term_id})
 
-        # get courses that exists in mongo and remove from list to fetch
-        existing_courses = self.dao.get_courses(usos[constants.USOS_ID], constants.COURSE_ID)
-        courses = list(set(courses) - set(existing_courses))
-
-        # get the rest of courses on course list from usos
+        # get courses from course_edition
         for course in courses:
             try:
                 result = client.course(course)
@@ -325,8 +334,31 @@ class UsosCrawler(object):
                 result['bibliography'] = result['bibliography']['pl']
 
                 self.dao.insert(constants.COLLECTION_COURSES, result)
+
             else:
                 logging.warn("no course for course_id: %r.", course)
+
+        users_to_fetch = list()
+        # get course_edition for lecturers
+        if len(courses_editions) > 0:
+            for ca in courses_editions:
+                for course_id, term_id in ca.items():
+                    continue
+                try:
+                    result = client.course_edition(course_id, term_id, fetch_participants=False)
+                except UsosClientError, ex:
+                    self._exc(ex)
+                    continue
+
+                if result:
+                    result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                    self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+                else:
+                    logging.warn("no course_edition for course_id: %r term_id: %r", course_id, term_id)
+
+                # get lecturers for rest of given course_edition
+                self.__find_users_related(users_to_fetch, result)
+        self.__build_users_info(client, crawl_time, users_to_fetch, usos)
 
     @gen.coroutine
     def __build_faculties(self, client, usos, crawl_time):
@@ -438,10 +470,12 @@ class UsosCrawler(object):
     def __find_users_related(users, result):
         if result and 'participants' in result:
             participants = result.pop('participants')
-            lecturers = result.pop('lecturers')
             for p in participants:
                 if p not in users:
                     users.append(p)
+
+        if result and 'lecturers' in result:
+            lecturers = result.pop('lecturers')
             for l in lecturers:
                 if l not in users:
                     users.append(l)
@@ -481,7 +515,7 @@ class UsosCrawler(object):
             self.__build_terms(client, user_id, usos, crawl_time)
             self.__build_course_edition(client, user_id, usos, crawl_time)
             self.__process_user_data(client, user_id, usos, crawl_time)
-            self.__build_courses(client, usos, crawl_time)
+            self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
             self.__build_faculties(client, usos, crawl_time)
         except Exception, ex:
             self._exc(ex)
@@ -502,7 +536,7 @@ class UsosCrawler(object):
                     self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
-                    self.__build_courses(client, usos, crawl_time)
+                    self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
                     self.__build_faculties(client, usos, crawl_time)
             except Exception, ex:
                 self._exc(ex)
