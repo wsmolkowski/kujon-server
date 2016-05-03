@@ -1,4 +1,14 @@
 # coding=UTF-8
+
+# brakujące:
+# ur.krakow.pl -> brak wystawionego API
+# aps.edu.pl -> brak wystawionego API
+# po.edu.pl -> brak wystawionego API
+# up.wroc.pl -> brak wystaionego API
+# prawowroclaw.edu.pl -> brak wystawionego API
+# wsb.net.pl -> brak wystawionego API
+# ajd.czest.pl -> brak wystawionego API
+
 USOSINSTANCES = [
     {'usos_id': 'UW',
      'name': 'Uniwersytet Warszawski',
@@ -9,7 +19,7 @@ USOSINSTANCES = [
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'enabled': True,
     },
-    {'usos_id': 'UJ',             #fiuty zablokowali dostep dla zewnetrznych aplikacji
+    {'usos_id': 'UJ',                           #fiuty zablokowali dostep dla zewnetrznych aplikacji
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
@@ -70,6 +80,15 @@ USOSINSTANCES = [
      'consumer_key': 'wJ64nBC9QszCtcWbMhZ2',
      'consumer_secret': 'LUUcUspRZBd5cxqRSaU2JgUsL2WgEwetVjEyw38J',
      'contact': 'mateusz.falfus@us.edu.pl, lukasz.wachstiel@us.edu.pl',
+     'enabled': True,
+     },
+    {'usos_id': 'UMCS',
+     'name': 'Uniwersytet Marii Curie-Skłodowskiej w Lublinie',
+     'url': 'https://apps.umcs.pl',
+     'logo': '/static/img/logo/logo-umcs-64x64.jpg',
+     'consumer_key': 'M9ZfkBFrrRULYfKEJJSr',
+     'consumer_secret': 'zApXh56mZ42wDz7fSTSKQUX5fqtaUfxP6mEw8Yrd',
+     'contact': 'usosweb@umcs.pl',
      'enabled': True,
      },
     {'usos_id': 'UWM',
@@ -263,6 +282,15 @@ USOSINSTANCES = [
      'contact': 'l.grzybek@pwsz.elblag.pl, p.kwasniewski@pwsz.elblag.pl',
      'enabled': True,
      },
+    {'usos_id': 'EUHE',
+     'name': 'Elbląska Uzelnia Humanistyczno-Ekonomiczna',
+     'url': 'https://usosapps.euh-e.edu.pl/',
+     'logo': '/static/img/logo/logo-euhe-64x64.jpg',
+     'consumer_key': '5fWZYAdbSEkhvGXWTgmM',
+     'consumer_secret': 'PhZjKtKvc553Epw7GZEtr2j6ZnEYkZuZFGSKLMvJ',
+     'contact': 'admin@euh-e.edu.pl',
+     'enabled': True,
+     },
     {'usos_id': 'UMFC',  # z palca dodane
      'name': 'Uniwersytet Muzyczny Fryderyka Chopina w Warszawie',
      'url': 'https://usosapps.chopin.edu.pl/',
@@ -272,13 +300,22 @@ USOSINSTANCES = [
      'contact': 'maksymilian.szpura@adm.uw.edu.pl',
      'enabled': True
      },
-    {'usos_id': 'DEMO',
-     'name': 'Uniwersytet DEMO w Nibylandi',
-     'url': 'https://usosapps.demo.usos.edu.pl/',
-     'logo': '/static/img/logo/logo-demo-64x64.jpg',
-     'consumer_key': 'u9xbMGsj9rfER3QBPCBR',
-     'consumer_secret': 'f6TDvucnwDUJ8ZX7HCFa4kvNEFnE7MzByezgBy5v',
-     'contact': 'dsksysadm@adm.uw.edu.pl',
+    {'usos_id': 'UPH',
+     'name': 'Uniwersytet Przyrodniczo-Humanistyczny w Siedlcach',
+     'url': 'https://usosapps.uph.edu.pl/',
+     'logo': '/static/img/logo/logo-uph-64x64.jpg',
+     'consumer_key': 'QmeQednVWmpYgSrAYWYc',
+     'consumer_secret': '29YshXKxtAjPyz2UGkEa5XJ7DWDkqw5dESeWu92Y',
+     'contact': 'usosweb@uph.edu.pl',
      'enabled': True
      },
+     {'usos_id': 'DEMO',
+      'name': 'Uniwersytet DEMO w Nibylandi',
+      'url': 'https://usosapps.demo.usos.edu.pl/',
+      'logo': '/static/img/logo/logo-demo-64x64.jpg',
+      'consumer_key': 'u9xbMGsj9rfER3QBPCBR',
+      'consumer_secret': 'f6TDvucnwDUJ8ZX7HCFa4kvNEFnE7MzByezgBy5v',
+      'contact': 'dsksysadm@adm.uw.edu.pl',
+      'enabled': True
+    },
 ]
