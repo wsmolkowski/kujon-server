@@ -192,6 +192,10 @@ class UsosCrawler(object):
                 result['mode_of_studies'] = result['mode_of_studies']['pl']
                 result['level_of_studies'] = result['level_of_studies']['pl']
                 result['duration'] = result['duration']['pl']
+                if 'faculty' in result and 'name' in result['faculty']:
+                    result['faculty']['name'] = result['faculty']['name']['pl']
+                    result['faculty'][constants.FACULTY_ID] = result['faculty']['id']
+                    del(result['faculty']['id'])
 
                 self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
             else:
