@@ -28,7 +28,7 @@ class ApiError(Exception):
             return self.msg
 
     def __repr__(self):
-        return self.message
+        return str(self.message)
 
     __str__ = __repr__
 
