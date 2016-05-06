@@ -4,9 +4,8 @@ import copy
 import urlparse
 
 import oauth2 as oauth
-import tornado.gen
-import tornado.web
 from bson import json_util
+from tornado import gen, web, escape
 from tornado.escape import json_decode
 
 from apidao import ApiDaoHandler
@@ -33,7 +32,7 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
     def get_auth_http_client():
         return utils.http_client()
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def get_current_user(self):
         response = None
         if hasattr(self, 'user_doc') and self.user_doc:
@@ -56,9 +55,9 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
                     user_doc = yield self.current_user(header_email)
                     response = user_doc
 
-        raise tornado.gen.Return(response)
+        raise gen.Return(response)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def config_data(self):
         user = yield self.get_current_user()
         if user and constants.USOS_PAIRED in user.keys():
@@ -72,7 +71,7 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
             'USER_LOGGED': True if user else False
         }
 
-        raise tornado.gen.Return(config)
+        raise gen.Return(config)
 
     @property
     def oauth_parameters(self):
@@ -90,7 +89,7 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
 
     _usoses = list()
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def get_usoses(self, showtokens):
 
         if not self._usoses:
@@ -113,16 +112,16 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
                 usos.pop("enabled")
                 usos.pop("contact")
                 usos.pop("url")
-        raise tornado.gen.Return(result_usoses)
+        raise gen.Return(result_usoses)
 
-    @tornado.gen.coroutine
+    @gen.coroutine
     def get_usos(self, key, value):
         usoses = yield self.get_usoses(showtokens=True)
 
         for u in usoses:
             if u[key] == value:
-                raise tornado.gen.Return(u)
-        raise tornado.gen.Return(None)
+                raise gen.Return(u)
+        raise gen.Return(None)
 
     @staticmethod
     def get_token(content):
@@ -137,29 +136,28 @@ class BaseHandler(ApiDaoHandler, JSendMixin):
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE,
-                               tornado.escape.json_encode(json_util.dumps(user_doc)),
+                               escape.json_encode(json_util.dumps(user_doc)),
                                constants.COOKIE_EXPIRES_DAYS)
 
 
 class UsosesApi(BaseHandler):
-
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         data = yield self.get_usoses(showtokens=False)
         self.success(data, cache_age=2592000)
 
 
 class DefaultErrorHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         self.fail(message='Strona o podanym adresie nie istnieje.', code=404)
 
 
 class ApplicationConfigHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         config = yield self.config_data()
         self.success(data=config)

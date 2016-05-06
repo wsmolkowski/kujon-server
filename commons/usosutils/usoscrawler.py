@@ -328,17 +328,7 @@ class UsosCrawler(object):
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.COURSE_ID] = result.pop(constants.ID)
-
-                # strip english names
-                result['name'] = result['name']['pl']
-                result['learning_outcomes'] = result['learning_outcomes']['pl']
-                result['description'] = result['description']['pl']
-                result['assessment_criteria'] = result['assessment_criteria']['pl']
-                result['bibliography'] = result['bibliography']['pl']
-
                 self.dao.insert(constants.COLLECTION_COURSES, result)
-
             else:
                 logging.warn("no course for course_id: %r.", course)
 
@@ -349,7 +339,7 @@ class UsosCrawler(object):
                 for course_id, term_id in ca.items():
                     continue
                 try:
-                    result = client.course_edition(course_id, term_id, fetch_participants=False)
+                    result = client.course_edition(course_id, term_id)
                 except UsosClientError, ex:
                     self._exc(ex)
                     continue

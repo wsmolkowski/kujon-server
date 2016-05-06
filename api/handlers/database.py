@@ -31,35 +31,28 @@ class DatabaseHandler(RequestHandler):
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
-        user_archive = yield self.db[constants.COLLECTION_USERS_ARCHIVE].insert(user_doc)
-        logging.debug('archived user data with id {0}'.format(user_archive))
+        yield self.insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
 
         result = yield self.db[constants.COLLECTION_USERS].remove({constants.MONGO_ID: user_id})
 
         logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
             constants.COLLECTION_USERS, user_id, result))
 
-        result = yield self.db[constants.COLLECTION_JOBS_QUEUE].insert({
-            constants.USER_ID: user_id,
-            constants.CREATED_TIME: datetime.now(),
-            constants.UPDATE_TIME: None,
-            constants.JOB_MESSAGE: None,
-            constants.JOB_STATUS: constants.JOB_PENDING,
-            constants.JOB_TYPE: 'unsubscribe_usos'
-        })
+        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
+                          {constants.USER_ID: user_id,
+                           constants.CREATED_TIME: datetime.now(),
+                           constants.UPDATE_TIME: None,
+                           constants.JOB_MESSAGE: None,
+                           constants.JOB_STATUS: constants.JOB_PENDING,
+                           constants.JOB_TYPE: 'unsubscribe_usos'})
 
-        logging.debug('created job for un subscribe USOS {0}'.format(result))
-
-        result = yield self.db[constants.COLLECTION_JOBS_QUEUE].insert({
-            constants.USER_ID: user_id,
-            constants.CREATED_TIME: datetime.now(),
-            constants.UPDATE_TIME: None,
-            constants.JOB_MESSAGE: None,
-            constants.JOB_STATUS: constants.JOB_PENDING,
-            constants.JOB_TYPE: 'archive_user'
-        })
-
-        logging.debug('created job for removing user data {0}'.format(result))
+        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
+                          {constants.USER_ID: user_id,
+                           constants.CREATED_TIME: datetime.now(),
+                           constants.UPDATE_TIME: None,
+                           constants.JOB_MESSAGE: None,
+                           constants.JOB_STATUS: constants.JOB_PENDING,
+                           constants.JOB_TYPE: 'archive_user'})
 
         yield self.email_archive_user(user_doc[constants.USER_EMAIL])
 
@@ -82,7 +75,7 @@ class DatabaseHandler(RequestHandler):
             '\nZespół {2}\n'.format(usos_doc['name'], settings.SMTP_EMAIL, settings.PROJECT_TITLE)
         )
 
-        yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
+        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def email_archive_user(self, recipient):
@@ -98,7 +91,7 @@ class DatabaseHandler(RequestHandler):
             '\nZespół {1}\n'.format(settings.SMTP_EMAIL, settings.PROJECT_TITLE)
         )
 
-        yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
+        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def find_user(self):

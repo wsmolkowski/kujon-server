@@ -15,7 +15,7 @@ from tornado.options import parse_command_line
 from commons import settings, constants, utils
 
 QUEUE_MAXSIZE = 100
-SLEEP = 1
+CONCURRENT = 4
 
 
 class NotificatorQueue(object):
@@ -23,14 +23,15 @@ class NotificatorQueue(object):
     _NOTIFICATION_ID = settings.APPLICATION_ID
     _NOTIFICATION_URL = settings.NOTIFICATION_URL
 
-    def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
+    def __init__(self):
         super(NotificatorQueue, self).__init__()
 
-        self._queue = queues.Queue(maxsize=queue_maxsize)
-        self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
+        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.running = True
 
     @gen.coroutine
-    def __load_work(self):
+    def load_work(self):
 
         # not_all = notification_all()
         # try:
@@ -42,7 +43,7 @@ class NotificatorQueue(object):
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
 
-        cursor = self._db[constants.COLLECTION_NOTIFICATION_QUEUE].find(
+        cursor = self.db[constants.COLLECTION_NOTIFICATION_QUEUE].find(
             {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
         ).sort([(constants.UPDATE_TIME, -1)])
 
@@ -51,26 +52,26 @@ class NotificatorQueue(object):
             yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
-        cursor = self._db[constants.COLLECTION_NOTIFICATION_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
+        cursor = self.db[constants.COLLECTION_NOTIFICATION_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
             logging.debug('putting job to queue with ID: {0}'.format(job[constants.MONGO_ID]))
-            yield self._queue.put(job)
+            yield self.queue.put(job)
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
         # insert current job to history collection
         old = job.copy()
         old.pop(constants.MONGO_ID)
-        yield self._db[constants.COLLECTION_NOTIFICATION_QUEUE_LOG].insert(old)
+        yield self.db[constants.COLLECTION_NOTIFICATION_QUEUE_LOG].insert(old)
 
         # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
         job[constants.JOB_MESSAGE] = message
 
-        update = yield self._db[constants.COLLECTION_NOTIFICATION_QUEUE].update(
+        update = yield self.db[constants.COLLECTION_NOTIFICATION_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.debug(
@@ -104,30 +105,31 @@ class NotificatorQueue(object):
     @gen.coroutine
     def worker(self):
 
-        while True:
+        while self.running:
+            job = yield self.queue.get()
+            logging.debug("consuming queue job {0}".format(job))
 
-            if self._queue.empty():
-                yield gen.sleep(SLEEP)
-                yield self.__load_work()
+            try:
+                yield self.update_job(job, constants.JOB_START)
+                yield self.process_job(job)
+                yield self.update_job(job, constants.JOB_FINISH)
+            except Exception, ex:
+                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                logging.exception(msg)
+                yield self.update_job(job, constants.JOB_FAIL, msg)
+            finally:
+                self.queue.task_done()
 
-            else:
-                job = yield self._queue.get()
-                logging.debug("consuming queue job {0}".format(job))
+    @gen.coroutine
+    def workers(self):
+        ioloop.IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(CONCURRENT)]
+        yield futures
 
-                try:
-                    yield self.update_job(job, constants.JOB_START)
-
-                    yield self.process_job(job)
-
-                    yield self.update_job(job, constants.JOB_FINISH)
-
-                except Exception, ex:
-                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
-                    logging.exception(msg)
-
-                    yield self.update_job(job, constants.JOB_FAIL, msg)
-                finally:
-                    self._queue.task_done()
+    @gen.coroutine
+    def producer(self):
+        while self.running:
+            yield self.load_work()
 
 
 def notification_user(user_id, message=None):
@@ -156,7 +158,7 @@ if __name__ == '__main__':
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    mq = NotificatorQueue()
+    notificatorQueue = NotificatorQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mq.worker)
+    io_loop.run_sync(notificatorQueue.workers)

@@ -1,4 +1,5 @@
 # coding=UTF-8
+# http://stackoverflow.com/questions/37068709/python-tornado-queue-toro-task-consuming-in-parallel
 
 import logging
 from datetime import timedelta, datetime
@@ -11,7 +12,7 @@ from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
-SLEEP = 1
+CONCURRENT = 4
 
 
 class MongoDbQueue(object):
@@ -19,12 +20,12 @@ class MongoDbQueue(object):
         super(MongoDbQueue, self).__init__()
 
         self.crawler = UsosCrawler()
-        self._queue = queues.Queue(maxsize=queue_maxsize)
-
+        self.queue = queues.Queue(maxsize=queue_maxsize)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.running = True
 
     @gen.coroutine
-    def __load_work(self):
+    def load_work(self):
 
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
@@ -42,9 +43,10 @@ class MongoDbQueue(object):
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} and type: {1}'.format(job[constants.USER_ID],
-                                                                                    job[constants.JOB_TYPE]))
-            yield self._queue.put(job)
+            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
+                                                                                                job[constants.JOB_TYPE],
+                                                                                                self.queue.qsize()))
+            yield self.queue.put(job)
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -85,7 +87,8 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug("processing job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
+        logging.debug("processing job: {0} with job type: {1} queue size: {2}".format(
+            job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize()))
 
         if job[constants.JOB_TYPE] == 'initial_user_crawl':
             yield self.crawler.initial_user_crawl(job[constants.USER_ID])
@@ -102,31 +105,31 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def worker(self):
+        while self.running:
+            job = yield self.queue.get()
+            logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self.queue.qsize()))
 
-        while True:
+            try:
+                yield self.update_job(job, constants.JOB_START)
+                yield self.process_job(job)
+                yield self.update_job(job, constants.JOB_FINISH)
+            except Exception, ex:
+                msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
+                logging.exception(msg)
+                yield self.update_job(job, constants.JOB_FAIL, msg)
+            finally:
+                self.queue.task_done()
 
-            if self._queue.empty():
-                yield gen.sleep(SLEEP)
-                yield self.__load_work()
+    @gen.coroutine
+    def workers(self):
+        ioloop.IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(CONCURRENT)]
+        yield futures
 
-            else:
-                job = yield self._queue.get()
-                logging.debug("consuming queue job {0}".format(job))
-
-                try:
-                    yield self.update_job(job, constants.JOB_START)
-
-                    yield self.process_job(job)
-
-                    yield self.update_job(job, constants.JOB_FINISH)
-
-                except Exception, ex:
-                    msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
-                    logging.exception(msg)
-
-                    yield self.update_job(job, constants.JOB_FAIL, msg)
-                finally:
-                    self._queue.task_done()
+    @gen.coroutine
+    def producer(self):
+        while self.running:
+            yield self.load_work()
 
 
 if __name__ == '__main__':
@@ -135,7 +138,7 @@ if __name__ == '__main__':
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    mq = MongoDbQueue()
+    mongoQueue = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mq.worker)
+    io_loop.run_sync(mongoQueue.workers)
