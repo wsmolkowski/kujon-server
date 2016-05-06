@@ -1,5 +1,7 @@
 import json
 
+import constants
+
 
 class Error(Exception):
     """Base error for this module."""
@@ -10,7 +12,7 @@ class ApiError(Exception):
     """Api Errors"""
 
     def __init__(self, msg, parameters=[]):
-        self.msg = msg
+        self.msg = msg.encode(constants.ENCODING)
         self.parameters = parameters
 
     def data(self):
@@ -26,7 +28,7 @@ class ApiError(Exception):
             return self.msg
 
     def __repr__(self):
-        return self.message
+        return str(self.message)
 
     __str__ = __repr__
 
