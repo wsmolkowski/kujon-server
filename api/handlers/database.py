@@ -27,7 +27,7 @@ class DatabaseHandler(RequestHandler):
 
         if not user_doc:
             logging.debug('cannot archive user which does not exists {0}'.format(user_id))
-            gen.Return()
+            raise gen.Return()
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
