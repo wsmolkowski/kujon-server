@@ -4,7 +4,7 @@ from base64 import b64encode
 
 import oauth2 as oauth
 
-from commons import utils, settings
+from commons import utils, settings, constants
 from commons.errors import UsosClientError
 
 URI_USER_INFO = u"services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
@@ -122,7 +122,7 @@ class UsosClient(object):
         else:
             raise UsosClientError(code, body, uri=request)
 
-    def course_edition(self, course_id, term_id, fetch_participants):
+    def course_edition(self, course_id, term_id, fetch_participants=False):
         if fetch_participants:
             request = u"{0}{1}".format(self.base_url,
                                        URI_COURSE_EDITION_INFO.format(course_id, urllib.quote(term_id, safe='')))
@@ -141,7 +141,17 @@ class UsosClient(object):
         request = u"{0}{1}".format(self.base_url, URI_COURSE.format(course_id))
         code, body = self.client.request(request)
         if self._validate(code):
-            return json.loads(body)
+            result = json.loads(body)
+            result[constants.COURSE_ID] = result.pop(constants.ID)
+
+            # strip english names
+            result['name'] = result['name']['pl']
+            result['learning_outcomes'] = result['learning_outcomes']['pl']
+            result['description'] = result['description']['pl']
+            result['assessment_criteria'] = result['assessment_criteria']['pl']
+            result['bibliography'] = result['bibliography']['pl']
+
+            return result
         else:
             raise UsosClientError(code, body, uri=request, parameters=[course_id])
 

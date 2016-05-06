@@ -1,14 +1,16 @@
 # coding=UTF-8
 
 from datetime import date, timedelta
+
 from bson.objectid import ObjectId
 from tornado import gen
+
 from commons import constants, helpers, settings
 from commons.errors import ApiError
+from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
-from datetime import datetime
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -23,8 +25,7 @@ LIMIT_FIELDS_USER = (
 LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
 
 
-class ApiDaoHandler(DatabaseHandler):
-
+class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course_term(self, course_id, term_id):
 
@@ -33,49 +34,22 @@ class ApiDaoHandler(DatabaseHandler):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos[constants.USOS_ID]}, LIMIT_FIELDS)
 
-        client = UsosClient(base_url=usos[constants.USOS_URL],
-                            consumer_key=usos[constants.CONSUMER_KEY],
-                            consumer_secret=usos[constants.CONSUMER_SECRET],
-                            access_token_key=self.user_doc[constants.ACCESS_TOKEN_KEY],
-                            access_token_secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
-
         if not course_doc:
-            raise ApiError("Nie znaleźliśmy kursu ", course_id)
-            return
-            # TODO: Jeżeli nie ma kursu ściągnietego crawlerem - pobrać go jak poniżej ale nie tak tylko jakoś wywołać crawler i czekać na zwrotkę
-            # try:
-            #     course_doc = client.course(course_id)
-            #     if course_doc:
-            #         course_doc[constants.COURSE_ID] = course_doc.pop(constants.ID)
-            #         course_doc[constants.CREATED_TIME] = datetime.now()
-            #         course_doc[constants.UPDATE_TIME] = datetime.now()
-            #         course_doc[constants.USOS_ID] = usos[constants.USOS_ID]
-            #         yield self.db[constants.COLLECTION_COURSES].insert(course_doc)
-            #     else:
-            #         raise ApiError("Nie znaleźliśmy kursu", course_id)
-            # except Exception, ex:
-            #     raise ApiError("Nie znaleźliśmy kursu błąd {0}".format(ex.message), course_id)
-            #     return
+            try:
+                course_doc = yield self.usos_course(course_id)
+            except Exception, ex:
+                raise ApiError("Nie znaleźliśmy kursu ", course_id)
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
             {constants.COURSE_ID: course_id, constants.USOS_ID: usos[constants.USOS_ID],
              constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
+
         if not course_edition_doc:
-            raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
-            # # TODO: Jeżeli nie ma kursu edycji ściągniąć crawlerem - pobrać go jak poniżej ale nie tak tylko jakoś wywołać crawler i czekać na zwrotkę
-            # try:
-            #     course_edition_doc = client.course_edition(course_id, term_id, fetch_participants=False)
-            #     if course_edition_doc:
-            #         course_edition_doc[constants.CREATED_TIME] = datetime.now()
-            #         course_edition_doc[constants.UPDATE_TIME] = datetime.now()
-            #         course_edition_doc[constants.USOS_ID] = usos[constants.USOS_ID]
-            #         yield self.db[constants.COLLECTION_COURSE_EDITION].insert(course_edition_doc)
-            #     else:
-            #         raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
-            # except Exception:
-            #     raise ApiError("Nie znaleźliśmy edycji kursu bład", (course_id, term_id))
-            #     return
+            try:
+                course_edition_doc = yield self.usos_course_edition(course_id, term_id)
+            except Exception:
+                raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.USER_ID: self.user_doc[constants.MONGO_ID]})
@@ -157,7 +131,7 @@ class ApiDaoHandler(DatabaseHandler):
     def api_course(self, course_id):
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({
-                constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
+            constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             raise ApiError("Nie znaleźliśmy danych kursu.", (course_id,))
@@ -611,5 +585,5 @@ class ApiDaoHandler(DatabaseHandler):
                 else:
                     tt['lecturers'] = list()
                     tt['lecturers'].append(lecturer_info)
-            del(tt['lecturer_ids'])
+            del (tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])

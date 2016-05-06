@@ -31,14 +31,14 @@ class DatabaseHandler(RequestHandler):
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
-        yield self.insert([constants.COLLECTION_USERS_ARCHIVE], user_doc)
+        yield self.insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
 
         result = yield self.db[constants.COLLECTION_USERS].remove({constants.MONGO_ID: user_id})
 
         logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
             constants.COLLECTION_USERS, user_id, result))
 
-        yield self.insert([constants.COLLECTION_JOBS_QUEUE],
+        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
                           {constants.USER_ID: user_id,
                            constants.CREATED_TIME: datetime.now(),
                            constants.UPDATE_TIME: None,
@@ -46,7 +46,7 @@ class DatabaseHandler(RequestHandler):
                            constants.JOB_STATUS: constants.JOB_PENDING,
                            constants.JOB_TYPE: 'unsubscribe_usos'})
 
-        yield self.insert([constants.COLLECTION_JOBS_QUEUE],
+        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
                           {constants.USER_ID: user_id,
                            constants.CREATED_TIME: datetime.now(),
                            constants.UPDATE_TIME: None,
@@ -75,7 +75,7 @@ class DatabaseHandler(RequestHandler):
             '\nZespół {2}\n'.format(usos_doc['name'], settings.SMTP_EMAIL, settings.PROJECT_TITLE)
         )
 
-        yield self.insert([constants.COLLECTION_EMAIL_QUEUE], email_job)
+        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def email_archive_user(self, recipient):
@@ -91,7 +91,7 @@ class DatabaseHandler(RequestHandler):
             '\nZespół {1}\n'.format(settings.SMTP_EMAIL, settings.PROJECT_TITLE)
         )
 
-        yield self.insert([constants.COLLECTION_EMAIL_QUEUE], email_job)
+        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def find_user(self):
