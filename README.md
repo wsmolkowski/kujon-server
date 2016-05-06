@@ -1,2 +1,2 @@
-# kujon - mobilny dostęp do Uczelni i USOSa
+# kujon - dostęp do danych studenckich (mobi/www)
 
