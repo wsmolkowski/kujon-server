@@ -111,7 +111,7 @@ class MongoDbQueue(object):
 
             else:
                 job = yield self._queue.get()
-                logging.debug("consuming queue job {0}".format(job))
+                logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self._queue.qsize()))
 
                 try:
                     yield self.update_job(job, constants.JOB_START)
