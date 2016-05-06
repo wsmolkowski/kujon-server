@@ -9,7 +9,7 @@ class Error(Exception):
 class ApiError(Exception):
     """Api Errors"""
 
-    def __init__(self, msg, parameters):
+    def __init__(self, msg, parameters=None):
         self.msg = msg
         self.parameters = parameters
 
