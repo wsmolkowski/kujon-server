@@ -328,10 +328,7 @@ class UsosCrawler(object):
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.COURSE_ID] = result.pop(constants.ID)
-
                 self.dao.insert(constants.COLLECTION_COURSES, result)
-
             else:
                 logging.warn("no course for course_id: %r.", course)
 
