@@ -9,7 +9,7 @@ class Error(Exception):
 class ApiError(Exception):
     """Api Errors"""
 
-    def __init__(self, msg, parameters=None):
+    def __init__(self, msg, parameters=[]):
         self.msg = msg
         self.parameters = parameters
 
@@ -32,7 +32,7 @@ class ApiError(Exception):
 
 
 class HttpError(Error):
-    def __init__(self, resp, content, uri=None, parameters=None):
+    def __init__(self, resp, content, uri=None, parameters=[]):
         self.resp = resp
         self.content = content
         self.uri = uri
