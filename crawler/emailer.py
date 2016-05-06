@@ -22,8 +22,8 @@ class EmailQueue(object):
 
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.smtp = smtplib.SMTP()
-        self.smtp.starttls()
         self.smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
+        self.smtp.starttls()
         self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
         self.running = True
