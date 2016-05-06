@@ -2,12 +2,12 @@
 
 import json
 import logging
+from datetime import datetime, timedelta
 
 import oauth2 as oauth
 import tornado.auth
 import tornado.gen
 import tornado.web
-from datetime import datetime, timedelta
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -150,7 +150,7 @@ class UsosRegisterHandler(BaseHandler):
             self.error('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
             return
 
-        if user_doc[constants.USOS_PAIRED]:
+        if constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
             self.error('Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
             return
 
