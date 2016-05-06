@@ -13,23 +13,22 @@ from tornado.options import parse_command_line
 from commons import settings, constants
 
 QUEUE_MAXSIZE = 100
-SLEEP = 1
+CONCURRENT = 4
 
 
-class MongoEmailQueue(object):
-    def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
-        super(MongoEmailQueue, self).__init__()
+class EmailQueue(object):
+    def __init__(self):
+        super(EmailQueue, self).__init__()
 
-        self._queue = queues.Queue(maxsize=queue_maxsize)
-
+        self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.smtp = smtplib.SMTP()
         self.smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
         self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-
         self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.running = True
 
     @gen.coroutine
-    def __load_work(self):
+    def load_work(self):
 
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
@@ -48,7 +47,7 @@ class MongoEmailQueue(object):
         while (yield cursor.fetch_next):
             job = cursor.next_object()
             logging.debug('putting job to queue with ID: {0}'.format(job[constants.MONGO_ID]))
-            yield self._queue.put(job)
+            yield self.queue.put(job)
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -84,31 +83,33 @@ class MongoEmailQueue(object):
     @gen.coroutine
     def worker(self):
 
-        while True:
+        while self.running:
+            job = yield self.queue.get()
+            logging.debug("consuming queue job {0}".format(job))
 
-            if self._queue.empty():
-                yield gen.sleep(SLEEP)
-                yield self.__load_work()
+            try:
+                yield self.update_job(job, constants.JOB_START)
+                yield self.process_job(job)
+                yield self.update_job(job, constants.JOB_FINISH)
 
-            else:
-                job = yield self._queue.get()
-                logging.debug("consuming queue job {0}".format(job))
+            except Exception, ex:
+                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                logging.exception(msg)
 
-                try:
-                    yield self.update_job(job, constants.JOB_START)
+                yield self.update_job(job, constants.JOB_FAIL, msg)
+            finally:
+                self.queue.task_done()
 
-                    yield self.process_job(job)
+    @gen.coroutine
+    def workers(self):
+        ioloop.IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(CONCURRENT)]
+        yield futures
 
-                    yield self.update_job(job, constants.JOB_FINISH)
-
-                except Exception, ex:
-                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
-                    logging.exception(msg)
-
-                    yield self.update_job(job, constants.JOB_FAIL, msg)
-                finally:
-                    self._queue.task_done()
-
+    @gen.coroutine
+    def producer(self):
+        while self.running:
+            yield self.load_work()
 
 if __name__ == '__main__':
     parse_command_line()
@@ -116,7 +117,7 @@ if __name__ == '__main__':
     if settings.DEBUG:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    mq = MongoEmailQueue()
+    emailQueue = EmailQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mq.worker)
+    io_loop.run_sync(emailQueue.workers)
