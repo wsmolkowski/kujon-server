@@ -86,6 +86,10 @@ class EmailQueue(object):
     def worker(self):
 
         while self.running:
+            if self.queue.empty():
+                yield self.load_work()
+                yield gen.sleep(SLEEP)
+
             job = yield self.queue.get()
             logging.debug("consuming queue job {0}".format(job))
 
@@ -106,15 +110,9 @@ class EmailQueue(object):
 
     @gen.coroutine
     def workers(self):
-        ioloop.IOLoop.current().spawn_callback(self.producer)
         futures = [self.worker() for _ in range(CONCURRENT)]
         yield futures
 
-    @gen.coroutine
-    def producer(self):
-        while self.running:
-            yield self.load_work()
-            yield gen.sleep(SLEEP)
 
 if __name__ == '__main__':
     parse_command_line()

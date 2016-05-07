@@ -4,13 +4,11 @@ import json
 import logging
 from datetime import datetime, timedelta
 
-import oauth2 as oauth
-import tornado.auth
-import tornado.gen
-import tornado.web
+from tornado import auth, gen, web
 
 from base import BaseHandler
 from commons import constants, settings, decorators
+from commons.mixins.UsosMixin import UsosMixin
 from crawler import job_factory
 
 
@@ -22,8 +20,8 @@ class LogoutHandler(BaseHandler):
 
 class ArchiveHandler(BaseHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         user_doc = yield self.get_current_user()
         if user_doc:
@@ -33,9 +31,9 @@ class ArchiveHandler(BaseHandler):
         self.redirect(settings.DEPLOY_WEB)
 
 
-class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class FacebookOAuth2LoginHandler(BaseHandler, auth.FacebookGraphMixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
@@ -73,9 +71,9 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class GoogleOAuth2LoginHandler(BaseHandler, auth.GoogleOAuth2Mixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         if self.get_argument('error', False):
@@ -134,10 +132,10 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class UsosRegisterHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class UsosRegisterHandler(BaseHandler, UsosMixin):
+    @web.authenticated
+    @web.asynchronous
+    @gen.coroutine
     def post(self):
 
         data = json.loads(self.request.body)
@@ -155,29 +153,9 @@ class UsosRegisterHandler(BaseHandler):
             return
 
         try:
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-            request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-                settings.CALLBACK_URL)
-
-            # is USOS have disabled SSL validation
-            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-                params = self.oauth_parameters
-                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-                client = oauth.Client(consumer, **params)
-            else:
-                client = oauth.Client(consumer, **self.oauth_parameters)
-
-            resp, content = client.request(request_token_url)
+            content = yield self.token_request(usos_doc)
         except Exception, ex:
-            msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
-            logging.exception(msg)
-            self.error(msg)
-            return
-
-        if 'status' not in resp or resp['status'] != '200':
-            self.error('Invalid USOS response %s:\n%s' % (resp['status'], content))
+            self.error(ex.message)
             return
 
         request_token = self.get_token(content)
@@ -200,10 +178,10 @@ class UsosRegisterHandler(BaseHandler):
         self.success({'redirect': url_redirect})
 
 
-class UsosVerificationHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class UsosVerificationHandler(BaseHandler, UsosMixin):
+    @web.authenticated
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         # oauth_token_key = self.get_argument('oauth_token')
         user_doc = yield self.find_user()
@@ -229,23 +207,10 @@ class UsosVerificationHandler(BaseHandler):
         if user_doc:
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
-            request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
-                constants.ACCESS_TOKEN_SECRET])
-            request_token.set_verifier(oauth_verifier)
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-            # is USOS have disabled SSL validation
-            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-                params = self.oauth_parameters
-                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-                client = oauth.Client(consumer, request_token,  **params)
-            else:
-                client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-
-            access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
-            esp, content = client.request(access_token_url, 'GET')
-            if esp.status != 200:
-                self.error('Bład podczas oauth USOS')
+            try:
+                content = yield self.mobile_token_verification(user_doc, usos_doc, oauth_verifier)
+            except Exception, ex:
+                self.error(ex.message)
                 return
 
             access_token = self.get_token(content)
@@ -272,9 +237,9 @@ class UsosVerificationHandler(BaseHandler):
             self.redirect(settings.DEPLOY_WEB)
 
 
-class MobiAuthHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class MobiAuthHandler(BaseHandler, UsosMixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         email = self.get_argument('email', default=None, strip=True)
@@ -282,77 +247,46 @@ class MobiAuthHandler(BaseHandler):
         usos_id = self.get_argument('usos_id', default=None, strip=True)
 
         if not email or not token or not usos_id:
-            self.error('One of the provided parameters is incorrect.')
+            self.error('Jeden z podanych parametrów jest niepoprawny.')
             return
 
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
         try:
-            http_client = self.get_auth_http_client()
-            tokeninfo = yield http_client.fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token)
-            if tokeninfo.code != 200 or tokeninfo.reason != 'OK':
-                raise Exception(
-                    'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
-            yield self.insert_token(json.loads(tokeninfo.body))
-        except (Exception, tornado.web.HTTPError), ex:
-            self.error('Google token verification failure. {0}'.format(ex.message))
+            google_token = yield self.google_token(token)
+            yield self.insert_token(google_token)
+        except (Exception, web.HTTPError), ex:
+            self.error(ex.message)
             return
 
-        user_doc = yield self.user_exists(email, usos_id)
-        if user_doc and 'usos_paired' in user_doc:
-            self.error('Użytkownik ma już konto połączone z {0}.'.format(usos_doc[constants.USOS_ID]))
+        user_exists = yield self.user_exists(email, usos_id)
+        if user_exists:
+            self.error('Użytkownik ma już konto połączone z USOS {0}.'.format(usos_doc[constants.USOS_ID]))
             return
 
         try:
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-            request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-                usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-                settings.CALLBACK_MOBI_URL + '?token=' + token)
-
-            # is USOS have disabled SSL validation
-            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-                params = self.oauth_parameters
-                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-                client = oauth.Client(consumer, **params)
-            else:
-                client = oauth.Client(consumer, **self.oauth_parameters)
-
-            resp, content = client.request(request_token_url)
+            content = yield self.token_verification(usos_doc, token)
         except Exception, ex:
-            msg = 'Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message)
-            logging.exception(msg)
-            self.error(msg)
-            return
-
-        if 'status' not in resp or resp['status'] != '200':
-            self.error('Invalid USOS response %s:\n%s' % (resp['status'], content))
+            self.error(ex.message)
             return
 
         request_token = self.get_token(content)
 
-        # updating to db user access_token_key & access_token_secret
-        access_token_key = request_token.key
-        access_token_secret = request_token.secret
-
         # update = user_doc
-        if not user_doc:
-            new_user = True
+        if not user_exists:
             user_doc = dict()
             user_doc[constants.USER_EMAIL] = email
-        else:
-            new_user = False
 
         update = user_doc
         update[constants.MOBI_TOKEN] = token
         update[constants.USER_EMAIL] = email
         update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-        update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-        update[constants.ACCESS_TOKEN_KEY] = access_token_key
+        update[constants.ACCESS_TOKEN_SECRET] = request_token.secret
+        update[constants.ACCESS_TOKEN_KEY] = request_token.key
         update[constants.CREATED_TIME] = datetime.now()
         update[constants.UPDATE_TIME] = datetime.now()
 
-        if new_user:
+        if not user_exists:
             yield self.insert_user(update)
         else:
             yield self.update_user_email(email, update)
@@ -362,9 +296,9 @@ class MobiAuthHandler(BaseHandler):
         self.redirect(url_redirect)
 
 
-class UsosMobiVerificationHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class UsosMobiVerificationHandler(BaseHandler, UsosMixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         # oauth_token_key = self.get_argument('oauth_token')
@@ -391,23 +325,11 @@ class UsosMobiVerificationHandler(BaseHandler):
         if user_doc:
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
-            request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
-                constants.ACCESS_TOKEN_SECRET])
-            request_token.set_verifier(oauth_verifier)
-            consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-            # is USOS have disabled SSL validation
-            if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-                params = self.oauth_parameters
-                params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-                client = oauth.Client(consumer, request_token, **params)
-            else:
-                client = oauth.Client(consumer, request_token, **self.oauth_parameters)
-
-            access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
-            esp, content = client.request(access_token_url, 'GET')
-            if esp['status'] != '200':
-                self.error('Bład podczas oauth USOS')
+            try:
+                content = yield self.mobile_token_verification(user_doc, usos_doc, oauth_verifier)
+            except Exception, ex:
+                self.error(ex.message)
+                return
 
             access_token = self.get_token(content)
 
@@ -422,6 +344,6 @@ class UsosMobiVerificationHandler(BaseHandler):
 
             self.db[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-            self.success('Usos paired successfully.')
+            self.success('Udało się sparować konto USOS.')
         else:
-            self.error('Usos paired failed.')
+            self.error('Nie udało się sprarować konta USOS.')

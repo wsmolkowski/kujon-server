@@ -81,8 +81,3 @@ class UsosClientError(HttpError):
 class UsosAsyncError(HttpError):
     """USOS exceptions"""
     pass
-
-
-if __name__ == '__main__':
-    # raise ApiError('asd')
-    raise ApiError("Nie  kursu ", 1234)
