@@ -140,4 +140,4 @@ if __name__ == '__main__':
     mongoQueue = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mongoQueue.worker)
+    io_loop.run_sync(mongoQueue.workers)
