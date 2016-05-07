@@ -91,7 +91,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if 'pl' in course_doc['fac_id']['name']:
             course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
-        # make lecurers uniqe list
+        # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
 
         course_doc['coordinators'] = course_edition_doc['coordinators']
