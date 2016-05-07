@@ -28,7 +28,7 @@ class ApiError(Exception):
             return self.msg
 
     def __repr__(self):
-        return str(self.message)
+        return self.message()
 
     __str__ = __repr__
 
@@ -81,3 +81,8 @@ class UsosClientError(HttpError):
 class UsosAsyncError(HttpError):
     """USOS exceptions"""
     pass
+
+
+if __name__ == '__main__':
+    # raise ApiError('asd')
+    raise ApiError("Nie  kursu ", 1234)

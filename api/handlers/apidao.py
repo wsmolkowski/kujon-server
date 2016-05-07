@@ -37,8 +37,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except Exception, ex:
-                raise ApiError("Nie znaleźliśmy kursu ", course_id)
+            except Exception:
+                raise ApiError("Nie znaleźliśmy kursu", course_id)
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
@@ -91,7 +91,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if 'pl' in course_doc['fac_id']['name']:
             course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
 
-        # make lecurers uniqe list
+        # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
 
         course_doc['coordinators'] = course_edition_doc['coordinators']
@@ -158,7 +158,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów", 'brak')
+            raise ApiError("Poczekaj szukamy przedmiotów")
 
         # get courses_classtypes
         classtypes = dict()
@@ -478,6 +478,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         for position in user_info['employment_positions']:
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
+
+        # strip english from building name
+        if 'room' in user_info and 'building_name' in user_info['room']:
+            user_info['room']['building_name']=user_info['room']['building_name']['pl']
 
         # change course_editions_conducted to list of courses
         course_editions = []

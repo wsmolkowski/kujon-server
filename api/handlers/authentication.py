@@ -300,9 +300,8 @@ class MobiAuthHandler(BaseHandler):
 
         user_doc = yield self.user_exists(email, usos_id)
         if user_doc:
-            if 'usos_paired' in user_doc and user_doc['usos_paired']:
-                self.success('User already paired with {0}.'.format(usos_id))
-                return
+            self.error('User already registered.')
+            return
 
         try:
             consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
