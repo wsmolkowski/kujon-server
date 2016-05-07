@@ -159,7 +159,7 @@ class UsosRegisterHandler(BaseHandler):
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
                 settings.CALLBACK_URL)
 
-            # is USOS have disabled SSL validation
+            # when USOS have disabled SSL validation
             if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
                 params = self.oauth_parameters
                 params[constants.DISABLE_SSL_CERT_VALIDATION] = True
@@ -296,8 +296,8 @@ class MobiAuthHandler(BaseHandler):
             self.error('Google token verification failure. {0}'.format(ex.message))
             return
 
-        user_doc = yield self.user_exists(email, usos_id)
-        if user_doc and 'usos_paired' in user_doc:
+        user_exists = yield self.user_exists(email, usos_id)
+        if not user_exists:
             self.error('Użytkownik ma już konto połączone z {0}.'.format(usos_doc[constants.USOS_ID]))
             return
 
@@ -308,7 +308,7 @@ class MobiAuthHandler(BaseHandler):
                 usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
                 settings.CALLBACK_MOBI_URL + '?token=' + token)
 
-            # is USOS have disabled SSL validation
+            # when USOS have disabled SSL validation
             if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
                 params = self.oauth_parameters
                 params[constants.DISABLE_SSL_CERT_VALIDATION] = True
