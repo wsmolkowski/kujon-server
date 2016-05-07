@@ -13,6 +13,7 @@ from commons.usosutils.usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 CONCURRENT = 4
+SLEEP = 2
 
 
 class MongoDbQueue(object):
@@ -120,6 +121,8 @@ class MongoDbQueue(object):
             finally:
                 self.queue.task_done()
 
+            yield gen.sleep(SLEEP)
+
     @gen.coroutine
     def workers(self):
         ioloop.IOLoop.current().spawn_callback(self.producer)
@@ -130,7 +133,7 @@ class MongoDbQueue(object):
     def producer(self):
         while self.running:
             yield self.load_work()
-
+            yield gen.sleep(SLEEP)
 
 if __name__ == '__main__':
     parse_command_line()

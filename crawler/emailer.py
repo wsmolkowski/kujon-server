@@ -14,6 +14,7 @@ from commons import settings, constants
 
 QUEUE_MAXSIZE = 100
 CONCURRENT = 4
+SLEEP = 2
 
 
 class EmailQueue(object):
@@ -101,6 +102,8 @@ class EmailQueue(object):
             finally:
                 self.queue.task_done()
 
+            yield gen.sleep(SLEEP)
+
     @gen.coroutine
     def workers(self):
         ioloop.IOLoop.current().spawn_callback(self.producer)
@@ -111,6 +114,7 @@ class EmailQueue(object):
     def producer(self):
         while self.running:
             yield self.load_work()
+            yield gen.sleep(SLEEP)
 
 if __name__ == '__main__':
     parse_command_line()
