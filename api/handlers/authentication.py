@@ -259,9 +259,15 @@ class MobiAuthHandler(BaseHandler, UsosMixin):
             self.error(ex.message)
             return
 
-        user_exists = yield self.user_exists(email, usos_id)
+        user_exists = yield self.user_exists(email, usos_doc[constants.USOS_ID])
         if user_exists:
             self.error('Użytkownik ma już konto połączone z USOS {0}.'.format(usos_doc[constants.USOS_ID]))
+            return
+
+        user_doc = yield self.find_user_email(email)
+        if user_doc and user_doc[constants.USOS_ID] != usos_doc[constants.USOS_ID]:
+            self.error('Brak możliwości zalogowania na drugi USOS {0}. Wcześniej wybrano {1}.'.format(
+                usos_doc[constants.USOS_ID], user_doc[constants.USOS_ID]))
             return
 
         try:
