@@ -17,11 +17,11 @@ SLEEP = 2
 
 
 class MongoDbQueue(object):
-    def __init__(self, queue_maxsize=QUEUE_MAXSIZE):
+    def __init__(self):
         super(MongoDbQueue, self).__init__()
 
         self.crawler = UsosCrawler()
-        self.queue = queues.Queue(maxsize=queue_maxsize)
+        self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
         self.running = True
 
@@ -125,8 +125,6 @@ class MongoDbQueue(object):
             finally:
                 self.queue.task_done()
 
-            yield gen.sleep(SLEEP)
-
     @gen.coroutine
     def workers(self):
         futures = [self.worker() for _ in range(CONCURRENT)]
@@ -142,4 +140,4 @@ if __name__ == '__main__':
     mongoQueue = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mongoQueue.workers)
+    io_loop.run_sync(mongoQueue.worker)
