@@ -5,9 +5,7 @@ import logging
 from datetime import datetime, timedelta
 
 import oauth2 as oauth
-import tornado.auth
-import tornado.gen
-import tornado.web
+from tornado import auth, gen, web
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -22,8 +20,8 @@ class LogoutHandler(BaseHandler):
 
 class ArchiveHandler(BaseHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         user_doc = yield self.get_current_user()
         if user_doc:
@@ -33,9 +31,9 @@ class ArchiveHandler(BaseHandler):
         self.redirect(settings.DEPLOY_WEB)
 
 
-class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class FacebookOAuth2LoginHandler(BaseHandler, auth.FacebookGraphMixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
@@ -73,9 +71,9 @@ class FacebookOAuth2LoginHandler(BaseHandler, tornado.auth.FacebookGraphMixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+class GoogleOAuth2LoginHandler(BaseHandler, auth.GoogleOAuth2Mixin):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         if self.get_argument('error', False):
@@ -135,9 +133,9 @@ class GoogleOAuth2LoginHandler(BaseHandler, tornado.auth.GoogleOAuth2Mixin):
 
 
 class UsosRegisterHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.authenticated
+    @web.asynchronous
+    @gen.coroutine
     def post(self):
 
         data = json.loads(self.request.body)
@@ -201,9 +199,9 @@ class UsosRegisterHandler(BaseHandler):
 
 
 class UsosVerificationHandler(BaseHandler):
-    @tornado.web.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.authenticated
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         # oauth_token_key = self.get_argument('oauth_token')
         user_doc = yield self.find_user()
@@ -238,7 +236,7 @@ class UsosVerificationHandler(BaseHandler):
             if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
                 params = self.oauth_parameters
                 params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-                client = oauth.Client(consumer, request_token,  **params)
+                client = oauth.Client(consumer, request_token, **params)
             else:
                 client = oauth.Client(consumer, request_token, **self.oauth_parameters)
 
@@ -273,8 +271,8 @@ class UsosVerificationHandler(BaseHandler):
 
 
 class MobiAuthHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         email = self.get_argument('email', default=None, strip=True)
@@ -294,7 +292,7 @@ class MobiAuthHandler(BaseHandler):
                 raise Exception(
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
             yield self.insert_token(json.loads(tokeninfo.body))
-        except (Exception, tornado.web.HTTPError), ex:
+        except (Exception, web.HTTPError), ex:
             self.error('Google token verification failure. {0}'.format(ex.message))
             return
 
@@ -363,8 +361,8 @@ class MobiAuthHandler(BaseHandler):
 
 
 class UsosMobiVerificationHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         # oauth_token_key = self.get_argument('oauth_token')
