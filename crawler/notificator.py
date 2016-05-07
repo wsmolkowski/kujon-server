@@ -125,8 +125,6 @@ class NotificatorQueue(object):
             finally:
                 self.queue.task_done()
 
-            yield gen.sleep(SLEEP)
-
     @gen.coroutine
     def workers(self):
         futures = [self.worker() for _ in range(CONCURRENT)]
@@ -162,4 +160,4 @@ if __name__ == '__main__':
     notificatorQueue = NotificatorQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(notificatorQueue.workers)
+    io_loop.run_sync(notificatorQueue.worker)

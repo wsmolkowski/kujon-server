@@ -106,8 +106,6 @@ class EmailQueue(object):
             finally:
                 self.queue.task_done()
 
-            yield gen.sleep(SLEEP)
-
     @gen.coroutine
     def workers(self):
         futures = [self.worker() for _ in range(CONCURRENT)]
@@ -123,4 +121,4 @@ if __name__ == '__main__':
     emailQueue = EmailQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(emailQueue.workers)
+    io_loop.run_sync(emailQueue.worker)
