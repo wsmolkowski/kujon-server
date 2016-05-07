@@ -50,7 +50,10 @@ class FacultiesApi(BaseHandler):
             facs_ids = list()
             for prog in progs_facs:
                 facs_ids.append(prog['faculty']['fac_id'])
-            cursor = self.db[constants.COLLECTION_FACULTIES].find({constants.FACULTY_ID: {'$in': facs_ids}})
+            cursor = self.db[constants.COLLECTION_FACULTIES].find(
+                {constants.FACULTY_ID: {'$in': facs_ids},
+                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+            )
             faculties = yield cursor.to_list(None)
             for fac in faculties:
                 fac.pop(constants.CREATED_TIME)

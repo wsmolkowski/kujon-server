@@ -90,6 +90,7 @@ USOSINSTANCES = [
      'consumer_secret': 'zApXh56mZ42wDz7fSTSKQUX5fqtaUfxP6mEw8Yrd',
      'contact': 'usosweb@umcs.pl',
      'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'UWM',
      'name': 'Uniwersytet Wamińsko-Mazurski w Olsztynie',

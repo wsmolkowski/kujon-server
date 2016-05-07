@@ -297,8 +297,8 @@ class MobiAuthHandler(BaseHandler):
             return
 
         user_doc = yield self.user_exists(email, usos_id)
-        if user_doc:
-            self.error('User already registered.')
+        if user_doc and 'usos_paired' in user_doc:
+            self.error('Użytkownik ma już konto połączone z {0}.'.format(usos_doc[constants.USOS_ID]))
             return
 
         try:

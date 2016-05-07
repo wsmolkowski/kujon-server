@@ -67,12 +67,12 @@ class DatabaseHandler(RequestHandler):
             'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
             settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            '\nCześć,'
-            '\nRejestracja w USOS {0} zakończona pomyślnie.'
-            '\nW razie pytań, bądź wątpliwości pozostajemy do Twojej dyspozycji.'
-            '\nNapisz do nas {1}'
+            '\nCześć,\n'
+            '\nRejestracja Twojego konta do współpracy z uczelnią {0} zakończona pomyślnie.'
+            '\nW razie pytań, bądź pomysłów na zmianę - napisz do nas, bo dzięki Tobie Kujon może być lepszy..\n'
             '\nPozdrawiamy,'
-            '\nZespół {2}\n'.format(usos_doc['name'], settings.SMTP_EMAIL, settings.PROJECT_TITLE)
+            '\nZespół Kujon.mobi'
+            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
         )
 
         yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
