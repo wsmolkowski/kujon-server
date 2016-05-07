@@ -37,8 +37,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except Exception, ex:
-                raise ApiError("Nie znaleźliśmy kursu ", course_id)
+            except Exception:
+                raise ApiError("Nie znaleźliśmy kursu", course_id)
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
@@ -158,7 +158,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów", 'brak')
+            raise ApiError("Poczekaj szukamy przedmiotów")
 
         # get courses_classtypes
         classtypes = dict()
