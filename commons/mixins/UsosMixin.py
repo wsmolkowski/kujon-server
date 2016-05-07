@@ -144,6 +144,9 @@ class UsosMixin(object):
             if tokeninfo.code != 200 or tokeninfo.reason != 'OK':
                 raise Exception(
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
-            raise gen.Return(json.loads(tokeninfo.body))
+            result = json.loads(tokeninfo.body)
         except Exception, ex:
+            logging.exception(ex)
             raise Exception('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
+        else:
+            raise gen.Return(result)
