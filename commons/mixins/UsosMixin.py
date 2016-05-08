@@ -97,13 +97,7 @@ class UsosMixin(object):
         request_token.set_verifier(oauth_verifier)
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-        # is USOS have disabled SSL validation
-        if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-            params = self.oauth_parameters
-            params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-            client = oauth.Client(consumer, request_token, **params)
-        else:
-            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+        client = self.oauth_client(consumer, usos_doc)
 
         access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
         try:
