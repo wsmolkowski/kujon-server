@@ -6,7 +6,7 @@ from datetime import timedelta, date
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants
+from commons import constants, utils
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
 from commons.errors import UsosClientError
@@ -44,26 +44,28 @@ class UsosCrawler(object):
         return data
 
     def _exc(self, exception):
-        if hasattr(self, 'user') and isinstance(exception, UsosClientError):
-            exc_doc = exception
-            exc_doc.append(constants.USER_ID, self.user[constants.MONGO_ID])
-            exc_doc.append(constants.USOS_ID, self.user[constants.USOS_ID])
-            exc_doc.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
-            exc_doc.append(constants.CREATED_TIME, datetime.now())
+        try:
+            if hasattr(self, 'user') and isinstance(exception, UsosClientError):
+                exc_doc = exception
+                exc_doc.append(constants.USER_ID, self.user[constants.MONGO_ID])
+                exc_doc.append(constants.USOS_ID, self.user[constants.USOS_ID])
+                exc_doc.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
+                exc_doc.append(constants.CREATED_TIME, datetime.now())
 
-            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc.message)
-        else:
-            exc_doc = {
-                'args': exception.args,
-                'message': str(exception),
-                constants.TRACEBACK: traceback.format_exc(),
-                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
-                constants.CREATED_TIME: datetime.now()
-            }
+                exc_doc = exc_doc.message
+            else:
+                exc_doc = {
+                    'args': exception.args,
+                    'message': str(exception),
+                    constants.TRACEBACK: traceback.format_exc(),
+                    constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
+                    constants.CREATED_TIME: datetime.now()
+                }
 
-            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
-
-        logging.error(exc_doc)
+            self.dao.insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
+            logging.error(exc_doc)
+        except Exception, ex:
+            logging.exception(ex)
 
     def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
         if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):

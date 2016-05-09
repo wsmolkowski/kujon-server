@@ -8,7 +8,7 @@ from tornado import gen
 from tornado.web import RequestHandler
 
 from commons import constants, settings
-from commons.errors import ApiError
+from commons.errors import ApiError, AuthenticationError
 from crawler import email_factory
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
@@ -26,7 +26,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
         if not user_doc:
-            logging.debug('cannot archive user which does not exists {0}'.format(user_id))
+            logging.warn('cannot archive user which does not exists {0}'.format(user_id))
             raise gen.Return()
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
@@ -162,7 +162,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.USER_EMAIL: email, constants.USOS_ID: usos_id})
         if user_doc:
-            raise gen.Return(True)
+            raise gen.Return(user_doc)
         raise gen.Return(False)
 
     @gen.coroutine
@@ -196,7 +196,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': str(exception)
+                'exception': exception.message
             }
 
         if hasattr(self, 'user_doc'):
@@ -212,7 +212,9 @@ class DatabaseHandler(RequestHandler):
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
-            self.fail(message=exception.message())
+            self.error(message=exception.message())
+        elif isinstance(exception, AuthenticationError):
+            self.error(message=exception.message)
         else:
             self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 

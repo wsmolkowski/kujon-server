@@ -13,7 +13,10 @@ class ApiError(Exception):
 
     def __init__(self, msg, parameters=[]):
         self.msg = msg.encode(constants.ENCODING)
-        self.parameters = parameters
+        if not isinstance(parameters, list) or not isinstance(parameters, tuple):
+            self.parameters = [parameters]
+        else:
+            self.parameters = parameters
 
     def data(self):
         return {
@@ -79,5 +82,10 @@ class UsosClientError(HttpError):
 
 
 class UsosAsyncError(HttpError):
+    """USOS exceptions"""
+    pass
+
+
+class AuthenticationError(Exception):
     """USOS exceptions"""
     pass

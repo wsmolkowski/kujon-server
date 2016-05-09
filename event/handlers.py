@@ -123,7 +123,7 @@ class VerifyHandler(MainHandler):
             if not user_exists:
                 logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
                 self.fail(message='Token verification failure.')
-                raise gen.Return()
+                return
 
             logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
                 self.argument_mode, self.argument_challenge, self.argument_verify_token))
