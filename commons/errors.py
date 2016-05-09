@@ -13,7 +13,10 @@ class ApiError(Exception):
 
     def __init__(self, msg, parameters=[]):
         self.msg = msg.encode(constants.ENCODING)
-        self.parameters = parameters
+        if not isinstance(parameters, list):
+            self.parameters = [parameters]
+        else:
+            self.parameters = parameters
 
     def data(self):
         return {
