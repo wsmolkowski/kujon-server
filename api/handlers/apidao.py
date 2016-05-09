@@ -134,7 +134,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            raise ApiError("Nie znaleźliśmy danych kursu.", (course_id,))
+            raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
 
         # change id to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -207,7 +207,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów", ["brak"])
+            raise ApiError("Poczekaj szukamy przedmiotów")
 
         # get courses_classtypes
         classtypes = dict()
@@ -465,7 +465,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
                                                                             LIMIT_FIELDS_USER)
         if not user_info:
-            raise ApiError("Poczekaj szukamy informacji o nauczycielu", (user_info_id,))
+            raise ApiError("Poczekaj szukamy informacji o nauczycielu", user_info_id)
 
         # change ObjectId to str for photo
         if user_info['has_photo']:
@@ -498,7 +498,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     course[constants.TERM_ID] = course_doc[constants.TERM_ID]
                     course_editions.append(course)
                 else:
-                    course_editions.append("Dont have data for course and term..")
+                    course_editions.append("Nie znaleziono danych dla kursu i cyklu.")
             user_info['course_editions_conducted'] = course_editions
 
         # show url to photo
@@ -513,7 +513,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         if not user_info:
-            raise ApiError("Szukamy danych o Twoich kursach", "brak")
+            raise ApiError("Szukamy danych o Twoich kursach")
 
         programmes = []
         for program in user_info['student_programmes']:

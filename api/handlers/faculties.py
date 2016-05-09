@@ -1,11 +1,11 @@
 # coding=UTF-8
 
 import tornado.web
+from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants, decorators
 from commons.errors import ApiError
-from bson.objectid import ObjectId
 
 class FacultyByIdApi(BaseHandler):
     @decorators.authenticated
@@ -20,7 +20,7 @@ class FacultyByIdApi(BaseHandler):
                 fac_doc.pop('created_time')
                 fac_doc.pop('update_time')
             else:
-                raise ApiError("Nie możemy znaleźć danych dla jednostki", (fac_id,))
+                raise ApiError("Nie możemy znaleźć danych dla jednostki", fac_id)
             self.success(fac_doc, cache_age=86400)
         except Exception, ex:
             yield self.exc(ex)
