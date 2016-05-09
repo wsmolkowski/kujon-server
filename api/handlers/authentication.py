@@ -90,7 +90,7 @@ class GoogleOAuth2LoginHandler(BaseHandler, auth.GoogleOAuth2Mixin):
                 access_token=access['access_token'])
 
             user_doc = yield self.find_user_email(user['email'])
-
+            now = datetime.now()
             if not user_doc:
                 insert_doc = dict()
                 insert_doc[constants.USER_TYPE] = 'google'
@@ -98,10 +98,10 @@ class GoogleOAuth2LoginHandler(BaseHandler, auth.GoogleOAuth2Mixin):
                 insert_doc[constants.USER_PICTURE] = user['picture']
                 insert_doc[constants.USER_EMAIL] = user['email']
                 insert_doc[constants.USOS_PAIRED] = False
-                insert_doc[constants.USER_CREATED] = datetime.now()
+                insert_doc[constants.USER_CREATED] = now
 
                 insert_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
-                insert_doc[constants.GAUTH_EXPIRES_IN] = datetime.now() + timedelta(seconds=access['expires_in'])
+                insert_doc[constants.GAUTH_EXPIRES_IN] = now + timedelta(seconds=access['expires_in'])
                 insert_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
                 insert_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
 
@@ -112,10 +112,10 @@ class GoogleOAuth2LoginHandler(BaseHandler, auth.GoogleOAuth2Mixin):
 
             else:
                 user_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
-                user_doc[constants.GAUTH_EXPIRES_IN] = datetime.now() + timedelta(seconds=access['expires_in'])
+                user_doc[constants.GAUTH_EXPIRES_IN] = now + timedelta(seconds=access['expires_in'])
                 user_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
                 user_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
-                user_doc[constants.UPDATE_TIME] = datetime.now()
+                user_doc[constants.UPDATE_TIME] = now
 
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
