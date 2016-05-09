@@ -25,7 +25,7 @@ class ApiError(Exception):
         }
 
     def message(self):
-        if self.parameters:
+        if self.parameters and len(self.parameters) > 1:
             return "{0} - {1}".format(self.msg, "; ".join(self.parameters))
         else:
             return self.msg
