@@ -480,7 +480,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             position['faculty']['name'] = position['faculty']['name']['pl']
 
         # strip english from building name
-        if 'room' in user_info and 'building_name' in user_info['room']:
+        if 'room' in user_info and user_info['room'] and 'building_name' in user_info['room']:
             user_info['room']['building_name'] = user_info['room']['building_name']['pl']
 
         # change course_editions_conducted to list of courses
