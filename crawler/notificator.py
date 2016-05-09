@@ -57,7 +57,9 @@ class NotificatorQueue(object):
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            logging.debug('putting job to queue with ID: {0}'.format(job[constants.MONGO_ID]))
+            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
+                                                                                                job[constants.JOB_TYPE],
+                                                                                                self.queue.qsize()))
             yield self.queue.put(job)
 
     @gen.coroutine
@@ -110,20 +112,20 @@ class NotificatorQueue(object):
             if self.queue.empty():
                 yield self.load_work()
                 yield gen.sleep(SLEEP)
+            else:
+                job = yield self.queue.get()
+                logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self.queue.qsize()))
 
-            job = yield self.queue.get()
-            logging.debug("consuming queue job {0}".format(job))
-
-            try:
-                yield self.update_job(job, constants.JOB_START)
-                yield self.process_job(job)
-                yield self.update_job(job, constants.JOB_FINISH)
-            except Exception, ex:
-                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
-                logging.exception(msg)
-                yield self.update_job(job, constants.JOB_FAIL, msg)
-            finally:
-                self.queue.task_done()
+                try:
+                    yield self.update_job(job, constants.JOB_START)
+                    yield self.process_job(job)
+                    yield self.update_job(job, constants.JOB_FINISH)
+                except Exception, ex:
+                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                    logging.exception(msg)
+                    yield self.update_job(job, constants.JOB_FAIL, msg)
+                finally:
+                    self.queue.task_done()
 
     @gen.coroutine
     def workers(self):
@@ -160,4 +162,4 @@ if __name__ == '__main__':
     notificatorQueue = NotificatorQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(notificatorQueue.worker)
+    io_loop.run_sync(notificatorQueue.workers)

@@ -43,14 +43,18 @@ class UsosMixin(object):
         if 'status' not in resp or resp['status'] != '200':
             raise Exception('Invalid USOS response %s:\n%s' % (resp['status'], content))
 
-    def oauth_client(self, consumer, usos_doc):
+    def oauth_client(self, consumer, usos_doc, request_token=None):
+        parameters = self.oauth_parameters
+
         # when USOS have disabled SSL validation
         if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-            params = self.oauth_parameters
-            params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-            client = oauth.Client(consumer, **params)
+            parameters[constants.DISABLE_SSL_CERT_VALIDATION] = True
+
+        if request_token:
+            client = oauth.Client(consumer, request_token, **parameters)
         else:
-            client = oauth.Client(consumer, **self.oauth_parameters)
+            client = oauth.Client(consumer, **parameters)
+
         return client
 
     @gen.coroutine
@@ -90,20 +94,13 @@ class UsosMixin(object):
         raise gen.Return(content)
 
     @gen.coroutine
-    def mobile_token_verification(self, user_doc, usos_doc, oauth_verifier):
+    def usos_token_verification(self, user_doc, usos_doc, oauth_verifier):
 
-        request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[
-            constants.ACCESS_TOKEN_SECRET])
+        request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[constants.ACCESS_TOKEN_SECRET])
         request_token.set_verifier(oauth_verifier)
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
-        # is USOS have disabled SSL validation
-        if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-            params = self.oauth_parameters
-            params[constants.DISABLE_SSL_CERT_VALIDATION] = True
-            client = oauth.Client(consumer, request_token, **params)
-        else:
-            client = oauth.Client(consumer, request_token, **self.oauth_parameters)
+        client = self.oauth_client(consumer, usos_doc, request_token)
 
         access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
         try:
@@ -144,6 +141,9 @@ class UsosMixin(object):
             if tokeninfo.code != 200 or tokeninfo.reason != 'OK':
                 raise Exception(
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
-            raise gen.Return(json.loads(tokeninfo.body))
+            result = json.loads(tokeninfo.body)
         except Exception, ex:
+            logging.exception(ex)
             raise Exception('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
+        else:
+            raise gen.Return(result)

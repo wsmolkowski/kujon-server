@@ -26,7 +26,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
         if not user_doc:
-            logging.debug('cannot archive user which does not exists {0}'.format(user_id))
+            logging.warn('cannot archive user which does not exists {0}'.format(user_id))
             raise gen.Return()
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
@@ -162,7 +162,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.USER_EMAIL: email, constants.USOS_ID: usos_id})
         if user_doc:
-            raise gen.Return(True)
+            raise gen.Return(user_doc)
         raise gen.Return(False)
 
     @gen.coroutine
