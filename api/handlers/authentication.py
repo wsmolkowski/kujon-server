@@ -211,7 +211,7 @@ class UsosVerificationHandler(BaseHandler, UsosMixin):
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             try:
-                content = yield self.token_verification(usos_doc, oauth_verifier)
+                content = yield self.usos_token_verification(user_doc, usos_doc, oauth_verifier)
             except Exception, ex:
                 self.error(ex.message)
                 return
@@ -333,7 +333,7 @@ class UsosMobiVerificationHandler(BaseHandler, UsosMixin):
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             try:
-                content = yield self.mobile_token_verification(user_doc, usos_doc, oauth_verifier)
+                content = yield self.usos_token_verification(user_doc, usos_doc, oauth_verifier)
             except Exception, ex:
                 self.error(ex.message)
                 return
