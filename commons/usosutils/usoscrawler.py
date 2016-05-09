@@ -6,7 +6,7 @@ from datetime import timedelta, date
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants
+from commons import constants, utils
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
 from commons.errors import UsosClientError
@@ -51,7 +51,7 @@ class UsosCrawler(object):
             exc_doc.append(constants.EXCEPTION_TYPE, self.EXCEPTION_TYPE)
             exc_doc.append(constants.CREATED_TIME, datetime.now())
 
-            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc.message)
+            exc_doc = exc_doc.message
         else:
             exc_doc = {
                 'args': exception.args,
@@ -61,7 +61,10 @@ class UsosCrawler(object):
                 constants.CREATED_TIME: datetime.now()
             }
 
-            self.dao.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        try:
+            self.dao.insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
+        except Exception, ex:
+            logging.exception(ex)
 
         logging.error(exc_doc)
 

@@ -40,6 +40,9 @@ def serialize_dictionary(data):
             data[key] = serialize_dictionary(value)
         elif isinstance(value, datetime.datetime):
             data[key] = value.strftime(constants.DATETIME_DISPLAY_FORMAT)
+        elif isinstance(value, datetime.date):
+            value = datetime.datetime.combine(value, datetime.time.min)
+            data[key] = value.strftime(constants.DATETIME_DISPLAY_FORMAT)
         elif isinstance(value, ObjectId):
             data.pop(key)
     return data
@@ -53,6 +56,9 @@ def serialize_list(data):
         elif isinstance(element, dict):
             result.append(serialize_dictionary(element))
         elif isinstance(element, datetime.datetime):
+            result.append(element.strftime(constants.DATETIME_DISPLAY_FORMAT))
+        elif isinstance(element, datetime.date):
+            element = datetime.datetime.combine(element, datetime.time.min)
             result.append(element.strftime(constants.DATETIME_DISPLAY_FORMAT))
         elif isinstance(element, ObjectId):
             continue
