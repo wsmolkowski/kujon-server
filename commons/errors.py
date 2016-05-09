@@ -84,3 +84,8 @@ class UsosClientError(HttpError):
 class UsosAsyncError(HttpError):
     """USOS exceptions"""
     pass
+
+
+class AuthenticationError(Exception):
+    """USOS exceptions"""
+    pass
