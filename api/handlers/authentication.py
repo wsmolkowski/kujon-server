@@ -256,7 +256,7 @@ class MobiAuthHandler(BaseHandler, UsosMixin):
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
         user_doc = yield self.user_exists(email, usos_id)
-        if user_doc and user_doc[constants.USOS_PAIRED]:
+        if user_doc and constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
             self.error('Użytkownik ma już konto połączone z USOS {0}.'.format(user_doc[constants.USOS_ID]))
             return
 

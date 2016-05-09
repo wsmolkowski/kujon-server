@@ -73,9 +73,6 @@ class UserInfoApi(BaseHandler):
 
             user.update(user_info)
 
-            # remove unneccecary fields
-            user.pop('update_time')
-
             user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
 
             # add school name from usosinstances based on usos_id
