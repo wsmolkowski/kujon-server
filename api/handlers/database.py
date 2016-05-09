@@ -8,7 +8,7 @@ from tornado import gen
 from tornado.web import RequestHandler
 
 from commons import constants, settings
-from commons.errors import ApiError
+from commons.errors import ApiError, AuthenticationError
 from crawler import email_factory
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
@@ -196,7 +196,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': str(exception)
+                'exception': exception.message
             }
 
         if hasattr(self, 'user_doc'):
@@ -212,7 +212,9 @@ class DatabaseHandler(RequestHandler):
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
-            self.fail(message=exception.message())
+            self.error(message=exception.message())
+        elif isinstance(exception, AuthenticationError):
+            self.error(message=exception.message)
         else:
             self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
