@@ -183,7 +183,12 @@ class UsosVerificationHandler(BaseHandler, UsosMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        # oauth_token_key = self.get_argument('oauth_token')
+        oauth_token_key = self.get_argument('oauth_token')
+        oauth_verifier = self.get_argument('oauth_verifier')
+        if not oauth_token_key or not oauth_verifier:
+            self.error('Jeden z podanych parametrów jest niepoprawny.')
+            return
+
         user_doc = yield self.find_user()
 
         if self.get_argument('error', False):
@@ -202,13 +207,11 @@ class UsosVerificationHandler(BaseHandler, UsosMixin):
             self.redirect(settings.DEPLOY_WEB + '/#register')
             return
 
-        oauth_verifier = self.get_argument('oauth_verifier')
-
         if user_doc:
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             try:
-                content = yield self.mobile_token_verification(user_doc, usos_doc, oauth_verifier)
+                content = yield self.token_verification(usos_doc, oauth_verifier)
             except Exception, ex:
                 self.error(ex.message)
                 return
@@ -241,7 +244,7 @@ class MobiAuthHandler(BaseHandler, UsosMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-
+        new_user = False
         email = self.get_argument('email', default=None, strip=True)
         token = self.get_argument('token', default=None, strip=True)
         usos_id = self.get_argument('usos_id', default=None, strip=True)
@@ -252,22 +255,21 @@ class MobiAuthHandler(BaseHandler, UsosMixin):
 
         usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
+        user_doc = yield self.user_exists(email, usos_id)
+        if user_doc and user_doc[constants.USOS_PAIRED]:
+            self.error('Użytkownik ma już konto połączone z USOS {0}.'.format(user_doc[constants.USOS_ID]))
+            return
+
+        user_doc = yield self.find_user_email(email)
+        if not user_doc:
+            user_doc = dict()
+            new_user = True
+
         try:
             google_token = yield self.google_token(token)
             yield self.insert_token(google_token)
         except (Exception, web.HTTPError), ex:
             self.error(ex.message)
-            return
-
-        user_exists = yield self.user_exists(email, usos_doc[constants.USOS_ID])
-        if user_exists:
-            self.error('Użytkownik ma już konto połączone z USOS {0}.'.format(usos_doc[constants.USOS_ID]))
-            return
-
-        user_doc = yield self.find_user_email(email)
-        if user_doc and user_doc[constants.USOS_ID] != usos_doc[constants.USOS_ID]:
-            self.error('Brak możliwości zalogowania na drugi USOS {0}. Wcześniej wybrano {1}.'.format(
-                usos_doc[constants.USOS_ID], user_doc[constants.USOS_ID]))
             return
 
         try:
@@ -278,24 +280,19 @@ class MobiAuthHandler(BaseHandler, UsosMixin):
 
         request_token = self.get_token(content)
 
-        # update = user_doc
-        if not user_exists:
-            user_doc = dict()
-            user_doc[constants.USER_EMAIL] = email
+        now = datetime.now()
+        user_doc[constants.MOBI_TOKEN] = token
+        user_doc[constants.USER_EMAIL] = email
+        user_doc[constants.USOS_ID] = usos_id
+        user_doc[constants.ACCESS_TOKEN_SECRET] = request_token.secret
+        user_doc[constants.ACCESS_TOKEN_KEY] = request_token.key
+        user_doc[constants.UPDATE_TIME] = now
 
-        update = user_doc
-        update[constants.MOBI_TOKEN] = token
-        update[constants.USER_EMAIL] = email
-        update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-        update[constants.ACCESS_TOKEN_SECRET] = request_token.secret
-        update[constants.ACCESS_TOKEN_KEY] = request_token.key
-        update[constants.CREATED_TIME] = datetime.now()
-        update[constants.UPDATE_TIME] = datetime.now()
-
-        if not user_exists:
-            yield self.insert_user(update)
+        if new_user:
+            user_doc[constants.CREATED_TIME] = now
+            yield self.insert_user(user_doc)
         else:
-            yield self.update_user_email(email, update)
+            yield self.update_user_email(email, user_doc)
 
         authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
         url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
@@ -310,6 +307,10 @@ class UsosMobiVerificationHandler(BaseHandler, UsosMixin):
         # oauth_token_key = self.get_argument('oauth_token')
         oauth_verifier = self.get_argument('oauth_verifier')
         token = self.get_argument('token')
+
+        if not oauth_verifier or not token:
+            self.error('Jeden z podanych parametrów jest niepoprawny.')
+            return
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.MOBI_TOKEN: token})

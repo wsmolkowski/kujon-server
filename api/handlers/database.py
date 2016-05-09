@@ -162,7 +162,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.USER_EMAIL: email, constants.USOS_ID: usos_id})
         if user_doc:
-            raise gen.Return(True)
+            raise gen.Return(user_doc)
         raise gen.Return(False)
 
     @gen.coroutine
