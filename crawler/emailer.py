@@ -26,7 +26,7 @@ class EmailQueue(object):
         self.smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
         self.smtp.starttls()
         self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-        self._db = self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
         self.running = True
 
     @gen.coroutine
@@ -35,7 +35,7 @@ class EmailQueue(object):
         # check if data for users should be updated
         delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
 
-        cursor = self._db[constants.COLLECTION_EMAIL_QUEUE].find(
+        cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find(
             {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
         ).sort([(constants.UPDATE_TIME, -1)])
 
@@ -44,7 +44,7 @@ class EmailQueue(object):
             yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
-        cursor = self._db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
+        cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
@@ -58,14 +58,14 @@ class EmailQueue(object):
         # insert current job to history collection
         old = job.copy()
         old.pop(constants.MONGO_ID)
-        yield self._db[constants.COLLECTION_EMAIL_QUEUE_LOG].insert(old)
+        yield self.db[constants.COLLECTION_EMAIL_QUEUE_LOG].insert(old)
 
         # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
         job[constants.JOB_MESSAGE] = message
 
-        update = yield self._db[constants.COLLECTION_EMAIL_QUEUE].update(
+        update = yield self.db[constants.COLLECTION_EMAIL_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.debug(

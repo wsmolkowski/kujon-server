@@ -284,7 +284,7 @@ USOSINSTANCES = [
      'enabled': True,
      },
     {'usos_id': 'EUHE',
-     'name': 'Elbląska Uzelnia Humanistyczno-Ekonomiczna',
+     'name': 'Elbląska Uczelnia Humanistyczno-Ekonomiczna',
      'url': 'https://usosapps.euh-e.edu.pl/',
      'logo': '/static/img/logo/logo-euhe-64x64.jpg',
      'consumer_key': '5fWZYAdbSEkhvGXWTgmM',
