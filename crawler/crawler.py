@@ -1,5 +1,4 @@
 # coding=UTF-8
-# http://stackoverflow.com/questions/37068709/python-tornado-queue-toro-task-consuming-in-parallel
 
 import logging
 from datetime import timedelta, datetime
@@ -11,19 +10,16 @@ from tornado.options import parse_command_line
 from commons import settings, constants
 from commons.usosutils.usoscrawler import UsosCrawler
 
-QUEUE_MAXSIZE = 100
-CONCURRENT = 4
-SLEEP = 2
-
 
 class MongoDbQueue(object):
+
     def __init__(self):
         super(MongoDbQueue, self).__init__()
 
         self.crawler = UsosCrawler()
-        self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
+        self.queue = queues.Queue(maxsize=constants.WORKES_QUEUE_SIZE)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
-        self.running = True
+        self.processing = []
 
     @gen.coroutine
     def load_work(self):
@@ -44,9 +40,12 @@ class MongoDbQueue(object):
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
-                                                                                                job[constants.JOB_TYPE],
-                                                                                                self.queue.qsize()))
+            logging.debug(
+                'putting job user: {0} type: {1} queue size: {2} processing {3}'.format(job[constants.USER_ID],
+                                                                                        job[constants.JOB_TYPE],
+                                                                                        self.queue.qsize(),
+                                                                                        len(self.processing)))
+
             yield self.queue.put(job)
 
     @gen.coroutine
@@ -88,36 +87,43 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug("processing job: {0} with job type: {1} queue size: {2}".format(
-            job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize()))
+        try:
+            logging.info("processing job: {0} with job type: {1} queue size: {2} parallel processing: {3}".format(
+                job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize(), len(self.processing)))
+            self.processing.append(job)
 
-        if job[constants.JOB_TYPE] == 'initial_user_crawl':
-            yield self.crawler.initial_user_crawl(job[constants.USER_ID])
-        elif job[constants.JOB_TYPE] == 'update_user_crawl':
-            yield self.crawler.update_user_crawl(job[constants.USER_ID])
-        elif job[constants.JOB_TYPE] == 'archive_user':
-            yield self.remove_user_data(job[constants.USER_ID])
-        elif job[constants.JOB_TYPE] == 'unsubscribe_usos':
-            yield self.crawler.unsubscribe(job[constants.USER_ID])
-        else:
-            raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
+            yield self.update_job(job, constants.JOB_START)
 
-        logging.debug("processed job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
+            if job[constants.JOB_TYPE] == 'initial_user_crawl':
+                yield self.crawler.initial_user_crawl(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'update_user_crawl':
+                yield self.crawler.update_user_crawl(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'archive_user':
+                yield self.remove_user_data(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'unsubscribe_usos':
+                yield self.crawler.unsubscribe(job[constants.USER_ID])
+            else:
+                raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
+
+            yield self.update_job(job, constants.JOB_FINISH)
+
+            logging.info(
+                "processed job: {0} with job type: {1}  queue size: {2}".format(
+                    job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize()))
+        finally:
+            self.processing.remove(job)
 
     @gen.coroutine
     def worker(self):
-        while self.running:
-            if self.queue.empty():
-                yield self.load_work()
-                yield gen.sleep(SLEEP)
+        while True:
+            if self.queue.empty() or len(self.processing) >= constants.WORKERS_MAX:
+                yield gen.sleep(constants.WORKERS_SLEEP)
             else:
-                job = yield self.queue.get()
-                logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self.queue.qsize()))
-
                 try:
-                    yield self.update_job(job, constants.JOB_START)
+                    job = yield self.queue.get()
+                    logging.debug("consuming queue job {0}. current queue size: {1} parallel processing: {2}".format(
+                        job, self.queue.qsize(), len(self.processing)))
                     yield self.process_job(job)
-                    yield self.update_job(job, constants.JOB_FINISH)
                 except Exception, ex:
                     msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
                     logging.exception(msg)
@@ -126,8 +132,15 @@ class MongoDbQueue(object):
                     self.queue.task_done()
 
     @gen.coroutine
+    def producer(self):
+        while True:
+            yield self.load_work()
+            yield gen.sleep(constants.WORKERS_SLEEP)
+
+    @gen.coroutine
     def workers(self):
-        futures = [self.worker() for _ in range(CONCURRENT)]
+        ioloop.IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(constants.WORKERS_MAX)]
         yield futures
 
 
