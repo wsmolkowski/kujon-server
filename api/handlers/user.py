@@ -40,7 +40,7 @@ class UsersInfoByIdApi(BaseHandler):
                 # change student status value to name
                 user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
             else:
-                self.error('Please hold on we are looking your USOS user information.')
+                self.error('Szukamy informacji o Tobie w USOS.')
                 return
 
             # show url to photo
