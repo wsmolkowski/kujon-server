@@ -86,6 +86,7 @@ class EmailQueue(object):
 
         while self.running:
             if self.queue.empty():
+                yield self.load_work()
                 yield gen.sleep(SLEEP)
             else:
                 job = yield self.queue.get()
@@ -126,4 +127,4 @@ if __name__ == '__main__':
     emailQueue = EmailQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(emailQueue.workers)
+    io_loop.run_sync(emailQueue.worker)
