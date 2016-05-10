@@ -119,9 +119,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
             {constants.USOS_ID: usos[constants.USOS_ID],
              constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-        if not term_doc:
-            pass
-        else:
+
+        if term_doc:
             term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
