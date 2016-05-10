@@ -11,6 +11,7 @@ from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
+from collections import OrderedDict
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -154,7 +155,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
@@ -170,10 +171,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get terms
         terms = list()
-        for term in course_doc['course_editions']:
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
             terms.append(year)
 
@@ -193,7 +194,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
-                course['course_name'] = course['course_name']['pl']
+                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
 
@@ -203,7 +204,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses_by_term(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
@@ -219,16 +220,31 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get terms
         terms = list()
-        for term in course_doc['course_editions']:
+        terms_list = list()
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
             terms.append(year)
+            terms_list.append(term)
+
+        # TODO: enkapsulacja tego fragmentu
+        terms_ordered = OrderedDict()
+        for term in terms_list:
+            term_coursor = self.db[constants.COLLECTION_TERMS].find(
+                {constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                 constants.TERM_ID: term},
+                (constants.TERM_ID, constants.TERMS_ORDER_KEY))
+            while (yield term_coursor.fetch_next):
+                term_elem = term_coursor.next_object()
+            terms_ordered[term_elem[constants.TERMS_ORDER_KEY]] = term_elem[constants.TERM_ID]
+
+        courses_editions = course_doc[constants.COURSE_EDITIONS]
 
         # add groups to courses
-        for term in course_doc['course_editions']:
-            for course in course_doc['course_editions'][term]:
+        for term in courses_editions:
+            for course in courses_editions[term]:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: term,
@@ -245,7 +261,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 del course['course_units_ids']
                 del course[constants.TERM_ID]
 
-        raise gen.Return(course_doc['course_editions'])
+        courses = list()
+        for order_key in sorted(terms_ordered):
+            courses.append(courses_editions[terms_ordered[order_key]])
+
+        raise gen.Return(courses)
 
     @gen.coroutine
     def api_grades(self):
