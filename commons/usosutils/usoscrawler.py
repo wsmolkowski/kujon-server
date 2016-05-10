@@ -242,26 +242,6 @@ class UsosCrawler(object):
             logging.warn("no course_editions for user_id: %r in USOS.", user_id)
             return False
 
-    def __build_terms(self, client, user_id, usos, crawl_time):
-
-        for term_id in self.dao.get_user_terms(user_id):
-
-            if self.dao.get_term(term_id, usos[constants.USOS_ID]):
-                continue
-
-            try:
-                result = client.get_term_info(term_id)
-            except UsosClientError, ex:
-                self._exc(ex)
-                continue
-
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.TERM_ID] = result.pop(constants.ID)
-                self.dao.insert(constants.COLLECTION_TERMS, result)
-            else:
-                logging.warn("no term_id: %r found!", term_id)
-
     @gen.coroutine
     def __build_course_edition(self, client, user_id, usos, crawl_time):
 
@@ -508,7 +488,6 @@ class UsosCrawler(object):
             self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
             self.__build_programmes(client, user_info_id, crawl_time, usos)
             self.__build_curseseditions(client, crawl_time, user_id, usos)
-            self.__build_terms(client, user_id, usos, crawl_time)
             self.__build_course_edition(client, user_id, usos, crawl_time)
             self.__process_user_data(client, user_id, usos, crawl_time)
             self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
@@ -529,7 +508,6 @@ class UsosCrawler(object):
 
                 # if courseseditions are updated - process update
                 if self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos):
-                    self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)

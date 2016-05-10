@@ -8,8 +8,6 @@ from bson.objectid import ObjectId
 from base import BaseHandler
 from commons import constants, decorators
 
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
-
 
 class TermsApi(BaseHandler):
     @decorators.authenticated
@@ -18,29 +16,28 @@ class TermsApi(BaseHandler):
     def get(self):
 
         try:
-            terms = []
-            terms_doc = []
+            terms_docs = []
             courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, ('course_editions',))
 
             if courses_editions_doc:
-                for term in courses_editions_doc['course_editions']:
-                    terms.append(term)
-                    term_data = yield self.db[constants.COLLECTION_TERMS].find_one(
-                        {constants.TERM_ID: term, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                        ('name', 'end_date', 'finish_date', 'start_date', 'name'))
-                    term_data[constants.TERM_ID] = term
+                for term_id in courses_editions_doc['course_editions']:
+                    term_doc = yield self.api_term(term_id)
+
+                    term_doc[constants.TERM_ID] = term_id
                     today = date.today()
-                    end_date = datetime.strptime(term_data['finish_date'], "%Y-%m-%d").date()
+                    end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
                     if today <= end_date:
-                        term_data['active'] = True
+                        term_doc['active'] = True
                     else:
-                        term_data['active'] = False
-                    terms_doc.append(term_data)
-            if not terms_doc:
+                        term_doc['active'] = False
+
+                    terms_docs.append(term_doc)
+
+            if not terms_docs:
                 self.error("Poczekaj szukamy semestrów.")
             else:
-                self.success(terms_doc, 2592000)
+                self.success(terms_docs, 2592000)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -52,8 +49,7 @@ class TermApi(BaseHandler):
     def get(self, term_id):
 
         try:
-            term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-                {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+            term_doc = yield self.api_term(term_id)
 
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
