@@ -112,6 +112,7 @@ class EmailQueue(object):
 
     @gen.coroutine
     def workers(self):
+        io_loop.IOLoop.current().spawn_callback(self.producer)
         futures = [self.worker() for _ in range(CONCURRENT)]
         yield futures
 
