@@ -48,9 +48,6 @@ class EmailQueue(object):
 
         while (yield cursor.fetch_next):
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
-                                                                                                job[constants.JOB_TYPE],
-                                                                                                self.queue.qsize()))
             yield self.queue.put(job)
 
     @gen.coroutine
@@ -89,7 +86,6 @@ class EmailQueue(object):
 
         while self.running:
             if self.queue.empty():
-                yield self.load_work()
                 yield gen.sleep(SLEEP)
             else:
                 job = yield self.queue.get()
@@ -107,6 +103,12 @@ class EmailQueue(object):
                     yield self.update_job(job, constants.JOB_FAIL, msg)
                 finally:
                     self.queue.task_done()
+
+    @gen.coroutine
+    def producer(self):
+        while True:
+            yield self.load_work()
+            yield gen.sleep(constants.WORKERS_SLEEP)
 
     @gen.coroutine
     def workers(self):
