@@ -22,4 +22,4 @@ echo 'services started'
 
 sudo chown -R appuser:appuser $APPDIR
 sudo chmod +x $APPDIR/scripts/*
-
+sudo chmod -R g+w $APPDIR
