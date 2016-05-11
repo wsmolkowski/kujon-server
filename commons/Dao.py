@@ -99,23 +99,16 @@ class Dao(object):
     def get_term(self, term_id, usos_id):
         return self._db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
 
-    def get_courses_editions(self, course_id, term_id, usos_id):
-        return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.COURSE_ID: course_id, constants.TERM_ID: term_id, constants.USOS_ID: usos_id})
-
-    def get_course_edition(self, course_id, term_id, usos_id):
+    def get_course_edition(self, user_id, course_id, term_id, usos_id):
         return self._db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.COURSE_ID: course_id,
+            {constants.USER_ID: user_id,
+             constants.COURSE_ID: course_id,
              constants.TERM_ID: term_id,
              constants.USOS_ID: usos_id})
 
     def get_usos_course_edition(self, usos_id):
         return self._db[constants.COLLECTION_COURSE_EDITION].find(
             {constants.USOS_ID: usos_id})
-
-    def get_courses_editions(self, user_id, usos_id):
-        return self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USOS_ID: usos_id, constants.USER_ID: user_id})
 
     def get_courses_conducted_by_lecturers(self, usos_id):
         fields = ['course_editions_conducted']
@@ -180,19 +173,7 @@ class Dao(object):
              constants.TT_STARTDATE: str(given_date)})
         return tt
 
-    def get_user_courses(self, user_id, usos_id):
-        course_edition = list()
-        data = self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(user_id), constants.USOS_ID: usos_id})
-
-        for term_data in data['course_editions'].values():
-            for term in term_data:
-                if term[constants.COURSE_ID] not in course_edition:
-                    course_edition.append({constants.COURSE_ID: term[constants.COURSE_ID],
-                                           constants.TERM_ID: term[constants.TERM_ID]})
-        return course_edition
-
-    def get_user_courses_editions(self, user_id):
+    def get_courses_editions(self, user_id):
         result = list()
         data = self._db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(user_id)})

@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import logging
 import traceback
 from datetime import datetime
@@ -121,19 +123,21 @@ class UsosCrawler(object):
 
         # if user conducts courses - fetch courses
         if result['course_editions_conducted']:
-            self.__build_course_editions_for_conducted(client, result['course_editions_conducted'], crawl_time, usos)
+            self.__build_course_editions_for_conducted(client, user_id, result['course_editions_conducted'], crawl_time, usos)
 
         return result[constants.ID]
 
-    def __build_course_editions_for_conducted(self, client, courses_conducted, crawl_time, usos):
+    def __build_course_editions_for_conducted(self, client, user_id, courses_conducted, crawl_time, usos):
+
         for courseterm in courses_conducted:
             course_id, term_id = courseterm[constants.ID].split('|')
-            course_doc = self.dao.get_course_edition(course_id, term_id, usos[constants.USOS_ID])
+            course_doc = self.dao.get_course_edition(user_id, course_id, term_id, usos[constants.USOS_ID])
             if course_doc:
                 continue
 
             try:
                 course_result = client.course_edition(course_id, term_id, fetch_participants=False)
+                course_result[constants.USER_ID] = user_id
             except UsosClientError, ex:
                 self._exc(ex)
                 continue
@@ -205,10 +209,10 @@ class UsosCrawler(object):
             else:
                 logging.warn("no programme: %r.", programme[constants.ID])
 
-    def __build_curseseditions(self, client, crawl_time, user_id, usos):
+    def __build_curses_editions(self, client, crawl_time, user_id, usos):
 
         update = False
-        course_edition = self.dao.get_courses_editions(user_id, usos[constants.USOS_ID])
+        course_edition = self.dao.get_courses_editions(user_id)
         if course_edition:
             update = True
 
@@ -266,31 +270,31 @@ class UsosCrawler(object):
 
     def __build_course_edition(self, client, user_id, usos, crawl_time):
 
-        for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
-            existing_doc = self.dao.get_course_edition(course_edition[constants.COURSE_ID],
-                                                       course_edition[constants.TERM_ID], usos[constants.USOS_ID])
+        for course_edition in self.dao.get_courses_editions(user_id):
+
+            existing_doc = self.dao.get_course_edition(user_id, course_edition[1], course_edition[0], usos[constants.USOS_ID])
 
             if existing_doc:
                 continue
 
             try:
-                result = client.course_edition(course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID],
-                                               fetch_participants=True)
+                # TODO: zamienić 1 i 0 na stałe i poprawić metdotę course_edition
+                result = client.course_edition(course_edition[1], course_edition[0], fetch_participants=True)
             except UsosClientError, ex:
                 self._exc(ex)
                 continue
 
             if result:
                 result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                result[constants.USER_ID] = user_id
                 self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
 
                 if existing_doc:
                     self.dao.delete_doc(constants.COLLECTION_COURSE_EDITION, existing_doc[constants.MONGO_ID])
             else:
-                logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[
-                    constants.COURSE_ID], course_edition[constants.TERM_ID])
+                logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[1], course_edition[0])
 
-    def __build_courses_and_rest_of_existing_courses(self, client, usos, crawl_time):
+    def __build_courses(self, client, usos, crawl_time):
 
         courses = list()
         courses_editions = list()
@@ -334,27 +338,28 @@ class UsosCrawler(object):
             else:
                 logging.warn("no course for course_id: %r.", course)
 
-        users_to_fetch = list()
-        # get course_edition for lecturers
-        if len(courses_editions) > 0:
-            for ca in courses_editions:
-                for course_id, term_id in ca.items():
-                    continue
-                try:
-                    result = client.course_edition(course_id, term_id)
-                except UsosClientError, ex:
-                    self._exc(ex)
-                    continue
-
-                if result:
-                    result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                    self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-                else:
-                    logging.warn("no course_edition for course_id: %r term_id: %r", course_id, term_id)
-
-                # get lecturers for rest of given course_edition
-                self.__find_users_related(users_to_fetch, result)
-        self.__build_users_info(client, crawl_time, users_to_fetch, usos)
+        # wylaczamy sciaganie reszty
+        # users_to_fetch = list()
+        # # get course_edition for lecturers
+        # if len(courses_editions) > 0:
+        #     for ca in courses_editions:
+        #         for course_id, term_id in ca.items():
+        #             continue
+        #         try:
+        #             result = client.course_edition(course_id, term_id)
+        #         except UsosClientError, ex:
+        #             self._exc(ex)
+        #             continue
+        #
+        #         if result:
+        #             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+        #             self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+        #         else:
+        #             logging.warn("no course_edition for course_id: %r term_id: %r", course_id, term_id)
+        #
+        #         # get lecturers for rest of given course_edition
+        #         # self.__find_users_related(users_to_fetch, result)
+        # self.__build_users_info(client, crawl_time, users_to_fetch, usos)
 
     def __build_faculties(self, client, usos, crawl_time):
         for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
@@ -426,7 +431,7 @@ class UsosCrawler(object):
         users_found = list()
         units_found = list()
 
-        for data in self.dao.get_user_courses_editions(user_id):
+        for data in self.dao.get_courses_editions(user_id):
             term_id, course_id = data[0], data[1]
 
             try:
@@ -435,7 +440,8 @@ class UsosCrawler(object):
                 self._exc(ex)
                 return
 
-            self.__find_users_related(users_found, result)
+            # wyłączam sciaganie bo to bedzie ściągane na zawołanie
+            # self.__find_users_related(users_found, result)
 
             # units
             if result and 'course_units_ids' in result:
@@ -448,12 +454,11 @@ class UsosCrawler(object):
                 if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
                     continue  # grades for course and term already exists
 
-            if result and (
-                            len(result['grades']['course_grades']) > 0 or len(
-                        result['grades']['course_units_grades']) > 0):
+            if result and (len(result['grades']['course_grades'])>0 or len(result['grades']['course_units_grades'])>0):
                 self.dao.insert(constants.COLLECTION_GRADES, result)
 
-        self.__build_users_info(client, crawl_time, users_found, usos)
+        # wyłączam sciaganie bo to bedzie ściągane na zawołanie
+        # self.__build_users_info(client, crawl_time, users_found, usos)
         self.__build_units(client, crawl_time, units_found, usos)
         self.__build_groups(client, crawl_time, units_found, usos)
 
@@ -501,12 +506,18 @@ class UsosCrawler(object):
             self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
             self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
             self.__build_programmes(client, user_info_id, crawl_time, usos)
-            self.__build_curseseditions(client, crawl_time, user_id, usos)
-            # self.__build_terms(client, user_id, usos, crawl_time)
+            self.__build_curses_editions(client, crawl_time, user_id, usos)
+            self.__build_terms(client, user_id, usos, crawl_time)
             self.__build_course_edition(client, user_id, usos, crawl_time)
+
             self.__process_user_data(client, user_id, usos, crawl_time)
-            self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
+
+            # do przeróbki niech działa nie na kursach tylko programach i przemieniesie nad programy
             self.__build_faculties(client, usos, crawl_time)
+
+            # wyłączamy ściąganie  dla wszystkich
+            self.__build_courses(client, usos, crawl_time)
+
         except Exception, ex:
             self._exc(ex)
 
@@ -521,11 +532,11 @@ class UsosCrawler(object):
                 client, usos = self.__build_client(user)
 
                 # if courseseditions are updated - process update
-                if self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos):
+                if self.__build_curses_editions(client, crawl_time, user[constants.MONGO_ID], usos):
                     # self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
-                    self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
+                    self.__build_courses(client, usos, crawl_time)
                     self.__build_faculties(client, usos, crawl_time)
             except Exception, ex:
                 self._exc(ex)
