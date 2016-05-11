@@ -84,7 +84,7 @@ USOSINSTANCES = [
      },
     {'usos_id': 'UMCS',
      'name': 'Uniwersytet Marii Curie-Skłodowskiej w Lublinie',
-     'url': 'https://apps.umcs.pl/',
+     'url': 'https://apps.umcs.pl',
      'logo': '/static/img/logo/logo-umcs-64x64.jpg',
      'consumer_key': 'M9ZfkBFrrRULYfKEJJSr',
      'consumer_secret': 'zApXh56mZ42wDz7fSTSKQUX5fqtaUfxP6mEw8Yrd',
