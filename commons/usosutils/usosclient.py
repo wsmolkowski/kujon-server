@@ -51,20 +51,26 @@ class UsosClient(object):
             return True
         return False
 
-    def _request(self, uri):
+    def build_request(self, uri):
         return "{0}{1}".format(self.base_url, uri)
 
-    def user_info(self, user_info_id):
-        if user_info_id:
-            request = u"{0}{1}{2}{3}".format(self.base_url, URI_USER_INFO, u"&user_id=", user_info_id)
-        else:
-            request = u"{0}{1}".format(self.base_url, URI_USER_INFO)
+    def user_info_id(self, user_info_id):
+        request = u"{0}{1}{2}{3}".format(self.base_url, URI_USER_INFO, u"&user_id=", user_info_id)
 
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
         else:
             raise UsosClientError(code, body, uri=request, parameters=[user_info_id])
+
+    def user_info(self):
+        request = u"{0}{1}".format(self.base_url, URI_USER_INFO)
+
+        code, body = self.client.request(request)
+        if self._validate(code):
+            return json.loads(body)
+        else:
+            raise UsosClientError(code, body, uri=request)
 
     def user_info_photo(self, user_id):
         request = u"{0}{1}".format(self.base_url, URI_USER_INFO_PHOTO.format(user_id))
@@ -190,7 +196,7 @@ class UsosClient(object):
 
     def subscribe(self, event_type, verify_token):
         # crstests/user_grade, grades/grade, crstests/user_point
-        request = self._request(URI_SUBSCRIBE_EVENT.format(event_type, self.SUBSCRIPTION_CALLBACK, verify_token))
+        request = self.build_request(URI_SUBSCRIBE_EVENT.format(event_type, self.SUBSCRIPTION_CALLBACK, verify_token))
 
         code, body = self.client.request(request)
         if self._validate(code):
@@ -199,7 +205,7 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[event_type, verify_token])
 
     def subscriptions(self):
-        request = self._request(URI_SUBSCRIPTIONS)
+        request = self.build_request(URI_SUBSCRIPTIONS)
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
@@ -207,7 +213,7 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request)
 
     def unsubscribe(self):
-        request = self._request(URI_UNSUBSCRIBE)
+        request = self.build_request(URI_UNSUBSCRIBE)
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)

@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+from collections import OrderedDict
 from datetime import date, timedelta
 
 from bson.objectid import ObjectId
@@ -23,6 +24,10 @@ LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
+USER_INFO_LIMIT_FIELDS = (
+    'first_name', 'last_name', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',
+    'user_type', 'has_photo', 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -51,8 +56,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             except Exception:
                 raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: self.user_doc[constants.MONGO_ID]})
+        user_info_doc = yield self.api_user_info()
+
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
@@ -69,8 +74,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 # remove from participant list current user
                 course_doc['participants'] = [participant for participant in course_doc['participants'] if
                                               participant[constants.USER_ID] != user_info_doc[constants.ID]]
-        else:
-            pass
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -115,13 +118,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     groups.append(group_doc)
         course_doc['groups'] = groups
 
-        # terms
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.USOS_ID: usos[constants.USOS_ID],
-             constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-        if not term_doc:
-            pass
-        else:
+        term_doc = yield self.api_term(term_id)
+
+        if term_doc:
             term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
@@ -154,7 +153,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
@@ -170,10 +169,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get terms
         terms = list()
-        for term in course_doc['course_editions']:
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
             terms.append(year)
 
@@ -193,7 +192,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
-                course['course_name'] = course['course_name']['pl']
+                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
 
@@ -203,32 +202,27 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses_by_term(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów")
+            raise ApiError("Poczekaj szukamy edycji przedmiotów")
 
         # get courses_classtypes
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
-            constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes(self.user_doc[constants.USOS_ID])
 
-        # get terms
+        # get terms_list for course
         terms = list()
-        for term in course_doc['course_editions']:
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
-            terms.append(year)
+            terms.append(term)
 
         # add groups to courses
-        for term in course_doc['course_editions']:
-            for course in course_doc['course_editions'][term]:
+        for term in course_doc[constants.COURSE_EDITIONS]:
+            for course in course_doc[constants.COURSE_EDITIONS][term]:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: term,
@@ -245,7 +239,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 del course['course_units_ids']
                 del course[constants.TERM_ID]
 
-        raise gen.Return(course_doc['course_editions'])
+        # get course in order in order_keys as dictionary and reverse sort
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        courses = list()
+        for order_key in terms_by_order:
+            courses.append({terms_by_order[order_key]: course_doc[constants.COURSE_EDITIONS][terms_by_order[order_key]]})
+
+        raise gen.Return(courses)
 
     @gen.coroutine
     def api_grades(self):
@@ -388,13 +389,22 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     new_grades.append(elem)
 
         # grouping grades by term
-        terms = dict()
+        grades = dict()
+        terms = list()
         for grade in new_grades:
-            if grade[constants.TERM_ID] not in terms:
-                terms[grade[constants.TERM_ID]] = list()
-            terms[grade[constants.TERM_ID]].append(grade)
+            if grade[constants.TERM_ID] not in grades:
+                grades[grade[constants.TERM_ID]] = list()
+                terms.append(grade[constants.TERM_ID])
+            grades[grade[constants.TERM_ID]].append(grade)
 
-        raise gen.Return(terms)
+        # sort grades in order of terms by order_keys descending
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        grades_sorted_by_term = list()
+        for order_key in terms_by_order:
+            grades_sorted_by_term.append({terms_by_order[order_key]: grades[terms_by_order[order_key]]})
+
+        raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
     def api_grade(self, course_id, term_id):
@@ -437,35 +447,38 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         courses = {}
         lecturers_returned = {}
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
-        if course_doc:
-            for term in course_doc['course_editions']:
-                for course in course_doc['course_editions'][term]:
+
+        if courses_editions_doc:
+
+            for term in courses_editions_doc[constants.COURSE_EDITIONS]:
+                for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                course_editions_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course,
+                     constants.TERM_ID: courses[course][constants.TERM_ID],
                      constants.USOS_ID: self.user_doc[constants.USOS_ID]})
 
-                if not course_doc:
+                if not course_editions_doc:
                     continue
 
-                for lecturer in course_doc[constants.LECTURERS]:
+                for lecturer in course_editions_doc[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
                     lecturers_returned[lecturer_id] = lecturer
 
-            lecturers_returned = lecturers_returned.values()
+        lecturers_returned = lecturers_returned.values()
 
         raise gen.Return(lecturers_returned)
 
     @gen.coroutine
     def api_lecturer(self, user_info_id):
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
-                                                                            LIMIT_FIELDS_USER)
+        user_info = yield self.api_user_info_id(user_info_id)
+
         if not user_info:
-            raise ApiError("Poczekaj szukamy informacji o nauczycielu", user_info_id)
+            raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
 
         # change ObjectId to str for photo
         if user_info['has_photo']:
@@ -509,8 +522,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_programmes(self):
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+        user_info = yield self.api_user_info()
 
         if not user_info:
             raise ApiError("Szukamy danych o Twoich kursach")
@@ -536,8 +548,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
-            self.error("Niepoprawny format daty - RRRR-MM-DD)")
-            return
+            self.error("Niepoprawny format daty: RRRR-MM-DD.")
+            raise ex
 
         # get usosdata for
         usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
@@ -591,3 +603,45 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])
+
+    @gen.coroutine
+    def api_term(self, term_id):
+        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+            {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+
+        if not term_doc:
+            term_doc = yield self.usos_term(term_id)
+            yield self.insert(constants.COLLECTION_TERMS, term_doc)
+
+        raise gen.Return(term_doc)
+
+    @gen.coroutine
+    def api_user_info(self):
+        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(user_id)}, USER_INFO_LIMIT_FIELDS)
+
+        if not user_info_doc:
+            user_info_doc = yield self.usos_user_info()
+            user_info_doc[constants.USER_ID] = user_id
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+
+        raise gen.Return(user_info_doc)
+
+    @gen.coroutine
+    def api_user_info_id(self, user_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]},
+            USER_INFO_LIMIT_FIELDS)
+
+        if not user_info_doc:
+            user_info_doc = yield self.usos_user_info(user_id)
+            user_info_doc[constants.USER_ID] = user_id
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+
+        raise gen.Return(user_info_doc)

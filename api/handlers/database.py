@@ -196,7 +196,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': exception.message
+                'exception': str(exception.message)
             }
 
         if hasattr(self, 'user_doc'):
@@ -219,3 +219,29 @@ class DatabaseHandler(RequestHandler):
             self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
+
+    @gen.coroutine
+    def get_classtypes(self, usos_id):
+
+        classtypes = dict()
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos_id})
+        while (yield cursor.fetch_next):
+            ct = cursor.next_object()
+            classtypes[ct['id']] = ct['name']['pl']
+
+        raise gen.Return(classtypes)
+
+    @gen.coroutine
+    def get_terms_with_order_keys(self, usos_id, terms_list):
+
+        terms_by_order = dict()
+        for term in terms_list:
+            term_coursor = self.db[constants.COLLECTION_TERMS].find(
+                {constants.USOS_ID: usos_id,
+                 constants.TERM_ID: term},
+                (constants.TERM_ID, constants.TERMS_ORDER_KEY))
+            while (yield term_coursor.fetch_next):
+                term_doc = term_coursor.next_object()
+            terms_by_order[term_doc[constants.TERMS_ORDER_KEY]] = term_doc[constants.TERM_ID]
+
+        raise gen.Return(terms_by_order)

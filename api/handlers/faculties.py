@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import tornado.web
-from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants, decorators
@@ -37,8 +36,7 @@ class FacultiesApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         try:
-            users_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+            users_info_doc = yield self.api_user_info()
 
             # get programmes for user
             programmes_ids = list()

@@ -74,11 +74,90 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
+    def usos_term(self, term_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.get_term_info(term_id)
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.TERM_ID] = result.pop(constants.ID)
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_user_info(self):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.user_info()
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.TERM_ID] = result.pop(constants.ID)
+
+        # # if user has photo - download
+        # if 'has_photo' in result and result['has_photo']:
+        #     result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
+        #                                                        crawl_time, usos)
+
+        # strip english values and if value is empty change to None
+        result['office_hours'] = result['office_hours']['pl']
+        result['interests'] = result['interests']['pl']
+
+        # strip empty values
+        if result['homepage_url'] and result['homepage_url'] == "":
+            result['homepage_url'] = None
+
+        # strip english names from programmes description
+        for programme in result['student_programmes']:
+            programme['programme']['description'] = programme['programme']['description']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_user_info_id(self, user_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.user_info_id(user_id)
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.TERM_ID] = result.pop(constants.ID)
+
+        # # if user has photo - download
+        # if 'has_photo' in result and result['has_photo']:
+        #     result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
+        #                                                        crawl_time, usos)
+
+        # strip english values and if value is empty change to None
+        result['office_hours'] = result['office_hours']['pl']
+        result['interests'] = result['interests']['pl']
+
+        # strip empty values
+        if result['homepage_url'] and result['homepage_url'] == "":
+            result['homepage_url'] = None
+
+        # strip english names from programmes description
+        for programme in result['student_programmes']:
+            programme['programme']['description'] = programme['programme']['description']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
     def token_verification(self, usos_doc, token):
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
         request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
+            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades|crstests|email|photo|student_exams',
             settings.CALLBACK_MOBI_URL + '?token=' + token)
 
         client = self.oauth_client(consumer, usos_doc)
