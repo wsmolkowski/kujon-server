@@ -101,10 +101,15 @@ class UsosMixin(object):
         result[constants.UPDATE_TIME] = create_time
         result[constants.TERM_ID] = result.pop(constants.ID)
 
-        # # if user has photo - download
-        # if 'has_photo' in result and result['has_photo']:
-        #     result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
-        #                                                        crawl_time, usos)
+        if 'has_photo' in result and result['has_photo']:
+            photo_result = client.user_info_photo(self.user_doc[constants.MONGO_ID])
+            if photo_result:
+                result[constants.CREATED_TIME] = create_time
+                result[constants.UPDATE_TIME] = create_time
+                photo_doc = yield self.insert(constants.COLLECTION_PHOTOS, photo_result)
+                result['has_photo'] = photo_doc
+            else:
+                logging.warn("no photo for user_id: %r", self.user_doc[constants.MONGO_ID])
 
         # strip english values and if value is empty change to None
         result['office_hours'] = result['office_hours']['pl']
@@ -122,6 +127,7 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_user_info_id(self, user_id):
+
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         client = yield self.usos_client()
         create_time = datetime.now()
@@ -132,10 +138,19 @@ class UsosMixin(object):
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
-        # # if user has photo - download
-        # if 'has_photo' in result and result['has_photo']:
-        #     result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
-        #                                                        crawl_time, usos)
+        # if user has photo - download
+        if 'has_photo' in result and result['has_photo']:
+
+            photo_result = client.user_info_photo(user_id)
+
+            if photo_result:
+                result[constants.CREATED_TIME] = create_time
+                result[constants.UPDATE_TIME] = create_time
+                photo_doc = yield self.insert(constants.COLLECTION_PHOTOS, photo_result)
+                result['has_photo'] = photo_doc
+            else:
+                logging.warn("no photo for user_id: %r", user_id)
+
 
         # strip english values and if value is empty change to None
         result['office_hours'] = result['office_hours']['pl']
