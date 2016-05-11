@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+from collections import OrderedDict
 from datetime import date, timedelta
 
 from bson.objectid import ObjectId
@@ -11,7 +12,6 @@ from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
-from collections import OrderedDict
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -612,11 +612,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not term_doc:
             term_doc = yield self.usos_term(term_id)
             yield self.insert(constants.COLLECTION_TERMS, term_doc)
-            raise gen.Return(term_doc)
-        else:
-            raise gen.Return(term_doc)
 
-        raise gen.Return(False)
+        raise gen.Return(term_doc)
 
     @gen.coroutine
     def api_user_info(self):
@@ -630,15 +627,13 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             user_info_doc[constants.USER_ID] = user_id
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-            raise gen.Return(user_info_doc)
-        else:
-            raise gen.Return(user_info_doc)
 
-        raise gen.Return(False)
+        raise gen.Return(user_info_doc)
 
     @gen.coroutine
     def api_user_info_id(self, user_id):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
             {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]},
             USER_INFO_LIMIT_FIELDS)
@@ -648,8 +643,5 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             user_info_doc[constants.USER_ID] = user_id
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-            raise gen.Return(user_info_doc)
-        else:
-            raise gen.Return(user_info_doc)
 
-        raise gen.Return(False)
+        raise gen.Return(user_info_doc)
