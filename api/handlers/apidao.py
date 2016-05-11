@@ -475,6 +475,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_lecturer(self, user_info_id):
+
         user_info = yield self.api_user_info_id(user_info_id)
 
         if not user_info:
@@ -597,7 +598,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
                     {constants.ID: str(lecturer)}, ('id', 'first_name', 'last_name', 'titles'))
                 if not lecturer_info:
-                    self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
+                    lecturer_info = self.api_user_info_id(str(lecturer))
+                    if not lecturer_info:
+                        self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
                 else:
                     tt['lecturers'] = list()
                     tt['lecturers'].append(lecturer_info)
@@ -617,6 +620,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_user_info(self):
+
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
@@ -632,6 +636,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_user_info_id(self, user_id):
+
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
