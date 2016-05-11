@@ -24,6 +24,9 @@ LIMIT_FIELDS_USER = (
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
+USER_INFO_LIMIT_FIELDS = (
+    'first_name', 'last_name', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',
+    'user_type', 'has_photo', 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -52,8 +55,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             except Exception:
                 raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: self.user_doc[constants.MONGO_ID]})
+        user_info_doc = yield self.api_user_info()
+
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
@@ -70,8 +73,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 # remove from participant list current user
                 course_doc['participants'] = [participant for participant in course_doc['participants'] if
                                               participant[constants.USER_ID] != user_info_doc[constants.ID]]
-        else:
-            pass
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -459,10 +460,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_lecturer(self, user_info_id):
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
-                                                                            LIMIT_FIELDS_USER)
+        user_info = yield self.api_user_info_id(user_info_id)
+
         if not user_info:
-            raise ApiError("Poczekaj szukamy informacji o nauczycielu", user_info_id)
+            raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
 
         # change ObjectId to str for photo
         if user_info['has_photo']:
@@ -506,8 +507,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_programmes(self):
-        user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+        user_info = yield self.api_user_info()
 
         if not user_info:
             raise ApiError("Szukamy danych o Twoich kursach")
@@ -533,8 +533,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
-            self.error("Niepoprawny format daty - RRRR-MM-DD)")
-            return
+            self.error("Niepoprawny format daty: RRRR-MM-DD.")
+            raise ex
 
         # get usosdata for
         usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
@@ -599,4 +599,42 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             yield self.insert(constants.COLLECTION_TERMS, term_doc)
             raise gen.Return(term_doc)
         else:
-            raise gen.Return(False)
+            raise gen.Return(term_doc)
+
+        raise gen.Return(False)
+
+    @gen.coroutine
+    def api_user_info(self):
+        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.USER_ID: ObjectId(user_id)}, USER_INFO_LIMIT_FIELDS)
+
+        if not user_info_doc:
+            user_info_doc = yield self.usos_user_info()
+            user_info_doc[constants.USER_ID] = user_id
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+            raise gen.Return(user_info_doc)
+        else:
+            raise gen.Return(user_info_doc)
+
+        raise gen.Return(False)
+
+    @gen.coroutine
+    def api_user_info_id(self, user_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
+            {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]},
+            USER_INFO_LIMIT_FIELDS)
+
+        if not user_info_doc:
+            user_info_doc = yield self.usos_user_info(user_id)
+            user_info_doc[constants.USER_ID] = user_id
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+            raise gen.Return(user_info_doc)
+        else:
+            raise gen.Return(user_info_doc)
+
+        raise gen.Return(False)

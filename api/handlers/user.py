@@ -12,9 +12,7 @@ from commons.errors import ApiError
 from commons.usosutils import usoshelper
 from commons.usosutils import usosinstances
 
-LIMIT_FIELDS = (
-    'first_name', 'last_name', 'email', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',
-    'user_type', 'has_photo')
+
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
 
@@ -26,26 +24,16 @@ class UsersInfoByIdApi(BaseHandler):
     def get(self, user_info_id):
 
         try:
-            user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id},
-                                                                                LIMIT_FIELDS)
+            user_info = yield self.api_user_info_id(user_id=user_info_id)
+
             if user_info:
-                # check if user has account in kujon
-                user = yield self.db[constants.COLLECTION_USERS].find_one(
-                    {'id': ObjectId(user_info[constants.MONGO_ID])})
-                if not user:
-                    user_info[constants.USER_ID] = None
-                else:
-                    user_info[constants.USER_ID] = user[constants.USER_ID]
+                if 'has_photo' in user_info and user_info['has_photo']:
+                    user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
-                # change student status value to name
-                user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
+                if 'student_status' in user_info:
+                    user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
             else:
-                self.error('Szukamy informacji o Tobie w USOS.')
-                return
-
-            # show url to photo
-            if user_info['has_photo']:
-                user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
+                raise ApiError('Szukamy informacji o Tobie w USOS.')
 
             self.success(user_info, cache_age=2592000)
         except Exception, ex:
@@ -57,19 +45,19 @@ class UserInfoApi(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
+        '''
+        :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO
+        '''
 
         try:
             user = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
-            user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, LIMIT_FIELDS)
+
+            user_info = yield self.api_user_info()
 
             if not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
-
-            if 'email' in user_info:
-                user_info['user_email'] = user_info.pop('email')
 
             user.update(user_info)
 
@@ -79,10 +67,7 @@ class UserInfoApi(BaseHandler):
             user['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                       usos[constants.USOS_ID] == user[constants.USOS_ID]), None)
 
-            if not user:
-                self.error('Poczekaj szukamy informacji o użytkowniku.')
-            else:
-                self.success(user, cache_age=2592000)
+            self.success(user, cache_age=2592000)
         except Exception, ex:
             yield self.exc(ex)
 

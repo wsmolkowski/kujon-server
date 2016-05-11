@@ -88,7 +88,10 @@ class UsosCrawler(object):
             return
 
         try:
-            result = client.user_info(user_info_id)
+            if user_info_id:
+                result = client.user_info_id(user_info_id)
+            else:
+                result = client.user_info()
         except UsosClientError, ex:
             self._exc(ex)
             return
