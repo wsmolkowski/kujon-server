@@ -57,6 +57,7 @@ if __name__ == "__main__":
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
         server.listen(options.port)
+        # server.start(0)  # forks one process per cpu
         logging.info('SSL ENABLED FOR EVENT')
     else:
         application.listen(options.port)

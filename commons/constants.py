@@ -117,3 +117,7 @@ MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
 EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
 
 DISABLE_SSL_CERT_VALIDATION = 'disable_ssl_certificate_validation'
+
+# WORKES_QUEUE_SIZE = 100
+# WORKERS_MAX = 10
+# WORKERS_SLEEP = 1

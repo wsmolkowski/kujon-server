@@ -24,6 +24,7 @@ LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -116,13 +117,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     groups.append(group_doc)
         course_doc['groups'] = groups
 
-        # terms
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.USOS_ID: usos[constants.USOS_ID],
-             constants.TERM_ID: term_id}, LIMIT_FIELDS_TERMS)
-        if not term_doc:
-            pass
-        else:
+        term_doc = yield self.api_term(term_id)
+
+        if term_doc:
             term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
@@ -603,3 +600,15 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])
+
+    @gen.coroutine
+    def api_term(self, term_id):
+        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
+            {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+
+        if not term_doc:
+            term_doc = yield self.usos_term(term_id)
+            yield self.insert(constants.COLLECTION_TERMS, term_doc)
+            raise gen.Return(term_doc)
+        else:
+            raise gen.Return(False)

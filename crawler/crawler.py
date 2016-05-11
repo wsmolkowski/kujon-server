@@ -126,7 +126,14 @@ class MongoDbQueue(object):
                     self.queue.task_done()
 
     @gen.coroutine
+    def producer(self):
+        while True:
+            yield self.load_work()
+            yield gen.sleep(constants.WORKERS_SLEEP)
+
+    @gen.coroutine
     def workers(self):
+        io_loop.IOLoop.current().spawn_callback(self.producer)
         futures = [self.worker() for _ in range(CONCURRENT)]
         yield futures
 
@@ -140,4 +147,4 @@ if __name__ == '__main__':
     mongoQueue = MongoDbQueue()
 
     io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(mongoQueue.workers)
+    io_loop.run_sync(mongoQueue.worker)

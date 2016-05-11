@@ -74,6 +74,21 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
+    def usos_term(self, term_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.get_term_info(term_id)
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.TERM_ID] = result.pop(constants.ID)
+
+        raise gen.Return(result)
+
+    @gen.coroutine
     def token_verification(self, usos_doc, token):
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
