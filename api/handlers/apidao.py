@@ -446,26 +446,29 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         courses = {}
         lecturers_returned = {}
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
-        if course_doc:
-            for term in course_doc['course_editions']:
-                for course in course_doc['course_editions'][term]:
+
+        if courses_editions_doc:
+
+            for term in courses_editions_doc[constants.COURSE_EDITIONS]:
+                for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                course_editions_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course,
+                     constants.TERM_ID: courses[course][constants.TERM_ID],
                      constants.USOS_ID: self.user_doc[constants.USOS_ID]})
 
-                if not course_doc:
+                if not course_editions_doc:
                     continue
 
-                for lecturer in course_doc[constants.LECTURERS]:
+                for lecturer in course_editions_doc[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
                     lecturers_returned[lecturer_id] = lecturer
 
-            lecturers_returned = lecturers_returned.values()
+        lecturers_returned = lecturers_returned.values()
 
         raise gen.Return(lecturers_returned)
 
