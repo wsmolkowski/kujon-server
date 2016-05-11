@@ -10,7 +10,6 @@ from commons import constants, utils
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
 from commons.errors import UsosClientError
-from commons.helpers import log_execution_time
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
@@ -242,7 +241,26 @@ class UsosCrawler(object):
             logging.warn("no course_editions for user_id: %r in USOS.", user_id)
             return False
 
-    @gen.coroutine
+    def __build_terms(self, client, user_id, usos, crawl_time):
+
+        for term_id in self.dao.get_user_terms(user_id):
+
+            if self.dao.get_term(term_id, usos[constants.USOS_ID]):
+                continue
+
+            try:
+                result = client.get_term_info(term_id)
+            except UsosClientError, ex:
+                self._exc(ex)
+                continue
+
+            if result:
+                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+                result[constants.TERM_ID] = result.pop(constants.ID)
+                self.dao.insert(constants.COLLECTION_TERMS, result)
+            else:
+                logging.warn("no term_id: %r found!", term_id)
+
     def __build_course_edition(self, client, user_id, usos, crawl_time):
 
         for course_edition in self.dao.get_user_courses(user_id, usos[constants.USOS_ID]):
@@ -269,7 +287,6 @@ class UsosCrawler(object):
                 logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[
                     constants.COURSE_ID], course_edition[constants.TERM_ID])
 
-    @gen.coroutine
     def __build_courses_and_rest_of_existing_courses(self, client, usos, crawl_time):
 
         courses = list()
@@ -336,7 +353,6 @@ class UsosCrawler(object):
                 self.__find_users_related(users_to_fetch, result)
         self.__build_users_info(client, crawl_time, users_to_fetch, usos)
 
-    @gen.coroutine
     def __build_faculties(self, client, usos, crawl_time):
         for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
             if self.dao.get_faculty(faculty, usos[constants.USOS_ID]):
@@ -356,7 +372,6 @@ class UsosCrawler(object):
             else:
                 logging.warn("no faculty for fac_id: %r.", faculty)
 
-    @gen.coroutine
     def __build_users_info(self, client, crawl_time, user_info_ids, usos_id):
         for user_info_id in user_info_ids:
             if not self.dao.get_users_info(user_info_id[constants.ID], usos_id):
@@ -366,7 +381,6 @@ class UsosCrawler(object):
                 # build programme for given user
                 self.__build_programmes(client, user_info_id[constants.ID], crawl_time, usos_id)
 
-    @gen.coroutine
     def __build_units(self, client, crawl_time, units, usos):
 
         for unit_id in units:
@@ -386,7 +400,6 @@ class UsosCrawler(object):
             else:
                 logging.warn("no unit %r.", format(unit_id))
 
-    @gen.coroutine
     def __build_groups(self, client, crawl_time, units, usos):
 
         for unit in units:
@@ -405,7 +418,6 @@ class UsosCrawler(object):
             else:
                 logging.warn("no group for unit: %r.", unit)
 
-    @gen.coroutine
     def __process_user_data(self, client, user_id, usos, crawl_time):
 
         users_found = list()
@@ -464,7 +476,6 @@ class UsosCrawler(object):
                             user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
         return client, usos
 
-    @log_execution_time
     @gen.coroutine
     def initial_user_crawl(self, user_id):
         try:
@@ -488,6 +499,7 @@ class UsosCrawler(object):
             self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
             self.__build_programmes(client, user_info_id, crawl_time, usos)
             self.__build_curseseditions(client, crawl_time, user_id, usos)
+            # self.__build_terms(client, user_id, usos, crawl_time)
             self.__build_course_edition(client, user_id, usos, crawl_time)
             self.__process_user_data(client, user_id, usos, crawl_time)
             self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
@@ -495,7 +507,6 @@ class UsosCrawler(object):
         except Exception, ex:
             self._exc(ex)
 
-    @log_execution_time
     @gen.coroutine
     def daily_crawl(self):
 
@@ -508,6 +519,7 @@ class UsosCrawler(object):
 
                 # if courseseditions are updated - process update
                 if self.__build_curseseditions(client, crawl_time, user[constants.MONGO_ID], usos):
+                    # self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
                     self.__build_courses_and_rest_of_existing_courses(client, usos, crawl_time)
@@ -525,7 +537,6 @@ class UsosCrawler(object):
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
 
-    @log_execution_time
     @gen.coroutine
     def update_user_crawl(self, user_id):
         try:
