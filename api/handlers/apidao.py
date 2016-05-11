@@ -47,7 +47,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.USER_ID: self.user
+            {constants.USER_ID: self.user,
              constants.COURSE_ID: course_id,
              constants.USOS_ID: usos[constants.USOS_ID],
              constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
