@@ -131,7 +131,6 @@ class UsosMixin(object):
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
-        result[constants.TERM_ID] = result.pop(constants.ID)
 
         # # if user has photo - download
         # if 'has_photo' in result and result['has_photo']:
