@@ -78,7 +78,7 @@ class UsosMixin(object):
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 
         request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
+            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades|crstests|email|photo|student_exams',
             settings.CALLBACK_MOBI_URL + '?token=' + token)
 
         client = self.oauth_client(consumer, usos_doc)

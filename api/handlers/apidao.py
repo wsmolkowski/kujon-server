@@ -208,43 +208,23 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów")
+            raise ApiError("Poczekaj szukamy edycji przedmiotów")
 
         # get courses_classtypes
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
-            constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes(self.user_doc[constants.USOS_ID])
 
-        # get terms
+        # get terms_list for course
         terms = list()
-        terms_list = list()
         for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
                 'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
-            terms.append(year)
-            terms_list.append(term)
-
-        # TODO: enkapsulacja tego fragmentu
-        terms_ordered = OrderedDict()
-        for term in terms_list:
-            term_coursor = self.db[constants.COLLECTION_TERMS].find(
-                {constants.USOS_ID: self.user_doc[constants.USOS_ID],
-                 constants.TERM_ID: term},
-                (constants.TERM_ID, constants.TERMS_ORDER_KEY))
-            while (yield term_coursor.fetch_next):
-                term_elem = term_coursor.next_object()
-            terms_ordered[term_elem[constants.TERMS_ORDER_KEY]] = term_elem[constants.TERM_ID]
-
-        courses_editions = course_doc[constants.COURSE_EDITIONS]
+            terms.append(term)
 
         # add groups to courses
-        for term in courses_editions:
-            for course in courses_editions[term]:
+        for term in course_doc[constants.COURSE_EDITIONS]:
+            for course in course_doc[constants.COURSE_EDITIONS][term]:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: term,
@@ -261,9 +241,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 del course['course_units_ids']
                 del course[constants.TERM_ID]
 
+        # get course in order in order_keys as dictionary and reverse sort
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
         courses = list()
-        for order_key in sorted(terms_ordered):
-            courses.append(courses_editions[terms_ordered[order_key]])
+        for order_key in terms_by_order:
+            courses.append({terms_by_order[order_key]: course_doc[constants.COURSE_EDITIONS][terms_by_order[order_key]]})
 
         raise gen.Return(courses)
 
@@ -408,13 +391,22 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     new_grades.append(elem)
 
         # grouping grades by term
-        terms = dict()
+        grades = dict()
+        terms = list()
         for grade in new_grades:
-            if grade[constants.TERM_ID] not in terms:
-                terms[grade[constants.TERM_ID]] = list()
-            terms[grade[constants.TERM_ID]].append(grade)
+            if grade[constants.TERM_ID] not in grades:
+                grades[grade[constants.TERM_ID]] = list()
+                terms.append(grade[constants.TERM_ID])
+            grades[grade[constants.TERM_ID]].append(grade)
 
-        raise gen.Return(terms)
+        # sort grades in order of terms by order_keys descending
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        grades_sorted_by_term = list()
+        for order_key in terms_by_order:
+            grades_sorted_by_term.append({terms_by_order[order_key]: grades[terms_by_order[order_key]]})
+
+        raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
     def api_grade(self, course_id, term_id):
