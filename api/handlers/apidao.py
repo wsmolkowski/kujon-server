@@ -47,7 +47,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get information about course_edition
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.USER_ID: self.user_doc[constants.MONGO_ID],
+            {constants.USER_ID: self.user,
              constants.COURSE_ID: course_id,
              constants.USOS_ID: usos[constants.USOS_ID],
              constants.TERM_ID: term_id}, LIMIT_FIELDS_COURSE_EDITION)
@@ -91,7 +91,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # change faculty_id to faculty name
         fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: course_doc[
             constants.FACULTY_ID], constants.USOS_ID: usos[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY)
-        course_doc.pop(constants.FACULTY_ID)
+
         course_doc[constants.FACULTY_ID] = fac_doc
         if 'pl' in course_doc['fac_id']['name']:
             course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
@@ -101,6 +101,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         course_doc['coordinators'] = course_edition_doc['coordinators']
         course_doc['course_units_ids'] = course_edition_doc['course_units_ids']
+
         if 'grades' in course_doc:
             course_doc['grades'] = course_edition_doc['grades']
 
