@@ -196,7 +196,7 @@ class DatabaseHandler(RequestHandler):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': exception.message
+                'exception': str(exception.message)
             }
 
         if hasattr(self, 'user_doc'):
