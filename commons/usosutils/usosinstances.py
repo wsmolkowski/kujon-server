@@ -84,13 +84,13 @@ USOSINSTANCES = [
      },
     {'usos_id': 'UMCS',
      'name': 'Uniwersytet Marii Curie-Skłodowskiej w Lublinie',
-     'url': 'https://apps.umcs.pl',
+     'url': 'https://apps.umcs.pl/',
      'logo': '/static/img/logo/logo-umcs-64x64.jpg',
      'consumer_key': 'M9ZfkBFrrRULYfKEJJSr',
      'consumer_secret': 'zApXh56mZ42wDz7fSTSKQUX5fqtaUfxP6mEw8Yrd',
      'contact': 'usosweb@umcs.pl',
      'enabled': True,
-     'disable_ssl_certificate_validation': True
+     'disable_ssl_certificate_validation': False
      },
     {'usos_id': 'UWM',
      'name': 'Uniwersytet Wamińsko-Mazurski w Olsztynie',
@@ -173,6 +173,7 @@ USOSINSTANCES = [
      'consumer_secret': 'G5kCRabYSQxnxWLQKhVeuYWxezU4kPPdwvKB2X6B',
      'contact': 'usos@wat.edu.pl',
      'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'UWB',
      'name': 'Uniwersytet Białostocki',
@@ -227,7 +228,8 @@ USOSINSTANCES = [
      'consumer_key': 'uvCDxnLu9L535GM4XDZh',
      'consumer_secret': 'QsPJx6cHAanqxyvBugKubvLdcshJkSqwyaHkh4UW',
      'contact': 'm.frica@chat.edu.pl',
-     'enabled': True
+     'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'PWSZ-Kalisz',
      'name': 'Państwowa Wyższa Szkoła Zawodowa w Kaliszu',
@@ -245,7 +247,8 @@ USOSINSTANCES = [
      'consumer_key': 'kNBmFG6vvEN6kN265qwB',
      'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
      'contact': 'mateusz.lorenc@pwsz.krosno.pl',
-     'enabled': True
+     'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'UTH',
      'name': 'Uczelnia Techniczno-Handlowa w Warszawie',
@@ -282,6 +285,7 @@ USOSINSTANCES = [
      'consumer_secret': 'DB7HGw4EvNsUU9nwUE3jrLPfFTHw6zGbYPe3KRVp',
      'contact': 'l.grzybek@pwsz.elblag.pl, p.kwasniewski@pwsz.elblag.pl',
      'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'EUHE',
      'name': 'Elbląska Uczelnia Humanistyczno-Ekonomiczna',
@@ -299,7 +303,8 @@ USOSINSTANCES = [
      'consumer_key': 'eJJcsMasd5wtUfGWp9pR',
      'consumer_secret': '4gjFFBGjSM4sndwwkUewAEz3XUGapTQ42NYDftbq',
      'contact': 'maksymilian.szpura@adm.uw.edu.pl',
-     'enabled': True
+     'enabled': True,
+     'disable_ssl_certificate_validation': True
      },
     {'usos_id': 'UPH',
      'name': 'Uniwersytet Przyrodniczo-Humanistyczny w Siedlcach',

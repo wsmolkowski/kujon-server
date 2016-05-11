@@ -11,6 +11,7 @@ from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
+from collections import OrderedDict
 
 LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
@@ -152,7 +153,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
@@ -168,10 +169,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get terms
         terms = list()
-        for term in course_doc['course_editions']:
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
             terms.append(year)
 
@@ -191,7 +192,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
                     groups.append(group)
                 course['groups'] = groups
-                course['course_name'] = course['course_name']['pl']
+                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
 
@@ -201,32 +202,27 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_courses_by_term(self):
         course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('course_editions', constants.MONGO_ID)
+            (constants.COURSE_EDITIONS, constants.MONGO_ID)
         )
 
         if not course_doc:
-            raise ApiError("Poczekaj szukamy przedmiotów")
+            raise ApiError("Poczekaj szukamy edycji przedmiotów")
 
         # get courses_classtypes
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
-            constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes(self.user_doc[constants.USOS_ID])
 
-        # get terms
+        # get terms_list for course
         terms = list()
-        for term in course_doc['course_editions']:
+        for term in course_doc[constants.COURSE_EDITIONS]:
             year = {
                 'term': term,
-                'term_data': course_doc['course_editions'][term]
+                'term_data': course_doc[constants.COURSE_EDITIONS][term]
             }
-            terms.append(year)
+            terms.append(term)
 
         # add groups to courses
-        for term in course_doc['course_editions']:
-            for course in course_doc['course_editions'][term]:
+        for term in course_doc[constants.COURSE_EDITIONS]:
+            for course in course_doc[constants.COURSE_EDITIONS][term]:
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: term,
@@ -243,7 +239,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 del course['course_units_ids']
                 del course[constants.TERM_ID]
 
-        raise gen.Return(course_doc['course_editions'])
+        # get course in order in order_keys as dictionary and reverse sort
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        courses = list()
+        for order_key in terms_by_order:
+            courses.append({terms_by_order[order_key]: course_doc[constants.COURSE_EDITIONS][terms_by_order[order_key]]})
+
+        raise gen.Return(courses)
 
     @gen.coroutine
     def api_grades(self):
@@ -386,13 +389,22 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     new_grades.append(elem)
 
         # grouping grades by term
-        terms = dict()
+        grades = dict()
+        terms = list()
         for grade in new_grades:
-            if grade[constants.TERM_ID] not in terms:
-                terms[grade[constants.TERM_ID]] = list()
-            terms[grade[constants.TERM_ID]].append(grade)
+            if grade[constants.TERM_ID] not in grades:
+                grades[grade[constants.TERM_ID]] = list()
+                terms.append(grade[constants.TERM_ID])
+            grades[grade[constants.TERM_ID]].append(grade)
 
-        raise gen.Return(terms)
+        # sort grades in order of terms by order_keys descending
+        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        grades_sorted_by_term = list()
+        for order_key in terms_by_order:
+            grades_sorted_by_term.append({terms_by_order[order_key]: grades[terms_by_order[order_key]]})
+
+        raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
     def api_grade(self, course_id, term_id):
@@ -435,26 +447,29 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         courses = {}
         lecturers_returned = {}
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
-        if course_doc:
-            for term in course_doc['course_editions']:
-                for course in course_doc['course_editions'][term]:
+
+        if courses_editions_doc:
+
+            for term in courses_editions_doc[constants.COURSE_EDITIONS]:
+                for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                course_editions_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
+                    {constants.COURSE_ID: course,
+                     constants.TERM_ID: courses[course][constants.TERM_ID],
                      constants.USOS_ID: self.user_doc[constants.USOS_ID]})
 
-                if not course_doc:
+                if not course_editions_doc:
                     continue
 
-                for lecturer in course_doc[constants.LECTURERS]:
+                for lecturer in course_editions_doc[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
                     lecturers_returned[lecturer_id] = lecturer
 
-            lecturers_returned = lecturers_returned.values()
+        lecturers_returned = lecturers_returned.values()
 
         raise gen.Return(lecturers_returned)
 
