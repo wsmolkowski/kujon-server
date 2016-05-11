@@ -14,7 +14,8 @@ from commons.usosutils import usosinstances
 
 
 LIMIT_FIELDS_USER = (
-    'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
+    'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
+    'has_photo')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -62,7 +63,8 @@ class UserInfoApi(BaseHandler):
             user.update(user_info)
 
             user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
-
+            if 'has_photo' in user:
+                user['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
             # add school name from usosinstances based on usos_id
             user['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                       usos[constants.USOS_ID] == user[constants.USOS_ID]), None)

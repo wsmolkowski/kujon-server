@@ -486,7 +486,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # change ObjectId to str for photo
         if user_info['has_photo']:
-            user_info['has_photo'] = str(user_info['has_photo'])
+            user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
         # change staff_status to dictionary
         user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
