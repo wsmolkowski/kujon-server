@@ -81,7 +81,12 @@ class UserInfoPhotoApi(BaseHandler):
     def get(self, photo_id):
 
         try:
+            if str(photo_id) == 'False':
+                raise ApiError('Nie podano parametru photo_id')
+
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+            # user_photo = yield self.api_photo(photo_id) # TODO
+
             self.set_header('Content-Type', 'image/jpeg')
             self.write(b64decode(user_photo['photo']))
 

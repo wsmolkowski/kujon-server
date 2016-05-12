@@ -701,3 +701,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
 
         raise gen.Return(course_edition_doc)
+
+    def api_photo(self, user_info_id):
+        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+
+        if not photo_doc:
+            photo_doc = yield self.usos_photo(user_info_id)
+            yield self.insert(constants.COLLECTION_PHOTOS, photo_doc)
+
+        raise gen.Return(photo_doc)
