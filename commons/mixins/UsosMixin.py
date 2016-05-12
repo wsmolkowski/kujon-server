@@ -58,13 +58,14 @@ class UsosMixin(object):
         return client
 
     @gen.coroutine
-    def usos_course_edition(self, course_id, term_id):
+    def usos_course_edition(self, course_id, term_id, user_id):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         client = yield self.usos_client()
         create_time = datetime.now()
 
         result = client.course_edition(course_id, term_id)
 
+        result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -163,6 +164,37 @@ class UsosMixin(object):
         # strip english names from programmes description
         for programme in result['student_programmes']:
             programme['programme']['description'] = programme['programme']['description']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_faculty(self, faculty_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.faculty(faculty_id)
+        result[constants.FACULTY_ID] = faculty_id
+        result['name'] = result['name']['pl']
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_group(self, group_id, usos_doc=False):
+        if not usos_doc:
+            usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.groups(group_id)
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 

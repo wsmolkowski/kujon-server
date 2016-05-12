@@ -4,7 +4,6 @@ import tornado.web
 
 from base import BaseHandler
 from commons import constants, decorators
-from commons.errors import ApiError
 
 LIMIT_FIELDS_FACULTY = (
     'logo_urls', 'stats', 'name', 'postal_address', 'fac_id', 'homepage_url', 'usos_id', 'static_map_urls',
@@ -15,17 +14,15 @@ class FacultyByIdApi(BaseHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, fac_id):
+    def get(self, faculty_id):
 
         try:
-            fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(
-                {constants.FACULTY_ID: fac_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                LIMIT_FIELDS_FACULTY)
+            faculty_doc = yield self.api_faculty(faculty_id)
 
-            if not fac_doc:
-                raise ApiError('Nie możemy znaleźć danych dla jednostki.', fac_id)
+            if not faculty_doc:
+                raise faculty_doc('Nie możemy znaleźć danych dla jednostki.', faculty_id)
 
-            self.success(fac_doc, cache_age=86400)
+            self.success(faculty_doc, cache_age=86400)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -54,12 +51,10 @@ class FacultiesApi(BaseHandler):
             for programme in programmes:
                 faculties_ids.append(programme['faculty']['fac_id'])
 
-            cursor = self.db[constants.COLLECTION_FACULTIES].find(
-                {constants.FACULTY_ID: {'$in': faculties_ids},
-                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY
-            )
-
-            faculties = yield cursor.to_list(None)
+            faculties = []
+            for faculty_id in faculties_ids:
+                faculty_doc = yield self.api_faculty(faculty_id)
+                faculties.append(faculty_doc)
 
             self.success(faculties, cache_age=86400)
         except Exception, ex:
