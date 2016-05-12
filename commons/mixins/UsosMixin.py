@@ -34,8 +34,6 @@ class UsosMixin(object):
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
-        yield self.insert(constants.COLLECTION_COURSES, result)
-
         raise gen.Return(result)
 
     @staticmethod
@@ -206,7 +204,7 @@ class UsosMixin(object):
         client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.course_edition(course_id, term_id)
+        result = client.course_edition(course_id, term_id, fetch_participants=True)
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]

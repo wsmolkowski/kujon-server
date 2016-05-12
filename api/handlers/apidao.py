@@ -43,6 +43,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
+                yield self.insert(constants.COLLECTION_COURSES, course_doc)
             except Exception:
                 raise ApiError("Nie znaleźliśmy kursu", course_id)
 
@@ -51,10 +52,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_edition_doc = yield self.api_course_edition(course_id, term_id)
 
         if not course_edition_doc:
-            try:
-                course_edition_doc = yield self.usos_course_edition(course_id, term_id)
-            except Exception:
-                raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
+            raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
         if not user_id:
             user_info_doc = yield self.api_user_info()
@@ -64,19 +62,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
-        # # checking if user is on this course, so have access to this course # FIXME
-        # if 'participants' in course_edition_doc:
-        #     # sort participants
-        #     course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
-        #
-        #     # check if user can see this course_edition (is on participant list)
-        #     if not helpers.search_key_value_onlist(course_doc['participants'], constants.USER_ID,
-        #                                            user_info_doc[constants.ID]):
-        #         raise ApiError("Nie masz uprawnień do wyświetlenie tej edycji kursu.", (course_id, term_id))
-        #     else:
-        #         # remove from participant list current user
-        #         course_doc['participants'] = [participant for participant in course_doc['participants'] if
-        #                                       participant[constants.USER_ID] != user_info_doc[constants.ID]]
+        # checking if user is on this course, so have access to this course # FIXME
+        if 'participants' in course_edition_doc:
+            # sort participants
+            course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
+
+            # # check if user can see this course_edition (is on participant list)
+            # if not helpers.search_key_value_onlist(course_doc['participants'], constants.USER_ID,
+            #                                        user_info_doc[constants.ID]):
+            #     raise ApiError("Nie masz uprawnień do wyświetlenie tej edycji kursu.", (course_id, term_id))
+            # else:
+            #     # remove from participant list current user
+            #     course_doc['participants'] = [participant for participant in course_doc['participants'] if
+            #                                   participant[constants.USER_ID] != user_info_doc[constants.ID]]
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
