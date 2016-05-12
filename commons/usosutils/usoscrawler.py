@@ -238,8 +238,6 @@ class UsosCrawler(object):
                     logging.debug("course_editions not changed.")
                     return False
                 else:
-                    logging.debug("course_editions changed - updating and moving old to archive.")
-                    self.dao.insert(constants.COLLECTION_COURSES_EDITIONS_ARCHIVE, course_edition)
                     self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID,
                                     course_edition[constants.MONGO_ID])
             self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)

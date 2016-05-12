@@ -71,7 +71,6 @@ COLLECTION_COURSES_UNITS = "courses_units"
 COLLECTION_COURSES = "courses"
 COLLECTION_USERS_INFO = "users_info"
 COLLECTION_COURSES_EDITIONS = "courses_editions"
-COLLECTION_COURSES_EDITIONS_ARCHIVE = "courses_editions_arch" #43 chars -> max collection length
 COLLECTION_TERMS = "terms"
 COLLECTION_COURSE_EDITION = "course_edition"
 COLLECTION_GRADES = "grades"
