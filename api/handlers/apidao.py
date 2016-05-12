@@ -21,13 +21,13 @@ LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_addre
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
 'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
-    'first_name', 'last_name', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',
+    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
     'user_type', 'has_photo', 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
 
 
@@ -35,10 +35,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
 
-        usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos[constants.USOS_ID]}, LIMIT_FIELDS)
+            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             try:
@@ -63,7 +63,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
         # checking if user is on this course, so have access to this course # FIXME
-        if 'participants' in course_edition_doc:
+        if 'participants' in course_edition_doc and constants.ID in user_info_doc:
             # sort participants
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
 
@@ -73,8 +73,13 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             #     raise ApiError("Nie masz uprawnień do wyświetlenie tej edycji kursu.", (course_id, term_id))
             # else:
             #     # remove from participant list current user
-            course_doc['participants'] = [participant for participant in course_doc['participants'] if
-                                          participant[constants.USER_ID] != user_info_doc[constants.ID]]
+            participants = course_doc['participants']
+            for participant in course_doc['participants']:
+                if participant[constants.USER_ID] == user_info_doc[constants.ID]:
+                    participants.remove(participant)
+                    break
+
+            course_doc['participants'] = participants
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -82,7 +87,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # get courses_classtypes
         classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos[constants.USOS_ID]})
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos_doc[constants.USOS_ID]})
         while (yield cursor.fetch_next):
             ct = cursor.next_object()
             classtypes[ct['id']] = ct['name']['pl']
