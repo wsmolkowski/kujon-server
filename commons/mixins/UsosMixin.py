@@ -8,6 +8,7 @@ import oauth2 as oauth
 from tornado import gen
 
 from commons import constants, settings
+from commons.errors import UsosClientError
 from commons.usosutils.usosclient import UsosClient
 
 
@@ -204,7 +205,12 @@ class UsosMixin(object):
         client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.course_edition(course_id, term_id, fetch_participants=True)
+        try:
+            result = client.course_edition(course_id, term_id, fetch_participants=True)
+        except UsosClientError, ex:
+            logging.warn(
+                'trying to fetch course_edition with {0} {1} due to {2}'.format(course_id, term_id, ex.message))
+            result = client.course_edition(course_id, term_id, fetch_participants=False)
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
