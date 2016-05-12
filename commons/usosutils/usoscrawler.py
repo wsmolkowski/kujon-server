@@ -210,11 +210,7 @@ class UsosCrawler(object):
                 logging.warn("no programme: %r.", programme[constants.ID])
 
     def __build_curses_editions(self, client, crawl_time, user_id, usos):
-
-        update = False
         course_edition = self.dao.get_courses_editions(user_id)
-        if course_edition:
-            update = True
 
         try:
             result = client.courseeditions_info()
@@ -222,28 +218,16 @@ class UsosCrawler(object):
             self._exc(ex)
             return
 
-        if result:
-            result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-            result[constants.USER_ID] = user_id
+        result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+        result[constants.USER_ID] = user_id
 
-            # checking if update differs from version from mango
-
-            if update:
-                try:
-                    compare = cmp(result[constants.COURSE_EDITIONS], course_edition[constants.COURSE_EDITIONS])
-                except Exception, ex:
-                    compare = 1
-                    logging.exception("Could not find compare old and new courseedition: %r", ex.message)
-                if compare == 0:
-                    logging.debug("course_editions not changed.")
-                    return False
-                else:
-                    self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID,
-                                    course_edition[constants.MONGO_ID])
+        if not course_edition:
             self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             return True
         else:
-            logging.warn("no course_editions for user_id: %r in USOS.", user_id)
+            self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID,
+                            course_edition[constants.MONGO_ID])
+            self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
             return False
 
     def __build_terms(self, client, user_id, usos, crawl_time):
