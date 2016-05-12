@@ -67,14 +67,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             # sort participants
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
 
-            # # check if user can see this course_edition (is on participant list)
+            # check if user can see this course_edition (is on participant list)
             # if not helpers.search_key_value_onlist(course_doc['participants'], constants.USER_ID,
             #                                        user_info_doc[constants.ID]):
             #     raise ApiError("Nie masz uprawnień do wyświetlenie tej edycji kursu.", (course_id, term_id))
             # else:
             #     # remove from participant list current user
-            #     course_doc['participants'] = [participant for participant in course_doc['participants'] if
-            #                                   participant[constants.USER_ID] != user_info_doc[constants.ID]]
+            course_doc['participants'] = [participant for participant in course_doc['participants'] if
+                                          participant[constants.USER_ID] != user_info_doc[constants.ID]]
 
         # change int to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
