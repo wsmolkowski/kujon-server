@@ -520,8 +520,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         programmes = []
         for program in user_info['student_programmes']:
-            result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
-                {constants.PROGRAMME_ID: program['programme']['id']}, LIMIT_FIELDS_PROGRAMMES)
+            result = yield self.api_programme(program['programme']['id'])
             if result:
                 program['programme']['mode_of_studies'] = result['mode_of_studies']
                 program['programme']['level_of_studies'] = result['level_of_studies']
@@ -532,6 +531,17 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 ApiError("Nie znaleziono programu", program['programme']['id'])
 
         raise gen.Return(programmes)
+
+    @gen.coroutine
+    def api_programme(self, programme_id):
+        programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
+            {constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS_PROGRAMMES)
+
+        if not programme_doc:
+            programme_doc = yield self.usos_programme(programme_id)
+            yield self.insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+
+        raise gen.Return(programme_doc)
 
     @gen.coroutine
     def api_tt(self, given_date):

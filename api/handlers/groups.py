@@ -22,8 +22,7 @@ class GroupsApi(BaseHandler):
             programmes = []
             for program in user_info['student_programmes']:
                 program_id = program['programme']['id']
-                result = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: program_id},
-                                                                                 LIMIT_FIELDS)
+                result = yield self.api_programme(program_id)
                 programmes.append(result)
 
             if not programmes:

@@ -216,6 +216,34 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
+    def usos_programme(self, programme_id):
+        user_id = self.user_doc[constants.MONGO_ID]
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.programme(programme_id)
+
+        result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+
+        # strip english names
+        result['name'] = result['name']['pl']
+        result['mode_of_studies'] = result['mode_of_studies']['pl']
+        result['level_of_studies'] = result['level_of_studies']['pl']
+        result['duration'] = result['duration']['pl']
+        if 'faculty' in result and 'name' in result['faculty']:
+            result['faculty']['name'] = result['faculty']['name']['pl']
+            result['faculty'][constants.FACULTY_ID] = result['faculty']['id']
+            del (result['faculty']['id'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
     def token_verification(self, usos_doc, token):
         consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
 

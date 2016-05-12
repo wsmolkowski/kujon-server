@@ -4,7 +4,7 @@ import tornado.gen
 import tornado.web
 
 from base import BaseHandler
-from commons import constants, decorators
+from commons import decorators
 
 LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studies', 'level_of_studies', 'duration')
 
@@ -16,8 +16,7 @@ class ProgrammesByIdApi(BaseHandler):
     def get(self, programme_id):
 
         try:
-            programme = yield self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id},
-                                                                                LIMIT_FIELDS_PROGRAMMES)
+            programme = yield self.api_programme(programme_id)
 
             if not programme:
                 self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
