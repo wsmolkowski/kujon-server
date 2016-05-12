@@ -3,7 +3,6 @@
 from datetime import date, datetime
 
 import tornado.web
-from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants, decorators
@@ -17,8 +16,8 @@ class TermsApi(BaseHandler):
 
         try:
             terms_docs = []
-            courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, ('course_editions',))
+
+            courses_editions_doc = yield self.api_courses_editions()
 
             if courses_editions_doc:
                 for term_id in courses_editions_doc['course_editions']:
