@@ -209,7 +209,7 @@ class DatabaseHandler(RequestHandler):
 
         ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
 
-        logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+        logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         if isinstance(exception, ApiError):
             self.error(message=exception.message())
