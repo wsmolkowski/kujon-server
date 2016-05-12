@@ -50,6 +50,13 @@ class TermApi(BaseHandler):
         try:
             term_doc = yield self.api_term(term_id)
 
+            today = date.today()
+            end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
+            if today <= end_date:
+                term_doc['active'] = True
+            else:
+                term_doc['active'] = False
+
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
             else:
