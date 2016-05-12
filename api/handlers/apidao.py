@@ -23,7 +23,8 @@ LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', 'id', 'has_photo', 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
-LIMIT_FIELDS_PROGRAMMES = ('name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description')
+LIMIT_FIELDS_PROGRAMMES = (
+'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', 'id', 'student_number', 'student_status', 'has_photo', 'student_programmes',

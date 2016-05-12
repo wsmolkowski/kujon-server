@@ -3,7 +3,7 @@
 import tornado.web
 
 from base import BaseHandler
-from commons import decorators
+from commons import decorators, constants
 
 LIMIT_FIELDS_FACULTY = (
     'logo_urls', 'stats', 'name', 'postal_address', 'fac_id', 'homepage_url', 'usos_id', 'static_map_urls',
@@ -48,8 +48,9 @@ class FacultiesApi(BaseHandler):
 
             # get faculties
             faculties_ids = list()
-            for programme in programmes:
-                faculties_ids.append(programme['faculty']['fac_id'])
+            for programme_doc in programmes:
+                if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
+                    faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
 
             faculties = []
             for faculty_id in faculties_ids:
