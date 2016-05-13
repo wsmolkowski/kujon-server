@@ -14,7 +14,8 @@ from commons.usosutils import usosinstances
 
 
 LIMIT_FIELDS_USER = (
-    'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id')
+    'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
+    'has_photo')
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -46,11 +47,12 @@ class UserInfoApi(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         '''
-        :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO
+        :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO and
+                    school name from usosinstances.USOSINSTANCES
         '''
 
         try:
-            user = yield self.db[constants.COLLECTION_USERS].find_one(
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
 
@@ -59,15 +61,16 @@ class UserInfoApi(BaseHandler):
             if not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
-            user.update(user_info)
+            user_doc.update(user_info)
 
-            user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
+            user_doc['student_status'] = usoshelper.dict_value_student_status(user_doc['student_status'])
+            if 'has_photo' in user_doc:
+                user_doc['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
-            # add school name from usosinstances based on usos_id
-            user['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
-                                      usos[constants.USOS_ID] == user[constants.USOS_ID]), None)
+            user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
+                                          usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
-            self.success(user, cache_age=2592000)
+            self.success(user_doc, cache_age=2592000)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -79,7 +82,12 @@ class UserInfoPhotoApi(BaseHandler):
     def get(self, photo_id):
 
         try:
+            if str(photo_id) == 'False':
+                raise ApiError('Nie podano parametru photo_id')
+
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+            # user_photo = yield self.api_photo(photo_id) # TODO
+
             self.set_header('Content-Type', 'image/jpeg')
             self.write(b64decode(user_photo['photo']))
 

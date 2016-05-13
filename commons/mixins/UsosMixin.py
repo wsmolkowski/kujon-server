@@ -8,6 +8,7 @@ import oauth2 as oauth
 from tornado import gen
 
 from commons import constants, settings
+from commons.errors import UsosClientError
 from commons.usosutils.usosclient import UsosClient
 
 
@@ -34,8 +35,6 @@ class UsosMixin(object):
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
-        yield self.insert(constants.COLLECTION_COURSES, result)
-
         raise gen.Return(result)
 
     @staticmethod
@@ -56,22 +55,6 @@ class UsosMixin(object):
             client = oauth.Client(consumer, **parameters)
 
         return client
-
-    @gen.coroutine
-    def usos_course_edition(self, course_id, term_id):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-        client = yield self.usos_client()
-        create_time = datetime.now()
-
-        result = client.course_edition(course_id, term_id)
-
-        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
-        yield self.insert(constants.COLLECTION_COURSE_EDITION, result)
-
-        raise gen.Return(result)
 
     @gen.coroutine
     def usos_term(self, term_id):
@@ -99,7 +82,6 @@ class UsosMixin(object):
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
-        result[constants.TERM_ID] = result.pop(constants.ID)
 
         if 'has_photo' in result and result['has_photo']:
             photo_result = client.user_info_photo(self.user_doc[constants.MONGO_ID])
@@ -163,6 +145,120 @@ class UsosMixin(object):
         # strip english names from programmes description
         for programme in result['student_programmes']:
             programme['programme']['description'] = programme['programme']['description']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_faculty(self, faculty_id):
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.faculty(faculty_id)
+        result[constants.FACULTY_ID] = faculty_id
+        result['name'] = result['name']['pl']
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_group(self, group_id, usos_doc=False):
+        if not usos_doc:
+            usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.groups(group_id)
+
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_courses_edition(self, usos_doc=False):
+        if not usos_doc:
+            usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.courseeditions_info()
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_course_edition(self, course_id, term_id, user_id=False):
+        if not user_id:
+            user_id = self.user_doc[constants.MONGO_ID]
+
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        try:
+            result = client.course_edition(course_id, term_id, fetch_participants=True)
+        except UsosClientError, ex:
+            logging.warn(
+                'trying to fetch course_edition with {0} {1} due to {2}'.format(course_id, term_id, ex.message))
+            result = client.course_edition(course_id, term_id, fetch_participants=False)
+
+        result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_programme(self, programme_id):
+        user_id = self.user_doc[constants.MONGO_ID]
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.programme(programme_id)
+
+        result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+
+        result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+
+        # strip english names
+        result['name'] = result['name']['pl']
+        result['mode_of_studies'] = result['mode_of_studies']['pl']
+        result['level_of_studies'] = result['level_of_studies']['pl']
+        result['duration'] = result['duration']['pl']
+        if 'faculty' in result and 'name' in result['faculty']:
+            result['faculty']['name'] = result['faculty']['name']['pl']
+            result['faculty'][constants.FACULTY_ID] = result['faculty']['id']
+            del (result['faculty']['id'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_photo(self, user_info_id):
+        user_id = self.user_doc[constants.MONGO_ID]
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        client = yield self.usos_client()
+        create_time = datetime.now()
+
+        result = client.user_info_photo(user_info_id)
+
+        result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 

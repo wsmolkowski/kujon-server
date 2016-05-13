@@ -28,10 +28,7 @@ class MainHandler(RequestHandler, JSendMixin):
             user_id = ObjectId(user_id)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
-        if user_doc:
-            raise gen.Return(True)
-        else:
-            raise gen.Return(False)
+        gen.Return(user_doc)
 
     @gen.coroutine
     def exc(self, exception):

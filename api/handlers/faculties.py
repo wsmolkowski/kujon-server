@@ -3,8 +3,7 @@
 import tornado.web
 
 from base import BaseHandler
-from commons import constants, decorators
-from commons.errors import ApiError
+from commons import decorators, constants
 
 LIMIT_FIELDS_FACULTY = (
     'logo_urls', 'stats', 'name', 'postal_address', 'fac_id', 'homepage_url', 'usos_id', 'static_map_urls',
@@ -15,17 +14,15 @@ class FacultyByIdApi(BaseHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def get(self, fac_id):
+    def get(self, faculty_id):
 
         try:
-            fac_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(
-                {constants.FACULTY_ID: fac_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                LIMIT_FIELDS_FACULTY)
+            faculty_doc = yield self.api_faculty(faculty_id)
 
-            if not fac_doc:
-                raise ApiError('Nie możemy znaleźć danych dla jednostki.', fac_id)
+            if not faculty_doc:
+                raise faculty_doc('Nie możemy znaleźć danych dla jednostki.', faculty_id)
 
-            self.success(fac_doc, cache_age=86400)
+            self.success(faculty_doc, cache_age=86400)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -44,22 +41,21 @@ class FacultiesApi(BaseHandler):
                 for programme in users_info_doc['student_programmes']:
                     programmes_ids.append(programme['programme']['id'])
 
-            # get facs from programmes
-            cursor = self.db[constants.COLLECTION_PROGRAMMES].find(
-                {constants.PROGRAMME_ID: {'$in': programmes_ids}}, ['programme_id', 'faculty.fac_id'])
-            programmes = yield cursor.to_list(None)
+            programmes = []
+            for programme_id in programmes_ids:
+                programme_doc = yield self.api_programme(programme_id)
+                programmes.append(programme_doc)
 
             # get faculties
             faculties_ids = list()
-            for programme in programmes:
-                faculties_ids.append(programme['faculty']['fac_id'])
+            for programme_doc in programmes:
+                if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
+                    faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
 
-            cursor = self.db[constants.COLLECTION_FACULTIES].find(
-                {constants.FACULTY_ID: {'$in': faculties_ids},
-                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS_FACULTY
-            )
-
-            faculties = yield cursor.to_list(None)
+            faculties = []
+            for faculty_id in faculties_ids:
+                faculty_doc = yield self.api_faculty(faculty_id)
+                faculties.append(faculty_doc)
 
             self.success(faculties, cache_age=86400)
         except Exception, ex:

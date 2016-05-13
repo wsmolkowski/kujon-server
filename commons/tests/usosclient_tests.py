@@ -19,7 +19,14 @@ class ClientTest(unittest.TestCase):
 
     def testUserInfo(self):
         # when
-        response = self.client.user_info("UW")
+        response = self.client.user_info()
+
+        # then
+        self.assertIsNotNone(0, len(response))
+
+    def testUserInfo(self):
+        # when
+        response = self.client.user_info_id(u'1979396')
 
         # then
         self.assertIsNotNone(0, len(response))

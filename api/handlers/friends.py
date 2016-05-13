@@ -96,18 +96,15 @@ class FriendsSuggestionsApi(BaseHandler):
         courses = {}
         suggested_participants = {}
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
-        if course_doc:
-            for term in course_doc['course_editions']:
-                for course in course_doc['course_editions'][term]:
+        courses_editions_doc = yield self.api_courses_editions()
+
+        if courses_editions_doc:
+            for term in courses_editions_doc['course_editions']:
+                for course in courses_editions_doc['course_editions'][term]:
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_participants = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-                    {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                     constants.USOS_ID: self.user_doc[constants.USOS_ID]})
-
+                course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID])
                 if not course_participants:
                     continue
 

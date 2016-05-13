@@ -3,7 +3,6 @@
 from datetime import date, datetime
 
 import tornado.web
-from bson.objectid import ObjectId
 
 from base import BaseHandler
 from commons import constants, decorators
@@ -17,8 +16,8 @@ class TermsApi(BaseHandler):
 
         try:
             terms_docs = []
-            courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, ('course_editions',))
+
+            courses_editions_doc = yield self.api_courses_editions()
 
             if courses_editions_doc:
                 for term_id in courses_editions_doc['course_editions']:
@@ -50,6 +49,13 @@ class TermApi(BaseHandler):
 
         try:
             term_doc = yield self.api_term(term_id)
+
+            today = date.today()
+            end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
+            if today <= end_date:
+                term_doc['active'] = True
+            else:
+                term_doc['active'] = False
 
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
