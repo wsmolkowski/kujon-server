@@ -58,7 +58,7 @@ class UserInfoApi(BaseHandler):
 
             user_info = yield self.api_user_info()
 
-            if not user_info:
+            if not user_info or not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
             user_doc.update(user_info)
