@@ -610,6 +610,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
+            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+                yield self.api_photo(user_info_doc[constants.ID])
+
         raise gen.Return(user_info_doc)
 
     @gen.coroutine
@@ -624,8 +627,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info_id(user_id)
             user_info_doc[constants.USER_ID] = user_id
-
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+
+            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+                yield self.api_photo(user_info_doc[constants.ID])
 
         raise gen.Return(user_info_doc)
 
@@ -662,7 +667,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, (constants.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
-            courses_editions_doc = yield self.usos_courses_edition()
+            courses_editions_doc = yield self.usos_courses_editions()
             yield self.insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
 
         raise gen.Return(courses_editions_doc)
@@ -681,8 +686,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         raise gen.Return(course_edition_doc)
 
+    @gen.coroutine
     def api_photo(self, user_info_id):
-        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: user_info_id})
 
         if not photo_doc:
             photo_doc = yield self.usos_photo(user_info_id)
