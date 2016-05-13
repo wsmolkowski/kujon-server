@@ -84,10 +84,15 @@ class UsosMixin(object):
         result[constants.UPDATE_TIME] = create_time
 
         if 'has_photo' in result and result['has_photo']:
-            photo_result = client.user_info_photo(self.user_doc[constants.MONGO_ID])
+            photo_result = client.user_info_photo(result[constants.ID])
             if photo_result:
-                result[constants.CREATED_TIME] = create_time
-                result[constants.UPDATE_TIME] = create_time
+
+                photo_result[constants.CREATED_TIME] = create_time
+                photo_result[constants.UPDATE_TIME] = create_time
+                photo_result[constants.ID] = result[constants.ID]
+                photo_result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                photo_result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+
                 photo_doc = yield self.insert(constants.COLLECTION_PHOTOS, photo_result)
                 result['has_photo'] = photo_doc
             else:

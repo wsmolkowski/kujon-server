@@ -245,3 +245,15 @@ class DatabaseHandler(RequestHandler):
             terms_by_order[term_doc[constants.TERMS_ORDER_KEY]] = term_doc[constants.TERM_ID]
 
         raise gen.Return(terms_by_order)
+
+    @gen.coroutine
+    def get_classtypes(self):
+
+        classtypes = dict()
+        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
+            {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+        while (yield cursor.fetch_next):
+            ct = cursor.next_object()
+            classtypes[ct['id']] = ct['name']['pl']
+
+        raise gen.Return(classtypes)

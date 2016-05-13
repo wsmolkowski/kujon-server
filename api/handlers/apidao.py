@@ -85,12 +85,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
             course_doc['is_currently_conducted'])
 
-        # get courses_classtypes
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos_doc[constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes()
 
         # change faculty_id to faculty name
         faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
@@ -158,13 +153,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not courses_editions_doc:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
-        # get courses_classtypes
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
-            constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes()
 
         # get terms
         terms = list()
@@ -249,12 +238,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_grades(self):
         # get class_types
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-            {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes()
 
         cursor = self.db[constants.COLLECTION_GRADES].find(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
@@ -291,7 +275,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
                     units[unit_id] = elem
 
-            if len(units) > 0:  # oceny czeciowe
+            if len(units) > 0:  # partial grades
                 grades_courseedition['grades']['course_units'] = units
                 for egzam in grades_courseedition['grades']['course_units_grades']:
                     for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
@@ -305,7 +289,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                         elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
                         elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
                         new_grades.append(elem)
-            else:  # ocena koncowa bez czesciowych
+            else:  # final grade no partials
                 for egzam in grades_courseedition['grades']['course_grades']:
                     elem = grades_courseedition['grades']['course_grades'][egzam]
                     elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
@@ -319,13 +303,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_grades_byterm(self):
-        # get class_types
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-            {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+
+        classtypes = yield self.get_classtypes()
 
         cursor = self.db[constants.COLLECTION_GRADES].find(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
@@ -411,12 +390,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         limit_fields = ('course_name', 'course_id', 'grades')
 
-        classtypes = {}
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: self.user_doc[
-            constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
+        classtypes = yield self.get_classtypes()
 
         grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline, limit_fields)
         units = {}
