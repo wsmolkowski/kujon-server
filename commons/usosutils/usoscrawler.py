@@ -11,12 +11,13 @@ from tornado import gen
 from commons import constants, utils
 from commons.AESCipher import AESCipher
 from commons.Dao import Dao
-from commons.errors import UsosClientError
+from commons.errors import UsosClientError, CrawlerException
+from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils.usosasync import UsosAsync
 from commons.usosutils.usosclient import UsosClient
 
 
-class UsosCrawler(object):
+class UsosCrawler(UsosMixin):
     EXCEPTION_TYPE = 'usoscrawler'
     EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
 
@@ -476,7 +477,7 @@ class UsosCrawler(object):
 
             user = self.dao.get_user(user_id)
             if not user:
-                raise Exception("Initial crawler not started. Unknown user with id: %r.", user_id)
+                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
 
             client, usos = self.__build_client(user)
             user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
@@ -543,7 +544,7 @@ class UsosCrawler(object):
 
             user = self.dao.get_user(user_id)
             if not user:
-                raise Exception("Update crawler not started. Unknown user with id: %r", user_id)
+                raise CrawlerException("Update crawler not started. Unknown user with id: %r", user_id)
 
             client, usos = self.__build_client(user)
 
@@ -578,7 +579,7 @@ class UsosCrawler(object):
                 user_id = ObjectId(user_id)
             user = self.dao.get_archive_user(user_id)
             if not user:
-                raise Exception(
+                raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
