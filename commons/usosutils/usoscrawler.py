@@ -10,41 +10,40 @@ from tornado import gen
 
 from commons import constants, utils
 from commons.AESCipher import AESCipher
-from commons.Dao import Dao
 from commons.errors import UsosClientError, CrawlerException
+from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils.usosasync import UsosAsync
-from commons.usosutils.usosclient import UsosClient
 
 
-class UsosCrawler(UsosMixin):
+class UsosCrawler(UsosMixin, DaoMixin):
     EXCEPTION_TYPE = 'usoscrawler'
     EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
 
-    def __init__(self, dao=None):
-        if not dao:
-            self.dao = Dao()
-        else:
-            self.dao = dao
-
+    def __init__(self):
         self.aes = AESCipher()
 
-    @staticmethod
-    def append(data, usos_id, create_time, update_time):
-        if not data:
-            data = dict()
+    _user_doc = None
 
-        if usos_id:
-            data[constants.USOS_ID] = usos_id
+    @property
+    def user_doc(self):
+        return self._user_doc
 
-        if create_time:
-            data[constants.CREATED_TIME] = create_time
+    _usos_doc = None
 
-        if update_time:
-            data[constants.UPDATE_TIME] = update_time
+    @property
+    def usos_doc(self):
+        return self._usos_doc
 
-        return data
+    @property
+    def usos_id(self):
+        return self.user_doc[constants.USOS_ID]
 
+    @property
+    def user_id(self):
+        return self.user_doc[constants.MONGO_ID]
+
+    @gen.coroutine
     def _exc(self, exception):
         try:
             if hasattr(self, 'user') and isinstance(exception, UsosClientError):
@@ -64,386 +63,347 @@ class UsosCrawler(UsosMixin):
                     constants.CREATED_TIME: datetime.now()
                 }
 
-            self.dao.insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
+            yield self.db_insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
             logging.error(exc_doc)
         except Exception, ex:
             logging.exception(ex)
 
-    def __build_user_info_photo(self, client, user_id, user_info_id, crawl_time, usos):
-        if not self.dao.get_users_info_photo(user_info_id, usos[constants.USOS_ID]):
+        raise gen.Return(None)
 
-            try:
-                photo = client.user_info_photo(user_info_id)
-            except UsosClientError, ex:
-                self._exc(ex)
-                return
+    @gen.coroutine
+    def __build_user_info_photo(self, user_info_id):
 
-            if photo:
-                photo = self.append(photo, usos[constants.USOS_ID], crawl_time, crawl_time)
-                photo_doc = self.dao.insert(constants.COLLECTION_PHOTOS, photo)
-                return photo_doc
+        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: user_info_id})
+
+        if not photo_doc:
+            photo_doc = yield self.usos_photo(user_info_id)
+            if not photo_doc:
+                yield self.insert(constants.COLLECTION_PHOTOS, photo_doc)
             else:
-                logging.warn("no photo for user_id: %r", user_id)
+                logging.warn('no photo for user_info_id: {0} and usos_id: {1}'.format(user_info_id, self.usos_id))
 
-    def __build_user_info(self, client, user_id, user_info_id, crawl_time, usos):
-        if user_id and self.dao.get_users_info_by_user_id(user_id, usos):
-            logging.debug("not building user info - it already exists for %r", user_id)
-            return
+        raise gen.Return(photo_doc)
 
+    @gen.coroutine
+    def __build_user_info(self, user_info_id=None):
+        user_info_doc = yield self.db_users_info_by_user_id(self.user_id, self.usos_id)
+        if self.user_id and user_info_doc:
+            logging.debug("not building user info - it already exists for %r", self.user_id)
+            raise gen.Return(user_info_doc[constants.ID])
         try:
             if user_info_id:
-                result = client.user_info_id(user_info_id)
+                result = yield self.usos_user_info_id(user_info_id, self.usos_id)
             else:
-                result = client.user_info()
+                result = yield self.usos_user_info(self.usos_id)
+
+            yield self.db_insert(constants.COLLECTION_USERS_INFO, result)
+
+            # if user has photo - download
+            if 'has_photo' in result and result['has_photo']:
+                result['has_photo'] = yield self.__build_user_info_photo(result[constants.ID])
+
         except UsosClientError, ex:
-            self._exc(ex)
-            return
+            yield self._exc(ex)
 
-        result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-        if user_id:
-            result[constants.USER_ID] = user_id
+        raise gen.Return(result[constants.ID])
 
-        # if user has photo - download
-        if 'has_photo' in result and result['has_photo']:
-            result['has_photo'] = self.__build_user_info_photo(client, user_id, result[constants.ID],
-                                                               crawl_time, usos)
-
-        # strip english values and if value is empty change to None
-        result['office_hours'] = result['office_hours']['pl']
-        result['interests'] = result['interests']['pl']
-
-        # strip empty values
-        if result['homepage_url'] and result['homepage_url'] == "":
-            result['homepage_url'] = None
-
-        # strip english names from programmes description
-        for programme in result['student_programmes']:
-            programme['programme']['description'] = programme['programme']['description']['pl']
-
-        self.dao.insert(constants.COLLECTION_USERS_INFO, result)
-
-        # if user conducts courses - fetch courses
-        if result['course_editions_conducted']:
-            self.__build_course_editions_for_conducted(client, user_id, result['course_editions_conducted'], crawl_time, usos)
-
-        return result[constants.ID]
-
-    def __build_course_editions_for_conducted(self, client, user_id, courses_conducted, crawl_time, usos):
+    @gen.coroutine
+    def __build_course_editions_conducted(self, courses_conducted):
 
         for courseterm in courses_conducted:
+
             course_id, term_id = courseterm[constants.ID].split('|')
-            course_doc = self.dao.get_course_edition(user_id, course_id, term_id, usos[constants.USOS_ID])
+
+            course_doc = yield self.db_course_edition(self.user_id, course_id, term_id, self.usos_id)
             if course_doc:
                 continue
 
             try:
-                course_result = client.course_edition(course_id, term_id, fetch_participants=False)
-                course_result[constants.USER_ID] = user_id
+                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id)
+                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+
             except UsosClientError, ex:
-                self._exc(ex)
+                yield self._exc(ex)
                 continue
 
-            course_result = self.append(course_result, usos[constants.USOS_ID], crawl_time, crawl_time)
-            self.dao.insert(constants.COLLECTION_COURSE_EDITION, course_result)
-
-    def __subscribe(self, client, user_id, usos):
+    @gen.coroutine
+    def __subscribe(self):
+        client = yield self.usos_client()
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = client.subscribe(event_type, str(user_id))
-                subscribe_doc = self.append(subscribe_doc, usos[constants.USOS_ID], datetime.now(), datetime.now())
-                subscribe_doc[constants.USER_ID] = user_id
+                subscribe_doc = client.subscribe(event_type, self.user_id)
+                subscribe_doc = self.append(subscribe_doc, self.usos_id, datetime.now(), datetime.now())
+                subscribe_doc[constants.USER_ID] = self.user_id
                 subscribe_doc['event_type'] = event_type
-                self.dao.insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+                yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except UsosClientError, ex:
-                self._exc(ex)
-                continue
+                yield self._exc(ex)
 
-    def __build_time_table(self, client, user_id, usos_id, given_date):
-        # existing_tt = self.dao.get_time_table(user_id, usos_id)
+    @gen.coroutine
+    def __build_time_table(self, given_date):
+        client = yield self.usos_client()
+
         try:
             result = client.time_table(given_date)
         except UsosClientError, ex:
-            self._exc(ex)
-            return
+            yield self._exc(ex)
+            raise gen.Return(None)
 
         if result:
             tt = dict()
-            tt[constants.USOS_ID] = usos_id
+            tt[constants.USOS_ID] = self.usos_id
             tt[constants.TT_STARTDATE] = str(given_date)
             tt['tts'] = result
-            tt[constants.USER_ID] = user_id
-            self.dao.insert(constants.COLLECTION_TT, tt)
+            tt[constants.USER_ID] = self.user_id
+            yield self.db_insert(constants.COLLECTION_TT, tt)
 
             # if existing_tt:
             #     self.dao.remove(constants.COLLECTION_TT, existing_tt)
         else:
             logging.debug("no time tables for date: %r inserted empty", given_date)
 
-    def __build_programmes(self, client, user_info_id, crawl_time, usos):
+        raise gen.Return(None)
 
-        for programme in self.dao.get_users_info_programmes(user_info_id, usos[constants.USOS_ID]):
-            # checking if program exists in mongo
-            if self.dao.get_programme(programme['programme'][constants.ID], usos[constants.USOS_ID]):
+    @gen.coroutine
+    def __build_programmes(self, user_info_id):
+        programmes = yield self.db_users_info_programmes(user_info_id, self.usos_id)
+
+        for programme in programmes:
+            programme_doc = yield self.db_programme(programme['programme'][constants.ID], self.usos_id)
+            if programme_doc:
                 continue
-
             try:
-                result = client.programme(programme['programme'][constants.ID])
+                result = yield self.usos_programme(programme['programme'][constants.ID])
+
+                yield self.db_insert(constants.COLLECTION_PROGRAMMES, result)
             except UsosClientError, ex:
-                self._exc(ex)
-                continue
+                yield self._exc(ex)
 
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+        raise gen.Return(None)
 
-                # strip english names
-                result['name'] = result['name']['pl']
-                result['mode_of_studies'] = result['mode_of_studies']['pl']
-                result['level_of_studies'] = result['level_of_studies']['pl']
-                result['duration'] = result['duration']['pl']
-                if 'faculty' in result and 'name' in result['faculty']:
-                    result['faculty']['name'] = result['faculty']['name']['pl']
-                    result['faculty'][constants.FACULTY_ID] = result['faculty']['id']
-                    del (result['faculty']['id'])
+    @gen.coroutine
+    def __build_curses_editions(self):
+        course_edition = yield self.db_courses_editions(self.user_id)
 
-                self.dao.insert(constants.COLLECTION_PROGRAMMES, result)
-            else:
-                logging.warn("no programme: %r.", programme[constants.ID])
-
-    def __build_curses_editions(self, client, crawl_time, user_id, usos):
-        course_edition = self.dao.get_courses_editions(user_id)
-
-        try:
-            result = client.courseeditions_info()
-        except UsosClientError, ex:
-            self._exc(ex)
-            return
-
-        result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-        result[constants.USER_ID] = user_id
+        result = yield self.usos_courses_editions(self.user_id, self.usos_id)
 
         if not course_edition:
-            self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            return True
+            yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
+            raise gen.Return(True)
         else:
-            self.dao.remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID,
-                            course_edition[constants.MONGO_ID])
-            self.dao.insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            return False
+            yield self.db_remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, self.user_id)
+            yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
+            raise gen.Return(False)
 
-    def __build_terms(self, client, user_id, usos, crawl_time):
-
-        for term_id in self.dao.get_user_terms(user_id):
-
-            if self.dao.get_term(term_id, usos[constants.USOS_ID]):
+    @gen.coroutine
+    def __build_terms(self):
+        terms = yield self.db_terms(self.user_id)
+        for term_id in terms:
+            term_doc = yield self.db_term(term_id, self.usos_id)
+            if term_doc:
                 continue
 
             try:
-                result = client.get_term_info(term_id)
+                result = yield self.usos_term(term_id, self.usos_id)
+
+                yield self.db_insert(constants.COLLECTION_TERMS, result)
             except UsosClientError, ex:
-                self._exc(ex)
+                yield self._exc(ex)
+
+        raise gen.Return(None)
+
+    @gen.coroutine
+    def __build_course_edition(self):
+        courses_editions = yield self.db_courses_editions(self.user_id)
+        for course_edition in courses_editions:
+            course_edition_doc = yield self.db_course_edition(self.user_id, course_edition[1], course_edition[0],
+                                                              self.usos_id)
+            if course_edition_doc:
                 continue
+            try:
+                result = yield self.usos_course_edition(course_edition[1], course_edition[0], self.user_id,
+                                                        self.usos_id)
+                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+            except UsosClientError, ex:
+                yield self._exc(ex)
 
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.TERM_ID] = result.pop(constants.ID)
-                self.dao.insert(constants.COLLECTION_TERMS, result)
-            else:
-                logging.warn("no term_id: %r found!", term_id)
+        raise gen.Return(None)
 
-    def __build_course_edition(self, client, user_id, usos, crawl_time):
+    # @gen.coroutine
+    # def __build_courses(self, client, usos, crawl_time):
+    #
+    #     courses = list()
+    #     courses_editions = list()
+    #     existing_courses_editions = list()
+    #
+    #     # get courses that exists in mongo and remove from list to fetch
+    #     existing_courses = self.dao.get_courses(usos[constants.USOS_ID], constants.COURSE_ID)
+    #
+    #     # get courses from course_edition
+    #     for ce in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
+    #         if ce[constants.COURSE_ID] not in existing_courses:
+    #             existing_courses.append(ce[constants.COURSE_ID])
+    #             courses.append(ce[constants.COURSE_ID])
+    #         if {ce[constants.COURSE_ID]: ce[constants.TERM_ID]} not in existing_courses_editions:
+    #             existing_courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
+    #             courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
+    #
+    #     # get courses_editions conducted by all lecturers
+    #     for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
+    #         if len(course_conducted['course_editions_conducted']) > 0:
+    #             for courseedition in course_conducted['course_editions_conducted']:
+    #                 course_id, term_id = courseedition['id'].split('|')
+    #                 if course_id not in existing_courses:
+    #                     existing_courses.append(course_id)
+    #                     courses.append(course_id)
+    #                 if {course_id: term_id} not in existing_courses_editions:
+    #                     existing_courses_editions.append({course_id: term_id})
+    #                     courses_editions.append({course_id: term_id})
+    #
+    #     # get courses from course_edition
+    #     for course in courses:
+    #         try:
+    #             result = client.course(course)
+    #         except UsosClientError, ex:
+    #             self._exc(ex)
+    #             continue
+    #
+    #         if result:
+    #             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+    #             self.dao.insert(constants.COLLECTION_COURSES, result)
+    #         else:
+    #             logging.warn("no course for course_id: %r.", course)
+    #
+    #             # wylaczamy sciaganie reszty
+    #             # users_to_fetch = list()
+    #             # # get course_edition for lecturers
+    #             # if len(courses_editions) > 0:
+    #             #     for ca in courses_editions:
+    #             #         for course_id, term_id in ca.items():
+    #             #             continue
+    #             #         try:
+    #             #             result = client.course_edition(course_id, term_id)
+    #             #         except UsosClientError, ex:
+    #             #             self._exc(ex)
+    #             #             continue
+    #             #
+    #             #         if result:
+    #             #             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
+    #             #             self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+    #             #         else:
+    #             #             logging.warn("no course_edition for course_id: %r term_id: %r", course_id, term_id)
+    #             #
+    #             #         # get lecturers for rest of given course_edition
+    #             #         # self.__find_users_related(users_to_fetch, result)
+    #             # self.__build_users_info(client, crawl_time, users_to_fetch, usos)
 
-        for course_edition in self.dao.get_courses_editions(user_id):
+    @gen.coroutine
+    def __build_faculties(self):
+        faculties = yield self.db_faculties_from_courses(self.usos_id)
 
-            existing_doc = self.dao.get_course_edition(user_id, course_edition[1], course_edition[0], usos[constants.USOS_ID])
-
-            if existing_doc:
-                continue
+        for faculty_id in faculties:
+            faculty_doc = yield self.db_faculty(faculty_id, self.usos_id)
+            if faculty_doc:
+                continue  # faculty already exists
 
             try:
-                # TODO: zamienić 1 i 0 na stałe i poprawić metdotę course_edition
-                result = client.course_edition(course_edition[1], course_edition[0], fetch_participants=True)
+                result = yield self.usos_faculty(faculty_id, self.usos_id)
+
+                if result:
+                    yield self.db_insert(constants.COLLECTION_FACULTIES, result)
+                else:
+                    logging.warn("no faculty for fac_id: {0} and usos_id: {1)".format(faculty_id, self.usos_id))
             except UsosClientError, ex:
-                self._exc(ex)
-                continue
+                yield self._exc(ex)
 
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.USER_ID] = user_id
-                self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
+        raise gen.Return(None)
 
-                if existing_doc:
-                    self.dao.delete_doc(constants.COLLECTION_COURSE_EDITION, existing_doc[constants.MONGO_ID])
-            else:
-                logging.warn("no course_edition for course_id: %r term_id: %r", course_edition[1], course_edition[0])
-
-    def __build_courses(self, client, usos, crawl_time):
-
-        courses = list()
-        courses_editions = list()
-        existing_courses_editions = list()
-
-        # get courses that exists in mongo and remove from list to fetch
-        existing_courses = self.dao.get_courses(usos[constants.USOS_ID], constants.COURSE_ID)
-
-        # get courses from course_edition
-        for ce in self.dao.get_usos_course_edition(usos[constants.USOS_ID]):
-            if ce[constants.COURSE_ID] not in existing_courses:
-                existing_courses.append(ce[constants.COURSE_ID])
-                courses.append(ce[constants.COURSE_ID])
-            if {ce[constants.COURSE_ID]: ce[constants.TERM_ID]} not in existing_courses_editions:
-                existing_courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
-                courses_editions.append({ce[constants.COURSE_ID]: ce[constants.TERM_ID]})
-
-        # get courses_editions conducted by all lecturers
-        for course_conducted in self.dao.get_courses_conducted_by_lecturers(usos[constants.USOS_ID]):
-            if len(course_conducted['course_editions_conducted']) > 0:
-                for courseedition in course_conducted['course_editions_conducted']:
-                    course_id, term_id = courseedition['id'].split('|')
-                    if course_id not in existing_courses:
-                        existing_courses.append(course_id)
-                        courses.append(course_id)
-                    if {course_id: term_id} not in existing_courses_editions:
-                        existing_courses_editions.append({course_id: term_id})
-                        courses_editions.append({course_id: term_id})
-
-        # get courses from course_edition
-        for course in courses:
-            try:
-                result = client.course(course)
-            except UsosClientError, ex:
-                self._exc(ex)
-                continue
-
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                self.dao.insert(constants.COLLECTION_COURSES, result)
-            else:
-                logging.warn("no course for course_id: %r.", course)
-
-        # wylaczamy sciaganie reszty
-        # users_to_fetch = list()
-        # # get course_edition for lecturers
-        # if len(courses_editions) > 0:
-        #     for ca in courses_editions:
-        #         for course_id, term_id in ca.items():
-        #             continue
-        #         try:
-        #             result = client.course_edition(course_id, term_id)
-        #         except UsosClientError, ex:
-        #             self._exc(ex)
-        #             continue
-        #
-        #         if result:
-        #             result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-        #             self.dao.insert(constants.COLLECTION_COURSE_EDITION, result)
-        #         else:
-        #             logging.warn("no course_edition for course_id: %r term_id: %r", course_id, term_id)
-        #
-        #         # get lecturers for rest of given course_edition
-        #         # self.__find_users_related(users_to_fetch, result)
-        # self.__build_users_info(client, crawl_time, users_to_fetch, usos)
-
-    def __build_faculties(self, client, usos, crawl_time):
-        for faculty in self.dao.get_faculties_from_courses(usos[constants.USOS_ID]):
-            if self.dao.get_faculty(faculty, usos[constants.USOS_ID]):
-                continue  # fac already exists
-
-            try:
-                result = client.faculty(faculty)
-            except UsosClientError, ex:
-                self._exc(ex)
-                continue
-
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.FACULTY_ID] = faculty
-                result['name'] = result['name']['pl']
-                self.dao.insert(constants.COLLECTION_FACULTIES, result)
-            else:
-                logging.warn("no faculty for fac_id: %r.", faculty)
-
-    def __build_users_info(self, client, crawl_time, user_info_ids, usos_id):
+    @gen.coroutine
+    def __build_users_info(self, user_info_ids):
         for user_info_id in user_info_ids:
-            if not self.dao.get_users_info(user_info_id[constants.ID], usos_id):
-                # build user_info
-                self.__build_user_info(client, None, user_info_id[constants.ID], crawl_time, usos_id)
+            user_info_doc = yield self.db_users_info(user_info_id, self.usos_id)
+            if user_info_doc:
+                yield self.__build_user_info(user_info_id)
+                yield self.__build_programmes(user_info_id)
 
-                # build programme for given user
-                self.__build_programmes(client, user_info_id[constants.ID], crawl_time, usos_id)
+        raise gen.Return(None)
 
-    def __build_units(self, client, crawl_time, units, usos):
+    @gen.coroutine
+    def __build_units(self, units):
 
         for unit_id in units:
-            if self.dao.get_units(unit_id, usos[constants.USOS_ID]):
+            unit_doc = yield self.db_unit(unit_id, self.usos_id)
+            if unit_doc:
                 continue  # units already exists
 
             try:
-                result = client.units(unit_id)
+                result = yield self.usos_unit(unit_id, self.usos_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
+                else:
+                    logging.warn("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
             except UsosClientError, ex:
-                self._exc(ex)
-                continue
+                yield self._exc(ex)
 
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.UNIT_ID] = result.pop(constants.ID)
-                self.dao.insert(constants.COLLECTION_COURSES_UNITS, result)
-            else:
-                logging.warn("no unit %r.", format(unit_id))
+        raise gen.Return(None)
 
-    def __build_groups(self, client, crawl_time, units, usos):
+    @gen.coroutine
+    def __build_groups(self, groups):
 
-        for unit in units:
-            if self.dao.get_group(unit, usos[constants.USOS_ID]):
-                continue
+        for group_id in groups:
+            group_doc = yield self.db_group(group_id, self.usos_id)
+            if group_doc:
+                continue  # group already exists
 
             try:
-                result = client.groups(unit)
+                result = yield self.usos_group(group_id, self.usos_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
+                else:
+                    logging.warn("no group for group_id: {0} and usos_id: {1)".format(group_id, self.usos_id))
             except UsosClientError, ex:
-                self._exc(ex)
-                continue
+                yield self._exc(ex)
 
-            if result:
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                self.dao.insert(constants.COLLECTION_GROUPS, result)
-            else:
-                logging.warn("no group for unit: %r.", unit)
+        raise gen.Return(None)
 
-    def __process_user_data(self, client, user_id, usos, crawl_time):
-
-        users_found = list()
+    @gen.coroutine
+    def __process_user_data(self):
         units_found = list()
+        courses_editions = yield self.db_courses_editions(self.user_id)
 
-        for data in self.dao.get_courses_editions(user_id):
+        for data in courses_editions:
             term_id, course_id = data[0], data[1]
 
+            # TODO: czy to nie powinno być przeczytane z bazy?
             try:
-                result = client.course_edition(course_id, term_id, fetch_participants=True)
+                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id)
+                # yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+
+                # collect units
+                if result and 'course_units_ids' in result:
+                    for unit in result['course_units_ids']:
+                        if unit not in units_found:
+                            units_found.append(unit)
+
+                    grade_doc = yield self.db_grades(course_id, term_id, self.user_id, self.usos_id)
+                    if grade_doc:
+                        continue  # grades for course and term already exists
+
+                if result and (
+                            result['grades']['course_grades'] or result['grades']['course_units_grades']):
+                    yield self.db_insert(constants.COLLECTION_GRADES, result)
+                else:
+                    logging.warn(
+                        'grades not found for course_id: {0} term_id: {1} usos_id: {2} and user_id: {3}'.format(
+                            course_id, term_id, self.usos_id, self.user_id
+                        ))
             except UsosClientError, ex:
-                self._exc(ex)
-                return
+                yield self._exc(ex)
 
-            # wyłączam sciaganie bo to bedzie ściągane na zawołanie
-            # self.__find_users_related(users_found, result)
+        yield self.__build_units(units_found)
+        yield self.__build_groups(units_found)
 
-            # units
-            if result and 'course_units_ids' in result:
-                for unit in result['course_units_ids']:
-                    if unit not in units_found:
-                        units_found.append(unit)
-
-                result = self.append(result, usos[constants.USOS_ID], crawl_time, crawl_time)
-                result[constants.USER_ID] = user_id
-                if self.dao.get_grades(course_id, term_id, user_id, usos[constants.USOS_ID]):
-                    continue  # grades for course and term already exists
-
-            if result and (len(result['grades']['course_grades'])>0 or len(result['grades']['course_units_grades'])>0):
-                self.dao.insert(constants.COLLECTION_GRADES, result)
-
-        # wyłączam sciaganie bo to bedzie ściągane na zawołanie
-        # self.__build_users_info(client, crawl_time, users_found, usos)
-        self.__build_units(client, crawl_time, units_found, usos)
-        self.__build_groups(client, crawl_time, units_found, usos)
+        raise gen.Return(None)
 
     @staticmethod
     def __find_users_related(users, result):
@@ -459,70 +419,59 @@ class UsosCrawler(UsosMixin):
                 if l not in users:
                     users.append(l)
 
-    def __build_client(self, user):
-        self.user = user
-        usos = self.dao.get_usos(user[constants.USOS_ID])
-        client = UsosClient(usos[constants.USOS_URL], usos[constants.CONSUMER_KEY],
-                            usos[constants.CONSUMER_SECRET],
-                            user[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_SECRET])
-        return client, usos
-
     @gen.coroutine
     def initial_user_crawl(self, user_id):
         try:
-            if isinstance(user_id, str):
-                user_id = ObjectId(user_id)
-
-            crawl_time = datetime.now()
-
-            user = self.dao.get_user(user_id)
-            if not user:
+            self._user_doc = yield self.db_get_user(user_id)
+            if not self.user_doc:
                 raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-            client, usos = self.__build_client(user)
-            user_info_id = self.__build_user_info(client, user_id, None, crawl_time, usos)
+            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
-            self.__subscribe(client, user_id, usos)
+            user_info_id = yield self.__build_user_info()
+            yield self.__subscribe()
 
-            # fetch time_table for current and next week
             monday = self.__get_monday()
-            self.__build_time_table(client, user_id, usos[constants.USOS_ID], monday)
-            self.__build_time_table(client, user_id, usos[constants.USOS_ID], self.__get_next_monday(monday))
-            self.__build_programmes(client, user_info_id, crawl_time, usos)
-            self.__build_curses_editions(client, crawl_time, user_id, usos)
-            self.__build_terms(client, user_id, usos, crawl_time)
-            self.__build_course_edition(client, user_id, usos, crawl_time)
+            yield self.__build_time_table(monday)
+            yield self.__build_time_table(self.__get_next_monday(monday))
+            yield self.__build_programmes(user_info_id)
+            yield self.__build_curses_editions()
+            yield self.__build_terms()
+            yield self.__build_course_edition()
+            yield self.__process_user_data()
 
-            self.__process_user_data(client, user_id, usos, crawl_time)
+            # # do przeróbki niech działa nie na kursach tylko programach i przemieniesie nad programy
+            yield self.__build_faculties()
 
-            # do przeróbki niech działa nie na kursach tylko programach i przemieniesie nad programy
-            self.__build_faculties(client, usos, crawl_time)
-
-            # wyłączamy ściąganie  dla wszystkich
-            self.__build_courses(client, usos, crawl_time)
+            # # wyłączamy ściąganie  dla wszystkich
+            # self.__build_courses(client, usos, crawl_time)
 
         except Exception, ex:
-            self._exc(ex)
+            yield self._exc(ex)
 
     @gen.coroutine
     def daily_crawl(self):
-
-        crawl_time = datetime.now()
-
-        for user in self.dao.get_users():
+        users = yield self.db_users()
+        for user_doc in users:
             try:
-                logging.debug('updating daily crawl for user: {0}'.format(user[constants.MONGO_ID]))
-                client, usos = self.__build_client(user)
+                logging.debug('updating daily crawl for user: {0}'.format(user_doc[constants.MONGO_ID]))
 
-                # if courseseditions are updated - process update
-                if self.__build_curses_editions(client, crawl_time, user[constants.MONGO_ID], usos):
-                    # self.__build_terms(client, user[constants.MONGO_ID], usos, crawl_time)
-                    self.__build_course_edition(client, user[constants.MONGO_ID], usos, crawl_time)
-                    self.__process_user_data(client, user[constants.MONGO_ID], usos, crawl_time)
-                    self.__build_courses(client, usos, crawl_time)
-                    self.__build_faculties(client, usos, crawl_time)
+                self._user_doc = yield self.db_get_user(user_doc[constants.MONGO_ID])
+                if not self.user_doc:
+                    raise CrawlerException("Daily crawler not started. Unknown user with id: %r.",
+                                           user_doc[constants.MONGO_ID])
+
+                self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
+
+                courses_editions = yield self.__build_curses_editions()
+                if courses_editions:
+                    # self.__build_terms()
+                    yield self.__build_course_edition()
+                    yield self.__process_user_data()
+                    # self.__build_courses(client, usos, crawl_time)
+                    yield self.__build_faculties()
             except Exception, ex:
-                self._exc(ex)
+                yield self._exc(ex)
 
     @staticmethod
     def __get_next_monday(monday):
@@ -537,58 +486,58 @@ class UsosCrawler(UsosMixin):
     @gen.coroutine
     def update_user_crawl(self, user_id):
         try:
-            if isinstance(user_id, str):
-                user_id = ObjectId(user_id)
+            self._user_doc = yield self.db_get_user(user_id)
+            if not self.user_doc:
+                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-            crawl_time = datetime.now()
+            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
-            user = self.dao.get_user(user_id)
-            if not user:
-                raise CrawlerException("Update crawler not started. Unknown user with id: %r", user_id)
+            courses_conducted = yield self.db_courses_conducted(user_id)
 
-            client, usos = self.__build_client(user)
-
-            courses_conducted = self.dao.courses_conducted(user_id)
-
-            self.__build_course_editions_for_conducted(client, courses_conducted, crawl_time, usos)
+            yield self.__build_course_editions_conducted(courses_conducted)
         except Exception, ex:
-            self._exc(ex)
+            yield self._exc(ex)
 
     @gen.coroutine
     def update_time_tables(self):
         monday = self.__get_monday()
         next_monday = self.__get_next_monday(monday)
 
-        for user in self.dao.get_users():
+        users = yield self.db_users()
+        for user_doc in users:
             try:
                 logging.debug(
-                    'updating time table for user: {0} and monday: {1}'.format(user[constants.MONGO_ID], monday))
-                client, usos = self.__build_client(user)
+                    'updating time table for user: {0} and monday: {1}'.format(user_doc[constants.MONGO_ID], monday))
+                self.__build_time_table(monday)
+                self.__build_time_table(next_monday)
 
-                self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], monday)
-                self.__build_time_table(client, user[constants.MONGO_ID], user[constants.USOS_ID], next_monday)
-
-                logging.debug('updating time table for user: {0}'.format(user[constants.MONGO_ID]))
+                logging.debug('updating time table for user: {0}'.format(user_doc[constants.MONGO_ID]))
             except Exception, ex:
-                self._exc(ex)
+                yield self._exc(ex)
 
     @gen.coroutine
     def unsubscribe(self, user_id):
         try:
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
-            user = self.dao.get_archive_user(user_id)
-            if not user:
+            self._user_doc = yield self.db_archive_user(user_id)
+
+            if not self.user_doc:
                 raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            if constants.USOS_ID in user:
-                client, usos = self.__build_client(user)
-                client.unsubscribe()
+            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
+
+            if constants.USOS_ID in self.user_doc:
+                client = yield self.usos_client()
+                try:
+                    client.unsubscribe()
+                except UsosClientError, ex:
+                    yield self._exc(ex)
 
         except Exception, ex:
-            self._exc(ex)
+            yield self._exc(ex)
 
     @gen.coroutine
     def notifier_status(self):
@@ -596,11 +545,35 @@ class UsosCrawler(UsosMixin):
             usosAsync = UsosAsync()
             timestamp = datetime.now()
 
-            for usos in self.dao.get_usoses():
-                data = yield usosAsync.notifier_status(usos[constants.USOS_URL])
-                data[constants.CREATED_TIME] = timestamp
-                data[constants.USOS_ID] = usos[constants.USOS_ID]
+            usoses = yield self.db_usoses()
+            for usos in usoses:
+                try:
+                    data = yield usosAsync.notifier_status(usos[constants.USOS_URL])
+                    data[constants.CREATED_TIME] = timestamp
+                    data[constants.USOS_ID] = usos[constants.USOS_ID]
 
-                self.dao.insert(constants.COLLECTION_NOTIFIER_STATUS, data)
+                    yield self.db_insert(constants.COLLECTION_NOTIFIER_STATUS, data)
+                except UsosClientError, ex:
+                    yield self._exc(ex)
+
         except Exception, ex:
             self._exc(ex)
+
+# @gen.coroutine
+# def main():
+#     crawler = UsosCrawler()
+#     user_id = '5735cd11d54c4b2574efb690'
+#     # yield crawler.initial_user_crawl(user_id)
+#     # yield crawler.daily_crawl()
+#     yield crawler.update_user_crawl(user_id)
+#     yield crawler.update_time_tables()
+#
+#
+# if __name__ == '__main__':
+#     from tornado import ioloop
+#     from tornado.options import parse_command_line
+#
+#     parse_command_line()
+#     logging.getLogger().setLevel(logging.DEBUG)
+#     io_loop = ioloop.IOLoop.current()
+#     io_loop.run_sync(main)
