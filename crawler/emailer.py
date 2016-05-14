@@ -7,19 +7,19 @@ from email.header import Header
 from email.mime.text import MIMEText
 
 import motor
-from tornado import queues, gen, ioloop
+from tornado import queues, gen
+from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
 
 QUEUE_MAXSIZE = 100
-CONCURRENT = 4
+MAX_WORKERS = 4
 SLEEP = 2
 
 
 class EmailQueue(object):
     def __init__(self):
-        super(EmailQueue, self).__init__()
 
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.smtp = smtplib.SMTP()
@@ -27,7 +27,9 @@ class EmailQueue(object):
         self.smtp.starttls()
         self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
-        self.running = True
+        self.processing = []
+
+        logging.info(self.db)
 
     @gen.coroutine
     def load_work(self):
@@ -47,8 +49,12 @@ class EmailQueue(object):
         cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
         while (yield cursor.fetch_next):
+            if len(self.processing) >= MAX_WORKERS:
+                break
             job = cursor.next_object()
             yield self.queue.put(job)
+
+        raise gen.Return(None)
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -65,56 +71,56 @@ class EmailQueue(object):
         update = yield self.db[constants.COLLECTION_EMAIL_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.debug(
+        logging.info(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug("processing job: {0}".format(job[constants.MONGO_ID]))
+        try:
+            self.processing.append(job)
+            logging.info("processing job: {0}".format(job[constants.MONGO_ID]))
 
-        msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), 'plain', constants.ENCODING)
-        msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
-        msg['From'] = job[constants.SMTP_FROM]
-        msg['To'] = ','.join(job[constants.SMTP_TO])
+            yield self.update_job(job, constants.JOB_START)
 
-        self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+            msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), 'plain', constants.ENCODING)
+            msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
+            msg['From'] = job[constants.SMTP_FROM]
+            msg['To'] = ','.join(job[constants.SMTP_TO])
 
-        logging.debug("processed job: {0}".format(job[constants.MONGO_ID]))
+            self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+
+            yield self.update_job(job, constants.JOB_FINISH)
+
+            logging.info("processed job: {0}".format(job[constants.MONGO_ID]))
+        finally:
+            self.processing.remove(job)
 
     @gen.coroutine
     def worker(self):
 
-        while self.running:
-            if self.queue.empty():
-                yield self.load_work()
-                yield gen.sleep(SLEEP)
-            else:
+        while True:
+            try:
                 job = yield self.queue.get()
-                logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self.queue.qsize()))
-
-                try:
-                    yield self.update_job(job, constants.JOB_START)
-                    yield self.process_job(job)
-                    yield self.update_job(job, constants.JOB_FINISH)
-
-                except Exception, ex:
-                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
-                    logging.exception(msg)
-
-                    yield self.update_job(job, constants.JOB_FAIL, msg)
-                finally:
-                    self.queue.task_done()
+                logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
+                    job, self.queue.qsize(), len(self.processing)))
+                yield self.process_job(job)
+            except Exception, ex:
+                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                logging.exception(msg)
+                yield self.update_job(job, constants.JOB_FAIL, msg)
+            finally:
+                self.queue.task_done()
 
     @gen.coroutine
     def producer(self):
         while True:
             yield self.load_work()
-            yield gen.sleep(constants.WORKERS_SLEEP)
+            yield gen.sleep(SLEEP)
 
     @gen.coroutine
     def workers(self):
-        io_loop.IOLoop.current().spawn_callback(self.producer)
-        futures = [self.worker() for _ in range(CONCURRENT)]
+        IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(MAX_WORKERS)]
         yield futures
 
 
@@ -126,5 +132,5 @@ if __name__ == '__main__':
 
     emailQueue = EmailQueue()
 
-    io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(emailQueue.worker)
+    io_loop = IOLoop.current()
+    io_loop.run_sync(emailQueue.workers)
