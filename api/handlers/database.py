@@ -10,6 +10,7 @@ from tornado.web import RequestHandler
 from commons import constants, settings
 from commons.errors import ApiError, AuthenticationError
 from crawler import email_factory
+from pprint import pformat
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
 
@@ -221,23 +222,12 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return()
 
     @gen.coroutine
-    def get_classtypes(self, usos_id):
-
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find({constants.USOS_ID: usos_id})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
-
-        raise gen.Return(classtypes)
-
-    @gen.coroutine
-    def get_terms_with_order_keys(self, usos_id, terms_list):
-
+    def get_terms_with_order_keys(self, terms_list):
+        # TODO: jeżeli terms jeszcze są nie ściągniete to tutaj się wywala.
         terms_by_order = dict()
         for term in terms_list:
             term_coursor = self.db[constants.COLLECTION_TERMS].find(
-                {constants.USOS_ID: usos_id,
+                {constants.USOS_ID: self.user_doc[constants.USOS_ID],
                  constants.TERM_ID: term},
                 (constants.TERM_ID, constants.TERMS_ORDER_KEY))
             while (yield term_coursor.fetch_next):

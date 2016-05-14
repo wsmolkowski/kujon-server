@@ -13,7 +13,7 @@ from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
 
-LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', 'name', constants.FACULTY_ID, 'assessment_criteria',
+LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
                 constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
@@ -49,7 +49,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         course_doc[constants.TERM_ID] = term_id
 
-        course_edition_doc = yield self.api_course_edition(course_id, term_id)
+        course_edition_doc = yield self.api_course_edition(course_id, term_id, fetch_participants=False)
 
         if not course_edition_doc:
             raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
@@ -130,7 +130,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
-            raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
+            course_doc = yield self.usos_course(course_id)
+            yield self.insert(constants.COLLECTION_COURSES, course_doc)
+            if not course_doc:
+                raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
 
         # change id to value
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -142,7 +145,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_doc.pop(constants.FACULTY_ID)
         if constants.FACULTY_ID in faculty_id:
             course_doc[constants.FACULTY_ID] = faculty_id
-            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         raise gen.Return(course_doc)
 
@@ -195,7 +197,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Poczekaj szukamy edycji przedmiotów")
 
         # get courses_classtypes
-        classtypes = yield self.get_classtypes(self.user_doc[constants.USOS_ID])
+        classtypes = yield self.get_classtypes()
 
         # get terms_list for course
         terms = list()
@@ -226,7 +228,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 del course[constants.TERM_ID]
 
         # get course in order in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = yield self.get_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
         courses = list()
         for order_key in terms_by_order:
@@ -375,7 +377,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             grades[grade[constants.TERM_ID]].append(grade)
 
         # sort grades in order of terms by order_keys descending
-        terms_by_order = yield self.get_terms_with_order_keys(self.user_doc[constants.USOS_ID], terms)
+        terms_by_order = yield self.get_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
         grades_sorted_by_term = list()
         for order_key in terms_by_order:
@@ -428,7 +430,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID])
+                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=True)
 
                 if not course_edition_doc:
                     continue
@@ -466,22 +468,18 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             user_info['room']['building_name'] = user_info['room']['building_name']['pl']
 
         # change course_editions_conducted to list of courses
-        course_editions = []
+        courses_conducted = []
         if user_info['course_editions_conducted']:
-            for courseterm in user_info['course_editions_conducted']:
-                course_id, term_id = courseterm['id'].split('|')
-                course_doc = yield self.api_course_term(course_id, term_id)
+            for c in user_info['course_editions_conducted']:
+                course_id, term_id = c['id'].split('|')
 
+                course_doc = yield self.api_course(course_id)
                 if course_doc:
-                    course = dict()
-                    course[constants.COURSE_NAME] = course_doc['name']
-                    course[constants.COURSE_ID] = course_doc[constants.COURSE_ID]
-                    course[constants.TERM_ID] = course_doc['term'][constants.TERM_ID]
-                    course_editions.append(course)
-                else:
-                    # FIXME WTF ?
-                    course_editions.append("Nie znaleziono danych dla kursu i cyklu.")
-            user_info['course_editions_conducted'] = course_editions
+                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                        constants.COURSE_ID: course_id,
+                                        constants.TERM_ID: term_id})
+
+            user_info['course_editions_conducted'] = courses_conducted
 
         raise gen.Return(user_info)
 
@@ -671,15 +669,26 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(courses_editions_doc)
 
     @gen.coroutine
-    def api_course_edition(self, course_id, term_id):
-        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.USER_ID: self.user_doc[constants.MONGO_ID],
-             constants.COURSE_ID: course_id,
-             constants.TERM_ID: term_id,
-             constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+    def api_course_edition(self, course_id, term_id, fetch_participants):
+
+
+        if fetch_participants:
+            pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID],
+                 constants.COURSE_ID: course_id,
+                 constants.TERM_ID: term_id,
+                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        else:
+            pipeline = {constants.COURSE_ID: course_id,
+                        constants.TERM_ID: term_id,
+                        constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+
+        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
 
         if not course_edition_doc:
-            course_edition_doc = yield self.usos_course_edition(course_id, term_id)
+            course_edition_doc = yield self.usos_course_edition(course_id, term_id, self.user_doc[constants.MONGO_ID],
+                                                                self.user_doc[constants.USOS_ID], fetch_participants)
+            if fetch_participants:
+                course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
             yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
 
         raise gen.Return(course_edition_doc)

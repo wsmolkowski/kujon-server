@@ -27,12 +27,13 @@ class UsosMixin(object):
         raise gen.Return(usos_client)
 
     @gen.coroutine
-    def usos_course(self, course):
+    def usos_course(self, course_id):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.course(course)
+        result = client.course(course_id)
+        result[constants.COURSE_NAME] = result.pop('name')
         result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -182,21 +183,17 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_course_edition(self, course_id, term_id, user_id=None, usos_id=None):
-        if not user_id:
-            user_id = self.user_doc[constants.MONGO_ID]
-        if not usos_id:
-            usos_id = self.user_doc[constants.USOS_ID]
+    def usos_course_edition(self, course_id, term_id, user_id, usos_id, fetch_participants):
+
 
         client = yield self.usos_client()
         create_time = datetime.now()
 
         try:
-            result = client.course_edition(course_id, term_id, fetch_participants=True)
+            result = client.course_edition(course_id, term_id, fetch_participants)
         except UsosClientError, ex:
             logging.warn(
                 'trying to fetch course_edition with {0} {1} due to {2}'.format(course_id, term_id, ex.message))
-            result = client.course_edition(course_id, term_id, fetch_participants=False)
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id

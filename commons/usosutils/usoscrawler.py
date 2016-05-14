@@ -119,7 +119,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 continue
 
             try:
-                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id)
+                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=False)
                 yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
 
             except UsosClientError, ex:
@@ -220,8 +220,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if course_edition_doc:
                 continue
             try:
-                result = yield self.usos_course_edition(course_edition[1], course_edition[0], self.user_id,
-                                                        self.usos_id)
+                result = yield self.usos_course_edition(course_edition[1], course_edition[0], self.user_id, self.usos_id, fetch_participants=True)
                 yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
             except UsosClientError, ex:
                 yield self._exc(ex)
@@ -373,10 +372,9 @@ class UsosCrawler(UsosMixin, DaoMixin):
         for data in courses_editions:
             term_id, course_id = data[0], data[1]
 
-            # TODO: czy to nie powinno być przeczytane z bazy?
             try:
-                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id)
-                # yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=True)
+                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
 
                 # collect units
                 if result and 'course_units_ids' in result:
