@@ -450,7 +450,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
 
         # change ObjectId to str for photo
-        if user_info['has_photo']:
+        if 'has_photo' in user_info and user_info['has_photo']:
             user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
         # change staff_status to dictionary
@@ -482,10 +482,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     # FIXME WTF ?
                     course_editions.append("Nie znaleziono danych dla kursu i cyklu.")
             user_info['course_editions_conducted'] = course_editions
-
-        # show url to photo
-        if user_info['has_photo']:
-            user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
         raise gen.Return(user_info)
 
@@ -627,10 +623,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info_id(user_id)
             user_info_doc[constants.USER_ID] = user_id
-            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
-                yield self.api_photo(user_info_doc[constants.ID])
+                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
+                user_info_doc['has_photo'] = photo_doc[constants.MONGO_ID]
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
         raise gen.Return(user_info_doc)
 

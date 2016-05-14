@@ -64,7 +64,7 @@ class UserInfoApi(BaseHandler):
             user_doc.update(user_info)
 
             user_doc['student_status'] = usoshelper.dict_value_student_status(user_doc['student_status'])
-            if 'has_photo' in user_doc:
+            if 'has_photo' in user_doc and user_doc['has_photo']:
                 user_doc['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
 
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
