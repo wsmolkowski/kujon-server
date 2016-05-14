@@ -596,11 +596,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: ObjectId(user_id)}, USER_INFO_LIMIT_FIELDS)
+            {constants.USER_ID: user_id}, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info()
-            user_info_doc[constants.USER_ID] = user_id
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 

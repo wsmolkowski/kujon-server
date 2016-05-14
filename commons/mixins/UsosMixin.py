@@ -77,16 +77,19 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_user_info(self, usos=None):
-        if not usos:
-            usos = self.user_doc[constants.USOS_ID]
+    def usos_user_info(self, user_id=None, usos_id=None):
+        if not user_id:
+            user_id = self.user_doc[constants.MONGO_ID]
+        if not usos_id:
+            usos_id = self.user_doc[constants.USOS_ID]
 
         client = yield self.usos_client()
         create_time = datetime.now()
 
         result = client.user_info()
 
-        result[constants.USOS_ID] = usos
+        result[constants.USER_ID] = user_id
+        result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
@@ -114,6 +117,7 @@ class UsosMixin(object):
 
         result = client.user_info_id(user_id)
 
+        result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -184,8 +188,6 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_course_edition(self, course_id, term_id, user_id, usos_id, fetch_participants):
-
-
         client = yield self.usos_client()
         create_time = datetime.now()
 

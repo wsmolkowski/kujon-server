@@ -94,7 +94,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if user_info_id:
                 result = yield self.usos_user_info_id(user_info_id, self.usos_id)
             else:
-                result = yield self.usos_user_info(self.usos_id)
+                result = yield self.usos_user_info(self.user_id, self.usos_id)
 
             yield self.db_insert(constants.COLLECTION_USERS_INFO, result)
 
@@ -556,21 +556,22 @@ class UsosCrawler(UsosMixin, DaoMixin):
         except Exception, ex:
             self._exc(ex)
 
-# @gen.coroutine
-# def main():
-#     crawler = UsosCrawler()
-#     user_id = '5735cd11d54c4b2574efb690'
-#     # yield crawler.initial_user_crawl(user_id)
-#     # yield crawler.daily_crawl()
-#     yield crawler.update_user_crawl(user_id)
-#     yield crawler.update_time_tables()
-#
-#
-# if __name__ == '__main__':
-#     from tornado import ioloop
-#     from tornado.options import parse_command_line
-#
-#     parse_command_line()
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     io_loop = ioloop.IOLoop.current()
-#     io_loop.run_sync(main)
+
+@gen.coroutine
+def main():
+    crawler = UsosCrawler()
+    user_id = '5737651dd54c4b09142cf68a'
+    yield crawler.initial_user_crawl(user_id)
+    # yield crawler.daily_crawl()
+    # yield crawler.update_user_crawl(user_id)
+    # yield crawler.update_time_tables()
+
+
+if __name__ == '__main__':
+    from tornado import ioloop
+    from tornado.options import parse_command_line
+
+    parse_command_line()
+    logging.getLogger().setLevel(logging.DEBUG)
+    io_loop = ioloop.IOLoop.current()
+    io_loop.run_sync(main)
