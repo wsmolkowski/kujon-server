@@ -124,7 +124,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             except UsosClientError, ex:
                 yield self._exc(ex)
-                continue
 
     @gen.coroutine
     def __subscribe(self):
