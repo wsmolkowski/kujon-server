@@ -20,7 +20,7 @@ class MainHandler(RequestHandler, JSendMixin):
 
     @property
     def db(self):
-        return self.application.db
+        return self.application.settings['db']
 
     @gen.coroutine
     def user_exists(self, user_id):
@@ -56,7 +56,8 @@ class MainHandler(RequestHandler, JSendMixin):
 
         self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
-        raise gen.Return()
+        return
+
 
     @gen.coroutine
     def process_event(self, event_data):
@@ -66,7 +67,7 @@ class MainHandler(RequestHandler, JSendMixin):
         logging.debug('entry: {0}'.format(self.event_data['entry']))
         logging.debug('event_type: {0}'.format(self.event_data['event_type']))
 
-        raise gen.Return()
+        raise gen.Return(None)
 
 
 class EventHandler(MainHandler):
@@ -89,6 +90,7 @@ class EventHandler(MainHandler):
 
 
 class VerifyHandler(MainHandler):
+    @gen.coroutine
     @web.asynchronous
     def prepare(self):
         # if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
@@ -99,11 +101,13 @@ class VerifyHandler(MainHandler):
         challenge = self.get_argument('hub.challenge', default=None, strip=True)
         verify_token = self.get_argument('hub.verify_token', default=None, strip=True)
 
+        logging.info(self.db)
+
         if not mode or not challenge or not verify_token:
             logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
                 mode, challenge, verify_token))
             self.fail(message='Required parameters not passed.')
-            raise gen.Return()
+            return
 
         self.argument_mode = mode
         self.argument_challenge = challenge

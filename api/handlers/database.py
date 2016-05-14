@@ -19,7 +19,7 @@ class DatabaseHandler(RequestHandler):
 
     @property
     def db(self):
-        return self.application.db
+        return self.application.settings['db']
 
     @gen.coroutine
     def archive_user(self, user_id):

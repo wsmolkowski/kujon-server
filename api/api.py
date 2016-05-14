@@ -18,13 +18,6 @@ define('cookie_secret', default=settings.COOKIE_SECRET)
 
 
 class Application(tornado.web.Application):
-    _db = None
-
-    @property
-    def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
 
     def __init__(self):
         _settings = dict(
@@ -40,8 +33,6 @@ class Application(tornado.web.Application):
         )
 
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
-
-        self.db
 
 
 def prepare_environment():
@@ -65,15 +56,18 @@ def main():
         ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
-        server.listen(options.port)
-        # server.start(0)  # forks one process per cpu
-        logging.info('SSL ENABLED FOR API')
+        server.bind(options.port)
+        server.start(0)  # Forks multiple sub-processes
+        logging.info('SSL ENABLED FOR API on port: {0}'.format(options.port))
     else:
-        application.listen(options.port)
-        logging.info('SSL DISABLED FOR API')
+        server = HTTPServer(application)
+        server.listen(options.port)
+        logging.info('SSL DISABLED FOR API on port: {0}'.format(options.port))
 
+    db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+    logging.info(db)
+    application.settings['db'] = db
     logging.info(settings.DEPLOY_API)
-
     IOLoop.instance().start()
 
 
