@@ -191,6 +191,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             raise gen.Return(True)
         else:
             yield self.db_remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, self.user_id)
+            yield self.db_remove(constants.COLLECTION_COURSE_EDITION, constants.USER_ID, self.user_id)
             yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
             raise gen.Return(False)
 
@@ -204,7 +205,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             try:
                 result = yield self.usos_term(term_id, self.usos_id)
-
                 yield self.db_insert(constants.COLLECTION_TERMS, result)
             except UsosClientError, ex:
                 yield self._exc(ex)
@@ -215,8 +215,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
     def __build_course_edition(self):
         courses_editions = yield self.db_courses_editions(self.user_id)
         for course_edition in courses_editions:
-            course_edition_doc = yield self.db_course_edition(self.user_id, course_edition[1], course_edition[0],
-                                                              self.usos_id)
+            course_id, term_id = course_edition[1], course_edition[0]
+            course_edition_doc = yield self.db_course_edition(self.user_id, course_id, term_id, self.usos_id)
             if course_edition_doc:
                 continue
             try:
