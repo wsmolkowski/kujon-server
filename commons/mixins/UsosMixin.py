@@ -13,22 +13,18 @@ from commons.usosutils.usosclient import UsosClient
 
 
 class UsosMixin(object):
-    USOS_CLIENTS = {}
 
     @gen.coroutine
     def usos_client(self):
         if not hasattr(self, 'usos_doc'):
             self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        if self.user_doc[constants.MONGO_ID] not in self.USOS_CLIENTS:
-            usos_client = UsosClient(self.usos_doc[constants.USOS_URL], self.usos_doc[constants.CONSUMER_KEY],
-                                     self.usos_doc[constants.CONSUMER_SECRET],
-                                     self.user_doc[constants.ACCESS_TOKEN_KEY],
-                                     self.user_doc[constants.ACCESS_TOKEN_SECRET])
+        usos_client = UsosClient(self.usos_doc[constants.USOS_URL], self.usos_doc[constants.CONSUMER_KEY],
+                                 self.usos_doc[constants.CONSUMER_SECRET],
+                                 self.user_doc[constants.ACCESS_TOKEN_KEY],
+                                 self.user_doc[constants.ACCESS_TOKEN_SECRET])
 
-            self.USOS_CLIENTS[self.user_doc[constants.MONGO_ID]] = usos_client
-
-        raise gen.Return(self.USOS_CLIENTS[self.user_doc[constants.MONGO_ID]])
+        raise gen.Return(usos_client)
 
     @gen.coroutine
     def usos_course(self, course):
