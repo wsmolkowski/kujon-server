@@ -108,7 +108,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             try:
                 result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=False)
-                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
 
             except UsosClientError, ex:
                 yield self._exc(ex)
@@ -209,7 +210,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
                                                         course_edition[constants.TERM_ID],
                                                         self.user_id, self.usos_id,
                                                         fetch_participants=True)
-                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
             except UsosClientError, ex:
                 yield self._exc(ex)
 
@@ -319,7 +321,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             try:
                 result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=True)
-                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
 
                 # collect units
                 if result and 'course_units_ids' in result:
