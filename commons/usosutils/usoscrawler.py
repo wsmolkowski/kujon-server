@@ -169,19 +169,16 @@ class UsosCrawler(UsosMixin, DaoMixin):
         raise gen.Return(None)
 
     @gen.coroutine
-    def __build_curses_editions(self):
+    def __build_courses_editions(self):
+
         course_edition = yield self.db_courses_editions(self.user_id)
 
-        result = yield self.usos_courses_editions(self.user_id, self.usos_id)
-
         if not course_edition:
-            yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            raise gen.Return(True)
+            result = yield self.usos_courses_editions(self.user_id, self.usos_id)
+            course_edition = yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
+            raise gen.Return(course_edition)
         else:
-            yield self.db_remove(constants.COLLECTION_COURSES_EDITIONS, constants.MONGO_ID, self.user_id)
-            yield self.db_remove(constants.COLLECTION_COURSE_EDITION, constants.USER_ID, self.user_id)
-            yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            raise gen.Return(False)
+            raise gen.Return(course_edition)
 
     @gen.coroutine
     def __build_terms(self):
@@ -203,12 +200,15 @@ class UsosCrawler(UsosMixin, DaoMixin):
     def __build_course_edition(self):
         courses_editions = yield self.db_courses_editions(self.user_id)
         for course_edition in courses_editions:
-            course_id, term_id = course_edition[1], course_edition[0]
+            course_id, term_id = course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]
             course_edition_doc = yield self.db_course_edition(self.user_id, course_id, term_id, self.usos_id)
             if course_edition_doc:
                 continue
             try:
-                result = yield self.usos_course_edition(course_edition[1], course_edition[0], self.user_id, self.usos_id, fetch_participants=True)
+                result = yield self.usos_course_edition(course_edition[constants.COURSE_ID],
+                                                        course_edition[constants.TERM_ID],
+                                                        self.user_id, self.usos_id,
+                                                        fetch_participants=True)
                 yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
             except UsosClientError, ex:
                 yield self._exc(ex)
@@ -228,10 +228,9 @@ class UsosCrawler(UsosMixin, DaoMixin):
         # get courses from course_edition
         courses_editions = yield self.db_courses_editions(self.user_id)
         for ce in courses_editions:
-            # TODO pozamieniać 0 i 1 na słowniki
-            if ce[1] not in existing_courses:
-                existing_courses.append(ce[1])
-                courses.append(ce[1])
+            if ce[constants.COURSE_ID] not in existing_courses:
+                existing_courses.append(ce[constants.COURSE_ID])
+                courses.append(ce[constants.COURSE_ID])
 
         # get courses
         for course_id in courses:
@@ -316,7 +315,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
         courses_editions = yield self.db_courses_editions(self.user_id)
 
         for data in courses_editions:
-            term_id, course_id = data[0], data[1]
+            term_id, course_id = data[constants.TERM_ID], data[constants.COURSE_ID]
 
             try:
                 result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=True)
@@ -372,22 +371,19 @@ class UsosCrawler(UsosMixin, DaoMixin):
             self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
             user_info_id = yield self.__build_user_info()
-            yield self.__subscribe()
 
             monday = self.__get_monday()
             yield self.__build_time_table(monday)
             yield self.__build_time_table(self.__get_next_monday(monday))
+
             yield self.__build_programmes(user_info_id)
-            yield self.__build_curses_editions()
+            yield self.__build_courses_editions()
             yield self.__build_terms()
             yield self.__build_course_edition()
             yield self.__process_user_data()
-
-            # # do przeróbki niech działa nie na kursach tylko programach i przemieniesie nad programy
-            yield self.__build_faculties()
-
-            # # wyłączamy ściąganie  dla wszystkich
             yield self.__build_courses()
+            yield self.__build_faculties()
+            yield self.__subscribe()
 
         except Exception, ex:
             yield self._exc(ex)
@@ -406,13 +402,10 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
                 self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
-                courses_editions = yield self.__build_curses_editions()
+                courses_editions = yield self.__build_courses_editions()
                 if courses_editions:
-                    # self.__build_terms()
                     yield self.__build_course_edition()
                     yield self.__process_user_data()
-                    # self.__build_courses(client, usos, crawl_time)
-                    yield self.__build_faculties()
             except Exception, ex:
                 yield self._exc(ex)
 
@@ -502,21 +495,3 @@ class UsosCrawler(UsosMixin, DaoMixin):
         except Exception, ex:
             self._exc(ex)
 
-# @gen.coroutine
-# def main():
-#     crawler = UsosCrawler()
-#     user_id = '5737651dd54c4b09142cf68a'
-#     yield crawler.initial_user_crawl(user_id)
-#     # yield crawler.daily_crawl()
-#     # yield crawler.update_user_crawl(user_id)
-#     # yield crawler.update_time_tables()
-#
-#
-# if __name__ == '__main__':
-#     from tornado import ioloop
-#     from tornado.options import parse_command_line
-#
-#     parse_command_line()
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     io_loop = ioloop.IOLoop.current()
-#     io_loop.run_sync(main)

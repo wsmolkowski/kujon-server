@@ -79,7 +79,7 @@ class DaoMixin(object):
         if data:
             for term_data in data['course_editions'].values():
                 for term in term_data:
-                    tc = term[constants.TERM_ID], term[constants.COURSE_ID]
+                    tc = {constants.TERM_ID: term[constants.TERM_ID], constants.COURSE_ID:term[constants.COURSE_ID]}
                     if tc not in result:
                         result.append(tc)
 
