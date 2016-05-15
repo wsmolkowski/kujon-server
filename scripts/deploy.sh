@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 APPDIR=/home/appuser/kujon.mobi/current
-LOGDIR=/home/appuser/kujon.mobi/logs
+LOGDIR=/home/appuser/kujon.mobi/log
 export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 echo 'stopping services...'
