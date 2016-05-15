@@ -28,13 +28,12 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_course(self, course_id):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         client = yield self.usos_client()
         create_time = datetime.now()
 
         result = client.course(course_id)
         result[constants.COURSE_NAME] = result.pop('name')
-        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 

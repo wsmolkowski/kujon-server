@@ -86,6 +86,12 @@ class DaoMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
+    def db_courses(self, usos_id):
+        cursor = self.db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id})
+        courses = yield cursor.to_list(None)
+        raise gen.Return(courses)
+
+    @gen.coroutine
     def db_terms(self, user_id):
         terms = list()
         data = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
