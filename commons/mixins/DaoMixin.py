@@ -104,8 +104,8 @@ class DaoMixin(object):
     def db_course_edition(self, user_id, course_id, term_id, usos_id):
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
             {constants.USER_ID: user_id,
-             constants.COURSE_ID: str(course_id),
-             constants.TERM_ID: str(term_id),
+             constants.COURSE_ID: course_id,
+             constants.TERM_ID: term_id,
              constants.USOS_ID: usos_id})
 
         raise gen.Return(course_edition_doc)
