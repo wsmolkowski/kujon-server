@@ -151,11 +151,13 @@ class UsosClient(object):
             result[constants.COURSE_ID] = result.pop(constants.ID)
 
             # strip english names
-            result['name'] = result['name']['pl']
+            result[constants.COURSE_NAME] = result['name']['pl']
+            result.pop('name')
             result['learning_outcomes'] = result['learning_outcomes']['pl']
             result['description'] = result['description']['pl']
             result['assessment_criteria'] = result['assessment_criteria']['pl']
             result['bibliography'] = result['bibliography']['pl']
+            result['practical_placement'] = result['practical_placement']['pl']
 
             return result
         else:

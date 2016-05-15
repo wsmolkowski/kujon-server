@@ -32,7 +32,6 @@ class UsosMixin(object):
         create_time = datetime.now()
 
         result = client.course(course_id)
-        result[constants.COURSE_NAME] = result.pop('name')
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
