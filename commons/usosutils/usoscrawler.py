@@ -71,20 +71,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
         raise gen.Return(None)
 
     @gen.coroutine
-    def __build_user_info_photo(self, user_info_id):
-
-        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: user_info_id})
-
-        if not photo_doc:
-            photo_doc = yield self.usos_photo(user_info_id)
-            if not photo_doc:
-                yield self.insert(constants.COLLECTION_PHOTOS, photo_doc)
-            else:
-                logging.warn('no photo for user_info_id: {0} and usos_id: {1}'.format(user_info_id, self.usos_id))
-
-        raise gen.Return(photo_doc)
-
-    @gen.coroutine
     def __build_user_info(self, user_info_id=None):
         user_info_doc = yield self.db_users_info_by_user_id(self.user_id, self.usos_id)
         if self.user_id and user_info_doc:
@@ -96,11 +82,13 @@ class UsosCrawler(UsosMixin, DaoMixin):
             else:
                 result = yield self.usos_user_info(self.user_id, self.usos_id)
 
-            yield self.db_insert(constants.COLLECTION_USERS_INFO, result)
-
             # if user has photo - download
-            if 'has_photo' in result and result['has_photo']:
-                result['has_photo'] = yield self.__build_user_info_photo(result[constants.ID])
+            if constants.HAS_PHOTO in result and result[constants.HAS_PHOTO]:
+                photo_doc = yield self.usos_photo(result[constants.ID])
+                yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
+                result[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
+
+            yield self.db_insert(constants.COLLECTION_USERS_INFO, result)
 
         except UsosClientError, ex:
             yield self._exc(ex)
