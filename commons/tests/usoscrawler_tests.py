@@ -4,9 +4,10 @@ from bson.objectid import ObjectId
 from tornado.testing import AsyncTestCase, gen_test
 
 from commons import constants
-from commons.Dao import Dao
 from commons.usosutils.usosclient import UsosClient
 from commons.usosutils.usoscrawler import UsosCrawler
+from commons.mixins.DaoMixin import DaoMixin
+from commons.mixins.UsosMixin import UsosMixin
 
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'
@@ -14,12 +15,11 @@ MONGODB_NAME = 'db-for-tests'
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-class CrawlerTest(AsyncTestCase):
+class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
     def setUp(self):
         super(CrawlerTest, self).setUp()
 
-        self.dao = Dao(dburi=MONGODB_URI, dbname=MONGODB_NAME)
-        self.crawler = UsosCrawler(dao=self.dao)
+        self.crawler = UsosCrawler()
         self.client = UsosClient("https://usosapps.uw.edu.pl/", "KBt6uWPWUekUzFtNTyY9",
                             "Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG",
                             "3ShYQv8LyvgeXthKJzmJ", "JwSUygmyJ85Pp3g9LfJsDnk48MkfYWQzg7Chhd7Y")

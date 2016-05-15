@@ -52,11 +52,12 @@ if __name__ == "__main__":
         ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
-        server.listen(options.port)
-        # server.start(0)  # forks one process per cpu
+        server.bind(options.port)
+        server.start(0)  # Forks multiple sub-processes
         logging.info('SSL ENABLED FOR WEB')
     else:
-        application.listen(options.port)
+        server = HTTPServer(application)
+        server.listen(options.port)
         logging.info('SSL DISABLED FOR WEB')
 
     logging.info(settings.DEPLOY_WEB)

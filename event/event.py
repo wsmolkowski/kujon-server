@@ -16,14 +16,6 @@ define("port", default=settings.EVENT_PORT, help="run on the given port", type=i
 
 
 class Application(tornado.web.Application):
-    _db = None
-
-    @property
-    def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
-
     def __init__(self):
         __handlers = [
             (r"/", EventHandler),
@@ -40,10 +32,8 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, __handlers, **__settings)
 
-        logging.debug(self.db)
 
-
-if __name__ == "__main__":
+def main():
     parse_command_line()
 
     if settings.DEBUG:
@@ -56,12 +46,20 @@ if __name__ == "__main__":
         ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
-        server.listen(options.port)
-        # server.start(0)  # forks one process per cpu
-        logging.info('SSL ENABLED FOR EVENT')
+        server.bind(options.port)
+        server.start(0)  # Forks multiple sub-processes
+        logging.info('SSL ENABLED FOR EVENT on port: {0}'.format(options.port))
     else:
-        application.listen(options.port)
-        logging.info('SSL DISABLED FOR EVENT')
+        server = HTTPServer(application)
+        server.listen(options.port)
+        logging.info('SSL DISABLED FOR EVENT on port: {0}'.format(options.port))
 
+    db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+    logging.info(db)
+    application.settings['db'] = db
     logging.info(settings.DEPLOY_EVENT)
     tornado.ioloop.IOLoop.current().start()
+
+
+if __name__ == "__main__":
+    main()

@@ -15,7 +15,7 @@ from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
-    'has_photo')
+    constants.HAS_PHOTO)
 
 
 class UsersInfoByIdApi(BaseHandler):
@@ -28,8 +28,8 @@ class UsersInfoByIdApi(BaseHandler):
             user_info = yield self.api_user_info_id(user_id=user_info_id)
 
             if user_info:
-                if 'has_photo' in user_info and user_info['has_photo']:
-                    user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
+                if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
+                    user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
 
                 if 'student_status' in user_info:
                     user_info['student_status'] = usoshelper.dict_value_student_status(user_info['student_status'])
@@ -58,14 +58,15 @@ class UserInfoApi(BaseHandler):
 
             user_info = yield self.api_user_info()
 
-            if not user_info:
+            if not user_info or not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
             user_doc.update(user_info)
 
             user_doc['student_status'] = usoshelper.dict_value_student_status(user_doc['student_status'])
-            if 'has_photo' in user_doc:
-                user_doc['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
+
+            if constants.HAS_PHOTO in user_doc and user_doc[constants.HAS_PHOTO]:
+                user_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
 
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)

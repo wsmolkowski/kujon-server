@@ -7,15 +7,16 @@ import logging
 from datetime import timedelta, datetime
 
 import motor
-from tornado import queues, gen, ioloop
+from tornado import queues, gen
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
+from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line
 
 from commons import settings, constants, utils
 
 QUEUE_MAXSIZE = 100
-CONCURRENT = 4
+MAX_WORKERS = 4
 SLEEP = 2
 
 
@@ -25,11 +26,11 @@ class NotificatorQueue(object):
     _NOTIFICATION_URL = settings.NOTIFICATION_URL
 
     def __init__(self):
-        super(NotificatorQueue, self).__init__()
-
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
-        self.running = True
+        self.processing = []
+
+        logging.info(self.db)
 
     @gen.coroutine
     def load_work(self):
@@ -37,7 +38,7 @@ class NotificatorQueue(object):
         # not_all = notification_all()
         # try:
         #     d = yield self._db[constants.COLLECTION_NOTIFICATION_QUEUE].insert(not_all)
-        #     logging.debug(d)
+        #     logging.info(d)
         # except Exception, ex:
         #     print ex
 
@@ -56,11 +57,15 @@ class NotificatorQueue(object):
         cursor = self.db[constants.COLLECTION_NOTIFICATION_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
         while (yield cursor.fetch_next):
+            if len(self.processing) >= MAX_WORKERS:
+                break
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
-                                                                                                job[constants.JOB_TYPE],
-                                                                                                self.queue.qsize()))
+            logging.info('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
+                                                                                               job[constants.JOB_TYPE],
+                                                                                               self.queue.qsize()))
             yield self.queue.put(job)
+
+        raise gen.Return(None)
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -77,59 +82,69 @@ class NotificatorQueue(object):
         update = yield self.db[constants.COLLECTION_NOTIFICATION_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.debug(
+        logging.info(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
     @gen.coroutine
     def process_job(self, job):
-        logging.debug("processing job: {0}".format(job[constants.MONGO_ID]))
+        try:
+            self.processing.append(job)
 
-        client = utils.http_client()
+            logging.info("processing job: {0}".format(job[constants.MONGO_ID]))
+            yield self.update_job(job, constants.JOB_START)
+            client = utils.http_client()
 
-        headers = HTTPHeaders({
-            'Authorization': 'Basic M2Q0NmNkNDUtOTFiMy00OTA2LTlkZGMtNWVhZDFjNGM4ODcw',
-            'Content-Type': 'application/json',
-            'User-Agent': self._PROJECT_TITLE
-        })
+            headers = HTTPHeaders({
+                'Authorization': 'Basic M2Q0NmNkNDUtOTFiMy00OTA2LTlkZGMtNWVhZDFjNGM4ODcw',
+                'Content-Type': 'application/json',
+                'User-Agent': self._PROJECT_TITLE
+            })
 
-        body = {
-            'app_id': self._NOTIFICATION_ID,
-            'included_segments': ['All'],
-            'contents': {'en': 'Testowa notyfikacja'}
-        }
+            body = {
+                'app_id': self._NOTIFICATION_ID,
+                'included_segments': ['All'],
+                'contents': {'en': 'Testowa notyfikacja'}
+            }
 
-        request = HTTPRequest(self._NOTIFICATION_URL, body=json.dumps(body), method='POST', headers=headers)
+            request = HTTPRequest(self._NOTIFICATION_URL, body=json.dumps(body), method='POST', headers=headers)
 
-        response = yield client.fetch(request)
-        response = json.loads(response.body)
+            response = yield client.fetch(request)
+            response = json.loads(response.body)
 
-        logging.info("processed job: {0} with result {1}".format(job[constants.MONGO_ID], response))
+            yield self.update_job(job, constants.JOB_FINISH)
+
+            logging.info("processed job: {0} with result {1}".format(job[constants.MONGO_ID], response))
+        finally:
+            self.processing.remove(job)
+
+        raise gen.Return(None)
 
     @gen.coroutine
     def worker(self):
 
-        while self.running:
-            if self.queue.empty():
-                yield self.load_work()
-                yield gen.sleep(SLEEP)
-            else:
+        while True:
+            try:
                 job = yield self.queue.get()
-                logging.debug("consuming queue job {0}. current queue size: {1}".format(job, self.queue.qsize()))
+                logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
+                    job, self.queue.qsize(), len(self.processing)))
+                yield self.process_job(job)
+            except Exception, ex:
+                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                logging.exception(msg)
+                yield self.update_job(job, constants.JOB_FAIL, msg)
+            finally:
+                self.queue.task_done()
 
-                try:
-                    yield self.update_job(job, constants.JOB_START)
-                    yield self.process_job(job)
-                    yield self.update_job(job, constants.JOB_FINISH)
-                except Exception, ex:
-                    msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
-                    logging.exception(msg)
-                    yield self.update_job(job, constants.JOB_FAIL, msg)
-                finally:
-                    self.queue.task_done()
+    @gen.coroutine
+    def producer(self):
+        while True:
+            yield self.load_work()
+            yield gen.sleep(SLEEP)
 
     @gen.coroutine
     def workers(self):
-        futures = [self.worker() for _ in range(CONCURRENT)]
+        IOLoop.current().spawn_callback(self.producer)
+        futures = [self.worker() for _ in range(MAX_WORKERS)]
         yield futures
 
 
@@ -161,5 +176,5 @@ if __name__ == '__main__':
 
     notificatorQueue = NotificatorQueue()
 
-    io_loop = ioloop.IOLoop.current()
+    io_loop = IOLoop.current()
     io_loop.run_sync(notificatorQueue.workers)

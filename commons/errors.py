@@ -89,3 +89,8 @@ class UsosAsyncError(HttpError):
 class AuthenticationError(Exception):
     """USOS exceptions"""
     pass
+
+
+class CrawlerException(Exception):
+    """Crawler Exceptions"""
+    pass
