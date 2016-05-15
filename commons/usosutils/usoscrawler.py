@@ -5,7 +5,6 @@ import traceback
 from datetime import datetime
 from datetime import timedelta, date
 
-from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, utils
@@ -480,5 +479,4 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     yield self._exc(ex)
 
         except Exception, ex:
-            self._exc(ex)
-
+            yield self._exc(ex)
