@@ -502,22 +502,21 @@ class UsosCrawler(UsosMixin, DaoMixin):
         except Exception, ex:
             self._exc(ex)
 
-
-@gen.coroutine
-def main():
-    crawler = UsosCrawler()
-    user_id = '5737651dd54c4b09142cf68a'
-    yield crawler.initial_user_crawl(user_id)
-    # yield crawler.daily_crawl()
-    # yield crawler.update_user_crawl(user_id)
-    # yield crawler.update_time_tables()
-
-
-if __name__ == '__main__':
-    from tornado import ioloop
-    from tornado.options import parse_command_line
-
-    parse_command_line()
-    logging.getLogger().setLevel(logging.DEBUG)
-    io_loop = ioloop.IOLoop.current()
-    io_loop.run_sync(main)
+# @gen.coroutine
+# def main():
+#     crawler = UsosCrawler()
+#     user_id = '5737651dd54c4b09142cf68a'
+#     yield crawler.initial_user_crawl(user_id)
+#     # yield crawler.daily_crawl()
+#     # yield crawler.update_user_crawl(user_id)
+#     # yield crawler.update_time_tables()
+#
+#
+# if __name__ == '__main__':
+#     from tornado import ioloop
+#     from tornado.options import parse_command_line
+#
+#     parse_command_line()
+#     logging.getLogger().setLevel(logging.DEBUG)
+#     io_loop = ioloop.IOLoop.current()
+#     io_loop.run_sync(main)
