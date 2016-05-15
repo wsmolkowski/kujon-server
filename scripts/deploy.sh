@@ -7,6 +7,7 @@ export PYTHONPATH=$PYTHONPATH:$APPDIR
 echo 'stopping services...'
 sudo service nginx stop
 sudo supervisorctl stop all
+sudo killall -9 python
 echo 'services stopped'
 
 echo 'cloning code'
