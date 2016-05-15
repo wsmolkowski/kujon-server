@@ -457,24 +457,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
     @gen.coroutine
     def unsubscribe(self, user_id):
         try:
-            if isinstance(user_id, str):
-                user_id = ObjectId(user_id)
-            self._user_doc = yield self.db_archive_user(user_id)
-
-            if not self.user_doc:
-                raise CrawlerException(
-                    "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
-                    user_id)
-
-            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
-
-            if constants.USOS_ID in self.user_doc:
-                client = yield self.usos_client()
-                try:
-                    client.unsubscribe()
-                except UsosClientError, ex:
-                    yield self._exc(ex)
-
+            client = yield self.usos_client()
+            client.unsubscribe()
         except Exception, ex:
             yield self._exc(ex)
 
