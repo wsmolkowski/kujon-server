@@ -20,7 +20,7 @@ COURSE_EDITIONS = "course_editions"
 CLASS_TYPE = "class_type"
 CLASS_TYPE_ID = "classtype_id"
 VALUE_DESCRIPTION = "value_description"
-
+HAS_PHOTO = "has_photo"
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 

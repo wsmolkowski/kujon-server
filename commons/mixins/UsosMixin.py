@@ -238,14 +238,13 @@ class UsosMixin(object):
     @gen.coroutine
     def usos_photo(self, user_info_id):
         user_id = self.user_doc[constants.MONGO_ID]
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         client = yield self.usos_client()
         create_time = datetime.now()
 
         result = client.user_info_photo(user_info_id)
 
         result[constants.USER_ID] = user_id
-        result[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 

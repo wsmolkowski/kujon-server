@@ -21,14 +21,14 @@ LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_addre
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, 'has_photo', 'staff_status', 'room', 'office_hours',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room', 'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
 'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
-    'user_type', 'has_photo', 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
+    'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -452,8 +452,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
 
         # change ObjectId to str for photo
-        if 'has_photo' in user_info and user_info['has_photo']:
-            user_info['has_photo'] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info['has_photo'])
+        if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
+            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
 
         # change staff_status to dictionary
         user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
@@ -603,7 +603,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
-            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
                 yield self.api_photo(user_info_doc[constants.ID])
 
         raise gen.Return(user_info_doc)
@@ -621,9 +621,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             user_info_doc = yield self.usos_user_info_id(user_id)
             user_info_doc[constants.USER_ID] = user_id
 
-            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+            # if user has photo
+            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
-                user_info_doc['has_photo'] = photo_doc[constants.MONGO_ID]
+                user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
