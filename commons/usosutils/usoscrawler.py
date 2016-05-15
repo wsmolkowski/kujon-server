@@ -119,7 +119,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
         for event_type in self.EVENT_TYPES:
             try:
                 subscribe_doc = client.subscribe(event_type, self.user_id)
-                subscribe_doc = self.append(subscribe_doc, self.usos_id, datetime.now(), datetime.now())
+                subscribe_doc[constants.USOS_ID] = self.usos_id
                 subscribe_doc[constants.USER_ID] = self.user_id
                 subscribe_doc['event_type'] = event_type
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
