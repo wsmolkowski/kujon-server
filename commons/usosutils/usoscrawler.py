@@ -110,7 +110,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id, fetch_participants=False)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
-
+                else:
+                    logging.info("Brak edycji kursu %r.", course_id)
             except UsosClientError, ex:
                 yield self._exc(ex)
 
