@@ -10,8 +10,8 @@ from commons.errors import UsosClientError
 URI_USER_INFO = u"services/users/user?fields=id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url"
 URI_USER_INFO_PHOTO = u"services/photos/photo?user_id={0}"
 URI_COURSES_EDITIONS_INFO = u"services/courses/user?active_terms_only=false&fields=course_editions[course_id|course_name|term_id|course_units_ids]"
-URI_COURSE_EDITION_INFO = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|coordinators|course_units_ids|lecturers"
-URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|coordinators|course_units_ids|lecturers"
+URI_COURSE_EDITION = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|coordinators|course_units_ids|lecturers"
+URI_COURSE_EDITION_WITHOUT_PARTICIPS = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|coordinators|course_units_ids|lecturers"
 URI_GRADES_FOR_COURSE_AND_TERM = u"services/courses/course_edition?course_id={0}&term_id={1}&fields=course_id|course_name|term_id|grades|participants|course_units_ids"
 URI_COURSES_CLASSTYPES = u"services/courses/classtypes_index"
 URI_PROGRAMMES = u"services/progs/programme?programme_id={0}&fields=id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]"
@@ -131,12 +131,12 @@ class UsosClient(object):
     def course_edition(self, course_id, term_id, fetch_participants=False):
         if fetch_participants:
             request = u"{0}{1}".format(self.base_url,
-                                       URI_COURSE_EDITION_INFO.format(course_id, urllib.quote(term_id, safe='')))
+                                       URI_COURSE_EDITION.format(course_id, urllib.quote(term_id, safe='')))
         else:
-            request = u"{0}{1}".format(self.base_url, URI_COURSE_EDITION_INFO_WITHOUT_PARTICIPANTS.format(course_id,
-                                                                                                          urllib.quote(
-                                                                                                              term_id,
-                                                                                                              safe='')))
+            request = u"{0}{1}".format(self.base_url,
+                                       URI_COURSE_EDITION_WITHOUT_PARTICIPS.format(course_id,
+                                                                                   urllib.quote(term_id, safe='')))
+
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
