@@ -200,7 +200,7 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_archive_user(self, user_id):
-        user_archive_doc = self.db[constants.COLLECTION_USERS_ARCHIVE].find_one(
+        user_archive_doc = yield self.db[constants.COLLECTION_USERS_ARCHIVE].find_one(
             {constants.USER_ID: user_id, constants.USOS_PAIRED: True})
 
         raise gen.Return(user_archive_doc)

@@ -474,7 +474,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     client.unsubscribe()
                 except UsosClientError, ex:
                     yield self._exc(ex)
-
         except Exception, ex:
             yield self._exc(ex)
 
