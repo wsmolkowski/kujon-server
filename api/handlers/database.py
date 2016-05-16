@@ -65,14 +65,14 @@ class DatabaseHandler(RequestHandler):
         recipient = user_doc[constants.USER_EMAIL]
 
         email_job = email_factory.email_job(
-            'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
+            'Rejestracja w Kujon.mobi',
             settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,\n'
-            '\nRejestracja Twojego konta do współpracy z uczelnią {0} zakończona pomyślnie.'
-            '\nW razie pytań, bądź pomysłów na zmianę - napisz do nas, bo dzięki Tobie Kujon może być lepszy..\n'
+            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
             '\nPozdrawiamy,'
-            '\nZespół Kujon.mobi'
+            '\nzespół Kujon.mobi'
             '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
         )
 
@@ -81,15 +81,14 @@ class DatabaseHandler(RequestHandler):
     @gen.coroutine
     def email_archive_user(self, recipient):
         email_job = email_factory.email_job(
-            'Pozdrowienia z serwisu {0}.'.format(settings.PROJECT_TITLE),
+            'Usunęliśmy Twoje konto w Kujon.mobi',
             settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,'
-            '\nTwoje konto w serwisie zostało skasowane.'
-            '\nW razie pytań, bądź wątpliwości pozostajemy do Twojej dyspozycji.'
-            '\nNapisz do nas {0}'
+            '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas..\n'
             '\nPozdrawiamy,'
-            '\nZespół {1}\n'.format(settings.SMTP_EMAIL, settings.PROJECT_TITLE)
+            '\nzespół Kujon.mobi'
+            '\nemail: {0}\n'.format(settings.SMTP_EMAIL)
         )
 
         yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
