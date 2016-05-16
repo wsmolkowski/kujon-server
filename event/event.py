@@ -36,8 +36,8 @@ class Application(tornado.web.Application):
 def main():
     parse_command_line()
 
-    # if settings.DEBUG:
-    logging.getLogger().setLevel(logging.DEBUG)
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     application = Application()
 
