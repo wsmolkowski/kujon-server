@@ -229,10 +229,10 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
         # get courses from course_edition
         courses_editions = yield self.db_courses_editions(self.user_id)
-        for ce in courses_editions:
-            if ce[constants.COURSE_ID] not in existing_courses:
-                existing_courses.append(ce[constants.COURSE_ID])
-                courses.append(ce[constants.COURSE_ID])
+        for course_edition in courses_editions:
+            if course_edition[constants.COURSE_ID] not in existing_courses:
+                existing_courses.append(course_edition[constants.COURSE_ID])
+                courses.append(course_edition[constants.COURSE_ID])
 
         # get courses
         for course_id in courses:
@@ -354,15 +354,15 @@ class UsosCrawler(UsosMixin, DaoMixin):
     def __find_users_related(users, result):
         if result and 'participants' in result:
             participants = result.pop('participants')
-            for p in participants:
-                if p not in users:
-                    users.append(p)
+            for participant in participants:
+                if participant not in users:
+                    users.append(participant)
 
         if result and 'lecturers' in result:
             lecturers = result.pop('lecturers')
-            for l in lecturers:
-                if l not in users:
-                    users.append(l)
+            for lecturer in lecturers:
+                if lecturer not in users:
+                    users.append(lecturer)
 
     @gen.coroutine
     def initial_user_crawl(self, user_id):
