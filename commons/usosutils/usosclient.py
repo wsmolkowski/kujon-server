@@ -105,7 +105,10 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[start_date])
 
     def groups(self, course_unit_id):
-        request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(urllib.quote(course_unit_id, safe='')))
+        if not isinstance(course_unit_id, int):
+            course_unit_id = urllib.quote(course_unit_id, safe='')
+
+        request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
@@ -113,6 +116,9 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[course_unit_id])
 
     def units(self, unit_id):
+        if not isinstance(unit_id, int):
+            unit_id = urllib.quote(unit_id, safe='')
+
         request = u"{0}{1}".format(self.base_url, URI_COURSES_UNITS.format(unit_id))
         code, body = self.client.request(request)
         if self._validate(code):
@@ -129,13 +135,18 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request)
 
     def course_edition(self, course_id, term_id, fetch_participants=False):
+        if not isinstance(course_id, int):
+            course_id = urllib.quote(course_id, safe='')
+
+        if not isinstance(term_id, int):
+            term_id = urllib.quote(term_id, safe='')
+
         if fetch_participants:
             request = u"{0}{1}".format(self.base_url,
-                                       URI_COURSE_EDITION.format(course_id, urllib.quote(term_id, safe='')))
+                                       URI_COURSE_EDITION.format(course_id, term_id))
         else:
             request = u"{0}{1}".format(self.base_url,
-                                       URI_COURSE_EDITION_WITHOUT_PARTICIPS.format(course_id,
-                                                                                   urllib.quote(term_id, safe='')))
+                                       URI_COURSE_EDITION_WITHOUT_PARTICIPS.format(course_id, term_id))
 
         code, body = self.client.request(request)
         if self._validate(code):
@@ -144,7 +155,10 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id, fetch_participants])
 
     def course(self, course_id):
-        request = u"{0}{1}".format(self.base_url, URI_COURSE.format(urllib.quote(course_id, safe='')))
+        if not isinstance(course_id, int):
+            course_id = urllib.quote(course_id, safe='')
+
+        request = u"{0}{1}".format(self.base_url, URI_COURSE.format(course_id))
         code, body = self.client.request(request)
         if self._validate(code):
             result = json.loads(body)
@@ -164,9 +178,14 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[course_id])
 
     def grades(self, course_id, term_id):
+        if not isinstance(course_id, int):
+            course_id = urllib.quote(course_id, safe='')
+
+        if not isinstance(term_id, int):
+            term_id = urllib.quote(term_id, safe='')
+
         request = "{0}{1}".format(self.base_url,
-                                  URI_GRADES_FOR_COURSE_AND_TERM.format(urllib.quote(course_id, safe=''),
-                                                                        urllib.quote(term_id, safe='')))
+                                  URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, term_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
@@ -182,7 +201,10 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request)
 
     def faculty(self, fac_id):
-        request = "{0}{1}".format(self.base_url, URI_FACULTY.format(urllib.quote(fac_id, safe='')))
+        if not isinstance(fac_id, int):
+            fac_id = urllib.quote(fac_id, safe='')
+
+        request = "{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
@@ -190,7 +212,10 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[fac_id, ])
 
     def get_term_info(self, term_id):
-        request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(urllib.quote(term_id, safe='')))
+        if not isinstance(term_id, int):
+            term_id = urllib.quote(term_id, safe='')
+
+        request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(term_id))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
