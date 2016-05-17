@@ -132,20 +132,22 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not course_doc:
             course_doc = yield self.usos_course(course_id)
+
+            # change id to value
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
+
+            # change faculty_id to faculty name
+            faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+
+            course_doc.pop(constants.FACULTY_ID)
+            if constants.FACULTY_ID in faculty_id:
+                course_doc[constants.FACULTY_ID] = faculty_id
+
             yield self.insert(constants.COLLECTION_COURSES, course_doc)
+
             if not course_doc:
                 raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
-
-        # change id to value
-        course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-            course_doc['is_currently_conducted'])
-
-        # change faculty_id to faculty name
-        faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
-
-        course_doc.pop(constants.FACULTY_ID)
-        if constants.FACULTY_ID in faculty_id:
-            course_doc[constants.FACULTY_ID] = faculty_id
 
         raise gen.Return(course_doc)
 

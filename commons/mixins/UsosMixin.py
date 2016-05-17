@@ -115,7 +115,7 @@ class UsosMixin(OAuthMixin):
         result['assessment_criteria'] = result['assessment_criteria']['pl']
         result['bibliography'] = result['bibliography']['pl']
         result['practical_placement'] = result['practical_placement']['pl']
-
+        result[constants.COURSE_ID] = result.pop([constants.ID])
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
