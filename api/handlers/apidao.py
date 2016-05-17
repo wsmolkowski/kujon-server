@@ -575,7 +575,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 if not lecturer_info:
                     lecturer_info = yield self.api_user_info_id(str(lecturer))
                     if not lecturer_info:
-                        self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
+                        exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
+                        yield self.exc(exception, finish=False)
                 tt['lecturers'] = list()
                 tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
