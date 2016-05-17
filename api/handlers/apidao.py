@@ -573,12 +573,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
                     {constants.ID: str(lecturer)}, ('id', 'first_name', 'last_name', 'titles'))
                 if not lecturer_info:
-                    lecturer_info = self.api_user_info_id(str(lecturer))
+                    lecturer_info = yield self.api_user_info_id(str(lecturer))
                     if not lecturer_info:
                         self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
-                else:
-                    tt['lecturers'] = list()
-                    tt['lecturers'].append(lecturer_info)
+                tt['lecturers'] = list()
+                tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])
 
