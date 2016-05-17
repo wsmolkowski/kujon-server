@@ -594,10 +594,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
             user_info_doc = yield self.usos_user_info()
 
-            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-
             if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
-                yield self.api_photo(user_info_doc[constants.ID])
+                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
+                user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
         raise gen.Return(user_info_doc)
 

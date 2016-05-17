@@ -66,6 +66,7 @@ class UserInfoApi(BaseHandler, ApiDaoHandler):
 
             user_doc['student_status'] = usoshelper.dict_value_student_status(user_doc['student_status'])
 
+            # check if get photo needed
             if constants.HAS_PHOTO in user_doc and user_doc[constants.HAS_PHOTO]:
                 user_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
 
@@ -88,7 +89,7 @@ class UserInfoPhotoApi(BaseHandler, ApiDaoHandler):
                 raise ApiError('Nie podano odpowiedniego parametru photo_id')
 
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
-            # user_photo = yield self.api_photo(photo_id) # TODO
+            #  # TODO
 
             self.set_header('Content-Type', 'image/jpeg')
             self.write(b64decode(user_photo['photo']))
