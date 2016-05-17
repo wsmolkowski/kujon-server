@@ -439,7 +439,7 @@ class UsosMixin(OAuthMixin):
         tt['tts'] = result
         tt[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
-        raise gen.Return(result)
+        raise gen.Return(tt)
 
     @gen.coroutine
     def subscribe(self, event_type, verify_token):
