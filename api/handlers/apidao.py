@@ -162,11 +162,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get terms
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            year = {
+            term_with_courses = {
                 'term': term,
                 'term_data': courses_editions_doc[constants.COURSE_EDITIONS][term]
             }
-            terms.append(year)
+            terms.append(term_with_courses)
 
         # add groups to courses
         courses = list()
@@ -204,10 +204,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get terms_list for course
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            year = {
-                'term': term,
-                'term_data': courses_editions_doc[constants.COURSE_EDITIONS][term]
-            }
             terms.append(term)
 
         # add groups to courses
