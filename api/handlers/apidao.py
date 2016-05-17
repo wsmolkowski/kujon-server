@@ -568,12 +568,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 t['type'] = 'egzamin'
 
         # add lecturer information
+        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
         for tt in tt_doc['tts']:
             for lecturer in tt['lecturer_ids']:
                 lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                    {constants.ID: str(lecturer)}, ('id', 'first_name', 'last_name', 'titles'))
+                    {constants.ID: str(lecturer)}, lecturer_keys)
                 if not lecturer_info:
                     lecturer_info = yield self.api_user_info_id(str(lecturer))
+                    lecturer_info = dict([(x, lecturer_info[x]) for x in lecturer_keys])
                     if not lecturer_info:
                         exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
                         yield self.exc(exception, finish=False)
