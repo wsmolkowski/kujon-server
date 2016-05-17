@@ -111,7 +111,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
                 else:
-                    logging.info("Brak edycji kursu %r.", course_id)
+                    raise CrawlerException("Brak edycji kursu %r.", course_id)
             except UsosClientError, ex:
                 yield self._exc(ex)
 
@@ -241,7 +241,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if result:
                 yield self.db_insert(constants.COLLECTION_COURSES, result)
             else:
-                logging.warn("no course for course_id: %r.", course_id)
+                logging.warning("no course for course_id: %r.", course_id)
 
     @gen.coroutine
     def __build_faculties(self):
@@ -258,7 +258,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 if result:
                     yield self.db_insert(constants.COLLECTION_FACULTIES, result)
                 else:
-                    logging.warn("no faculty for fac_id: {0} and usos_id: {1)".format(faculty_id, self.usos_id))
+                    logging.warning("no faculty for fac_id: {0} and usos_id: {1)".format(faculty_id, self.usos_id))
             except UsosClientError, ex:
                 yield self._exc(ex)
 
@@ -287,7 +287,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
-                    logging.warn("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
+                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
             except UsosClientError, ex:
                 yield self._exc(ex)
 
@@ -306,7 +306,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 if result:
                     yield self.db_insert(constants.COLLECTION_GROUPS, result)
                 else:
-                    logging.warn("no group for group_id: {0} and usos_id: {1)".format(group_id, self.usos_id))
+                    logging.warning("no group for group_id: {0} and usos_id: {1)".format(group_id, self.usos_id))
             except UsosClientError, ex:
                 yield self._exc(ex)
 
@@ -339,7 +339,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                             result['grades']['course_grades'] or result['grades']['course_units_grades']):
                     yield self.db_insert(constants.COLLECTION_GRADES, result)
                 else:
-                    logging.warn(
+                    logging.warning(
                         'grades not found for course_id: {0} term_id: {1} usos_id: {2} and user_id: {3}'.format(
                             course_id, term_id, self.usos_id, self.user_id
                         ))

@@ -192,7 +192,7 @@ class UsosMixin(object):
         try:
             result = client.course_edition(course_id, term_id, fetch_participants)
         except UsosClientError, ex:
-            logging.warn("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
+            logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
 
         result[constants.USER_ID] = user_id
