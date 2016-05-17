@@ -138,9 +138,11 @@ def recreate_dictionaries():
         inserts = list()
         try:
             class_types = yield usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
-        except Exception:
-            logging.error("fail to recreate_dictionaries for %r", usos[constants.USOS_ID])
+        except Exception, ex:
+            logging.error("failed to recreate_dictionaries for %r", usos[constants.USOS_ID])
+            logging.exception(ex)
             continue
+
         if len(class_types) > 0:
             for class_type in class_types.values():
                 class_type[constants.USOS_ID] = usos[constants.USOS_ID]
@@ -150,8 +152,8 @@ def recreate_dictionaries():
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(inserts)
             logging.debug("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
         else:
-            logging.error("fail to recreate_dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                             usos[constants.USOS_ID]))
+            logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                                                  usos[constants.USOS_ID]))
 
     raise tornado.gen.Return(True)
 
