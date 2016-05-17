@@ -76,7 +76,7 @@ class HttpError(Error):
     __str__ = __repr__
 
 
-class UsosClientError(HttpError):
+class UsosClientError(Exception):
     """USOS exceptions"""
     pass
 
@@ -93,4 +93,9 @@ class AuthenticationError(Exception):
 
 class CrawlerException(Exception):
     """Crawler Exceptions"""
+    pass
+
+
+class UsosOAuthError(HttpError):
+    """USOS exceptions"""
     pass

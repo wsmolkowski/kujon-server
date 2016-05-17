@@ -4,11 +4,12 @@ from datetime import date, datetime
 
 import tornado.web
 
+from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import constants, decorators
 
 
-class TermsApi(BaseHandler):
+class TermsApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -41,7 +42,7 @@ class TermsApi(BaseHandler):
             yield self.exc(ex)
 
 
-class TermApi(BaseHandler):
+class TermApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

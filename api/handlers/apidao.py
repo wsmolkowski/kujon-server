@@ -1,5 +1,5 @@
 # coding=UTF-8
-
+import logging
 from collections import OrderedDict
 from datetime import date, timedelta
 
@@ -10,7 +10,6 @@ from commons import constants, settings
 from commons.errors import ApiError, UsosClientError
 from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
-from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
 
 LIMIT_FIELDS = (
@@ -36,17 +35,17 @@ USER_INFO_LIMIT_FIELDS = (
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
-
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
+            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
                 yield self.insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception:
+            except Exception, ex:
+                logging.exception(ex)
                 raise ApiError("Nie znaleźliśmy kursu", course_id)
 
         course_doc[constants.TERM_ID] = term_id
@@ -470,14 +469,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # change course_editions_conducted to list of courses
         courses_conducted = []
         if user_info['course_editions_conducted']:
-            for c in user_info['course_editions_conducted']:
-                course_id, term_id = c['id'].split('|')
+            for course_conducted in user_info['course_editions_conducted']:
+                course_id, term_id = course_conducted['id'].split('|')
 
-                course_doc = yield self.api_course(course_id)
-                if course_doc:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_id,
-                                              constants.TERM_ID: term_id})
+                try:
+                    course_doc = yield self.api_course(course_id)
+                    if course_doc:
+                        courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                                  constants.COURSE_ID: course_id,
+                                                  constants.TERM_ID: term_id})
+                    else:
+                        raise ApiError('brak kursu %r'.format(course_id))
+                except Exception, ex:
+                    yield self.exc(ex, finish=False)
 
             user_info['course_editions_conducted'] = courses_conducted
 
@@ -525,37 +529,20 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
             self.error("Niepoprawny format daty: RRRR-MM-DD.")
-            raise ex
-
-        # get usosdata for
-        usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+            raise self.exc(ex)
 
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
              constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
-            # fetch TT from USOS
-            client = UsosClient(base_url=usos[constants.USOS_URL],
-                                consumer_key=usos[constants.CONSUMER_KEY],
-                                consumer_secret=usos[constants.CONSUMER_SECRET],
-                                access_token_key=self.user_doc[constants.ACCESS_TOKEN_KEY],
-                                access_token_secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
-            try:
-                result = client.time_table(monday)
 
-                # insert TT to mongo
-                tt_doc = dict()
-                tt_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-                tt_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-                tt_doc[constants.TT_STARTDATE] = str(monday)
-                if not result:
-                    result = list()
-                tt_doc['tts'] = result
-                yield self.db[constants.COLLECTION_TT].insert(tt_doc)
-            except Exception:
-                self.error("Błąd podczas pobierania TT z USOS for {0}.".format(given_date))
-                return
+            try:
+                result = yield self.time_table(monday)
+                yield self.insert(constants.COLLECTION_TT, result)
+            except Exception, ex:
+                yield self.exc(ex, finish=False)
+                raise gen.Return(None)
 
         # remove english names
         for t in tt_doc['tts']:
@@ -604,6 +591,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             {constants.USER_ID: user_id}, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
+
             user_info_doc = yield self.usos_user_info()
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
@@ -616,10 +604,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_user_info_id(self, user_id):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]},
+            {constants.ID: user_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]},
             USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
@@ -650,15 +638,15 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_group(self, course_id, term_id, group_id, finish=True):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID],
+            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID],
              constants.TERM_ID: term_id, 'course_unit_id': group_id}, LIMIT_FIELDS_GROUPS)
 
         if not group_doc:
             try:
-                group_doc = yield self.usos_group(group_id, usos_doc)
+                group_doc = yield self.usos_group(group_id, self.usos_doc)
                 yield self.insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=finish)

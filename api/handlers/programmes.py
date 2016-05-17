@@ -3,13 +3,14 @@
 import tornado.gen
 import tornado.web
 
+from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import decorators
 
 LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studies', 'level_of_studies', 'duration')
 
 
-class ProgrammesByIdApi(BaseHandler):
+class ProgrammesByIdApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -26,7 +27,7 @@ class ProgrammesByIdApi(BaseHandler):
             yield self.exc(ex)
 
 
-class ProgrammesApi(BaseHandler):
+class ProgrammesApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

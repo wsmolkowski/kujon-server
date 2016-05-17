@@ -3,11 +3,12 @@
 import tornado.gen
 import tornado.web
 
+from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import decorators
 
 
-class TTApi(BaseHandler):
+class TTApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

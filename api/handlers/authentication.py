@@ -9,7 +9,8 @@ from tornado import auth, gen, web
 from base import BaseHandler
 from commons import constants, settings, decorators
 from commons.errors import AuthenticationError
-from commons.mixins.UsosMixin import UsosMixin
+from commons.mixins.GoogleMixin import GoogleMixin
+from commons.mixins.OAuth2Mixin import OAuth2Mixin
 from crawler import job_factory
 
 
@@ -32,7 +33,7 @@ class ArchiveHandler(BaseHandler):
         self.redirect(settings.DEPLOY_WEB)
 
 
-class AuthenticationHandler(BaseHandler, UsosMixin):
+class AuthenticationHandler(BaseHandler, OAuth2Mixin):
     EXCEPTION_TYPE = 'authentication'
     pass
 
@@ -195,6 +196,7 @@ class UsosVerificationHandler(AuthenticationHandler):
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
             user_doc = yield self.find_user()
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             if self.get_argument('error', False):
                 updated_user = user_doc
@@ -213,9 +215,7 @@ class UsosVerificationHandler(AuthenticationHandler):
                 return
 
             if user_doc:
-                usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
-
-                content = yield self.usos_token_verification(user_doc, usos_doc, oauth_verifier)
+                content = yield self.usos_token_verification(user_doc, self.usos_doc, oauth_verifier)
 
                 access_token = self.get_token(content)
 
@@ -245,7 +245,7 @@ class UsosVerificationHandler(AuthenticationHandler):
             yield self.exc(ex)
 
 
-class MobiAuthHandler(AuthenticationHandler):
+class MobiAuthHandler(AuthenticationHandler, GoogleMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
