@@ -95,6 +95,7 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_course(self, course_id):
+
         if not hasattr(self, 'usos_doc'):
             self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
@@ -389,32 +390,6 @@ class UsosMixin(OAuthMixin):
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_course(self, course_id):
-        if not hasattr(self, 'usos_doc'):
-            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/courses/course', args={
-            'fields': 'id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement',
-            'course_id': course_id,
-        })
-
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
-        result[constants.COURSE_NAME] = result['name']['pl']
-        result.pop('name')
-        result['learning_outcomes'] = result['learning_outcomes']['pl']
-        result['description'] = result['description']['pl']
-        result['assessment_criteria'] = result['assessment_criteria']['pl']
-        result['bibliography'] = result['bibliography']['pl']
-        result['practical_placement'] = result['practical_placement']['pl']
 
         raise gen.Return(result)
 
