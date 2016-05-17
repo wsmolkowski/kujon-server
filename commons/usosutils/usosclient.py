@@ -61,7 +61,7 @@ class UsosClient(object):
         if self._validate(code):
             return json.loads(body)
         else:
-            raise UsosClientError(code, body, uri=request, parameters=[user_info_id])
+            raise UsosClientError(code, body, uri=request, parameters=[user_info_id, ])
 
     def user_info(self):
         request = u"{0}{1}".format(self.base_url, URI_USER_INFO)
@@ -86,12 +86,12 @@ class UsosClient(object):
         if not programme_id:
             raise Exception(u"Cannot fetch for USOS data for empty programme parameter")
 
-        request = u"{0}{1}".format(self.base_url, URI_PROGRAMMES.format(programme_id))
+        request = u"{0}{1}".format(self.base_url, URI_PROGRAMMES.format(urllib.quote(programme_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
         else:
-            raise UsosClientError(code, body, uri=request, parameters=[programme_id])
+            raise UsosClientError(code, body, uri=request, parameters=[programme_id, ])
 
     def time_table(self, start_date):
         if not start_date:
@@ -105,7 +105,7 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[start_date])
 
     def groups(self, course_unit_id):
-        request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(course_unit_id))
+        request = u"{0}{1}".format(self.base_url, URI_GROUPS.format(urllib.quote(course_unit_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
@@ -144,7 +144,7 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id, fetch_participants])
 
     def course(self, course_id):
-        request = u"{0}{1}".format(self.base_url, URI_COURSE.format(course_id))
+        request = u"{0}{1}".format(self.base_url, URI_COURSE.format(urllib.quote(course_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             result = json.loads(body)
@@ -165,12 +165,13 @@ class UsosClient(object):
 
     def grades(self, course_id, term_id):
         request = "{0}{1}".format(self.base_url,
-                                  URI_GRADES_FOR_COURSE_AND_TERM.format(course_id, urllib.quote(term_id, safe='')))
+                                  URI_GRADES_FOR_COURSE_AND_TERM.format(urllib.quote(course_id, safe=''),
+                                                                        urllib.quote(term_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
         else:
-            raise UsosClientError(code, body, uri=request, parameters=[course_id])
+            raise UsosClientError(code, body, uri=request, parameters=[course_id, term_id])
 
     def class_types(self):
         request = "{0}{1}".format(self.base_url, URI_COURSES_CLASSTYPES)
@@ -181,15 +182,15 @@ class UsosClient(object):
             raise UsosClientError(code, body, uri=request)
 
     def faculty(self, fac_id):
-        request = "{0}{1}".format(self.base_url, URI_FACULTY.format(fac_id))
+        request = "{0}{1}".format(self.base_url, URI_FACULTY.format(urllib.quote(fac_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
         else:
-            raise UsosClientError(code, body, uri=request, parameters=[fac_id])
+            raise UsosClientError(code, body, uri=request, parameters=[fac_id, ])
 
     def get_term_info(self, term_id):
-        request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(term_id))
+        request = "{0}{1}".format(self.base_url, URI_TERM_INFO.format(urllib.quote(term_id, safe='')))
         code, body = self.client.request(request)
         if self._validate(code):
             return json.loads(body)
