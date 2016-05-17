@@ -496,7 +496,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         programmes = []
         for program in user_info['student_programmes']:
-            result = yield self.api_programme(program['programme']['id'])
+            result = yield self.api_programme(program['programme']['id'], finish=False)
             if result:
                 program['programme']['mode_of_studies'] = result['mode_of_studies']
                 program['programme']['level_of_studies'] = result['level_of_studies']
@@ -504,18 +504,21 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 program['programme']['name'] = result['name']
                 programmes.append(program)
             else:
-                ApiError("Nie znaleziono programu", program['programme']['id'])
+                yield self.exc(ApiError("Nie znaleziono programu", program['programme']['id']), finish=False)
 
         raise gen.Return(programmes)
 
     @gen.coroutine
-    def api_programme(self, programme_id):
+    def api_programme(self, programme_id, finish=True):
         programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
             {constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS_PROGRAMMES)
 
         if not programme_doc:
-            programme_doc = yield self.usos_programme(programme_id)
-            yield self.insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            try:
+                programme_doc = yield self.usos_programme(programme_id)
+                yield self.insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            except UsosClientError, ex:
+                raise self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
 

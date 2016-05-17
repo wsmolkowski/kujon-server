@@ -22,7 +22,7 @@ class GroupsApi(BaseHandler):
             programmes = []
             for program in user_info['student_programmes']:
                 program_id = program['programme']['id']
-                result = yield self.api_programme(program_id)
+                result = yield self.api_programme(program_id, finish=False)
                 programmes.append(result)
 
             if not programmes:

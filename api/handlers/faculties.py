@@ -43,7 +43,7 @@ class FacultiesApi(BaseHandler):
 
             programmes = []
             for programme_id in programmes_ids:
-                programme_doc = yield self.api_programme(programme_id)
+                programme_doc = yield self.api_programme(programme_id, finish=False)
                 programmes.append(programme_doc)
 
             # get faculties
