@@ -7,24 +7,26 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
-from commons.errors import ApiError
+from commons.errors import ApiError, UsosClientError
 from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
 from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
 
-LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
-                constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
+LIMIT_FIELDS = (
+    'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
+    constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room', 'office_hours',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room',
+    'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
-'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
+    'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
@@ -107,7 +109,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get information about group
         if course_doc['course_units_ids']:
             for unit in course_doc['course_units_ids']:
-                group_doc = yield self.api_group(course_id, term_id, int(unit))
+                group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
 
                 if group_doc:
                     group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
@@ -430,7 +432,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=True)
+                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID],
+                                                                   fetch_participants=True)
 
                 if not course_edition_doc:
                     continue
@@ -453,7 +456,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # change ObjectId to str for photo
         if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
-            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
+            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                user_info[constants.HAS_PHOTO])
 
         # change staff_status to dictionary
         user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
@@ -476,8 +480,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 course_doc = yield self.api_course(course_id)
                 if course_doc:
                     courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                        constants.COURSE_ID: course_id,
-                                        constants.TERM_ID: term_id})
+                                              constants.COURSE_ID: course_id,
+                                              constants.TERM_ID: term_id})
 
             user_info['course_editions_conducted'] = courses_conducted
 
@@ -644,7 +648,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(faculty_doc)
 
     @gen.coroutine
-    def api_group(self, course_id, term_id, group_id):
+    def api_group(self, course_id, term_id, group_id, finish=True):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
@@ -652,8 +656,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
              constants.TERM_ID: term_id, 'course_unit_id': group_id}, LIMIT_FIELDS_GROUPS)
 
         if not group_doc:
-            group_doc = yield self.usos_group(group_id, usos_doc)
-            yield self.insert(constants.COLLECTION_GROUPS, group_doc)
+            try:
+                group_doc = yield self.usos_group(group_id, usos_doc)
+                yield self.insert(constants.COLLECTION_GROUPS, group_doc)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=finish)
 
         raise gen.Return(group_doc)
 
@@ -671,12 +678,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course_edition(self, course_id, term_id, fetch_participants):
 
-
         if fetch_participants:
             pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID],
-                 constants.COURSE_ID: course_id,
-                 constants.TERM_ID: term_id,
-                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+                        constants.COURSE_ID: course_id,
+                        constants.TERM_ID: term_id,
+                        constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         else:
             pipeline = {constants.COURSE_ID: course_id,
                         constants.TERM_ID: term_id,

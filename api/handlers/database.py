@@ -10,7 +10,6 @@ from tornado.web import RequestHandler
 from commons import constants, settings
 from commons.errors import ApiError, AuthenticationError
 from crawler import email_factory
-from pprint import pformat
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
 
@@ -191,7 +190,7 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(token_doc)
 
     @gen.coroutine
-    def exc(self, exception):
+    def exc(self, exception, finish=True):
         if isinstance(exception, ApiError):
             exc_doc = exception.data()
         else:
@@ -211,12 +210,13 @@ class DatabaseHandler(RequestHandler):
 
         logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
-        if isinstance(exception, ApiError):
-            self.error(message=exception.message())
-        elif isinstance(exception, AuthenticationError):
-            self.error(message=exception.message)
-        else:
-            self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+        if finish:
+            if isinstance(exception, ApiError):
+                self.error(message=exception.message())
+            elif isinstance(exception, AuthenticationError):
+                self.error(message=exception.message)
+            else:
+                self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
 
