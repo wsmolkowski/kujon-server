@@ -433,7 +433,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
             for course in courses:
                 course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID],
-                                                                   fetch_participants=True)
+                                                                   fetch_participants=True, finish=False)
 
                 if not course_edition_doc:
                     continue
@@ -676,7 +676,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(courses_editions_doc)
 
     @gen.coroutine
-    def api_course_edition(self, course_id, term_id, fetch_participants):
+    def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
 
         if fetch_participants:
             pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID],
@@ -691,11 +691,16 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
 
         if not course_edition_doc:
-            course_edition_doc = yield self.usos_course_edition(course_id, term_id, self.user_doc[constants.MONGO_ID],
-                                                                self.user_doc[constants.USOS_ID], fetch_participants)
-            if fetch_participants:
-                course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-            yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
+            try:
+                course_edition_doc = yield self.usos_course_edition(course_id, term_id,
+                                                                    self.user_doc[constants.MONGO_ID],
+                                                                    self.user_doc[constants.USOS_ID],
+                                                                    fetch_participants)
+                if fetch_participants:
+                    course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
+            except UsosClientError, ex:
+                raise self.exc(ex, finish=finish)
 
         raise gen.Return(course_edition_doc)
 
