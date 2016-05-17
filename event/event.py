@@ -10,7 +10,7 @@ from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
 from commons import settings
-from handlers import EventHandler, VerifyHandler, DefaultErrorHandler
+from handlers import EventHandler, DefaultErrorHandler
 
 define("port", default=settings.EVENT_PORT, help="run on the given port", type=int)
 
@@ -19,7 +19,6 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", EventHandler),
-            (r"/verify", VerifyHandler),
         ]
 
         __settings = dict(
