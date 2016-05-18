@@ -104,7 +104,7 @@ class UsosMixin(OAuthMixin):
         url = 'services/courses/course'
         args = {
             'course_id': course_id,
-            'fields': 'id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
+            'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
         }
         result = yield self.usos_request(path=url, args=args)
 
