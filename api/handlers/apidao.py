@@ -34,7 +34,7 @@ USER_INFO_LIMIT_FIELDS = (
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def prepare(self):
-        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False):
+        if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             self.api_refresh = True
 
     @gen.coroutine
