@@ -531,7 +531,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
             self.error("Niepoprawny format daty: RRRR-MM-DD.")
-            raise self.exc(ex)
+            yield self.exc(ex)
 
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
