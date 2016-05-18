@@ -1,15 +1,12 @@
 import unittest
 
-from commons.tests.usosasync_tests import UsosAsyncTest
 
 
 def build_suite():
 
     test_suite = unittest.TestSuite()
 
-    test_suite.addTest(unittest.makeSuite(CrawlerTest))
-    test_suite.addTest(unittest.makeSuite(ClientTest))
-    test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
+    # test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
 
     return test_suite
 

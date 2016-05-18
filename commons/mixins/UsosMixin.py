@@ -48,6 +48,15 @@ class UsosMixin(OAuthMixin):
 
     @_auth_return_future
     def usos_request(self, path, callback=None, args={}, photo=False):
+        '''
+            USOS async authenticated request
+
+        :param path: service URI
+        :param callback:
+        :param args: service arguments
+        :param photo: if photo to retrieve
+        :return: json_decode
+        '''
 
         url = self._oauth_base_uri() + path
         access_token = self._oauth_access_token()
@@ -84,6 +93,26 @@ class UsosMixin(OAuthMixin):
         future.set_result({'photo': b64encode(response.body)})
 
     @gen.coroutine
+    def call_async(self, path, arguments={}):
+        '''
+            USOS async non authenticated request
+
+        :param path: service URI
+        :param arguments: service arguments
+        :return: json_decode
+        '''
+
+        url = self._oauth_base_uri() + path
+        url += "?" + urllib_parse.urlencode(arguments)
+        http_client = utils.http_client()
+
+        response = yield http_client.fetch(url)
+        if response.code is not 200 and response.reason != 'OK':
+            raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
+
+        raise gen.Return(escape.json_decode(response.body))
+
+    @gen.coroutine
     def usos_course(self, course_id):
         create_time = datetime.now()
 
@@ -110,12 +139,9 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_term(self, term_id):
-
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/terms/term', args={
-            'term_id': term_id,
-        })
+        result = yield self.call_async('services/terms/term', arguments={'term_id': term_id})
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
@@ -185,7 +211,7 @@ class UsosMixin(OAuthMixin):
     def usos_faculty(self, faculty_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/fac/faculty', args={
+        result = yield self.call_async('services/fac/faculty', arguments={
             'fields': 'name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
             'fac_id': faculty_id
         })
@@ -202,7 +228,7 @@ class UsosMixin(OAuthMixin):
     def usos_group(self, group_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/groups/group', args={
+        result = yield self.call_async('services/groups/group', arguments={
             'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
             'course_unit_id': group_id,
             'group_number': 1,
@@ -266,7 +292,7 @@ class UsosMixin(OAuthMixin):
     def usos_programme(self, programme_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/progs/programme', args={
+        result = yield self.call_async('services/progs/programme', arguments={
             'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
             'programme_id': programme_id,
         })
@@ -309,7 +335,7 @@ class UsosMixin(OAuthMixin):
     def usos_unit(self, unit_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/courses/unit', args={
+        result = yield self.call_async('services/courses/unit', arguments={
             'fields': 'id|course_id|term_id|groups|classtype_id',
             'unit_id': unit_id,
         })
@@ -373,5 +399,19 @@ class UsosMixin(OAuthMixin):
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def notifier_status(self, usos_doc):
+        self.usos_doc = usos_doc
+        result = yield self.call_async('services/events/notifier_status')
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def courses_classtypes(self, usos_doc):
+        self.usos_doc = usos_doc
+        result = yield self.call_async('services/courses/classtypes_index')
 
         raise gen.Return(result)
