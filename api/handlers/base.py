@@ -8,13 +8,13 @@ from bson import json_util
 from tornado import gen, web, escape
 from tornado.escape import json_decode
 
-from apidao import ApiDaoHandler
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
 from commons.mixins.JSendMixin import JSendMixin
+from database import DatabaseHandler
 
 
-class BaseHandler(ApiDaoHandler, JSendMixin):
+class BaseHandler(DatabaseHandler, JSendMixin):
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 

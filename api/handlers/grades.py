@@ -3,11 +3,12 @@
 import tornado.gen
 import tornado.web
 
+from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import decorators
 
 
-class GradesForUserApi(BaseHandler):
+class GradesForUserApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -20,7 +21,7 @@ class GradesForUserApi(BaseHandler):
             yield self.exc(ex)
 
 
-class GradesForUserByTermApi(BaseHandler):
+class GradesForUserByTermApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -33,7 +34,7 @@ class GradesForUserByTermApi(BaseHandler):
             yield self.exc(ex)
 
 
-class GradesForCourseAndTermApi(BaseHandler):
+class GradesForCourseAndTermApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

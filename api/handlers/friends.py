@@ -4,11 +4,12 @@ import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
+from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import constants, helpers, decorators
 
 
-class FriendsApi(BaseHandler):
+class FriendsApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -85,7 +86,7 @@ class FriendsApi(BaseHandler):
             self.fail(message=user_info_id)
 
 
-class FriendsSuggestionsApi(BaseHandler):
+class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

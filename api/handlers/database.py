@@ -10,7 +10,6 @@ from tornado.web import RequestHandler
 from commons import constants, settings
 from commons.errors import ApiError, AuthenticationError
 from crawler import email_factory
-from pprint import pformat
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
 
@@ -27,7 +26,7 @@ class DatabaseHandler(RequestHandler):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
         if not user_doc:
-            logging.warn('cannot archive user which does not exists {0}'.format(user_id))
+            logging.warning('cannot archive user which does not exists {0}'.format(user_id))
             raise gen.Return()
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
@@ -61,19 +60,19 @@ class DatabaseHandler(RequestHandler):
     def email_registration(self):
 
         user_doc = yield self.find_user()
-        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+        yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
         recipient = user_doc[constants.USER_EMAIL]
 
         email_job = email_factory.email_job(
-            'Witamy w serwisie {0}.'.format(settings.PROJECT_TITLE),
+            'Rejestracja w Kujon.mobi',
             settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,\n'
-            '\nRejestracja Twojego konta do współpracy z uczelnią {0} zakończona pomyślnie.'
-            '\nW razie pytań, bądź pomysłów na zmianę - napisz do nas, bo dzięki Tobie Kujon może być lepszy..\n'
+            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
             '\nPozdrawiamy,'
-            '\nZespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
+            '\nzespół Kujon.mobi'
+            '\nemail: {1}\n'.format(self.usos_doc['name'], settings.SMTP_EMAIL)
         )
 
         yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -81,15 +80,14 @@ class DatabaseHandler(RequestHandler):
     @gen.coroutine
     def email_archive_user(self, recipient):
         email_job = email_factory.email_job(
-            'Pozdrowienia z serwisu {0}.'.format(settings.PROJECT_TITLE),
+            'Usunęliśmy Twoje konto w Kujon.mobi',
             settings.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,'
-            '\nTwoje konto w serwisie zostało skasowane.'
-            '\nW razie pytań, bądź wątpliwości pozostajemy do Twojej dyspozycji.'
-            '\nNapisz do nas {0}'
+            '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas..\n'
             '\nPozdrawiamy,'
-            '\nZespół {1}\n'.format(settings.SMTP_EMAIL, settings.PROJECT_TITLE)
+            '\nzespół Kujon.mobi'
+            '\nemail: {0}\n'.format(settings.SMTP_EMAIL)
         )
 
         yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -192,7 +190,7 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(token_doc)
 
     @gen.coroutine
-    def exc(self, exception):
+    def exc(self, exception, finish=True):
         if isinstance(exception, ApiError):
             exc_doc = exception.data()
         else:
@@ -212,12 +210,13 @@ class DatabaseHandler(RequestHandler):
 
         logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
-        if isinstance(exception, ApiError):
-            self.error(message=exception.message())
-        elif isinstance(exception, AuthenticationError):
-            self.error(message=exception.message)
-        else:
-            self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+        if finish:
+            if isinstance(exception, ApiError):
+                self.error(message=exception.message())
+            elif isinstance(exception, AuthenticationError):
+                self.error(message=exception.message)
+            else:
+                self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
 

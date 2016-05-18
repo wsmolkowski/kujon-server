@@ -1,71 +1,137 @@
 # coding=UTF-8
-
-import json
+import functools
 import logging
+from base64 import b64encode
 from datetime import datetime
 
-import oauth2 as oauth
-from tornado import gen
+from tornado import gen, escape
+from tornado.auth import OAuthMixin, _auth_return_future
 
-from commons import constants, settings
+from commons import constants, utils, settings
 from commons.errors import UsosClientError
-from commons.usosutils.usosclient import UsosClient
+
+try:
+    import urlparse  # py2
+except ImportError:
+    import urllib.parse as urlparse  # py3
+
+try:
+    import urllib.parse as urllib_parse  # py3
+except ImportError:
+    import urllib as urllib_parse  # py2
 
 
-class UsosMixin(object):
+class UsosMixin(OAuthMixin):
+    _OAUTH_VERSION = '1.0a'
+    _OAUTH_NO_CALLBACKS = False
 
-    @gen.coroutine
-    def usos_client(self):
-        if not hasattr(self, 'usos_doc'):
-            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+    def _oauth_base_uri(self):
+        return self.usos_doc[constants.USOS_URL]
 
-        usos_client = UsosClient(self.usos_doc[constants.USOS_URL], self.usos_doc[constants.CONSUMER_KEY],
-                                 self.usos_doc[constants.CONSUMER_SECRET],
-                                 self.user_doc[constants.ACCESS_TOKEN_KEY],
-                                 self.user_doc[constants.ACCESS_TOKEN_SECRET])
+    # def _oauth_authorize_uri(self):
+    #     return '{0}services/oauth/authorize'.format(self._oauth_base_uri())
+    #
+    # def _oauth_access_token_uri(self):
+    #     return '{0}services/oauth/access_token'.format(self._oauth_base_uri())
+    #
+    # @_auth_return_future
+    # def get_authenticated_user(self, callback, http_client=None):
+    #
+    #     future = callback
+    #     request_key = escape.utf8(self.get_argument("oauth_token"))
+    #     oauth_verifier = self.get_argument("oauth_verifier", None)
+    #     request_cookie = self.get_cookie("_oauth_request_token")
+    #     if not request_cookie:
+    #         future.set_exception(UsosClientError(
+    #             "Missing OAuth request token cookie"))
+    #         return
+    #     self.clear_cookie("_oauth_request_token")
+    #     cookie_key, cookie_secret = [base64.b64decode(escape.utf8(i)) for i in request_cookie.split("|")]
+    #     if cookie_key != request_key:
+    #         future.set_exception(UsosClientError(
+    #             "Request token does not match cookie"))
+    #         return
+    #     token = dict(key=cookie_key, secret=cookie_secret)
+    #     if oauth_verifier:
+    #         token["verifier"] = oauth_verifier
+    #     if http_client is None:
+    #         http_client = self.get_auth_http_client()
+    #     http_client.fetch(self._oauth_access_token_url(token),
+    #                       functools.partial(self._on_access_token, callback))
 
-        raise gen.Return(usos_client)
+    def _oauth_consumer_token(self):
+        return dict(key=self.usos_doc[constants.CONSUMER_KEY], secret=self.usos_doc[constants.CONSUMER_SECRET])
+
+    def _oauth_access_token(self):
+        return dict(key=self.user_doc[constants.ACCESS_TOKEN_KEY], secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
+
+    @_auth_return_future
+    def usos_request(self, path, callback=None, args={}):
+
+        url = self._oauth_base_uri() + path
+        access_token = self._oauth_access_token()
+
+        # Add the OAuth resource request signature if we have credentials
+        method = "GET"
+        oauth = self._oauth_request_parameters(
+            url, access_token, args, method=method)
+        args.update(oauth)
+
+        url += "?" + urllib_parse.urlencode(args)
+        http = utils.http_client()
+        http_callback = functools.partial(self._on_usos_request, callback)
+        http.fetch(url, callback=http_callback)
+
+    def _on_usos_request(self, future, response):
+        if response.error:
+            future.set_exception(UsosClientError(
+                "Error response %s fetching %s" % (response.error,
+                                                   response.request.url)))
+            return
+        if hasattr(self, 'has_photo'):
+            future.set_result({'photo': b64encode(response.body)})
+        else:
+            future.set_result(escape.json_decode(response.body))
 
     @gen.coroutine
     def usos_course(self, course_id):
-        client = yield self.usos_client()
+
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         create_time = datetime.now()
 
-        result = client.course(course_id)
+        url = 'services/courses/course'
+        args = {
+            'course_id': course_id,
+            'fields': 'id|name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
+        }
+        result = yield self.usos_request(path=url, args=args)
+
+        result[constants.COURSE_NAME] = result['name']['pl']
+        result.pop('name')
+        result['learning_outcomes'] = result['learning_outcomes']['pl']
+        result['description'] = result['description']['pl']
+        result['assessment_criteria'] = result['assessment_criteria']['pl']
+        result['bibliography'] = result['bibliography']['pl']
+        result['practical_placement'] = result['practical_placement']['pl']
+        result[constants.COURSE_ID] = course_id
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
-    @staticmethod
-    def validate_response(content, resp):
-        if 'status' not in resp or resp['status'] != '200':
-            raise Exception('Invalid USOS response %s:\n%s' % (resp['status'], content))
-
-    def oauth_client(self, consumer, usos_doc, request_token=None):
-        parameters = self.oauth_parameters
-
-        # when USOS have disabled SSL validation
-        if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-            parameters[constants.DISABLE_SSL_CERT_VALIDATION] = True
-
-        if request_token:
-            client = oauth.Client(consumer, request_token, **parameters)
-        else:
-            client = oauth.Client(consumer, **parameters)
-
-        return client
-
     @gen.coroutine
     def usos_term(self, term_id, usos_id=None):
-        if not usos_id:
-            usos_id = self.user_doc[constants.USOS_ID]
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.get_term_info(term_id)
+        result = yield self.usos_request(path='services/terms/term', args={
+            'term_id': term_id,
+        })
 
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
@@ -81,10 +147,14 @@ class UsosMixin(object):
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
 
-        client = yield self.usos_client()
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         create_time = datetime.now()
 
-        result = client.user_info()
+        result = yield self.usos_request(path='services/users/user', args={
+            'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
+        })
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
@@ -109,11 +179,15 @@ class UsosMixin(object):
     def usos_user_info_id(self, user_id, usos_id=None):
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.user_info_id(user_id)
+        result = yield self.usos_request(path='services/users/user', args={
+            'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url',
+            'user_id': user_id
+        })
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
@@ -135,16 +209,20 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_faculty(self, faculty_id, usos_id=None):
-        if not usos_id:
-            usos_id = self.user_doc[constants.USOS_ID]
-        client = yield self.usos_client()
+    def usos_faculty(self, faculty_id):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         create_time = datetime.now()
 
-        result = client.faculty(faculty_id)
+        result = yield self.usos_request(path='services/fac/faculty', args={
+            'fields': 'name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
+            'fac_id': faculty_id
+        })
+
         result[constants.FACULTY_ID] = faculty_id
         result['name'] = result['name']['pl']
-        result[constants.USOS_ID] = usos_id
+        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
@@ -154,11 +232,16 @@ class UsosMixin(object):
     def usos_group(self, group_id, usos_id=None):
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.groups(group_id)
+        result = yield self.usos_request(path='services/groups/group', args={
+            'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
+            'course_unit_id': group_id,
+            'group_number': 1,
+        })
 
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
@@ -173,10 +256,17 @@ class UsosMixin(object):
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
 
-        client = yield self.usos_client()
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         create_time = datetime.now()
 
-        result = client.courseeditions_info()
+        # result = client.courseeditions_info()
+        result = yield self.usos_request(path='services/courses/user', args={
+            'fields': 'course_editions[course_id|course_name|term_id|course_units_ids]',
+            'active_terms_only': 'false',
+        })
+
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
@@ -186,15 +276,33 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_course_edition(self, course_id, term_id, user_id, usos_id, fetch_participants):
-        client = yield self.usos_client()
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         create_time = datetime.now()
 
         try:
-            result = client.course_edition(course_id, term_id, fetch_participants)
-        except UsosClientError, ex:
-            logging.warn('trying to fetch course_edition with {0} {1} due to {2}'.format(course_id, term_id, ex.message))
+            # result = client.course_edition(course_id, term_id, fetch_participants)
+            if fetch_participants:
+                args = {
+                    'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
+                    'course_id': course_id,
+                    'term_id': term_id
+                }
+            else:
+                args = {
+                    'fields': 'course_name|coordinators|course_units_ids|lecturers',
+                    'course_id': course_id,
+                    'term_id': term_id
+                }
+
+            result = yield self.usos_request(path='services/courses/course_edition', args=args)
+        except Exception, ex:
+            logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
 
+        result[constants.COURSE_ID] = course_id
+        result[constants.TERM_ID] = term_id
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
         result[constants.CREATED_TIME] = create_time
@@ -204,15 +312,22 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_programme(self, programme_id, user_id=None, usos_id=None):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         if not user_id:
             user_id = self.user_doc[constants.MONGO_ID]
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
 
-        client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.programme(programme_id)
+        # result = client.programme(programme_id)
+
+        result = yield self.usos_request(path='services/progs/programme', args={
+            'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
+            'programme_id': programme_id,
+        })
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = usos_id
@@ -235,11 +350,17 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_photo(self, user_info_id):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.has_photo = True
+
         user_id = self.user_doc[constants.MONGO_ID]
-        client = yield self.usos_client()
+
         create_time = datetime.now()
 
-        result = client.user_info_photo(user_info_id)
+        result = yield self.usos_request(path='services/photos/photo', args={
+            'user_id': user_info_id,
+        })
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
@@ -250,13 +371,20 @@ class UsosMixin(object):
 
     @gen.coroutine
     def usos_unit(self, unit_id, usos_id=None):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
         if not usos_id:
             usos_id = self.user_doc[constants.USOS_ID]
 
-        client = yield self.usos_client()
         create_time = datetime.now()
 
-        result = client.units(unit_id)
+        # result = client.units(unit_id)
+
+        result = yield self.usos_request(path='services/courses/unit', args={
+            'fields': 'id|course_id|term_id|groups|classtype_id',
+            'unit_id': unit_id,
+        })
 
         result[constants.UNIT_ID] = result.pop(constants.ID)
         result[constants.USOS_ID] = usos_id
@@ -266,76 +394,64 @@ class UsosMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
-    def token_verification(self, usos_doc, token):
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+    def time_table(self, given_date):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades|crstests|email|photo|student_exams',
-            settings.CALLBACK_MOBI_URL + '?token=' + token)
+        create_time = datetime.now()
 
-        client = self.oauth_client(consumer, usos_doc)
+        result = yield self.usos_request(path='services/tt/user', args={
+            'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
+            'start': given_date,
+            'days': 7
+        })
 
-        try:
-            resp, content = client.request(request_token_url)
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
+        tt = dict()
+        tt[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+        tt[constants.TT_STARTDATE] = str(given_date)
+        tt[constants.CREATED_TIME] = create_time
+        tt[constants.UPDATE_TIME] = create_time
+        tt['tts'] = result
+        tt[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
-
-    @gen.coroutine
-    def usos_token_verification(self, user_doc, usos_doc, oauth_verifier):
-
-        request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[constants.ACCESS_TOKEN_SECRET])
-        request_token.set_verifier(oauth_verifier)
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-        client = self.oauth_client(consumer, usos_doc, request_token)
-
-        access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
-        try:
-            resp, content = client.request(access_token_url, 'GET')
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
-
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
+        raise gen.Return(tt)
 
     @gen.coroutine
-    def token_request(self, usos_doc):
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+    def subscribe(self, event_type, verify_token):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-            settings.CALLBACK_URL)
+        create_time = datetime.now()
+        result = yield self.usos_request(path='services/events/subscribe_event', args={
+            'event_type': event_type,
+            'callback_url': settings.DEPLOY_EVENT,
+            'verify_token': verify_token
+        })
 
-        client = self.oauth_client(consumer, usos_doc)
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
-        try:
-            resp, content = client.request(request_token_url)
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
-
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
+        raise gen.Return(result)
 
     @gen.coroutine
-    def google_token(self, token):
-        try:
-            http_client = self.get_auth_http_client()
-            tokeninfo = yield http_client.fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token)
-            if tokeninfo.code != 200 or tokeninfo.reason != 'OK':
-                raise Exception(
-                    'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
-            result = json.loads(tokeninfo.body)
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
-        else:
-            raise gen.Return(result)
+    def unsubscribe(self):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        result = yield self.usos_request(path='services/events/unsubscribe')
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def subscriptions(self):
+        if not hasattr(self, 'usos_doc'):
+            self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+
+        create_time = datetime.now()
+        result = yield self.usos_request(path='services/events/subscriptions')
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        raise gen.Return(result)

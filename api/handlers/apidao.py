@@ -1,5 +1,5 @@
 # coding=UTF-8
-
+import logging
 from collections import OrderedDict
 from datetime import date, timedelta
 
@@ -7,24 +7,25 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
-from commons.errors import ApiError
+from commons.errors import ApiError, UsosClientError
 from commons.mixins.UsosMixin import UsosMixin
 from commons.usosutils import usoshelper
-from commons.usosutils.usosclient import UsosClient
 from database import DatabaseHandler
 
-LIMIT_FIELDS = ('is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
-                constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
+LIMIT_FIELDS = (
+    'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
+    constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room', 'office_hours',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room',
+    'office_hours',
     'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
-'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
+    'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
@@ -34,17 +35,17 @@ USER_INFO_LIMIT_FIELDS = (
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
-
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
+            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
 
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
                 yield self.insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception:
+            except Exception, ex:
+                logging.exception(ex)
                 raise ApiError("Nie znaleźliśmy kursu", course_id)
 
         course_doc[constants.TERM_ID] = term_id
@@ -107,7 +108,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get information about group
         if course_doc['course_units_ids']:
             for unit in course_doc['course_units_ids']:
-                group_doc = yield self.api_group(course_id, term_id, int(unit))
+                group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
 
                 if group_doc:
                     group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
@@ -131,20 +132,22 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not course_doc:
             course_doc = yield self.usos_course(course_id)
+
+            # change id to value
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
+
+            # change faculty_id to faculty name
+            faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+
+            course_doc.pop(constants.FACULTY_ID)
+            if constants.FACULTY_ID in faculty_id:
+                course_doc[constants.FACULTY_ID] = faculty_id
+
             yield self.insert(constants.COLLECTION_COURSES, course_doc)
+
             if not course_doc:
                 raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
-
-        # change id to value
-        course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-            course_doc['is_currently_conducted'])
-
-        # change faculty_id to faculty name
-        faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
-
-        course_doc.pop(constants.FACULTY_ID)
-        if constants.FACULTY_ID in faculty_id:
-            course_doc[constants.FACULTY_ID] = faculty_id
 
         raise gen.Return(course_doc)
 
@@ -160,11 +163,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get terms
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            year = {
+            term_with_courses = {
                 'term': term,
                 'term_data': courses_editions_doc[constants.COURSE_EDITIONS][term]
             }
-            terms.append(year)
+            terms.append(term_with_courses)
 
         # add groups to courses
         courses = list()
@@ -202,10 +205,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get terms_list for course
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            year = {
-                'term': term,
-                'term_data': courses_editions_doc[constants.COURSE_EDITIONS][term]
-            }
             terms.append(term)
 
         # add groups to courses
@@ -430,7 +429,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=True)
+                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID],
+                                                                   fetch_participants=True, finish=False)
 
                 if not course_edition_doc:
                     continue
@@ -453,7 +453,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         # change ObjectId to str for photo
         if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
-            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
+            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                user_info[constants.HAS_PHOTO])
 
         # change staff_status to dictionary
         user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
@@ -470,14 +471,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # change course_editions_conducted to list of courses
         courses_conducted = []
         if user_info['course_editions_conducted']:
-            for c in user_info['course_editions_conducted']:
-                course_id, term_id = c['id'].split('|')
+            for course_conducted in user_info['course_editions_conducted']:
+                course_id, term_id = course_conducted['id'].split('|')
 
-                course_doc = yield self.api_course(course_id)
-                if course_doc:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                        constants.COURSE_ID: course_id,
-                                        constants.TERM_ID: term_id})
+                try:
+                    course_doc = yield self.api_course(course_id)
+                    if course_doc:
+                        courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                                  constants.COURSE_ID: course_id,
+                                                  constants.TERM_ID: term_id})
+                    else:
+                        raise ApiError('brak kursu %r'.format(course_id))
+                except Exception, ex:
+                    yield self.exc(ex, finish=False)
 
             user_info['course_editions_conducted'] = courses_conducted
 
@@ -492,7 +498,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         programmes = []
         for program in user_info['student_programmes']:
-            result = yield self.api_programme(program['programme']['id'])
+            result = yield self.api_programme(program['programme']['id'], finish=False)
             if result:
                 program['programme']['mode_of_studies'] = result['mode_of_studies']
                 program['programme']['level_of_studies'] = result['level_of_studies']
@@ -500,18 +506,21 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 program['programme']['name'] = result['name']
                 programmes.append(program)
             else:
-                ApiError("Nie znaleziono programu", program['programme']['id'])
+                yield self.exc(ApiError("Nie znaleziono programu", program['programme']['id']), finish=False)
 
         raise gen.Return(programmes)
 
     @gen.coroutine
-    def api_programme(self, programme_id):
+    def api_programme(self, programme_id, finish=True):
         programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
             {constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS_PROGRAMMES)
 
         if not programme_doc:
-            programme_doc = yield self.usos_programme(programme_id)
-            yield self.insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            try:
+                programme_doc = yield self.usos_programme(programme_id)
+                yield self.insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            except UsosClientError, ex:
+                raise self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
 
@@ -522,37 +531,20 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
             self.error("Niepoprawny format daty: RRRR-MM-DD.")
-            raise ex
-
-        # get usosdata for
-        usos = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+            raise self.exc(ex)
 
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
              constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
-            # fetch TT from USOS
-            client = UsosClient(base_url=usos[constants.USOS_URL],
-                                consumer_key=usos[constants.CONSUMER_KEY],
-                                consumer_secret=usos[constants.CONSUMER_SECRET],
-                                access_token_key=self.user_doc[constants.ACCESS_TOKEN_KEY],
-                                access_token_secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
-            try:
-                result = client.time_table(monday)
 
-                # insert TT to mongo
-                tt_doc = dict()
-                tt_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-                tt_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-                tt_doc[constants.TT_STARTDATE] = str(monday)
-                if not result:
-                    result = list()
-                tt_doc['tts'] = result
-                yield self.db[constants.COLLECTION_TT].insert(tt_doc)
-            except Exception:
-                self.error("Błąd podczas pobierania TT z USOS for {0}.".format(given_date))
-                return
+            try:
+                tt_doc = yield self.time_table(monday)
+                yield self.insert(constants.COLLECTION_TT, tt_doc)
+            except Exception, ex:
+                yield self.exc(ex, finish=False)
+                raise gen.Return(None)
 
         # remove english names
         for t in tt_doc['tts']:
@@ -565,17 +557,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 t['type'] = 'egzamin'
 
         # add lecturer information
+        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
         for tt in tt_doc['tts']:
             for lecturer in tt['lecturer_ids']:
                 lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                    {constants.ID: str(lecturer)}, ('id', 'first_name', 'last_name', 'titles'))
+                    {constants.ID: str(lecturer)}, lecturer_keys)
                 if not lecturer_info:
-                    lecturer_info = self.api_user_info_id(str(lecturer))
+                    lecturer_info = yield self.api_user_info_id(str(lecturer))
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
                     if not lecturer_info:
-                        self.error("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
-                else:
-                    tt['lecturers'] = list()
-                    tt['lecturers'].append(lecturer_info)
+                        exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
+                        yield self.exc(exception, finish=False)
+                tt['lecturers'] = list()
+                tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
         raise gen.Return(tt_doc['tts'])
 
@@ -599,22 +593,24 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             {constants.USER_ID: user_id}, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
+
             user_info_doc = yield self.usos_user_info()
 
-            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-
             if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
-                yield self.api_photo(user_info_doc[constants.ID])
+                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
+                user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
+
+            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
         raise gen.Return(user_info_doc)
 
     @gen.coroutine
     def api_user_info_id(self, user_id):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]},
+            {constants.ID: user_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]},
             USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
@@ -644,16 +640,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(faculty_doc)
 
     @gen.coroutine
-    def api_group(self, course_id, term_id, group_id):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+    def api_group(self, course_id, term_id, group_id, finish=True):
+        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID],
+            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID],
              constants.TERM_ID: term_id, 'course_unit_id': group_id}, LIMIT_FIELDS_GROUPS)
 
         if not group_doc:
-            group_doc = yield self.usos_group(group_id, usos_doc)
-            yield self.insert(constants.COLLECTION_GROUPS, group_doc)
+            try:
+                group_doc = yield self.usos_group(group_id, self.usos_doc)
+                yield self.insert(constants.COLLECTION_GROUPS, group_doc)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=finish)
 
         raise gen.Return(group_doc)
 
@@ -669,14 +668,13 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(courses_editions_doc)
 
     @gen.coroutine
-    def api_course_edition(self, course_id, term_id, fetch_participants):
-
+    def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
 
         if fetch_participants:
             pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID],
-                 constants.COURSE_ID: course_id,
-                 constants.TERM_ID: term_id,
-                 constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+                        constants.COURSE_ID: course_id,
+                        constants.TERM_ID: term_id,
+                        constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         else:
             pipeline = {constants.COURSE_ID: course_id,
                         constants.TERM_ID: term_id,
@@ -685,11 +683,16 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
 
         if not course_edition_doc:
-            course_edition_doc = yield self.usos_course_edition(course_id, term_id, self.user_doc[constants.MONGO_ID],
-                                                                self.user_doc[constants.USOS_ID], fetch_participants)
-            if fetch_participants:
-                course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-            yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
+            try:
+                course_edition_doc = yield self.usos_course_edition(course_id, term_id,
+                                                                    self.user_doc[constants.MONGO_ID],
+                                                                    self.user_doc[constants.USOS_ID],
+                                                                    fetch_participants)
+                if fetch_participants:
+                    course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
+            except UsosClientError, ex:
+                raise self.exc(ex, finish=finish)
 
         raise gen.Return(course_edition_doc)
 

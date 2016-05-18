@@ -121,7 +121,7 @@ def initialize_logging(logger_name):
         traceback.print_exc()
 
         # if config fails entirely, enable basic stdout logging as a fallback
-        logging.basicConfig(format=log_format,level=logging.INFO,)
+        logging.basicConfig(format=log_format, level=logging.INFO, )
 
     # re-get the log after logging is initialized
     global log
