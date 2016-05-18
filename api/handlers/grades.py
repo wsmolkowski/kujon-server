@@ -34,17 +34,3 @@ class GradesForUserByTermApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class GradesForCourseAndTermApi(BaseHandler, ApiDaoHandler):
-    @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self, course_id, term_id):
-
-        try:
-            grades_doc = yield self.api_grade(course_id, term_id)
-            if not grades_doc:
-                self.error("Nie ma ocen dla przedmiotu {0} i semestru {1}.".format(course_id, term_id))
-            else:
-                self.success(grades_doc)
-        except Exception, ex:
-            yield self.exc(ex)

@@ -316,37 +316,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
-    def api_grade(self, course_id, term_id):
-        pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.COURSE_ID: course_id,
-                    constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
-
-        limit_fields = ('course_name', 'course_id', 'grades')
-
-        classtypes = yield self.get_classtypes()
-
-        grades = yield self.db[constants.COLLECTION_GRADES].find_one(pipeline, limit_fields)
-        units = {}
-        if grades and len(grades) > 0:
-            for unit in grades['grades']['course_units_grades']:
-                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: self.user_doc[constants.USOS_ID]}}, {
-                    '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
-                                'as': 'courses_classtypes'}}]
-                unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
-                u = yield unit_coursor.to_list(None)
-                for elem in u:
-                    unit_id = elem['unit_id']
-                    elem.pop('unit_id')
-                    elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
-                    units[unit_id] = elem
-            if len(units) > 0:
-                grades['grades']['course_units'] = units
-                del grades['grades']['course_grades']
-            else:
-                del grades['grades']['course_units_grades']
-
-        raise gen.Return(grades)
-
-    @gen.coroutine
     def api_lecturers(self):
         courses = {}
         lecturers_returned = {}

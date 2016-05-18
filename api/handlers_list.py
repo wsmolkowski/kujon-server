@@ -32,7 +32,6 @@ HANDLERS = [
     (r"/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
     (r"/courses/([^/]+)", CoursesApi),
 
-    (r"/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
     (r"/grades", GradesForUserApi),
     (r"/gradesbyterm", GradesForUserByTermApi),
 
