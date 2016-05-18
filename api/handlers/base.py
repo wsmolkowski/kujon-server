@@ -159,5 +159,7 @@ class ApplicationConfigHandler(BaseHandler):
     @web.asynchronous
     @gen.coroutine
     def get(self):
+        if not hasattr(self, '_usoses') or not self._usoses:
+            yield self.get_usoses(showtokens=True)
         config = yield self.config_data()
         self.success(data=config)

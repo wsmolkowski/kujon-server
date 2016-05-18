@@ -531,7 +531,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception, ex:
             self.error("Niepoprawny format daty: RRRR-MM-DD.")
-            raise self.exc(ex)
+            yield self.exc(ex)
 
         # fetch TT from mongo
         tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
@@ -649,7 +649,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not group_doc:
             try:
-                group_doc = yield self.usos_group(group_id, self.usos_doc)
+                group_doc = yield self.usos_group(group_id)
                 yield self.insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=finish)
@@ -684,10 +684,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not course_edition_doc:
             try:
-                course_edition_doc = yield self.usos_course_edition(course_id, term_id,
-                                                                    self.user_doc[constants.MONGO_ID],
-                                                                    self.user_doc[constants.USOS_ID],
-                                                                    fetch_participants)
+                course_edition_doc = yield self.usos_course_edition(course_id, term_id, fetch_participants)
                 if fetch_participants:
                     course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
                 yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)

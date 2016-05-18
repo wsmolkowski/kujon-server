@@ -74,9 +74,9 @@ class UsosCrawler(UsosMixin, DaoMixin):
             raise gen.Return(user_info_doc[constants.ID])
         try:
             if user_info_id:
-                result = yield self.usos_user_info_id(user_info_id, self.usos_id)
+                result = yield self.usos_user_info_id(user_info_id)
             else:
-                result = yield self.usos_user_info(self.user_id, self.usos_id)
+                result = yield self.usos_user_info()
 
             # if user has photo - download
             if constants.HAS_PHOTO in result and result[constants.HAS_PHOTO]:
@@ -103,8 +103,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 continue
 
             try:
-                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id,
-                                                        fetch_participants=False)
+                result = yield self.usos_course_edition(course_id, term_id, fetch_participants=False)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
                 else:
@@ -117,9 +116,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
         for event_type in self.EVENT_TYPES:
             try:
                 subscribe_doc = yield self.subscribe(event_type, self.user_id)
-                subscribe_doc[constants.USOS_ID] = self.usos_id
-                subscribe_doc[constants.USER_ID] = self.user_id
-                subscribe_doc['event_type'] = event_type
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
                 yield self._exc(ex)
@@ -162,7 +158,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
         course_edition = yield self.db_courses_editions(self.user_id)
 
         if not course_edition:
-            result = yield self.usos_courses_editions(self.user_id, self.usos_id)
+            result = yield self.usos_courses_editions()
             course_edition = yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
             raise gen.Return(course_edition)
         else:
@@ -177,7 +173,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 continue
 
             try:
-                result = yield self.usos_term(term_id, self.usos_id)
+                result = yield self.usos_term(term_id)
                 yield self.db_insert(constants.COLLECTION_TERMS, result)
             except Exception, ex:
                 yield self._exc(ex)
@@ -195,10 +191,12 @@ class UsosCrawler(UsosMixin, DaoMixin):
             try:
                 result = yield self.usos_course_edition(course_edition[constants.COURSE_ID],
                                                         course_edition[constants.TERM_ID],
-                                                        self.user_id, self.usos_id,
                                                         fetch_participants=True)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+                else:
+                    logging.warning('could not find course edition for course_id:{0} and term_id:{1}'.format(
+                        course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]))
             except Exception, ex:
                 yield self._exc(ex)
 
@@ -272,7 +270,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 continue  # units already exists
 
             try:
-                result = yield self.usos_unit(unit_id, self.usos_id)
+                result = yield self.usos_unit(unit_id)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
@@ -291,7 +289,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 continue  # group already exists
 
             try:
-                result = yield self.usos_group(group_id, self.usos_id)
+                result = yield self.usos_group(group_id)
                 if result:
                     yield self.db_insert(constants.COLLECTION_GROUPS, result)
                 else:
@@ -310,8 +308,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             term_id, course_id = data[constants.TERM_ID], data[constants.COURSE_ID]
 
             try:
-                result = yield self.usos_course_edition(course_id, term_id, self.user_id, self.usos_id,
-                                                        fetch_participants=True)
+                result = yield self.usos_course_edition(course_id, term_id, fetch_participants=True)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
 
@@ -456,7 +453,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
+            self.usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
             if constants.USOS_ID in self.user_doc:
                 try:
