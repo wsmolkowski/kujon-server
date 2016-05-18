@@ -317,17 +317,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
                         if unit not in units_found:
                             units_found.append(unit)
 
-                    grade_doc = yield self.db_grades(course_id, term_id, self.user_id, self.usos_id)
-                    if grade_doc:
-                        continue  # grades for course and term already exists
-
-                if result and (
-                            result['grades']['course_grades'] or result['grades']['course_units_grades']):
-                    yield self.db_insert(constants.COLLECTION_GRADES, result)
-                else:
-                    logging.warning(
-                        "grades not found for course_id: %r term_id: %r usos_id: %r and user_id: %r .",
-                            course_id, term_id, self.usos_id, self.user_id)
             except Exception, ex:
                 yield self._exc(ex)
 
