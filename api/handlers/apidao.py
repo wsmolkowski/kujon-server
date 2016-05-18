@@ -214,7 +214,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         for course in courses_edition:
             if course[constants.TERM_ID] not in courses:
                 courses[course[constants.TERM_ID]] = list()
-                courses[course[constants.TERM_ID]].append(course)
                 terms.append(course[constants.TERM_ID])
             courses[course[constants.TERM_ID]].append(course)
 
