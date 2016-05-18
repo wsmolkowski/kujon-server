@@ -66,20 +66,23 @@ class UsosMixin(OAuthMixin):
         return dict(key=self.user_doc[constants.ACCESS_TOKEN_KEY], secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     @_auth_return_future
-    def usos_request(self, path, callback=None, args={}):
+    def usos_request(self, path, callback=None, args={}, photo=False):
 
         url = self._oauth_base_uri() + path
         access_token = self._oauth_access_token()
 
         # Add the OAuth resource request signature if we have credentials
         method = "GET"
-        oauth = self._oauth_request_parameters(
-            url, access_token, args, method=method)
+        oauth = self._oauth_request_parameters(url, access_token, args, method=method)
         args.update(oauth)
 
         url += "?" + urllib_parse.urlencode(args)
         http = utils.http_client()
-        http_callback = functools.partial(self._on_usos_request, callback)
+        if photo:
+            http_callback = functools.partial(self._on_usos_photo_request, callback)
+        else:
+            http_callback = functools.partial(self._on_usos_request, callback)
+
         http.fetch(url, callback=http_callback)
 
     def _on_usos_request(self, future, response):
@@ -88,10 +91,16 @@ class UsosMixin(OAuthMixin):
                 "Error response %s fetching %s" % (response.error,
                                                    response.request.url)))
             return
-        if hasattr(self, 'has_photo'):
-            future.set_result({'photo': b64encode(response.body)})
-        else:
-            future.set_result(escape.json_decode(response.body))
+        future.set_result(escape.json_decode(response.body))
+
+    def _on_usos_photo_request(self, future, response):
+        if response.error:
+            future.set_exception(UsosClientError(
+                "Error response %s fetching %s" % (response.error,
+                                                   response.request.url)))
+            return
+
+        future.set_result({'photo': b64encode(response.body)})
 
     @gen.coroutine
     def usos_course(self, course_id):
@@ -352,7 +361,6 @@ class UsosMixin(OAuthMixin):
     def usos_photo(self, user_info_id):
         if not hasattr(self, 'usos_doc'):
             self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-        self.has_photo = True
 
         user_id = self.user_doc[constants.MONGO_ID]
 
@@ -360,7 +368,7 @@ class UsosMixin(OAuthMixin):
 
         result = yield self.usos_request(path='services/photos/photo', args={
             'user_id': user_info_id,
-        })
+        }, photo=True)
 
         result[constants.USER_ID] = user_id
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
@@ -428,6 +436,7 @@ class UsosMixin(OAuthMixin):
             'verify_token': verify_token
         })
 
+        result['event_type'] = event_type
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
