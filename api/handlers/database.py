@@ -246,3 +246,11 @@ class DatabaseHandler(RequestHandler):
             classtypes[ct['id']] = ct['name']['pl']
 
         raise gen.Return(classtypes)
+
+    @gen.coroutine
+    def remove(self, collection, pipeline):
+        result = yield self.db[collection].remove(pipeline)
+        logging.debug('removed from collection: {0} for pipeline:{1} with result {2}'.format(
+            collection, result
+        ))
+        raise gen.Return(result)

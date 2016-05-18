@@ -9,7 +9,6 @@ from commons import decorators
 
 
 class CourseEditionApi(BaseHandler, ApiDaoHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -23,7 +22,6 @@ class CourseEditionApi(BaseHandler, ApiDaoHandler):
 
 
 class CoursesApi(BaseHandler, ApiDaoHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

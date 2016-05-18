@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import tornado.web
-from bson.objectid import ObjectId
 
 from apidao import ApiDaoHandler
 from base import BaseHandler
@@ -17,8 +16,7 @@ class GroupsApi(BaseHandler, ApiDaoHandler):
     def get(self, course):
 
         try:
-            user_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+            user_info = yield self.api_user_info()
 
             programmes = []
             for program in user_info['student_programmes']:
