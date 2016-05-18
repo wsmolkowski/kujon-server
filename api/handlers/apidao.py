@@ -206,47 +206,27 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_courses_by_term(self):
 
-        courses_editions_doc = yield self.api_courses_editions()
+        courses_edition = yield self.api_courses()
 
-        if not courses_editions_doc:
-            raise ApiError("Poczekaj szukamy edycji przedmiotów")
-
-        # get courses_classtypes
-        classtypes = yield self.get_classtypes()
-
-        # get terms_list for course
+        # grouping grades by term
+        courses = dict()
         terms = list()
-        for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            terms.append(term)
-
-        # add groups to courses
-        for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
-                cursor = self.db[constants.COLLECTION_GROUPS].find(
-                    {constants.COURSE_ID: course[constants.COURSE_ID],
-                     constants.TERM_ID: term,
-                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                    LIMIT_FIELDS_GROUPS
-                )
-                groups = list()
-                while (yield cursor.fetch_next):
-                    group = cursor.next_object()
-                    group['class_type_id'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
-                    groups.append(group)
-                course['groups'] = groups
-                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
-                del course['course_units_ids']
-                del course[constants.TERM_ID]
+        for course in courses_edition:
+            if course[constants.TERM_ID] not in courses:
+                courses[course[constants.TERM_ID]] = list()
+                courses[course[constants.TERM_ID]].append(course)
+                terms.append(course[constants.TERM_ID])
+            courses[course[constants.TERM_ID]].append(course)
 
         # get course in order in order_keys as dictionary and reverse sort
         terms_by_order = yield self.get_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
-        courses = list()
-        for order_key in terms_by_order:
-            courses.append(
-                {terms_by_order[order_key]: courses_editions_doc[constants.COURSE_EDITIONS][terms_by_order[order_key]]})
 
-        raise gen.Return(courses)
+        courses_sorted_by_term = list()
+        for order_key in terms_by_order:
+            courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
+
+        raise gen.Return(courses_sorted_by_term)
 
     @gen.coroutine
     def api_grades(self):
