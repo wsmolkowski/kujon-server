@@ -81,11 +81,6 @@ class UsosClientError(Exception):
     pass
 
 
-class UsosAsyncError(HttpError):
-    """USOS exceptions"""
-    pass
-
-
 class AuthenticationError(Exception):
     """USOS exceptions"""
     pass

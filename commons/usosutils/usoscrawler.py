@@ -13,7 +13,6 @@ from commons.AESCipher import AESCipher
 from commons.errors import CrawlerException
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
-from commons.usosutils.usosasync import UsosAsync
 
 
 class UsosCrawler(UsosMixin, DaoMixin):
@@ -466,15 +465,14 @@ class UsosCrawler(UsosMixin, DaoMixin):
     @gen.coroutine
     def notifier_status(self):
         try:
-            usosAsync = UsosAsync()
             timestamp = datetime.now()
 
             usoses = yield self.db_usoses()
-            for usos in usoses:
+            for usos_doc in usoses:
                 try:
-                    data = yield usosAsync.notifier_status(usos[constants.USOS_URL])
+                    data = yield self.notifier_status(usos_doc)
                     data[constants.CREATED_TIME] = timestamp
-                    data[constants.USOS_ID] = usos[constants.USOS_ID]
+                    data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
 
                     yield self.db_insert(constants.COLLECTION_NOTIFIER_STATUS, data)
                 except Exception, ex:

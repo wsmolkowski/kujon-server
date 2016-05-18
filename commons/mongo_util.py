@@ -1,16 +1,18 @@
+# coding=UTF-8
+
 import logging
 from datetime import datetime
 from pprint import pprint
 
 import pymongo
-import tornado.gen
-import tornado.ioloop
+from tornado import escape
+from tornado import gen
 
 import constants
 import settings
+import utils
 from commons.AESCipher import AESCipher
 from commons.usosutils import usosinstances
-from commons.usosutils.usosasync import UsosAsync
 from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
@@ -127,9 +129,8 @@ def drop_collections(skip_collections=[]):
         db.drop_collection(collection)
 
 
-@tornado.gen.coroutine
+@gen.coroutine
 def recreate_dictionaries():
-    usosAsync = UsosAsync()
     db = get_client()
     recreate_time = datetime.now()
 
@@ -137,7 +138,16 @@ def recreate_dictionaries():
     for usos in db[constants.COLLECTION_USOSINSTANCES].find():
         inserts = list()
         try:
-            class_types = yield usosAsync.get_courses_classtypes(usos[constants.USOS_URL])
+            url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
+            http_client = utils.http_client()
+
+            response = yield http_client.fetch(url)
+            if response.code is not 200 and response.reason != 'OK':
+                logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
+                logging.warning(response)
+            else:
+                class_types = escape.json_decode(response.body)
+
         except Exception, ex:
             logging.error("failed to recreate_dictionaries for %r", usos[constants.USOS_ID])
             logging.exception(ex)
@@ -155,7 +165,7 @@ def recreate_dictionaries():
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                   usos[constants.USOS_ID]))
 
-    raise tornado.gen.Return(True)
+    raise gen.Return(True)
 
 
 def recreate_usos():
@@ -172,7 +182,7 @@ def recreate_usos():
                 db[constants.COLLECTION_USOSINSTANCES].insert(usos)
 
 
-@tornado.gen.coroutine
+@gen.coroutine
 def recreate_database():
     try:
         recreate_usos()
@@ -180,8 +190,8 @@ def recreate_database():
     except Exception, ex:
         msg = "Problem during database recreate: {0}".format(ex.message)
         logging.exception(msg, ex)
-        raise tornado.gen.Return(False)
-    raise tornado.gen.Return(True)
+        raise gen.Return(False)
+    raise gen.Return(True)
 
 
 def create_user_jobs():

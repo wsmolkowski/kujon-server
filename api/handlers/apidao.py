@@ -33,12 +33,20 @@ USER_INFO_LIMIT_FIELDS = (
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
+    def prepare(self):
+        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False):
+            self.api_refresh = True
+
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
         self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}, LIMIT_FIELDS)
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_COURSES, pipeline)
+
+        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
             try:
@@ -127,8 +135,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_course(self, course_id):
 
-        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one({
-            constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, LIMIT_FIELDS)
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_COURSES, pipeline)
+
+        course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
             course_doc = yield self.usos_course(course_id)
@@ -512,8 +524,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_programme(self, programme_id, finish=True):
-        programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
-            {constants.PROGRAMME_ID: programme_id}, LIMIT_FIELDS_PROGRAMMES)
+        pipeline = {constants.PROGRAMME_ID: programme_id}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_PROGRAMMES, pipeline)
+
+        programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
 
         if not programme_doc:
             try:
@@ -533,10 +549,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             self.error("Niepoprawny format daty: RRRR-MM-DD.")
             yield self.exc(ex)
 
+        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_TT, {constants.USER_ID: user_id})
+
         # fetch TT from mongo
-        tt_doc = yield self.db[constants.COLLECTION_TT].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
-             constants.TT_STARTDATE: str(monday)})
+        tt_doc = yield self.db[constants.COLLECTION_TT].find_one({constants.USER_ID: user_id,
+                                                                  constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
 
             try:
@@ -575,8 +595,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_term(self, term_id):
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(
-            {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}, TERM_LIMIT_FIELDS)
+        pipeline = {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_TERMS, pipeline)
+
+        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(pipeline, TERM_LIMIT_FIELDS)
 
         if not term_doc:
             term_doc = yield self.usos_term(term_id)
@@ -586,14 +610,16 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_user_info(self):
-
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.USER_ID: user_id}, USER_INFO_LIMIT_FIELDS)
+        pipeline = {constants.USER_ID: user_id}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
-
             user_info_doc = yield self.usos_user_info()
 
             if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
@@ -609,9 +635,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-            {constants.ID: user_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]},
-            USER_INFO_LIMIT_FIELDS)
+        pipeline = {constants.ID: user_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
+
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info_id(user_id)
@@ -628,10 +657,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_faculty(self, faculty_id):
+        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
 
-        faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(
-            {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-            LIMIT_FIELDS_FACULTY)
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_FACULTIES, pipeline)
+
+        faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         if not faculty_doc:
             faculty_doc = yield self.usos_faculty(faculty_id)
@@ -643,9 +674,13 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_group(self, course_id, term_id, group_id, finish=True):
         self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
-            {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID],
-             constants.TERM_ID: term_id, 'course_unit_id': group_id}, LIMIT_FIELDS_GROUPS)
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID],
+                    constants.TERM_ID: term_id, 'course_unit_id': group_id}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_GROUPS, pipeline)
+
+        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline, LIMIT_FIELDS_GROUPS)
 
         if not group_doc:
             try:
@@ -658,8 +693,15 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_courses_editions(self):
+        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+
+        pipeline = {constants.USER_ID: user_id}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_GROUPS, pipeline)
+
         courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}, (constants.COURSE_EDITIONS,))
+            pipeline, (constants.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
             courses_editions_doc = yield self.usos_courses_editions()
@@ -669,12 +711,15 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
+        pipeline = {constants.COURSE_ID: course_id,
+                    constants.TERM_ID: term_id,
+                    constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
 
         if fetch_participants:
-            pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID],
-                        constants.COURSE_ID: course_id,
-                        constants.TERM_ID: term_id,
-                        constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+            pipeline = pipeline
         else:
             pipeline = {constants.COURSE_ID: course_id,
                         constants.TERM_ID: term_id,
@@ -695,7 +740,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_photo(self, user_info_id):
-        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.ID: user_info_id})
+        pipeline = {constants.ID: user_info_id}
+        if hasattr(self, 'api_refresh'):
+            yield self.remove(constants.COLLECTION_PHOTOS, pipeline)
+
+        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
 
         if not photo_doc:
             photo_doc = yield self.usos_photo(user_info_id)
