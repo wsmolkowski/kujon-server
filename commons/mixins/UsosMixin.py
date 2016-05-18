@@ -273,12 +273,12 @@ class UsosMixin(OAuthMixin):
                     'course_id': course_id,
                     'term_id': term_id
                 }
-
             result = yield self.usos_request(path='services/courses/course_edition', args=args)
         except Exception, ex:
             logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
 
+        result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
         result[constants.TERM_ID] = term_id
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
@@ -368,7 +368,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(tt)
 
     @gen.coroutine
-    def subscribe(self, event_type, verify_token):
+    def usos_subscribe(self, event_type, verify_token):
         create_time = datetime.now()
         result = yield self.usos_request(path='services/events/subscribe_event', args={
             'event_type': event_type,
@@ -385,7 +385,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def unsubscribe(self):
+    def usos_unsubscribe(self):
         result = yield self.usos_request(path='services/events/unsubscribe')
         raise gen.Return(result)
 

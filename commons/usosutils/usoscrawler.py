@@ -114,7 +114,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
     def __subscribe(self):
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = yield self.subscribe(event_type, self.user_id)
+                subscribe_doc = yield self.usos_unsubscribe(event_type, self.user_id)
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
                 yield self._exc(ex)
@@ -317,17 +317,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
                         if unit not in units_found:
                             units_found.append(unit)
 
-                    grade_doc = yield self.db_grades(course_id, term_id, self.user_id, self.usos_id)
-                    if grade_doc:
-                        continue  # grades for course and term already exists
-
-                if result and (
-                            result['grades']['course_grades'] or result['grades']['course_units_grades']):
-                    yield self.db_insert(constants.COLLECTION_GRADES, result)
-                else:
-                    logging.warning(
-                        "grades not found for course_id: %r term_id: %r usos_id: %r and user_id: %r .",
-                            course_id, term_id, self.usos_id, self.user_id)
             except Exception, ex:
                 yield self._exc(ex)
 
@@ -452,11 +441,11 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            self.usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
+            usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
             if constants.USOS_ID in self.user_doc:
                 try:
-                    yield self.unsubscribe()
+                    yield self.usos_unsubscribe()
                 except Exception, ex:
                     yield self._exc(ex)
         except Exception, ex:

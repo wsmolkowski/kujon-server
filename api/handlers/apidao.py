@@ -100,8 +100,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
 
         course_doc[constants.FACULTY_ID] = faculty_doc
-        if faculty_doc and course_doc['fac_id'] and 'pl' in course_doc['fac_id']['name']:
-            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
+        if faculty_doc and course_doc[constants.FACULTY_ID] and 'pl' in course_doc[constants.FACULTY_ID]['name']:
+            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
@@ -206,71 +206,50 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_courses_by_term(self):
 
-        courses_editions_doc = yield self.api_courses_editions()
+        courses_edition = yield self.api_courses()
 
-        if not courses_editions_doc:
-            raise ApiError("Poczekaj szukamy edycji przedmiotów")
-
-        # get courses_classtypes
-        classtypes = yield self.get_classtypes()
-
-        # get terms_list for course
+        # grouping grades by term
+        courses = dict()
         terms = list()
-        for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            terms.append(term)
-
-        # add groups to courses
-        for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-            for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
-                cursor = self.db[constants.COLLECTION_GROUPS].find(
-                    {constants.COURSE_ID: course[constants.COURSE_ID],
-                     constants.TERM_ID: term,
-                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
-                    LIMIT_FIELDS_GROUPS
-                )
-                groups = list()
-                while (yield cursor.fetch_next):
-                    group = cursor.next_object()
-                    group['class_type_id'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
-                    groups.append(group)
-                course['groups'] = groups
-                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
-                del course['course_units_ids']
-                del course[constants.TERM_ID]
+        for course in courses_edition:
+            if course[constants.TERM_ID] not in courses:
+                courses[course[constants.TERM_ID]] = list()
+                courses[course[constants.TERM_ID]].append(course)
+                terms.append(course[constants.TERM_ID])
+            courses[course[constants.TERM_ID]].append(course)
 
         # get course in order in order_keys as dictionary and reverse sort
         terms_by_order = yield self.get_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
-        courses = list()
-        for order_key in terms_by_order:
-            courses.append(
-                {terms_by_order[order_key]: courses_editions_doc[constants.COURSE_EDITIONS][terms_by_order[order_key]]})
 
-        raise gen.Return(courses)
+        courses_sorted_by_term = list()
+        for order_key in terms_by_order:
+            courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
+
+        raise gen.Return(courses_sorted_by_term)
 
     @gen.coroutine
     def api_grades(self):
         # get class_types
         classtypes = yield self.get_classtypes()
 
-        cursor = self.db[constants.COLLECTION_GRADES].find(
+        cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(
             {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('grades', constants.TERM_ID, constants.COURSE_ID,
-             constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
+            ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
         new_grades = []
 
-        while (yield cursor.fetch_next):
-            grades_courseedition = cursor.next_object()
-            grades_courseedition.pop(constants.MONGO_ID)
-            grades_courseedition[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]['pl']
+        grades = yield cursor.to_list(None)
+
+        for grade in grades:
+            grade.pop(constants.MONGO_ID)
 
             # if there is no grades -> pass
-            if len(grades_courseedition['grades']['course_grades']) == 0 and \
-                            len(grades_courseedition['grades']['course_units_grades']) == 0:
+            if len(grade['grades']['course_grades']) == 0 and \
+                            len(grade['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}
-            for unit in grades_courseedition['grades']['course_units_grades']:
+            for unit in grade['grades']['course_units_grades']:
                 pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: self.user_doc[constants.USOS_ID]}}, {
                     '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
                                 'as': 'courses_classtypes'}}]
@@ -289,27 +268,27 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     units[unit_id] = elem
 
             if len(units) > 0:  # partial grades
-                grades_courseedition['grades']['course_units'] = units
-                for egzam in grades_courseedition['grades']['course_units_grades']:
-                    for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
-                        elem = grades_courseedition['grades']['course_units_grades'][egzam][termin]
+                grade['grades']['course_units'] = units
+                for egzam in grade['grades']['course_units_grades']:
+                    for termin in grade['grades']['course_units_grades'][egzam]:
+                        elem = grade['grades']['course_units_grades'][egzam][termin]
                         if int(egzam) in units:
                             elem[constants.CLASS_TYPE] = units[int(egzam)][constants.CLASS_TYPE_ID]
                         else:
                             elem[constants.CLASS_TYPE] = None
                         elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
-                        elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                        elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
-                        elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
+                        elem[constants.COURSE_ID] = grade[constants.COURSE_ID]
+                        elem[constants.COURSE_NAME] = grade[constants.COURSE_NAME]
+                        elem[constants.TERM_ID] = grade[constants.TERM_ID]
                         new_grades.append(elem)
             else:  # final grade no partials
-                for egzam in grades_courseedition['grades']['course_grades']:
-                    elem = grades_courseedition['grades']['course_grades'][egzam]
+                for egzam in grade['grades']['course_grades']:
+                    elem = grade['grades']['course_grades'][egzam]
                     elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
                     elem[constants.CLASS_TYPE] = constants.GRADE_FINAL
-                    elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                    elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
-                    elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
+                    elem[constants.COURSE_ID] = grade[constants.COURSE_ID]
+                    elem[constants.COURSE_NAME] = grade[constants.COURSE_NAME]
+                    elem[constants.TERM_ID] = grade[constants.TERM_ID]
                     new_grades.append(elem)
 
         raise gen.Return(new_grades)
@@ -317,66 +296,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_grades_byterm(self):
 
-        classtypes = yield self.get_classtypes()
-
-        cursor = self.db[constants.COLLECTION_GRADES].find(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('grades', constants.TERM_ID, constants.COURSE_ID,
-             constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
-        new_grades = []
-
-        while (yield cursor.fetch_next):
-            grades_courseedition = cursor.next_object()
-            grades_courseedition.pop(constants.MONGO_ID)
-            grades_courseedition[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]['pl']
-
-            # if there is no grades -> pass
-            if len(grades_courseedition['grades']['course_grades']) == 0 and \
-                            len(grades_courseedition['grades']['course_units_grades']) == 0:
-                continue
-
-            units = {}
-            for unit in grades_courseedition['grades']['course_units_grades']:
-                pipeline = [{'$match': {'unit_id': int(unit), constants.USOS_ID: self.user_doc[constants.USOS_ID]}}, {
-                    '$lookup': {'from': 'courses_classtypes', 'localField': 'classtype_id', 'foreignField': 'id',
-                                'as': 'courses_classtypes'}}]
-                unit_coursor = self.db[constants.COLLECTION_COURSES_UNITS].aggregate(pipeline)
-                u = yield unit_coursor.to_list(None)
-                for elem in u:
-                    unit_id = elem[constants.UNIT_ID]
-                    elem.pop(constants.UNIT_ID)
-                    elem.pop(constants.CREATED_TIME)
-                    elem.pop(constants.UPDATE_TIME)
-                    elem.pop(constants.TERM_ID)
-                    elem.pop(constants.USOS_ID)
-                    elem.pop('courses_classtypes')
-                    elem.pop('groups')
-                    elem[constants.CLASS_TYPE_ID] = classtypes[(elem[constants.CLASS_TYPE_ID])]
-                    units[unit_id] = elem
-
-            if len(units) > 0:  # oceny czeciowe
-                grades_courseedition['grades']['course_units'] = units
-                for egzam in grades_courseedition['grades']['course_units_grades']:
-                    for termin in grades_courseedition['grades']['course_units_grades'][egzam]:
-                        elem = grades_courseedition['grades']['course_units_grades'][egzam][termin]
-                        if int(egzam) in units:
-                            elem[constants.CLASS_TYPE] = units[int(egzam)][constants.CLASS_TYPE_ID]
-                        else:
-                            elem[constants.CLASS_TYPE] = None
-                        elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
-                        elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                        elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
-                        elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
-                        new_grades.append(elem)
-            else:  # ocena koncowa bez czesciowych
-                for egzam in grades_courseedition['grades']['course_grades']:
-                    elem = grades_courseedition['grades']['course_grades'][egzam]
-                    elem[constants.VALUE_DESCRIPTION] = elem[constants.VALUE_DESCRIPTION]['pl']
-                    elem[constants.CLASS_TYPE] = constants.GRADE_FINAL
-                    elem[constants.COURSE_ID] = grades_courseedition[constants.COURSE_ID]
-                    elem[constants.COURSE_NAME] = grades_courseedition[constants.COURSE_NAME]
-                    elem[constants.TERM_ID] = grades_courseedition[constants.TERM_ID]
-                    new_grades.append(elem)
+        new_grades = yield self.api_grades()
 
         # grouping grades by term
         grades = dict()
