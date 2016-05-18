@@ -251,6 +251,6 @@ class DatabaseHandler(RequestHandler):
     def remove(self, collection, pipeline):
         result = yield self.db[collection].remove(pipeline)
         logging.debug('removed from collection: {0} for pipeline:{1} with result {2}'.format(
-            collection, result
+            collection, pipeline, result
         ))
         raise gen.Return(result)
