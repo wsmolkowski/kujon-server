@@ -100,8 +100,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
 
         course_doc[constants.FACULTY_ID] = faculty_doc
-        if faculty_doc and course_doc['fac_id'] and 'pl' in course_doc['fac_id']['name']:
-            course_doc['fac_id']['name'] = course_doc['fac_id']['name']['pl']
+        if faculty_doc and course_doc[constants.FACULTY_ID] and 'pl' in course_doc[constants.FACULTY_ID]['name']:
+            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())

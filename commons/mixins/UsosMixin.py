@@ -368,7 +368,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(tt)
 
     @gen.coroutine
-    def subscribe(self, event_type, verify_token):
+    def usos_subscribe(self, event_type, verify_token):
         create_time = datetime.now()
         result = yield self.usos_request(path='services/events/subscribe_event', args={
             'event_type': event_type,
@@ -385,7 +385,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def unsubscribe(self):
+    def usos_unsubscribe(self):
         result = yield self.usos_request(path='services/events/unsubscribe')
         raise gen.Return(result)
 
