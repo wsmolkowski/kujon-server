@@ -120,12 +120,22 @@ class UsosMixin(OAuthMixin):
 
         request = httpclient.HTTPRequest(url, use_gzip=settings.COMPRESS_RESPONSE, user_agent=settings.PROJECT_TITLE)
 
-        response = yield http_client.fetch(request)
+        try:
+            response = yield http_client.fetch(request)
 
-        if response.code is not 200 and response.reason != 'OK':
-            raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
+            if response.code is not 200 and response.reason != 'OK':
+                raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
 
-        raise gen.Return(escape.json_decode(response.body))
+            result = escape.json_decode(response.body)
+        except httpclient.HTTPError, ex:
+            msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
+                                                                                          ex.response.code,
+                                                                                          ex.response.effective_url,
+                                                                                          ex.response.body)
+            # logging.exception(ex)
+            raise UsosClientError(msg)
+
+        raise gen.Return(result)
 
     @gen.coroutine
     def usos_course(self, course_id):
