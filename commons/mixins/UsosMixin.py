@@ -48,7 +48,7 @@ class UsosMixin(OAuthMixin):
         return dict(key=self.user_doc[constants.ACCESS_TOKEN_KEY], secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     @_auth_return_future
-    def usos_request(self, path, callback=None, args={}, photo=False):
+    def usos_request(self, path, callback=None, args={}, photo=False, base_url=None):
         '''
             USOS async authenticated request
 
@@ -58,8 +58,11 @@ class UsosMixin(OAuthMixin):
         :param photo: if photo to retrieve
         :return: json_decode
         '''
+        if not base_url:
+            url = self._oauth_base_uri() + path
+        else:
+            url = base_url + path
 
-        url = self._oauth_base_uri() + path
         access_token = self._oauth_access_token()
 
         # Add the OAuth resource request signature if we have credentials
@@ -413,8 +416,8 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_unsubscribe(self):
-        result = yield self.usos_request(path='services/events/unsubscribe')
+    def usos_unsubscribe(self, base_url):
+        result = yield self.usos_request(path='services/events/unsubscribe', base_url=base_url)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -432,7 +435,7 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def notifier_status(self, usos_doc):
-        self.usos_doc = usos_doc
+        # self.usos_doc = usos_doc FIXME
         result = yield self.call_async('services/events/notifier_status')
 
         raise gen.Return(result)
