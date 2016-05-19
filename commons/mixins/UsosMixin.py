@@ -5,6 +5,7 @@ from base64 import b64encode
 from datetime import datetime
 
 from tornado import gen, escape
+from tornado import httpclient
 from tornado.auth import OAuthMixin, _auth_return_future
 
 from commons import constants, utils, settings
@@ -32,11 +33,6 @@ class UsosMixin(OAuthMixin):
     def _find_usos(self):
         if hasattr(self, 'usos_doc'):
             return self.usos_doc
-        if hasattr(self, 'usos_id'):
-            return self.usos_id
-
-        if hasattr(self, 'user_doc'):
-            return self.user_doc[constants.USOS_ID]
 
         for usos_doc in self._usoses:
             if usos_doc[constants.USOS_ID] == self.user_doc[constants.USOS_ID]:
@@ -109,9 +105,13 @@ class UsosMixin(OAuthMixin):
 
         url = self._oauth_base_uri() + path
         url += "?" + urllib_parse.urlencode(arguments)
+
         http_client = utils.http_client()
 
-        response = yield http_client.fetch(url)
+        request = httpclient.HTTPRequest(url, use_gzip=settings.COMPRESS_RESPONSE, user_agent=settings.PROJECT_TITLE)
+
+        response = yield http_client.fetch(request)
+
         if response.code is not 200 and response.reason != 'OK':
             raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
 
@@ -359,7 +359,7 @@ class UsosMixin(OAuthMixin):
         result = yield self.usos_request(path='services/tt/user', args={
             'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
             'start': given_date,
-            'days': 7
+            'days': '7'
         })
 
         tt = dict()

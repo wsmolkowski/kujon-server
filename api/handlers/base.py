@@ -15,6 +15,11 @@ from database import DatabaseHandler
 
 
 class BaseHandler(DatabaseHandler, JSendMixin):
+    @gen.coroutine
+    def prepare(self):
+        if not hasattr(self, '_usoses') or not self._usoses:
+            yield self.get_usoses(showtokens=True)
+
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
                       constants.USOS_PAIRED)
 
@@ -159,7 +164,5 @@ class ApplicationConfigHandler(BaseHandler):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        if not hasattr(self, '_usoses') or not self._usoses:
-            yield self.get_usoses(showtokens=True)
         config = yield self.config_data()
         self.success(data=config)
