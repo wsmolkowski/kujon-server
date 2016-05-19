@@ -114,7 +114,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
     def __subscribe(self):
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = yield self.usos_unsubscribe(event_type, self.user_id)
+                subscribe_doc = yield self.usos_subscribe(event_type, self.usos_doc[constants.MONGO_ID])
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
                 yield self._exc(ex)
@@ -440,8 +440,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
-
-            usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
             if constants.USOS_ID in self.user_doc:
                 try:

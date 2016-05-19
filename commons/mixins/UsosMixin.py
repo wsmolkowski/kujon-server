@@ -32,6 +32,11 @@ class UsosMixin(OAuthMixin):
     def _find_usos(self):
         if hasattr(self, 'usos_doc'):
             return self.usos_doc
+        if hasattr(self, 'usos_id'):
+            return self.usos_id
+
+        if hasattr(self, 'user_doc'):
+            return self.user_doc[constants.USOS_ID]
 
         for usos_doc in self._usoses:
             if usos_doc[constants.USOS_ID] == self.user_doc[constants.USOS_ID]:

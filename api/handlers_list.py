@@ -3,7 +3,7 @@ from handlers.base import UsosesApi, ApplicationConfigHandler
 from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from handlers.faculties import FacultyByIdApi, FacultiesApi
 from handlers.friends import FriendsSuggestionsApi, FriendsApi
-from handlers.grades import GradesForCourseAndTermApi, GradesForUserApi, GradesForUserByTermApi
+from handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from handlers.lecturers import LecturersApi, LecturerByIdApi
 from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.terms import TermsApi, TermApi
@@ -32,7 +32,6 @@ HANDLERS = [
     (r"/courseseditions/([^/]+)/([^/]+)", CourseEditionApi),
     (r"/courses/([^/]+)", CoursesApi),
 
-    (r"/grades/course/([^/]+)/([^/]+)", GradesForCourseAndTermApi),
     (r"/grades", GradesForUserApi),
     (r"/gradesbyterm", GradesForUserByTermApi),
 

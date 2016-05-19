@@ -111,15 +111,6 @@ class DaoMixin(object):
         raise gen.Return(course_edition_doc)
 
     @gen.coroutine
-    def db_grades(self, course_id, term_id, user_id, usos_id):
-        grades_doc = yield self.db[constants.COLLECTION_GRADES].find_one({constants.COURSE_ID: course_id,
-                                                                          constants.TERM_ID: term_id,
-                                                                          constants.USER_ID: user_id,
-                                                                          constants.USOS_ID: usos_id})
-
-        raise gen.Return(grades_doc)
-
-    @gen.coroutine
     def db_term(self, term_id, usos_id):
         term_doc = yield self.db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id,
                                                                        constants.USOS_ID: usos_id})
