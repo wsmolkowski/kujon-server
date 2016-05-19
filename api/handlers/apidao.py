@@ -115,12 +115,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get information about group
         if course_doc['course_units_ids']:
             for unit in course_doc['course_units_ids']:
-                group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
-
-                if group_doc:
-                    group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
-                    del (group_doc['class_type_id'])
-                    groups.append(group_doc)
+                try:
+                    group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
+                    if group_doc:
+                        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
+                        del (group_doc['class_type_id'])
+                        groups.append(group_doc)
+                except Exception, ex:
+                    yield self.exc(ex, finish=False)
         course_doc['groups'] = groups
 
         term_doc = yield self.api_term(term_id)
