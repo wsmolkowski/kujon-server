@@ -173,6 +173,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         classtypes = yield self.get_classtypes()
 
+        def get_classtype(key_find):
+            for key, name in classtypes.items():
+                if key_find == key:
+                    return name
+            return key_find
+
         # get terms
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
@@ -195,7 +201,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 groups = list()
                 while (yield cursor.fetch_next):
                     group = cursor.next_object()
-                    group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
+                    group['class_type'] = get_classtype(group['class_type_id'])  # changing class_type_id to name
+                    group.pop('class_type_id')
                     groups.append(group)
                 course['groups'] = groups
                 course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
