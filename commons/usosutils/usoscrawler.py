@@ -471,7 +471,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     user_id = '573b1b3cd54c4b371cd154ea'
+#     user_id = '573db9dad54c4b2138405092'
 #     yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.daily_crawl()
 #     # yield crawler.update_user_crawl(user_id)

@@ -78,10 +78,20 @@ class UsosMixin(OAuthMixin):
 
     def _on_usos_request(self, future, response):
         if response.error:
-            future.set_exception(UsosClientError(
-                "Error response %s fetching %s" % (response.error,
-                                                   response.request.url)))
-            return
+            msg = "Error response: {0} code: {1} fetching: {2} body: {3}".format(response.error.message,
+                                                                                 response.code,
+                                                                                 response.request.url,
+                                                                                 response.body)
+
+            try:
+                future.set_result(escape.json_decode(response.body))
+                logging.warning(msg)
+                return
+            except Exception, ex:
+                logging.exception(ex)
+                future.set_exception(UsosClientError(msg))
+                return
+
         future.set_result(escape.json_decode(response.body))
 
     def _on_usos_photo_request(self, future, response):
@@ -110,12 +120,22 @@ class UsosMixin(OAuthMixin):
 
         request = httpclient.HTTPRequest(url, use_gzip=settings.COMPRESS_RESPONSE, user_agent=settings.PROJECT_TITLE)
 
-        response = yield http_client.fetch(request)
+        try:
+            response = yield http_client.fetch(request)
 
-        if response.code is not 200 and response.reason != 'OK':
-            raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
+            if response.code is not 200 and response.reason != 'OK':
+                raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
 
-        raise gen.Return(escape.json_decode(response.body))
+            result = escape.json_decode(response.body)
+        except httpclient.HTTPError, ex:
+            msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
+                                                                                          ex.response.code,
+                                                                                          ex.response.effective_url,
+                                                                                          ex.response.body)
+            # logging.exception(ex)
+            raise UsosClientError(msg)
+
+        raise gen.Return(result)
 
     @gen.coroutine
     def usos_course(self, course_id):
@@ -375,17 +395,20 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_subscribe(self, event_type, verify_token):
         create_time = datetime.now()
-        result = yield self.usos_request(path='services/events/subscribe_event', args={
-            'event_type': event_type,
-            'callback_url': settings.DEPLOY_EVENT,
-            'verify_token': verify_token
-        })
+        try:
+            result = yield self.usos_request(path='services/events/subscribe_event', args={
+                'event_type': event_type,
+                'callback_url': settings.DEPLOY_EVENT,
+                'verify_token': verify_token
+            })
 
-        result['event_type'] = event_type
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
+            result['event_type'] = event_type
+            result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+            result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+            result[constants.CREATED_TIME] = create_time
+            result[constants.UPDATE_TIME] = create_time
+        except Exception, ex:
+            logging.exception(ex)
 
         raise gen.Return(result)
 
