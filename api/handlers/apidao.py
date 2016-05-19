@@ -115,12 +115,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get information about group
         if course_doc['course_units_ids']:
             for unit in course_doc['course_units_ids']:
-                group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
-
-                if group_doc:
-                    group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
-                    del (group_doc['class_type_id'])
-                    groups.append(group_doc)
+                try:
+                    group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
+                    if group_doc:
+                        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
+                        del (group_doc['class_type_id'])
+                        groups.append(group_doc)
+                except Exception, ex:
+                    yield self.exc(ex, finish=False)
         course_doc['groups'] = groups
 
         term_doc = yield self.api_term(term_id)
@@ -171,6 +173,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         classtypes = yield self.get_classtypes()
 
+        def classtype_name(key_id):
+            for key, name in classtypes.items():
+                if str(key_id) == str(key):
+                    return name
+            return key_id
+
         # get terms
         terms = list()
         for term in courses_editions_doc[constants.COURSE_EDITIONS]:
@@ -193,7 +201,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 groups = list()
                 while (yield cursor.fetch_next):
                     group = cursor.next_object()
-                    group['class_type'] = classtypes[group.pop('class_type_id')]  # changing class_type_id to name
+                    group['class_type'] = classtype_name(group['class_type_id'])  # changing class_type_id to name
+                    group.pop('class_type_id')
                     groups.append(group)
                 course['groups'] = groups
                 course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
