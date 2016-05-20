@@ -1,8 +1,8 @@
 # coding=UTF-8
+
 import logging
 from collections import OrderedDict
-from datetime import date, timedelta
-
+from datetime import date, timedelta, datetime
 from bson.objectid import ObjectId
 from tornado import gen
 
@@ -233,7 +233,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get course in order in order_keys as dictionary and reverse sort
         terms_by_order = yield self.get_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
-
         courses_sorted_by_term = list()
         for order_key in terms_by_order:
             courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
@@ -512,7 +511,43 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             term_doc = yield self.usos_term(term_id)
             yield self.insert(constants.COLLECTION_TERMS, term_doc)
 
+        today = date.today()
+        end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
+        if today <= end_date:
+            term_doc['active'] = True
+        else:
+            term_doc['active'] = False
+
         raise gen.Return(term_doc)
+
+    @gen.coroutine
+    def api_terms(self):
+
+        terms = dict()
+        terms_list = list()
+        terms_ordered = list()
+
+        if self.do_refresh():
+            # pobieranie zaimplmentowane już w api_courses_editions
+            pass
+
+        courses_editions_doc = yield self.api_courses_editions()
+
+        if courses_editions_doc:
+            for term_id in courses_editions_doc[constants.COURSE_EDITIONS]:
+                term_doc = yield self.api_term(term_id)
+                terms[term_id] = term_doc
+                terms_list.append(term_id)
+
+            #
+            final = list()
+            terms_by_order = yield self.get_terms_with_order_keys(terms)
+            terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+            for order_key in terms_by_order:
+                final.append(terms)
+                terms_ordered.append({terms_by_order[order_key]: terms[terms_by_order[order_key]]})
+
+        raise gen.Return(terms_ordered)
 
     @gen.coroutine
     def api_user_info(self):

@@ -16,28 +16,12 @@ class TermsApi(BaseHandler, ApiDaoHandler):
     def get(self):
 
         try:
-            terms_docs = []
+            terms_ordered = yield self.api_terms()
 
-            courses_editions_doc = yield self.api_courses_editions()
-
-            if courses_editions_doc:
-                for term_id in courses_editions_doc['course_editions']:
-                    term_doc = yield self.api_term(term_id)
-
-                    term_doc[constants.TERM_ID] = term_id
-                    today = date.today()
-                    end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
-                    if today <= end_date:
-                        term_doc['active'] = True
-                    else:
-                        term_doc['active'] = False
-
-                    terms_docs.append(term_doc)
-
-            if not terms_docs:
-                self.error("Poczekaj szukamy semestrów.")
+            if not terms_ordered:
+                self.error("Poczekaj szukamy cykli")
             else:
-                self.success(terms_docs, 2592000)
+                self.success(terms_ordered, 2592000)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -50,13 +34,6 @@ class TermApi(BaseHandler, ApiDaoHandler):
 
         try:
             term_doc = yield self.api_term(term_id)
-
-            today = date.today()
-            end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
-            if today <= end_date:
-                term_doc['active'] = True
-            else:
-                term_doc['active'] = False
 
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
