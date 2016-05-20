@@ -148,6 +148,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 course_doc = yield self.usos_course(course_id)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=True)
+                raise gen.Return(None)
 
             # change id to value
             course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
