@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import json_util
+from bson.objectid import ObjectId
 from tornado import auth, gen, web
 from tornado import escape
 
@@ -192,7 +193,7 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
             if email and token:
-                self.set_cookie('kujon-mobi-register', 'True')
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
                 self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
 
             yield self.authorize_redirect(extra_params={
@@ -216,7 +217,12 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             if not oauth_token_key or not oauth_verifier:
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
-            user_doc = yield self.find_user()
+            cookie_user_id = self.get_cookie(constants.KUJON_MOBI_REGISTER, default=None)
+            if cookie_user_id:
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: ObjectId(cookie_user_id)})
+            else:
+                user_doc = yield self.find_user()
 
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
@@ -234,14 +240,23 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
-                self.reset_user_cookie(user_doc)
-                self.redirect(settings.DEPLOY_WEB + '/#register')
-                return
+                self.clear_cookie(constants.KUJON_MOBI_REGISTER)
+                if cookie_user_id:
+                    self.fail(message='nie udało się sparować konta USOS', code=501)
+                else:  # WEB registration
+                    self.reset_user_cookie(user_doc)
+                    self.redirect(settings.DEPLOY_WEB + '/#register')
 
             if user_doc:
                 self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
                 user_doc = yield self.get_authenticated_user()
-                current_doc = yield self.find_user()
+
+                if cookie_user_id:
+                    current_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+                        {constants.MONGO_ID: ObjectId(cookie_user_id)})
+                else:
+                    current_doc = yield self.find_user()
+
                 user_doc.update(current_doc)
                 user_doc[constants.USOS_PAIRED] = True
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
@@ -253,8 +268,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 self.db[constants.COLLECTION_JOBS_QUEUE].insert(
                     job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-                if self.get_cookie('kujon-mobi-register', default=None):
-                    self.clear_cookie('kujon-mobi-register')
+                self.clear_cookie(constants.KUJON_MOBI_REGISTER)
+                if cookie_user_id:
                     self.success('Udało się sparować konto USOS.')
                 else:  # WEB registration
                     yield self.email_registration(user_doc)
