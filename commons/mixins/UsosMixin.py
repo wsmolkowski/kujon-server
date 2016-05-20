@@ -87,7 +87,9 @@ class UsosMixin(OAuthMixin):
                                                                                  response.body)
 
             try:
-                future.set_result(escape.json_decode(response.body))
+                resp = escape.json_decode(response.body)
+                resp['code'] = response.code
+                future.set_result(resp)
                 logging.warning(msg)
                 return
             except Exception, ex:
@@ -153,6 +155,8 @@ class UsosMixin(OAuthMixin):
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
         }
         result = yield self.usos_request(path=url, args=args)
+        if 'code' in result:
+            raise UsosClientError('Błedna odpowiedź  course_id: {0}: {1} - {2} '.format(course_id, result['code'], result['message']))
 
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
@@ -165,6 +169,11 @@ class UsosMixin(OAuthMixin):
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
+
+        # change faculty_id to faculty name
+        faculty_doc = yield self.api_faculty(result[constants.FACULTY_ID])
+        if constants.FACULTY_ID in faculty_doc:
+            result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
 
         raise gen.Return(result)
 

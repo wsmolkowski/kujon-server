@@ -216,7 +216,7 @@ class DatabaseHandler(RequestHandler):
             elif isinstance(exception, AuthenticationError):
                 self.error(message=exception.message)
             else:
-                self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem: {0}'.format(exception.message))
 
         raise gen.Return()
 

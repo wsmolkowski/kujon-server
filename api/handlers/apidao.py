@@ -144,18 +144,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            course_doc = yield self.usos_course(course_id)
+            try:
+                course_doc = yield self.usos_course(course_id)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=True)
 
             # change id to value
             course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
                 course_doc['is_currently_conducted'])
-
-            # change faculty_id to faculty name
-            # faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
-            #
-            # course_doc.pop(constants.FACULTY_ID)
-            # if constants.FACULTY_ID in faculty_doc:
-            #     course_doc[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_ID]
 
             yield self.insert(constants.COLLECTION_COURSES, course_doc)
 
@@ -251,8 +247,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             grade.pop(constants.MONGO_ID)
 
             # if there is no grades -> pass
-            if len(grade['grades']['course_grades']) == 0 and \
-                            len(grade['grades']['course_units_grades']) == 0:
+            if grade['grades'] and grade['grades']['course_grades'] and len(grade['grades']['course_grades']) == 0 \
+                    and grade['grades']['course_units_grades'] and len(grade['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}
