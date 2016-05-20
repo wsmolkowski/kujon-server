@@ -428,8 +428,8 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_unsubscribe(self, base_url):
-        result = yield self.usos_request(path='services/events/unsubscribe', base_url=base_url)
+    def usos_unsubscribe(self, usos_doc):
+        result = yield self.usos_request(path='services/events/unsubscribe', base_url=usos_doc[constants.USOS_URL])
         logging.debug('unsubscribe ok')
         raise gen.Return(result)
 
