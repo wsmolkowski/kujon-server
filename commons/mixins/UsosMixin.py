@@ -107,7 +107,7 @@ class UsosMixin(OAuthMixin):
         future.set_result({'photo': b64encode(response.body)})
 
     @gen.coroutine
-    def call_async(self, path, arguments={}):
+    def call_async(self, path, arguments={}, base_url=None):
         '''
             USOS async non authenticated request
 
@@ -115,8 +115,11 @@ class UsosMixin(OAuthMixin):
         :param arguments: service arguments
         :return: json_decode
         '''
+        if not base_url:
+            url = self._oauth_base_uri() + path
+        else:
+            url = base_url + path
 
-        url = self._oauth_base_uri() + path
         url += "?" + urllib_parse.urlencode(arguments)
 
         http_client = utils.http_client()
@@ -436,14 +439,12 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def notifier_status(self, usos_doc):
-        # self.usos_doc = usos_doc FIXME
-        result = yield self.call_async('services/events/notifier_status')
+        result = yield self.call_async(path='services/events/notifier_status', base_url=usos_doc[constants.USOS_URL])
 
         raise gen.Return(result)
 
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
-        self.usos_doc = usos_doc
-        result = yield self.call_async('services/courses/classtypes_index')
+        result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
 
         raise gen.Return(result)
