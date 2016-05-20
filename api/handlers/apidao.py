@@ -38,9 +38,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
-        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSES, pipeline)
@@ -50,6 +50,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
+
                 yield self.insert(constants.COLLECTION_COURSES, course_doc)
             except Exception, ex:
                 logging.exception(ex)
@@ -95,12 +96,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         classtypes = yield self.get_classtypes()
 
-        # change faculty_id to faculty name
-        faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
-
-        course_doc[constants.FACULTY_ID] = faculty_doc
-        if faculty_doc and course_doc[constants.FACULTY_ID] and 'pl' in course_doc[constants.FACULTY_ID]['name']:
-            course_doc[constants.FACULTY_ID]['name'] = course_doc[constants.FACULTY_ID]['name']['pl']
 
         # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition_doc['lecturers']}.values())
@@ -131,6 +126,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
+        # change faculty_id to faculty name
+        faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+        course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
+                                            constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
+
         raise gen.Return(course_doc)
 
     @gen.coroutine
@@ -144,20 +144,25 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            course_doc = yield self.usos_course(course_id)
+            try:
+                course_doc = yield self.usos_course(course_id)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=True)
+                raise gen.Return(None)
+
+            yield self.insert(constants.COLLECTION_COURSES, course_doc)
 
             # change id to value
             course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
                 course_doc['is_currently_conducted'])
 
             # change faculty_id to faculty name
-            faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+            faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+            if not faculty_doc:
+                faculty_doc = yield self.usos_faculty(course_doc[constants.FACULTY_ID])
+            course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
+                                                constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
-            course_doc.pop(constants.FACULTY_ID)
-            if constants.FACULTY_ID in faculty_id:
-                course_doc[constants.FACULTY_ID] = faculty_id
-
-            yield self.insert(constants.COLLECTION_COURSES, course_doc)
 
             if not course_doc:
                 raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
@@ -240,9 +245,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get class_types
         classtypes = yield self.get_classtypes()
 
-        cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
+        pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}
+        limit_fields = ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)
+
+        if self.do_refresh():
+            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
+
+        cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(pipeline, limit_fields).sort(
+            [(constants.TERM_ID, -1)])
         new_grades = []
 
         grades = yield cursor.to_list(None)
@@ -251,8 +261,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             grade.pop(constants.MONGO_ID)
 
             # if there is no grades -> pass
-            if len(grade['grades']['course_grades']) == 0 and \
-                            len(grade['grades']['course_units_grades']) == 0:
+            if grade['grades'] and grade['grades']['course_grades'] and len(grade['grades']['course_grades']) == 0 \
+                    and grade['grades']['course_units_grades'] and len(grade['grades']['course_units_grades']) == 0:
                 continue
 
             units = {}
@@ -529,9 +539,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_user_info_id(self, user_id):
 
-        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.ID: user_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID]}
+        pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
@@ -568,9 +578,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_group(self, course_id, term_id, group_id, finish=True):
-        self.usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.usos_doc[constants.USOS_ID],
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID],
                     constants.TERM_ID: term_id, 'course_unit_id': group_id}
 
         if self.do_refresh():

@@ -112,9 +112,10 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
     @gen.coroutine
     def __subscribe(self):
+
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.usos_doc[constants.MONGO_ID])
+                subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
                 yield self._exc(ex)
@@ -223,28 +224,17 @@ class UsosCrawler(UsosMixin, DaoMixin):
             try:
                 result = yield self.usos_course(course_id)
                 if result:
+
+                    # change faculty_id to faculty name
+                    faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
+                    if not faculty_doc:
+                        faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
+                        yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+
+                    result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
                     yield self.db_insert(constants.COLLECTION_COURSES, result)
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
-            except Exception, ex:
-                yield self._exc(ex)
-
-    @gen.coroutine
-    def __build_faculties(self):
-        faculties = yield self.db_faculties_from_courses(self.usos_id)
-
-        for faculty_id in faculties:
-            faculty_doc = yield self.db_faculty(faculty_id, self.usos_id)
-            if faculty_doc:
-                continue  # faculty already exists
-
-            try:
-                result = yield self.usos_faculty(faculty_id)
-
-                if result:
-                    yield self.db_insert(constants.COLLECTION_FACULTIES, result)
-                else:
-                    logging.warning("no faculty for fac_id: {0} and usos_id: {1)".format(faculty_id, self.usos_id))
             except Exception, ex:
                 yield self._exc(ex)
 
@@ -361,7 +351,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
             yield self.__build_course_edition()
             yield self.__process_user_data()
             yield self.__build_courses()
-            yield self.__build_faculties()
 
         except Exception, ex:
             yield self._exc(ex)
@@ -435,18 +424,18 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
 
-            user_doc = yield self.db_archive_user(user_id)
+            user_doc_archive = yield self.db_archive_user(user_id)
 
-            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
-
-            if not user_doc:
+            if not user_doc_archive:
                 raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            if constants.USOS_ID in user_doc:
+            usos_doc = yield self.db_get_usos(user_doc_archive[constants.USOS_ID])
+
+            if constants.USOS_ID in user_doc_archive:
                 try:
-                    yield self.usos_unsubscribe(usos_doc[constants.USOS_URL])
+                    yield self.usos_unsubscribe(usos_doc, user_doc_archive)
                 except Exception, ex:
                     yield self._exc(ex)
         except Exception, ex:

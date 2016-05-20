@@ -1,90 +1,63 @@
 # coding=UTF-8
+from datetime import datetime
 
-import logging
-
-import oauth2 as oauth
+from bson import json_util
+from tornado import escape
 from tornado import gen
+from tornado.auth import OAuthMixin
 
-from commons import constants, settings
+from commons import constants, settings, utils
+
+try:
+    import urlparse  # py2
+except ImportError:
+    import urllib.parse as urlparse  # py3
+
+try:
+    import urllib.parse as urllib_parse  # py3
+except ImportError:
+    import urllib as urllib_parse  # py2
 
 
-class OAuth2Mixin(object):
-    @staticmethod
-    def validate_response(content, resp):
-        if 'status' not in resp or resp['status'] != '200':
-            raise Exception('Invalid USOS response %s:\n%s' % (resp['status'], content))
+class OAuth2Mixin(OAuthMixin):
+    _OAUTH_CALLBACK_URI = settings.DEPLOY_API + '/authentication/verify'
+    _OAUTH_BASE_URL = None
+    _OAUTH_REQUEST_TOKEN_URL = None
+    _OAUTH_AUTHORIZE_URL = None
+    _OAUTH_ACCESS_TOKEN_URL = None
+    _OAUTH_VERSION = '1.0a'
+    _OAUTH_NO_CALLBACKS = False
+    _CONSUMER_TOKEN = None
 
-    def oauth_client(self, consumer, usos_doc, request_token=None):
-        parameters = self.oauth_parameters
+    def get_auth_http_client(self):
+        return utils.http_client()
 
-        # when USOS have disabled SSL validation
-        if constants.DISABLE_SSL_CERT_VALIDATION in usos_doc and constants.DISABLE_SSL_CERT_VALIDATION:
-            parameters[constants.DISABLE_SSL_CERT_VALIDATION] = True
+    def _oauth_consumer_token(self):
+        return self._CONSUMER_TOKEN
 
-        if request_token:
-            client = oauth.Client(consumer, request_token, **parameters)
-        else:
-            client = oauth.Client(consumer, **parameters)
+    # def _oauth_get_user_future
+    def set_up(self, usos_doc):
+        '''
+            do execute before any other operations
+        :param base_url:
+        :return:
+        '''
 
-        return client
-
-    @gen.coroutine
-    def token_verification(self, usos_doc, token):
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-        request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL],
-            'scopes=studies|offline_access|student_exams|grades|crstests|email|photo|student_exams',
-            settings.CALLBACK_MOBI_URL + '?token=' + token)
-
-        client = self.oauth_client(consumer, usos_doc)
-
-        try:
-            resp, content = client.request(request_token_url)
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
-
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
-
-    @gen.coroutine
-    def usos_token_verification(self, user_doc, usos_doc, oauth_verifier):
-
-        request_token = oauth.Token(user_doc[constants.ACCESS_TOKEN_KEY], user_doc[constants.ACCESS_TOKEN_SECRET])
-        request_token.set_verifier(oauth_verifier)
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
-
-        client = self.oauth_client(consumer, usos_doc, request_token)
-
-        access_token_url = '{0}{1}'.format(usos_doc[constants.USOS_URL], 'services/oauth/access_token')
-        try:
-            resp, content = client.request(access_token_url, 'GET')
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
-
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
+        self._CONSUMER_TOKEN = dict(key=usos_doc[constants.CONSUMER_KEY], secret=usos_doc[constants.CONSUMER_SECRET])
+        self._OAUTH_BASE_URL = usos_doc[constants.USOS_URL]
+        self._OAUTH_REQUEST_TOKEN_URL = '{0}services/oauth/request_token'.format(self._OAUTH_BASE_URL)
+        self._OAUTH_AUTHORIZE_URL = '{0}services/oauth/authorize'.format(self._OAUTH_BASE_URL)
+        self._OAUTH_ACCESS_TOKEN_URL = '{0}services/oauth/access_token'.format(self._OAUTH_BASE_URL)
 
     @gen.coroutine
-    def token_request(self, usos_doc):
-        consumer = oauth.Consumer(usos_doc[constants.CONSUMER_KEY], usos_doc[constants.CONSUMER_SECRET])
+    def _oauth_get_user_future(self, access_token):
+        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
 
-        request_token_url = '{0}services/oauth/request_token?{1}&oauth_callback={2}'.format(
-            usos_doc[constants.USOS_URL], 'scopes=studies|offline_access|student_exams|grades',
-            settings.CALLBACK_URL)
+        user_doc = json_util.loads(escape.json_decode(cookie))
 
-        client = self.oauth_client(consumer, usos_doc)
+        user_doc[constants.USOS_PAIRED] = True
+        user_doc[constants.ACCESS_TOKEN_SECRET] = access_token['secret']
+        user_doc[constants.ACCESS_TOKEN_KEY] = access_token['key']
+        user_doc[constants.UPDATE_TIME] = datetime.now()
 
-        try:
-            resp, content = client.request(request_token_url)
-        except Exception, ex:
-            logging.exception(ex)
-            raise Exception('Wystąpił problem z połączeniem z serwerem USOS {0}'.format(ex.message))
-
-        self.validate_response(content, resp)
-
-        raise gen.Return(content)
+        raise gen.Return(user_doc)

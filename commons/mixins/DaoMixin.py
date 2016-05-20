@@ -142,18 +142,6 @@ class DaoMixin(object):
 
         raise gen.Return(group_doc)
 
-    @gen.coroutine
-    def db_faculties_from_courses(self, usos_id):
-        cursor = self.db[constants.COLLECTION_COURSES].find({constants.USOS_ID: usos_id}, (constants.FACULTY_ID,))
-
-        result = []
-        cursor_list = yield cursor.to_list(None)
-        for faculty in cursor_list:
-            faculty_id = int(faculty[constants.FACULTY_ID])
-            if faculty_id not in result:
-                result.append(faculty_id)
-
-        raise gen.Return(result)
 
     @gen.coroutine
     def db_faculty(self, fac_id, usos_id):
