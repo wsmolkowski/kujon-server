@@ -224,28 +224,17 @@ class UsosCrawler(UsosMixin, DaoMixin):
             try:
                 result = yield self.usos_course(course_id)
                 if result:
+
+                    # change faculty_id to faculty name
+                    faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
+                    if not faculty_doc:
+                        faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
+                    result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
+
+                    yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
                     yield self.db_insert(constants.COLLECTION_COURSES, result)
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
-            except Exception, ex:
-                yield self._exc(ex)
-
-    @gen.coroutine
-    def __build_faculties(self):
-        faculties = yield self.db_faculties_from_courses(self.usos_id)
-
-        for faculty_id in faculties:
-            faculty_doc = yield self.db_faculty(faculty_id, self.usos_id)
-            if faculty_doc:
-                continue  # faculty already exists
-
-            try:
-                result = yield self.usos_faculty(faculty_id)
-
-                if result:
-                    yield self.db_insert(constants.COLLECTION_FACULTIES, result)
-                else:
-                    logging.warning("no faculty for fac_id: {0} and usos_id: {1)".format(faculty_id, self.usos_id))
             except Exception, ex:
                 yield self._exc(ex)
 

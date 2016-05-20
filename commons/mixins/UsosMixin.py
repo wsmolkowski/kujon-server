@@ -170,11 +170,6 @@ class UsosMixin(OAuthMixin):
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 
-        # change faculty_id to faculty name
-        faculty_doc = yield self.api_faculty(result[constants.FACULTY_ID])
-        if constants.FACULTY_ID in faculty_doc:
-            result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
-
         raise gen.Return(result)
 
     @gen.coroutine

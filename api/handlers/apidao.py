@@ -154,6 +154,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
                 course_doc['is_currently_conducted'])
 
+            # change faculty_id to faculty name
+            faculty_doc = yield self.db_faculty(course_doc[constants.FACULTY_ID], self.usos_id)
+            if not faculty_doc:
+                faculty_doc = yield self.usos_faculty(course_doc[constants.FACULTY_ID])
+            course_doc[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
+
             yield self.insert(constants.COLLECTION_COURSES, course_doc)
 
             if not course_doc:
