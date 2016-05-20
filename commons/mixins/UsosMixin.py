@@ -26,9 +26,6 @@ class UsosMixin(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
     _OAUTH_NO_CALLBACKS = False
 
-    def __init__(self):
-        pass
-
     def _oauth_base_uri(self):
         usos_doc = self._find_usos()
         return usos_doc[constants.USOS_URL]
