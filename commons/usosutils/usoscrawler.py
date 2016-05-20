@@ -229,9 +229,9 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
                     if not faculty_doc:
                         faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
-                    result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
+                        yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
 
-                    yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+                    result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
                     yield self.db_insert(constants.COLLECTION_COURSES, result)
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
@@ -351,7 +351,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
             yield self.__build_course_edition()
             yield self.__process_user_data()
             yield self.__build_courses()
-            yield self.__build_faculties()
 
         except Exception, ex:
             yield self._exc(ex)
@@ -434,7 +433,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             usos_doc = yield self.db_get_usos(user_doc_archive[constants.USOS_ID])
 
-            if constants.USOS_ID in self.user_doc:
+            if constants.USOS_ID in user_doc_archive:
                 try:
                     yield self.usos_unsubscribe(usos_doc, user_doc_archive)
                 except Exception, ex:
