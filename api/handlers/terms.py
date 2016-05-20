@@ -1,12 +1,9 @@
 # coding=UTF-8
 
-from datetime import date, datetime
-
 import tornado.web
-
 from apidao import ApiDaoHandler
 from base import BaseHandler
-from commons import constants, decorators
+from commons import decorators
 
 
 class TermsApi(BaseHandler, ApiDaoHandler):
