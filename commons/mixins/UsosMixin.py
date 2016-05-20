@@ -440,11 +440,9 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def notifier_status(self, usos_doc):
         result = yield self.call_async(path='services/events/notifier_status', base_url=usos_doc[constants.USOS_URL])
-
         raise gen.Return(result)
 
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
-
         raise gen.Return(result)

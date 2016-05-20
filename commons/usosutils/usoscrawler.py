@@ -446,7 +446,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             if constants.USOS_ID in user_doc:
                 try:
-                    yield self.usos_unsubscribe(usos_doc[constants.USOS_URL])
+                    yield self.usos_unsubscribe(usos_doc)
                 except Exception, ex:
                     yield self._exc(ex)
         except Exception, ex:
