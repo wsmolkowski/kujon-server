@@ -44,9 +44,6 @@ class UsosMixin(OAuthMixin):
             self.usos_doc = self._find_usos()
         return dict(key=self.usos_doc[constants.CONSUMER_KEY], secret=self.usos_doc[constants.CONSUMER_SECRET])
 
-    def _oauth_access_token(self):
-        return dict(key=self.user_doc[constants.ACCESS_TOKEN_KEY], secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
-
     @_auth_return_future
     def usos_request(self, path, user_doc, callback=None, args={}, photo=False, base_url=None):
         '''
@@ -425,8 +422,8 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_unsubscribe(self, usos_doc, user_doc):
-        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc, base_url=usos_doc[constants.USOS_URL])
+    def usos_unsubscribe(self, usos_doc, user_doc_archi):
+        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc_archi, base_url=usos_doc[constants.USOS_URL])
         logging.debug('unsubscribe ok')
         raise gen.Return(result)
 

@@ -231,7 +231,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                         faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
                         yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
 
-                    result[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_NAME]
+                    result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
                     yield self.db_insert(constants.COLLECTION_COURSES, result)
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
