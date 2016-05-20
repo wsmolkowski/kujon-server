@@ -1,10 +1,11 @@
 # coding=UTF-8
 
-import json
 import logging
 from datetime import datetime, timedelta
 
+from bson import json_util
 from tornado import auth, gen, web
+from tornado import escape
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -33,7 +34,7 @@ class ArchiveHandler(BaseHandler):
         self.redirect(settings.DEPLOY_WEB)
 
 
-class AuthenticationHandler(BaseHandler, OAuth2Mixin):
+class AuthenticationHandler(BaseHandler):
     EXCEPTION_TYPE = 'authentication'
     pass
 
@@ -139,51 +140,71 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class UsosRegisterHandler(AuthenticationHandler):
+class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
     @web.authenticated
     @web.asynchronous
     @gen.coroutine
-    def post(self):
+    def get(self):
+        email = self.get_argument('email', default=None, strip=True)
+        token = self.get_argument('token', default=None, strip=True)
+        usos_id = self.get_argument('usos_id', default=None, strip=True)
+        new_user = False
 
         try:
-            data = json.loads(self.request.body)
-            usos_doc = yield self.get_usos(constants.USOS_ID, data[constants.USOS_ID])
+            usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
 
-            user_doc = yield self.find_user()
+            if email:
+                user_doc = yield self.find_user_email(email)
+                if not user_doc:
+                    user_doc = dict()
+                    new_user = True
+            else:
+                user_doc = yield self.find_user()
+                if not user_doc:
+                    raise AuthenticationError('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
 
-            if not user_doc:
-                raise AuthenticationError('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
+                if constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
+                    raise AuthenticationError(
+                        'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
-                raise AuthenticationError(
-                    'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
+            if email and token:
+                google_token = yield self.google_token(token)
+                yield self.insert_token(google_token)
 
-            content = yield self.token_request(usos_doc)
+            if not usos_doc:
+                self.fail('Nieznany USOS {0}'.format(usos_id))
+                return
 
-            request_token = self.get_token(content)
+            self.set_up(usos_doc)
 
-            # updating to db user access_token_key & access_token_secret
-            access_token_key = request_token.key
-            access_token_secret = request_token.secret
+            user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+            user_doc[constants.UPDATE_TIME] = datetime.now()
 
-            update = user_doc
-            update[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            update[constants.ACCESS_TOKEN_SECRET] = access_token_secret
-            update[constants.ACCESS_TOKEN_KEY] = access_token_key
-            update[constants.UPDATE_TIME] = datetime.now()
+            if email:
+                user_doc[constants.USER_EMAIL] = email
+            if token:
+                user_doc[constants.MOBI_TOKEN] = token
 
-            yield self.update_user(user_doc[constants.MONGO_ID], update)
+            if new_user:
+                user_doc[constants.CREATED_TIME] = datetime.now()
+                yield self.insert_user(user_doc)
+            else:
+                yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
-            authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
-            url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
+            if email and token:
+                self.set_cookie('kujon-mobi-register', 'True')
+                self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
 
-            self.success({'redirect': url_redirect})
+            yield self.authorize_redirect(extra_params={
+                'scopes': 'studies|offline_access|student_exams|grades',
+                'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
+            })
 
         except Exception, ex:
             yield self.exc(ex)
 
 
-class UsosVerificationHandler(AuthenticationHandler):
+class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @web.authenticated
     @web.asynchronous
     @gen.coroutine
@@ -196,7 +217,10 @@ class UsosVerificationHandler(AuthenticationHandler):
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
             user_doc = yield self.find_user()
-            self.usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+
+            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+
+            self.set_up(usos_doc)
 
             if self.get_argument('error', False):
                 updated_user = user_doc
@@ -215,144 +239,28 @@ class UsosVerificationHandler(AuthenticationHandler):
                 return
 
             if user_doc:
-                content = yield self.usos_token_verification(user_doc, self.usos_doc, oauth_verifier)
+                self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
+                user_doc = yield self.get_authenticated_user()
+                current_doc = yield self.find_user()
+                user_doc.update(current_doc)
+                user_doc[constants.USOS_PAIRED] = True
+                yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
-                access_token = self.get_token(content)
-
-                updated_user = user_doc
-                updated_user[constants.USOS_PAIRED] = True
-                updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
-                updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
-                updated_user[constants.UPDATE_TIME] = datetime.now()
-                updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
-
-                yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
-
-                user_doc = yield self.cookie_user_id(updated_user[constants.MONGO_ID])
+                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
                 self.reset_user_cookie(user_doc)
 
                 self.db[constants.COLLECTION_JOBS_QUEUE].insert(
                     job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
-                yield self.email_registration()
-
-                self.redirect(settings.DEPLOY_WEB + '/#home')
+                if self.get_cookie('kujon-mobi-register', default=None):
+                    self.clear_cookie('kujon-mobi-register')
+                    self.success('Udało się sparować konto USOS.')
+                else:  # WEB registration
+                    yield self.email_registration(user_doc)
+                    self.redirect(settings.DEPLOY_WEB + '/#home')
             else:
                 self.redirect(settings.DEPLOY_WEB)
-
-        except Exception, ex:
-            yield self.exc(ex)
-
-
-class MobiAuthHandler(AuthenticationHandler, GoogleMixin):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
-        new_user = False
-        email = self.get_argument('email', default=None, strip=True)
-        token = self.get_argument('token', default=None, strip=True)
-        usos_id = self.get_argument('usos_id', default=None, strip=True)
-
-        try:
-            if not email or not token or not usos_id:
-                raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
-
-            usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
-
-            user_doc = yield self.user_exists(email, usos_id)
-            if user_doc and constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
-                raise AuthenticationError(
-                    'Użytkownik ma już konto połączone z USOS {0}.'.format(user_doc[constants.USOS_ID]))
-
-            user_doc = yield self.find_user_email(email)
-            if not user_doc:
-                user_doc = dict()
-                new_user = True
-
-            google_token = yield self.google_token(token)
-            yield self.insert_token(google_token)
-
-            content = yield self.token_verification(usos_doc, token)
-
-            request_token = self.get_token(content)
-
-            now = datetime.now()
-            user_doc[constants.MOBI_TOKEN] = token
-            user_doc[constants.USER_EMAIL] = email
-            user_doc[constants.USOS_ID] = usos_id
-            user_doc[constants.ACCESS_TOKEN_SECRET] = request_token.secret
-            user_doc[constants.ACCESS_TOKEN_KEY] = request_token.key
-            user_doc[constants.UPDATE_TIME] = now
-
-            if new_user:
-                user_doc[constants.CREATED_TIME] = now
-                yield self.insert_user(user_doc)
-            else:
-                yield self.update_user_email(email, user_doc)
-
-            authorize_url = usos_doc[constants.USOS_URL] + 'services/oauth/authorize'
-            url_redirect = '%s?oauth_token=%s' % (authorize_url, request_token.key)
-            self.redirect(url_redirect)
-
-        except Exception, ex:
-            yield self.exc(ex)
-
-
-class UsosMobiVerificationHandler(AuthenticationHandler):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
-        oauth_verifier = self.get_argument('oauth_verifier')
-        token = self.get_argument('token')
-
-        try:
-            if not oauth_verifier or not token:
-                raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
-
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MOBI_TOKEN: token})
-
-            if self.get_argument('error', False):
-                updated_user = user_doc
-                updated_user[constants.USOS_PAIRED] = False
-                updated_user[constants.ACCESS_TOKEN_SECRET] = None
-                updated_user[constants.ACCESS_TOKEN_KEY] = None
-                updated_user[constants.UPDATE_TIME] = datetime.now()
-                updated_user[constants.OAUTH_VERIFIER] = None
-
-                yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
-
-                self.reset_user_cookie()
-                self.redirect(settings.DEPLOY_WEB + '/#register')
-                return
-
-            if user_doc:
-                usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
-
-                try:
-                    content = yield self.usos_token_verification(user_doc, usos_doc, oauth_verifier)
-                except Exception, ex:
-                    self.error(ex.message)
-                    return
-
-                access_token = self.get_token(content)
-
-                updated_user = user_doc
-                updated_user[constants.USOS_PAIRED] = True
-                updated_user[constants.ACCESS_TOKEN_SECRET] = access_token.secret
-                updated_user[constants.ACCESS_TOKEN_KEY] = access_token.key
-                updated_user[constants.UPDATE_TIME] = datetime.now()
-                updated_user[constants.OAUTH_VERIFIER] = oauth_verifier
-
-                yield self.update_user(user_doc[constants.MONGO_ID], updated_user)
-
-                self.db[constants.COLLECTION_JOBS_QUEUE].insert(
-                    job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
-
-                self.success('Udało się sparować konto USOS.')
-            else:
-                raise AuthenticationError('Nie udało się sprarować konta USOS.')
 
         except Exception, ex:
             yield self.exc(ex)

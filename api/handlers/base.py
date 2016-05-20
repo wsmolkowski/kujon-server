@@ -1,9 +1,8 @@
 # coding=UTF-8
 
 import copy
-import urlparse
 
-import oauth2 as oauth
+# import oauth2 as oauth
 from bson import json_util
 from tornado import gen, web, escape
 from tornado.escape import json_decode
@@ -21,7 +20,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             yield self.get_usoses(showtokens=True)
 
     _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                      constants.USOS_PAIRED)
+                      constants.USOS_PAIRED, constants.USER_EMAIL)
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -127,16 +126,6 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             if u[key] == value:
                 raise gen.Return(u)
         raise gen.Return(None)
-
-    @staticmethod
-    def get_token(content):
-        arr = dict(urlparse.parse_qsl(content))
-        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
-
-    @staticmethod
-    def get_token(content):
-        arr = dict(urlparse.parse_qsl(content))
-        return oauth.Token(arr[constants.OAUTH_TOKEN], arr[constants.OAUTH_TOKEN_SECRET])
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)

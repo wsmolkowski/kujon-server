@@ -245,9 +245,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         # get class_types
         classtypes = yield self.get_classtypes()
 
-        cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
-            ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)).sort([(constants.TERM_ID, -1)])
+        pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID])}
+        limit_fields = ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)
+
+        if self.do_refresh():
+            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
+
+        cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(pipeline, limit_fields).sort(
+            [(constants.TERM_ID, -1)])
         new_grades = []
 
         grades = yield cursor.to_list(None)

@@ -57,6 +57,7 @@ class UsosMixin(OAuthMixin):
         :param base_url: usos_url
         :return: json_decode
         '''
+
         if not base_url:
             url = self._oauth_base_uri() + path
         else:
@@ -125,7 +126,8 @@ class UsosMixin(OAuthMixin):
 
         http_client = utils.http_client()
 
-        request = httpclient.HTTPRequest(url, use_gzip=settings.COMPRESS_RESPONSE, user_agent=settings.PROJECT_TITLE)
+        request = httpclient.HTTPRequest(url, method='GET', use_gzip=settings.COMPRESS_RESPONSE,
+                                         user_agent=settings.PROJECT_TITLE)
 
         try:
             response = yield http_client.fetch(request)

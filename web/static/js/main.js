@@ -170,18 +170,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         };
 
         function registerUsos(usosId){
-            var url = buildApiUrl('/authentication/register');
-            var data = {
-                'usos_id': usosId
-            }
-
-            callAjaxPost(url, data, function(response){
-                if (response.status == 'success' && response.data.redirect !== undefined){
-                    window.location.href = response.data.redirect;
-                } else {
-                    $('#page').html(templateError(response));
-                }
-            });
+            var url = buildApiUrl('/authentication/register?usos_id=' + usosId);
+            window.location.href = url;
         }
 
         /* public methods */
