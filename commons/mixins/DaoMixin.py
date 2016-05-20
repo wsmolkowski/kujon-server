@@ -149,11 +149,7 @@ class DaoMixin(object):
         result = []
         cursor_list = yield cursor.to_list(None)
         for faculty in cursor_list:
-            try:
-                faculty_id = int(faculty[constants.FACULTY_ID])
-            except Exception, ex:
-                logging.exception(ex)
-
+            faculty_id = int(faculty[constants.FACULTY_ID])
             if faculty_id not in result:
                 result.append(faculty_id)
 

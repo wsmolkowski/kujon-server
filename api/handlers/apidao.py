@@ -151,11 +151,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 course_doc['is_currently_conducted'])
 
             # change faculty_id to faculty name
-            faculty_id = yield self.api_faculty(course_doc[constants.FACULTY_ID])
-
-            course_doc.pop(constants.FACULTY_ID)
-            if constants.FACULTY_ID in faculty_id:
-                course_doc[constants.FACULTY_ID] = faculty_id
+            # faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
+            #
+            # course_doc.pop(constants.FACULTY_ID)
+            # if constants.FACULTY_ID in faculty_doc:
+            #     course_doc[constants.FACULTY_ID] = faculty_doc[constants.FACULTY_ID]
 
             yield self.insert(constants.COLLECTION_COURSES, course_doc)
 
