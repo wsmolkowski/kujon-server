@@ -48,14 +48,16 @@ class UsosMixin(OAuthMixin):
         return dict(key=self.user_doc[constants.ACCESS_TOKEN_KEY], secret=self.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     @_auth_return_future
-    def usos_request(self, path, callback=None, args={}, photo=False, base_url=None):
+    def usos_request(self, path, user_doc, callback=None, args={}, photo=False, base_url=None):
         '''
             USOS async authenticated request
 
         :param path: service URI
+        :param user_doc
         :param callback:
         :param args: service arguments
         :param photo: if photo to retrieve
+        :param base_url: usos_url
         :return: json_decode
         '''
         if not base_url:
@@ -63,7 +65,7 @@ class UsosMixin(OAuthMixin):
         else:
             url = base_url + path
 
-        access_token = self._oauth_access_token()
+        access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY], secret=user_doc[constants.ACCESS_TOKEN_SECRET])
 
         # Add the OAuth resource request signature if we have credentials
         method = "GET"
@@ -154,7 +156,7 @@ class UsosMixin(OAuthMixin):
             'course_id': course_id,
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
         }
-        result = yield self.usos_request(path=url, args=args)
+        result = yield self.usos_request(path=url, user_doc=self.user_doc, args=args)
         if 'code' in result:
             raise UsosClientError('Błedna odpowiedź  course_id: {0}: {1} - {2} '.format(course_id, result['code'], result['message']))
 
@@ -190,7 +192,7 @@ class UsosMixin(OAuthMixin):
 
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/users/user', args={
+        result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
             'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
         })
 
@@ -218,7 +220,7 @@ class UsosMixin(OAuthMixin):
 
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/users/user', args={
+        result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
             'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url',
             'user_id': user_id
         })
@@ -279,7 +281,7 @@ class UsosMixin(OAuthMixin):
     def usos_courses_editions(self):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/courses/user', args={
+        result = yield self.usos_request(path='services/courses/user', user_doc=self.user_doc, args={
             'fields': 'course_editions[course_id|course_name|term_id|course_units_ids]',
             'active_terms_only': 'false',
         })
@@ -308,7 +310,7 @@ class UsosMixin(OAuthMixin):
                     'course_id': course_id,
                     'term_id': term_id
                 }
-            result = yield self.usos_request(path='services/courses/course_edition', args=args)
+            result = yield self.usos_request(path='services/courses/course_edition', user_doc=self.user_doc, args=args)
         except Exception, ex:
             logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
@@ -355,7 +357,7 @@ class UsosMixin(OAuthMixin):
     def usos_photo(self, user_info_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/photos/photo', args={
+        result = yield self.usos_request(path='services/photos/photo', user_doc=self.user_doc, args={
             'user_id': user_info_id,
         }, photo=True)
 
@@ -386,7 +388,7 @@ class UsosMixin(OAuthMixin):
     def time_table(self, given_date):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/tt/user', args={
+        result = yield self.usos_request(path='services/tt/user', user_doc=self.user_doc, args={
             'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
             'start': given_date,
             'days': '7'
@@ -406,7 +408,7 @@ class UsosMixin(OAuthMixin):
     def usos_subscribe(self, event_type, verify_token):
         create_time = datetime.now()
         try:
-            result = yield self.usos_request(path='services/events/subscribe_event', args={
+            result = yield self.usos_request(path='services/events/subscribe_event', user_doc=self.user_doc, args={
                 'event_type': event_type,
                 'callback_url': settings.DEPLOY_EVENT,
                 'verify_token': verify_token
@@ -423,8 +425,8 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_unsubscribe(self, usos_doc):
-        result = yield self.usos_request(path='services/events/unsubscribe', base_url=usos_doc[constants.USOS_URL])
+    def usos_unsubscribe(self, usos_doc, user_doc):
+        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc, base_url=usos_doc[constants.USOS_URL])
         logging.debug('unsubscribe ok')
         raise gen.Return(result)
 
@@ -432,7 +434,7 @@ class UsosMixin(OAuthMixin):
     def subscriptions(self):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/events/subscriptions')
+        result = yield self.usos_request(path='services/events/subscriptions', user_doc=self.user_doc)
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time

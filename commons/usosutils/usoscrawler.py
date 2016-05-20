@@ -425,18 +425,18 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
 
-            user_doc = yield self.db_archive_user(user_id)
+            user_doc_archive = yield self.db_archive_user(user_id)
 
-            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
-
-            if not user_doc:
+            if not user_doc_archive:
                 raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            if constants.USOS_ID in user_doc:
+            usos_doc = yield self.db_get_usos(user_doc_archive[constants.USOS_ID])
+
+            if constants.USOS_ID in self.user_doc:
                 try:
-                    yield self.usos_unsubscribe(usos_doc)
+                    yield self.usos_unsubscribe(usos_doc, user_doc_archive)
                 except Exception, ex:
                     yield self._exc(ex)
         except Exception, ex:
