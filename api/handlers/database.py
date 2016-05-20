@@ -60,7 +60,7 @@ class DatabaseHandler(RequestHandler):
     def email_registration(self):
 
         user_doc = yield self.find_user()
-        yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
         recipient = user_doc[constants.USER_EMAIL]
 
         email_job = email_factory.email_job(
@@ -72,7 +72,7 @@ class DatabaseHandler(RequestHandler):
             '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(self.usos_doc['name'], settings.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
         )
 
         yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)

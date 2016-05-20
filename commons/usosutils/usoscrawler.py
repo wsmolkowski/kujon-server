@@ -112,9 +112,10 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
     @gen.coroutine
     def __subscribe(self):
+
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.usos_doc[constants.MONGO_ID])
+                subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
                 yield self._exc(ex)
