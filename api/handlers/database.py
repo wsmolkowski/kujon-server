@@ -57,9 +57,8 @@ class DatabaseHandler(RequestHandler):
         yield self.email_archive_user(user_doc[constants.USER_EMAIL])
 
     @gen.coroutine
-    def email_registration(self):
+    def email_registration(self, user_doc):
 
-        user_doc = yield self.find_user()
         usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
         recipient = user_doc[constants.USER_EMAIL]
 
