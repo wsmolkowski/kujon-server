@@ -179,6 +179,7 @@ class UsosMixin(OAuthMixin):
 
         result = yield self.call_async('services/terms/term', arguments={'term_id': term_id})
 
+        result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
