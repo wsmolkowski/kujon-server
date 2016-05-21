@@ -571,8 +571,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
 
             # fetch programmes if needed
-            for programme in user_info_doc['student_programmes']:
-                yield self.api_programme(programme['programme'][constants.ID])
+            if 'student_programmes' in user_info_doc:
+                for programme in user_info_doc['student_programmes']:
+                    yield self.api_programme(programme['programme'][constants.ID])
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
