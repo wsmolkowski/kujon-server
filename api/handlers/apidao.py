@@ -123,7 +123,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         term_doc = yield self.api_term(term_id)
 
         if term_doc:
-            term_doc['name'] = term_doc['name']['pl']
             course_doc['term'] = term_doc
 
         # change faculty_id to faculty name
