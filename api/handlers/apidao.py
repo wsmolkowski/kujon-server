@@ -539,13 +539,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 terms[term_id] = term_doc
                 terms_list.append(term_id)
 
-            #
-            final = list()
+            # order terms from newset
             terms_by_order = yield self.get_terms_with_order_keys(terms)
             terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
             for order_key in terms_by_order:
-                final.append(terms)
-                terms_ordered.append({terms_by_order[order_key]: terms[terms_by_order[order_key]]})
+                terms_ordered.append(terms[terms_by_order[order_key]])
 
         raise gen.Return(terms_ordered)
 
