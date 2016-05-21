@@ -3,11 +3,10 @@ import functools
 import logging
 from base64 import b64encode
 from datetime import datetime
-
 from tornado import gen, escape
 from tornado import httpclient
 from tornado.auth import OAuthMixin, _auth_return_future
-
+from commons.usosutils import usoshelper
 from commons import constants, utils, settings
 from commons.errors import UsosClientError
 
@@ -188,13 +187,21 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_user_info(self):
+    def usos_user_info(self, user_id):
 
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
-            'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
-        })
+        fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
+
+        if user_id:
+            result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
+                'fields': fields,
+                'user_id': user_id
+            })
+        else:
+            result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
+                'fields': fields
+            })
 
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
@@ -209,38 +216,13 @@ class UsosMixin(OAuthMixin):
         if result['homepage_url'] and result['homepage_url'] == "":
             result['homepage_url'] = None
 
-        # strip english names from programmes description
-        for programme in result['student_programmes']:
-            programme['programme']['description'] = programme['programme']['description']['pl']
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_user_info_id(self, user_id):
-
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
-            'fields': 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url',
-            'user_id': user_id
-        })
-
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
-        # strip english values and if value is empty change to None
-        result['office_hours'] = result['office_hours']['pl']
-        result['interests'] = result['interests']['pl']
-
-        # strip empty values
-        if result['homepage_url'] and result['homepage_url'] == "":
-            result['homepage_url'] = None
+        if 'student_status' in result:
+            result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
 
         # strip english names from programmes description
         for programme in result['student_programmes']:
             programme['programme']['description'] = programme['programme']['description']['pl']
+            yield self.api_programme(programme['programme']['id'])
 
         raise gen.Return(result)
 
@@ -334,7 +316,6 @@ class UsosMixin(OAuthMixin):
             'programme_id': programme_id,
         })
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -345,6 +326,7 @@ class UsosMixin(OAuthMixin):
         result['name'] = result['name']['pl']
         result['mode_of_studies'] = result['mode_of_studies']['pl']
         result['level_of_studies'] = result['level_of_studies']['pl']
+        result['professional_status'] = result['professional_status']['pl']
         result['duration'] = result['duration']['pl']
         if 'faculty' in result and 'name' in result['faculty']:
             result['faculty']['name'] = result['faculty']['name']['pl']

@@ -162,7 +162,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
-
             if not course_doc:
                 raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
 
@@ -558,7 +557,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
-            user_info_doc = yield self.usos_user_info()
+            user_info_doc = yield self.usos_user_info(None)
 
             if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
@@ -581,7 +580,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
-            user_info_doc = yield self.usos_user_info_id(user_id)
+            user_info_doc = yield self.usos_user_info(user_id)
             user_info_doc[constants.USER_ID] = user_id
 
             # if user has photo
