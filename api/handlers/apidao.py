@@ -64,9 +64,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
         if not user_id:
-            user_info_doc = yield self.api_user_info()
+            user_info_doc = yield self.api_user_info(None)
         else:
-            user_info_doc = yield self.api_user_info_id(user_id)
+            user_info_doc = yield self.api_user_info(user_id)
 
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
@@ -161,7 +161,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 faculty_doc = yield self.usos_faculty(course_doc[constants.FACULTY_ID])
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
-
 
             if not course_doc:
                 raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
@@ -362,7 +361,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_lecturer(self, user_info_id):
 
-        user_info = yield self.api_user_info_id(user_info_id)
+        user_info = yield self.api_user_info(user_info_id)
 
         if not user_info:
             raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
@@ -407,10 +406,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_programmes(self):
-        user_info = yield self.api_user_info()
+
+        user_info = yield self.api_user_info(None)
 
         if not user_info:
-            raise ApiError("Szukamy danych o Twoich kursach")
+            raise ApiError("Brak danych o użytkowniku.")
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -487,7 +487,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
                     {constants.ID: str(lecturer)}, lecturer_keys)
                 if not lecturer_info:
-                    lecturer_info = yield self.api_user_info_id(str(lecturer))
+                    lecturer_info = yield self.api_user_info(str(lecturer))
                     lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
                     if not lecturer_info:
                         exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
@@ -547,29 +547,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(terms_ordered)
 
     @gen.coroutine
-    def api_user_info(self):
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+    def api_user_info(self, user_id):
 
-        pipeline = {constants.USER_ID: user_id}
-
-        if self.do_refresh():
-            yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
-
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
-
-        if not user_info_doc:
-            user_info_doc = yield self.usos_user_info()
-
-            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
-                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
-                user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
-
-            yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-
-        raise gen.Return(user_info_doc)
-
-    @gen.coroutine
-    def api_user_info_id(self, user_id):
+        if not user_id:
+            user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
@@ -581,13 +562,17 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
-            user_info_doc = yield self.usos_user_info_id(user_id)
+            user_info_doc = yield self.usos_user_info(user_id)
             user_info_doc[constants.USER_ID] = user_id
 
             # if user has photo
             if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
                 user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
+
+            # fetch programmes if needed
+            for programme in user_info_doc['student_programmes']:
+                yield self.api_programme(programme['programme'][constants.ID])
 
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
 
