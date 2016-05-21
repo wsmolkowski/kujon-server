@@ -214,15 +214,16 @@ class UsosMixin(OAuthMixin):
             result['interests'] = result['interests']['pl']
 
         # strip empty values
-        if result['homepage_url'] and result['homepage_url'] == "":
+        if 'homepage_url' in result and result['homepage_url'] == "":
             result['homepage_url'] = None
 
         if 'student_status' in result:
             result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
 
         # strip english names from programmes description
-        for programme in result['student_programmes']:
-            programme['programme']['description'] = programme['programme']['description']['pl']
+        if 'student_programmes' in result:
+            for programme in result['student_programmes']:
+                programme['programme']['description'] = programme['programme']['description']['pl']
 
         raise gen.Return(result)
 
