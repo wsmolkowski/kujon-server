@@ -92,7 +92,7 @@ class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        user_info = yield self.api_user_info()
+        user_info = yield self.api_user_info(None)
 
         courses = {}
         suggested_participants = {}

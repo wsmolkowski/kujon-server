@@ -26,7 +26,7 @@ class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
     def get(self, user_info_id):
 
         try:
-            user_info = yield self.api_user_info_id(user_id=user_info_id)
+            user_info = yield self.api_user_info(user_id=user_info_id)
 
             if user_info:
                 if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
@@ -55,7 +55,7 @@ class UserInfoApi(BaseHandler, ApiDaoHandler):
                 {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
 
-            user_info = yield self.api_user_info()
+            user_info = yield self.api_user_info(None)
 
             if not user_info or not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
