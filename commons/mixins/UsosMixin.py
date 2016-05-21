@@ -209,8 +209,9 @@ class UsosMixin(OAuthMixin):
         result[constants.UPDATE_TIME] = create_time
 
         # strip english values and if value is empty change to None
-        result['office_hours'] = result['office_hours']['pl']
-        result['interests'] = result['interests']['pl']
+        if 'office_hours' in result and 'pl' in result['office_hours']:
+            result['office_hours'] = result['office_hours']['pl']
+            result['interests'] = result['interests']['pl']
 
         # strip empty values
         if result['homepage_url'] and result['homepage_url'] == "":
