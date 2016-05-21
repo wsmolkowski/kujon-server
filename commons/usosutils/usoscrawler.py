@@ -67,7 +67,9 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
     @gen.coroutine
     def __build_user_info(self, user_info_id=None):
+
         user_info_doc = yield self.db_users_info_by_user_id(self.user_id, self.usos_id)
+
         if self.user_id and user_info_doc:
             logging.debug("not building user info - it already exists for %r", self.user_id)
             raise gen.Return(user_info_doc[constants.ID])

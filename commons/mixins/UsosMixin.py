@@ -222,7 +222,6 @@ class UsosMixin(OAuthMixin):
         # strip english names from programmes description
         for programme in result['student_programmes']:
             programme['programme']['description'] = programme['programme']['description']['pl']
-            yield self.api_programme(programme['programme']['id'])
 
         raise gen.Return(result)
 
