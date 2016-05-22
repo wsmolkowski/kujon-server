@@ -3,6 +3,7 @@
 import logging
 from collections import OrderedDict
 from datetime import date, timedelta, datetime
+
 from bson.objectid import ObjectId
 from tornado import gen
 
@@ -64,7 +65,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
 
         if not user_id:
-            user_info_doc = yield self.api_user_info(None)
+            user_info_doc = yield self.api_user_info()
         else:
             user_info_doc = yield self.api_user_info(user_id)
 
@@ -407,7 +408,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_programmes(self):
 
-        user_info = yield self.api_user_info(None)
+        user_info = yield self.api_user_info()
 
         if not user_info:
             raise ApiError("Brak danych o użytkowniku.")
@@ -547,7 +548,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         raise gen.Return(terms_ordered)
 
     @gen.coroutine
-    def api_user_info(self, user_id):
+    def api_user_info(self, user_id=None):
 
         if not user_id:
             user_id = ObjectId(self.user_doc[constants.MONGO_ID])

@@ -4,7 +4,6 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import json_util
-from bson.objectid import ObjectId
 from tornado import auth, gen, web
 from tornado import escape
 
@@ -189,12 +188,12 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
             if new_user:
                 user_doc[constants.CREATED_TIME] = datetime.now()
                 yield self.insert_user(user_doc)
+                logging.info('insert: ' + str(user_doc))
+                self.set_secure_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
             else:
-                yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
-
-            if email and token:
-                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
-                self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
+                update_doc = yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
+                logging.info('update: ' + str(update_doc))
+                self.set_secure_cookie(constants.KUJON_MOBI_REGISTER, str(update_doc[constants.MONGO_ID]))
 
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades',
@@ -217,13 +216,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             if not oauth_token_key or not oauth_verifier:
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
-            cookie_user_id = self.get_cookie(constants.KUJON_MOBI_REGISTER, default=None)
-            if cookie_user_id:
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: ObjectId(cookie_user_id)})
-            else:
-                user_doc = yield self.find_user()
-
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: oauth_token_key})
+            a = yield self.find_user()
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             self.set_up(usos_doc)
@@ -241,23 +235,14 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
-                if cookie_user_id:
-                    self.fail(message='nie udało się sparować konta USOS', code=501)
-                else:  # WEB registration
-                    self.reset_user_cookie(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/#register')
+                self.reset_user_cookie(user_doc)
+                self.redirect(settings.DEPLOY_WEB + '/#register')
 
             if user_doc:
                 self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
-                user_doc = yield self.get_authenticated_user()
+                auth_user_doc = yield self.get_authenticated_user()
 
-                if cookie_user_id:
-                    current_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                        {constants.MONGO_ID: ObjectId(cookie_user_id)})
-                else:
-                    current_doc = yield self.find_user()
-
-                user_doc.update(current_doc)
+                user_doc.update(auth_user_doc)
                 user_doc[constants.USOS_PAIRED] = True
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 

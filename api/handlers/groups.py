@@ -16,7 +16,7 @@ class GroupsApi(BaseHandler, ApiDaoHandler):
     def get(self, course):
 
         try:
-            user_info = yield self.api_user_info(None)
+            user_info = yield self.api_user_info()
 
             programmes = []
             for program in user_info['student_programmes']:
