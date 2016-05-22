@@ -158,7 +158,8 @@ class UsosMixin(OAuthMixin):
         }
         result = yield self.usos_request(path=url, user_doc=self.user_doc, args=args)
         if 'code' in result:
-            raise UsosClientError('Błedna odpowiedź  course_id: {0}: {1} - {2} '.format(course_id, result['code'], result['message']))
+            raise UsosClientError(
+                'Błedna odpowiedź  course_id: {0}: {1} - {2} '.format(course_id, result['code'], result['message']))
 
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
@@ -410,8 +411,9 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_unsubscribe(self, usos_doc, user_doc_archi):
-        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc_archi, base_url=usos_doc[constants.USOS_URL])
+    def usos_unsubscribe(self, usos_doc, user_doc):
+        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc,
+                                         base_url=usos_doc[constants.USOS_URL])
         logging.debug('unsubscribe ok')
         raise gen.Return(result)
 
