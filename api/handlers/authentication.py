@@ -244,10 +244,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             if user_doc:
 
-                current_user = yield self.get_authenticated_user()
-                user_doc.update(current_user)
-                user_doc[constants.USOS_PAIRED] = True
-                user_doc[constants.UPDATE_TIME] = datetime.now()
+                auth_user = yield self.get_authenticated_user()  # dict with access_token key/secret
+                user_doc.update(auth_user)
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
@@ -259,8 +257,14 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
-                yield self.email_registration(user_doc)
-                self.redirect(settings.DEPLOY_WEB + '/#home')
+                header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+                header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+
+                if header_email and header_token:
+                    self.success('Udało się sparować konto USOS')
+                else:
+                    yield self.email_registration(user_doc)
+                    self.redirect(settings.DEPLOY_WEB + '/#home')
             else:
                 self.redirect(settings.DEPLOY_WEB)
 
