@@ -550,12 +550,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     @gen.coroutine
     def api_user_info(self, user_id=None):
 
-        if not user_id:
-            user_id = ObjectId(self.user_doc[constants.MONGO_ID])
-
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+        if not user_id:
+            user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+            pipeline = {constants.USER_ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+
+        else:
+            pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
