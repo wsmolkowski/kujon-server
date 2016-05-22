@@ -1,8 +1,6 @@
 # coding=UTF-8
 from datetime import datetime
 
-from bson import json_util
-from tornado import escape
 from tornado import gen
 from tornado.auth import OAuthMixin
 
@@ -51,13 +49,10 @@ class OAuth2Mixin(OAuthMixin):
 
     @gen.coroutine
     def _oauth_get_user_future(self, access_token):
-        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+        response = dict()
+        response[constants.USOS_PAIRED] = True
+        response[constants.ACCESS_TOKEN_SECRET] = access_token['secret']
+        response[constants.ACCESS_TOKEN_KEY] = access_token['key']
+        response[constants.UPDATE_TIME] = datetime.now()
 
-        user_doc = json_util.loads(escape.json_decode(cookie))
-
-        user_doc[constants.USOS_PAIRED] = True
-        user_doc[constants.ACCESS_TOKEN_SECRET] = access_token['secret']
-        user_doc[constants.ACCESS_TOKEN_KEY] = access_token['key']
-        user_doc[constants.UPDATE_TIME] = datetime.now()
-
-        raise gen.Return(user_doc)
+        raise gen.Return(response)
