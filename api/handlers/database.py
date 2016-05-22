@@ -125,6 +125,7 @@ class DatabaseHandler(RequestHandler):
     def update(self, collection, _id, document):
         updated = yield self.db[collection].update({constants.MONGO_ID: _id}, document)
         logging.debug('collection: {0} updated: {1}'.format(collection, updated))
+        raise gen.Return(updated)
 
     @gen.coroutine
     def current_user(self, email):
@@ -137,7 +138,8 @@ class DatabaseHandler(RequestHandler):
 
     @gen.coroutine
     def update_user(self, _id, document):
-        yield self.update(constants.COLLECTION_USERS, _id, document)
+        update_doc = yield self.update(constants.COLLECTION_USERS, _id, document)
+        raise gen.Return(update_doc)
 
     @gen.coroutine
     def update_user_email(self, email, document):
