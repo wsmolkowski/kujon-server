@@ -243,6 +243,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 self.redirect(settings.DEPLOY_WEB + '/#register')
 
             if user_doc:
+
+                current_user = yield self.get_authenticated_user()
+                user_doc.update(current_user)
                 user_doc[constants.USOS_PAIRED] = True
                 user_doc[constants.UPDATE_TIME] = datetime.now()
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
