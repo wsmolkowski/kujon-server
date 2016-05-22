@@ -34,7 +34,7 @@ class FacultiesApi(BaseHandler, ApiDaoHandler):
     @tornado.gen.coroutine
     def get(self):
         try:
-            users_info_doc = yield self.api_user_info(None)
+            users_info_doc = yield self.api_user_info()
 
             # get programmes for user
             programmes_ids = list()

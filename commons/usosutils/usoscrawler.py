@@ -77,7 +77,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
             if user_info_id:
                 result = yield self.usos_user_info(user_info_id)
             else:
-                result = yield self.usos_user_info(None)
+                result = yield self.usos_user_info()
 
             # if user has photo - download
             if constants.HAS_PHOTO in result and result[constants.HAS_PHOTO]:

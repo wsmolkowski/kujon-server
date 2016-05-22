@@ -10,7 +10,6 @@ from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import constants, settings, decorators
 from commons.errors import ApiError
-from commons.usosutils import usoshelper
 from commons.usosutils import usosinstances
 
 
@@ -55,7 +54,7 @@ class UserInfoApi(BaseHandler, ApiDaoHandler):
                 {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
 
-            user_info = yield self.api_user_info(None)
+            user_info = yield self.api_user_info()
 
             if not user_info or not user_info:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')

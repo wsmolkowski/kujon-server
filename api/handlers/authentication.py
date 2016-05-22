@@ -3,10 +3,8 @@
 import logging
 from datetime import datetime, timedelta
 
-from bson import json_util
-from bson.objectid import ObjectId
+from bson import ObjectId
 from tornado import auth, gen, web
-from tornado import escape
 
 from base import BaseHandler
 from commons import constants, settings, decorators
@@ -188,13 +186,12 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
 
             if new_user:
                 user_doc[constants.CREATED_TIME] = datetime.now()
-                yield self.insert_user(user_doc)
+                new_id = yield self.insert_user(user_doc)
+                logging.info('insert: ' + str(new_id))
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
             else:
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
-
-            if email and token:
                 self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
-                self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
 
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades',
@@ -217,12 +214,13 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             if not oauth_token_key or not oauth_verifier:
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
-            cookie_user_id = self.get_cookie(constants.KUJON_MOBI_REGISTER, default=None)
-            if cookie_user_id:
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: ObjectId(cookie_user_id)})
-            else:
-                user_doc = yield self.find_user()
+            user_id = self.get_cookie(constants.KUJON_MOBI_REGISTER)
+            logging.info('verifying user: {0} for oauth_token: {1} and oauth_verifier: {2}'.format(
+                user_id, oauth_token_key, oauth_token_key
+            ))
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
+
+            self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
             usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
@@ -241,24 +239,12 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
-                if cookie_user_id:
-                    self.fail(message='nie udało się sparować konta USOS', code=501)
-                else:  # WEB registration
-                    self.reset_user_cookie(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/#register')
+                self.reset_user_cookie(user_doc)
+                self.redirect(settings.DEPLOY_WEB + '/#register')
 
             if user_doc:
-                self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
-                user_doc = yield self.get_authenticated_user()
-
-                if cookie_user_id:
-                    current_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                        {constants.MONGO_ID: ObjectId(cookie_user_id)})
-                else:
-                    current_doc = yield self.find_user()
-
-                user_doc.update(current_doc)
                 user_doc[constants.USOS_PAIRED] = True
+                user_doc[constants.UPDATE_TIME] = datetime.now()
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
@@ -269,11 +255,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                     job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
-                if cookie_user_id:
-                    self.success('Udało się sparować konto USOS.')
-                else:  # WEB registration
-                    yield self.email_registration(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/#home')
+
+                yield self.email_registration(user_doc)
+                self.redirect(settings.DEPLOY_WEB + '/#home')
             else:
                 self.redirect(settings.DEPLOY_WEB)
 

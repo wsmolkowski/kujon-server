@@ -3,12 +3,14 @@ import functools
 import logging
 from base64 import b64encode
 from datetime import datetime
+
 from tornado import gen, escape
 from tornado import httpclient
 from tornado.auth import OAuthMixin, _auth_return_future
-from commons.usosutils import usoshelper
+
 from commons import constants, utils, settings
 from commons.errors import UsosClientError
+from commons.usosutils import usoshelper
 
 try:
     import urlparse  # py2
@@ -187,7 +189,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_user_info(self, user_id):
+    def usos_user_info(self, user_id=None):
 
         create_time = datetime.now()
 
