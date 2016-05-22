@@ -25,7 +25,6 @@ fi
 # Install all required Python packages
 echo -e "\n\nInstalled required Python packages with pip . . ."
 pip install tornado
-pip install oauth2
 pip install pycurl
 pip install pycrypto
 pip install pymongo
