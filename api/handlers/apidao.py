@@ -259,8 +259,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             grade.pop(constants.MONGO_ID)
 
             # if there is no grades -> pass
-            if grade['grades'] and grade['grades']['course_grades'] and len(grade['grades']['course_grades']) == 0 \
-                    and grade['grades']['course_units_grades'] and len(grade['grades']['course_units_grades']) == 0:
+            if not 'grades' in grade or not 'course_grades' in grade['grades'] or 'course_units_grades' not in grade['grades'] \
+                    or (len(grade['grades']['course_grades']) == 0 and len(grade['grades']['course_units_grades']) == 0):
                 continue
 
             units = {}
