@@ -39,11 +39,51 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         return False
 
     @gen.coroutine
+    def api_courses_editions(self):
+        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+
+        pipeline = {constants.USER_ID: user_id}
+
+        if self.do_refresh():
+            yield self.remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
+
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+            pipeline, (constants.COURSE_EDITIONS,))
+
+        if not courses_editions_doc:
+            courses_editions_doc = yield self.usos_courses_editions()
+            yield self.insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
+
+        raise gen.Return(courses_editions_doc)
+
+    @gen.coroutine
+    def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
+        pipeline = {constants.COURSE_ID: course_id,
+                    constants.TERM_ID: term_id,
+                    constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                    constants.USER_ID: self.user_doc[constants.MONGO_ID]}
+
+        if self.do_refresh():
+            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
+
+        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
+
+        if not course_edition_doc:
+            try:
+                course_edition_doc = yield self.usos_course_edition(course_id, term_id, fetch_participants)
+                yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
+            except UsosClientError, ex:
+                raise self.exc(ex, finish=finish)
+
+        raise gen.Return(course_edition_doc)
+
+    @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         pipeline = {constants.COURSE_ID: course_id,
-                    constants.USOS_ID: usos_doc[constants.USOS_ID]}
+                    constants.USOS_ID: usos_doc[constants.USOS_ID],
+                    constants.USER_ID: self.user_doc[constants.MONGO_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSES, pipeline)
@@ -79,12 +119,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             # sort participants
             course_doc['participants'] = sorted(course_edition_doc['participants'], key=lambda k: k['last_name'])
 
-            # check if user can see this course_edition (is on participant list)
-            # if not helpers.search_key_value_onlist(course_doc['participants'], constants.USER_ID,
-            #                                        user_info_doc[constants.ID]):
-            #     raise ApiError("Nie masz uprawnień do wyświetlenie tej edycji kursu.", (course_id, term_id))
-            # else:
-            #     # remove from participant list current user
             participants = course_doc['participants']
             for participant in course_doc['participants']:
                 if participant[constants.USER_ID] == user_info_doc[constants.ID]:
@@ -522,7 +556,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_id:
             pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.USOS_ID: usos_doc[constants.USOS_ID]}
         else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+            pipeline = {constants.ID: str(user_id), constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_USERS_INFO, pipeline)
@@ -582,45 +616,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(group_doc)
-
-    @gen.coroutine
-    def api_courses_editions(self):
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
-
-        pipeline = {constants.USER_ID: user_id}
-
-        if self.do_refresh():
-            yield self.remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
-
-        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            pipeline, (constants.COURSE_EDITIONS,))
-
-        if not courses_editions_doc:
-            courses_editions_doc = yield self.usos_courses_editions()
-            yield self.insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
-
-        raise gen.Return(courses_editions_doc)
-
-    @gen.coroutine
-    def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
-        pipeline = {constants.COURSE_ID: course_id,
-                    constants.TERM_ID: term_id,
-                    constants.USOS_ID: self.user_doc[constants.USOS_ID],
-                    constants.USER_ID: self.user_doc[constants.MONGO_ID]}
-
-        if self.do_refresh():
-            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
-
-        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
-
-        if not course_edition_doc:
-            try:
-                course_edition_doc = yield self.usos_course_edition(course_id, term_id, fetch_participants)
-                yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
-            except UsosClientError, ex:
-                raise self.exc(ex, finish=finish)
-
-        raise gen.Return(course_edition_doc)
 
     @gen.coroutine
     def api_photo(self, user_info_id):

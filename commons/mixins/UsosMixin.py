@@ -264,7 +264,6 @@ class UsosMixin(OAuthMixin):
                     yield self.exc(ex, finish=False)
             result['course_editions_conducted'] = courses_conducted
 
-
         raise gen.Return(result)
 
     @gen.coroutine
