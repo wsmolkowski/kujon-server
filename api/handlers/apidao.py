@@ -249,13 +249,14 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
+            yield self.api_courses_editions()
 
         cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(pipeline, limit_fields).sort(
             [(constants.TERM_ID, -1)])
-        new_grades = []
 
         grades = yield cursor.to_list(None)
 
+        grades_sorted = list()
         for grade in grades:
             grade.pop(constants.MONGO_ID)
 
@@ -296,7 +297,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                         elem[constants.COURSE_ID] = grade[constants.COURSE_ID]
                         elem[constants.COURSE_NAME] = grade[constants.COURSE_NAME]
                         elem[constants.TERM_ID] = grade[constants.TERM_ID]
-                        new_grades.append(elem)
+                        grades_sorted.append(elem)
             else:  # final grade no partials
                 for egzam in grade['grades']['course_grades']:
                     elem = grade['grades']['course_grades'][egzam]
@@ -305,9 +306,9 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     elem[constants.COURSE_ID] = grade[constants.COURSE_ID]
                     elem[constants.COURSE_NAME] = grade[constants.COURSE_NAME]
                     elem[constants.TERM_ID] = grade[constants.TERM_ID]
-                    new_grades.append(elem)
+                    grades_sorted.append(elem)
 
-        raise gen.Return(new_grades)
+        raise gen.Return(grades_sorted)
 
     @gen.coroutine
     def api_grades_byterm(self):
@@ -626,7 +627,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         pipeline = {constants.USER_ID: user_id}
 
         if self.do_refresh():
-            yield self.remove(constants.COLLECTION_GROUPS, pipeline)
+            yield self.remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
 
         courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
             pipeline, (constants.COURSE_EDITIONS,))
