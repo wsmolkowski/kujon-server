@@ -307,8 +307,7 @@ class UsosMixin(OAuthMixin):
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
-        if fetch_participants:
-            result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
         raise gen.Return(result)
 

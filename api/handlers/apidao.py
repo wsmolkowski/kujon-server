@@ -41,7 +41,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_course_term(self, course_id, term_id, user_id=None):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id,
+                    constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSES, pipeline)
@@ -640,17 +641,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
     def api_course_edition(self, course_id, term_id, fetch_participants, finish=True):
         pipeline = {constants.COURSE_ID: course_id,
                     constants.TERM_ID: term_id,
-                    constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+                    constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                    constants.USER_ID: self.user_doc[constants.MONGO_ID]}
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
-
-        if fetch_participants:
-            pipeline = pipeline
-        else:
-            pipeline = {constants.COURSE_ID: course_id,
-                        constants.TERM_ID: term_id,
-                        constants.USOS_ID: self.user_doc[constants.USOS_ID]}
 
         course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
 
