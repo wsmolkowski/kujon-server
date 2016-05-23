@@ -138,6 +138,9 @@ class UsosMixin(OAuthMixin):
 
             result = escape.json_decode(response.body)
         except httpclient.HTTPError, ex:
+            # jeżeli nie ma grupy
+            if ex.response.body =='{\"message\": \"Group matching query does not exist.\"}':
+                raise gen.Return(None)
             msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
                                                                                           ex.response.code,
                                                                                           ex.response.effective_url,
@@ -206,7 +209,10 @@ class UsosMixin(OAuthMixin):
                 'fields': fields
             })
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        # if not positive response
+        if 'code' in result and result['code'] != 200:
+            raise gen.Return(None)
+
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -227,6 +233,36 @@ class UsosMixin(OAuthMixin):
         if 'student_programmes' in result:
             for programme in result['student_programmes']:
                 programme['programme']['description'] = programme['programme']['description']['pl']
+
+        # change staff_status to dictionary
+        result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
+
+        # strip employment_positions from english names
+        for position in result['employment_positions']:
+            position['position']['name'] = position['position']['name']['pl']
+            position['faculty']['name'] = position['faculty']['name']['pl']
+
+        # strip english from building name
+        if 'room' in result and result['room'] and 'building_name' in result['room']:
+            result['room']['building_name'] = result['room']['building_name']['pl']
+
+        # change course_editions_conducted to list of courses
+        courses_conducted = []
+        if result['course_editions_conducted']:
+            for course_conducted in result['course_editions_conducted']:
+                course_id, term_id = course_conducted['id'].split('|')
+
+                try:
+                    course_doc = yield self.api_course(course_id)
+                    if course_doc:
+                        courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                                  constants.COURSE_ID: course_id,
+                                                  constants.TERM_ID: term_id})
+                    else:
+                        raise UsosClientError('brak kursu %r'.format(course_id))
+                except Exception, ex:
+                    yield self.exc(ex, finish=False)
+            result['course_editions_conducted'] = courses_conducted
 
         raise gen.Return(result)
 
@@ -256,11 +292,12 @@ class UsosMixin(OAuthMixin):
             'course_unit_id': group_id,
             'group_number': 1,
         })
-
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
+        if result:
+            result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+            result[constants.CREATED_TIME] = create_time
+            result[constants.UPDATE_TIME] = create_time
+        else:
+            raise gen.Return(None)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -304,10 +341,10 @@ class UsosMixin(OAuthMixin):
         result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
         result[constants.TERM_ID] = term_id
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
         raise gen.Return(result)
 
@@ -347,7 +384,6 @@ class UsosMixin(OAuthMixin):
             'user_id': user_info_id,
         }, photo=True)
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time

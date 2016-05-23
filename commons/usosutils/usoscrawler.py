@@ -284,7 +284,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 if result:
                     yield self.db_insert(constants.COLLECTION_GROUPS, result)
                 else:
-                    logging.warning("no group for group_id: {0} and usos_id: {1)".format(group_id, self.usos_id))
+                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
+                    logging.info(msg)
             except Exception, ex:
                 yield self._exc(ex)
 

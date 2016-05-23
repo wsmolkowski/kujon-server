@@ -25,16 +25,12 @@ class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
     def get(self, user_info_id):
 
         try:
-            user_info = yield self.api_user_info(user_id=user_info_id)
+            user_info_doc = yield self.api_user_info(user_id=user_info_id)
 
-            if user_info:
-                if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
-                    user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
-
-            else:
+            if not user_info_doc:
                 raise ApiError('Szukamy informacji o Tobie w USOS.')
 
-            self.success(user_info, cache_age=2592000)
+            self.success(user_info_doc, cache_age=2592000)
         except Exception, ex:
             yield self.exc(ex)
 
