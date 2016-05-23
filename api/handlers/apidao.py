@@ -29,7 +29,7 @@ TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 't
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
     'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted',
-    'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex')
+    'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -520,9 +520,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
         if not user_id:
-            user_id = ObjectId(self.user_doc[constants.MONGO_ID])
-            pipeline = {constants.USER_ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
-
+            pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.USOS_ID: usos_doc[constants.USOS_ID]}
         else:
             pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
 
@@ -533,10 +531,19 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info(user_id)
-            user_info_doc[constants.USER_ID] = user_id
-
+            if not user_info_doc:
+                raise ApiError("Nie znaleziono użytkownika: {}".format(user_id))
+            if not user_id:
+                user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
+
+            # if user has photo
+            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
+                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
+                if photo_doc:
+                    user_info_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(photo_doc[constants.MONGO_ID])
+                    yield self.update(constants.COLLECTION_USERS_INFO, user_info_doc[constants.MONGO_ID], user_info_doc)
 
         raise gen.Return(user_info_doc)
 
@@ -625,6 +632,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         if not photo_doc:
             photo_doc = yield self.usos_photo(user_info_id)
-            yield self.insert(constants.COLLECTION_PHOTOS, photo_doc)
+            photo_id = yield self.insert(constants.COLLECTION_PHOTOS, photo_doc)
+            photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)

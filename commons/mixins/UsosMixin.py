@@ -209,7 +209,10 @@ class UsosMixin(OAuthMixin):
                 'fields': fields
             })
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        # if not positive response
+        if 'code' in result and result['code'] != 200:
+            raise gen.Return(None)
+
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -230,8 +233,6 @@ class UsosMixin(OAuthMixin):
         if 'student_programmes' in result:
             for programme in result['student_programmes']:
                 programme['programme']['description'] = programme['programme']['description']['pl']
-
-
 
         # change staff_status to dictionary
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
@@ -258,7 +259,7 @@ class UsosMixin(OAuthMixin):
                                                   constants.COURSE_ID: course_id,
                                                   constants.TERM_ID: term_id})
                     else:
-                        raise ApiError('brak kursu %r'.format(course_id))
+                        raise UsosClientError('brak kursu %r'.format(course_id))
                 except Exception, ex:
                     yield self.exc(ex, finish=False)
             result['course_editions_conducted'] = courses_conducted
@@ -384,7 +385,6 @@ class UsosMixin(OAuthMixin):
             'user_id': user_info_id,
         }, photo=True)
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
