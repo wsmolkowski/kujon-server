@@ -28,7 +28,8 @@ LIMIT_FIELDS_PROGRAMMES = (
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
-    'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted')
+    'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted',
+    'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex')
 
 
 class ApiDaoHandler(DatabaseHandler, UsosMixin):
@@ -369,42 +370,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_info:
             raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
 
-        # change ObjectId to str for photo
-        if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
-            user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
-                user_info[constants.HAS_PHOTO])
-
-        # change staff_status to dictionary
-        user_info['staff_status'] = usoshelper.dict_value_staff_status(user_info['staff_status'])
-
-        # strip employment_positions from english names
-        for position in user_info['employment_positions']:
-            position['position']['name'] = position['position']['name']['pl']
-            position['faculty']['name'] = position['faculty']['name']['pl']
-
-        # strip english from building name
-        if 'room' in user_info and user_info['room'] and 'building_name' in user_info['room']:
-            user_info['room']['building_name'] = user_info['room']['building_name']['pl']
-
-        # change course_editions_conducted to list of courses
-        courses_conducted = []
-        if user_info['course_editions_conducted']:
-            for course_conducted in user_info['course_editions_conducted']:
-                course_id, term_id = course_conducted['id'].split('|')
-
-                try:
-                    course_doc = yield self.api_course(course_id)
-                    if course_doc:
-                        courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                                  constants.COURSE_ID: course_id,
-                                                  constants.TERM_ID: term_id})
-                    else:
-                        raise ApiError('brak kursu %r'.format(course_id))
-                except Exception, ex:
-                    yield self.exc(ex, finish=False)
-
-            user_info['course_editions_conducted'] = courses_conducted
-
         raise gen.Return(user_info)
 
     @gen.coroutine
@@ -570,17 +535,8 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             user_info_doc = yield self.usos_user_info(user_id)
             user_info_doc[constants.USER_ID] = user_id
 
-            # if user has photo
-            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
-                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
-                user_info_doc[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
-
-            # fetch programmes if needed
-            if 'student_programmes' in user_info_doc:
-                for programme in user_info_doc['student_programmes']:
-                    yield self.api_programme(programme['programme'][constants.ID])
-
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+            user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         raise gen.Return(user_info_doc)
 

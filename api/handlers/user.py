@@ -29,8 +29,8 @@ class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
 
             if user_info:
                 if constants.HAS_PHOTO in user_info and user_info[constants.HAS_PHOTO]:
-                    user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(user_info[constants.HAS_PHOTO])
-
+                    photo_doc = yield self.api_photo(user_info[constants.ID])
+                    user_info[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(photo_doc[constants.MONGO_ID])
             else:
                 raise ApiError('Szukamy informacji o Tobie w USOS.')
 
