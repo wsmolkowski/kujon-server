@@ -138,6 +138,9 @@ class UsosMixin(OAuthMixin):
 
             result = escape.json_decode(response.body)
         except httpclient.HTTPError, ex:
+            # jeżeli nie ma grupy
+            if ex.response.body =='{\"message\": \"Group matching query does not exist.\"}':
+                raise gen.Return(None)
             msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
                                                                                           ex.response.code,
                                                                                           ex.response.effective_url,
@@ -256,11 +259,12 @@ class UsosMixin(OAuthMixin):
             'course_unit_id': group_id,
             'group_number': 1,
         })
-
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
+        if result:
+            result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+            result[constants.CREATED_TIME] = create_time
+            result[constants.UPDATE_TIME] = create_time
+        else:
+            raise gen.Return(None)
         raise gen.Return(result)
 
     @gen.coroutine
