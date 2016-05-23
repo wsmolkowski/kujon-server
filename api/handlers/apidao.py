@@ -657,8 +657,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not course_edition_doc:
             try:
                 course_edition_doc = yield self.usos_course_edition(course_id, term_id, fetch_participants)
-                if fetch_participants:
-                    course_edition_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
                 yield self.insert(constants.COLLECTION_COURSE_EDITION, course_edition_doc)
             except UsosClientError, ex:
                 raise self.exc(ex, finish=finish)
