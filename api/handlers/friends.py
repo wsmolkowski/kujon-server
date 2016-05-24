@@ -105,7 +105,7 @@ class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID])
+                course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=False)
                 if not course_participants:
                     continue
 
@@ -138,6 +138,6 @@ class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
         if not suggested_participants:
             self.error("Poczekaj szukamy sugerowanych przyjaciół.")
         else:
-            # sort by count descending and limit to 10 records
+            # sort by count descending and limit to 20 records
             suggested_participants = sorted(suggested_participants, key=lambda k: k['count'], reverse=True)
-            self.success(suggested_participants[:10])
+            self.success(suggested_participants[:20])
