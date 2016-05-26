@@ -43,13 +43,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
         pipeline = {constants.USER_ID: user_id}
-        courses_editions_doc = None
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
             yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
-        else:
-            courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+
+        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
                                                 pipeline, (constants.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
