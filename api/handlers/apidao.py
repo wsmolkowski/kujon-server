@@ -43,16 +43,24 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
         pipeline = {constants.USER_ID: user_id}
+        courses_editions_doc = None
 
         if self.do_refresh():
             yield self.remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
-
-        courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            pipeline, (constants.COURSE_EDITIONS,))
+            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
+        else:
+            courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+                                                pipeline, (constants.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
             courses_editions_doc = yield self.usos_courses_editions()
             yield self.insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
+
+        if self.do_refresh():
+            for term in courses_editions_doc[constants.COURSE_EDITIONS]:
+                for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
+                    yield self.api_course_edition(course[constants.COURSE_ID], course[constants.TERM_ID],
+                                                                   fetch_participants=True, finish=False)
 
         raise gen.Return(courses_editions_doc)
 
@@ -283,16 +291,16 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         limit_fields = ('grades', constants.TERM_ID, constants.COURSE_ID, constants.COURSE_NAME)
 
         if self.do_refresh():
-            yield self.remove(constants.COLLECTION_COURSE_EDITION, pipeline)
             yield self.api_courses_editions()
 
         cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(pipeline, limit_fields).sort(
             [(constants.TERM_ID, -1)])
 
-        grades = yield cursor.to_list(None)
+        course_edition_list = yield cursor.to_list(None)
+
 
         grades_sorted = list()
-        for grade in grades:
+        for grade in course_edition_list:
             grade.pop(constants.MONGO_ID)
 
             # if there is no grades -> pass
@@ -384,7 +392,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             for course in courses:
                 course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID],
                                                                    fetch_participants=True, finish=False)
-
                 if not course_edition_doc:
                     continue
 
