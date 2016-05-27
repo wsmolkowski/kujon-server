@@ -3,3 +3,4 @@ pycrypto
 pymongo
 motor
 tornado
+git+https://github.com/mobolic/facebook-sdk.git#egg=facebook-sdk
