@@ -1,146 +1,98 @@
-<div class="modal fade" id="courseModal{{courseId}}" tabindex="-1" role="dialog" aria-labelledby="courseModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="courseModalLabel">{{name}} ({{course_id}})</h4>
-            </div>
-            <div class="modal-body">
-                <div class="media">
-                    <div class="media-left">
-                        <a href="#">
-                            {{#if has_photo}}
-                            <img class="media-object" src="{{has_photo}}" alt="...">
-                            {{/if}}
-                        </a>
-                    </div>
-                    <div class="media-body">
-
-                        <table class="table table-hover table-responsive">
-                            <tbody>
-                            <tr>
-                                <td>Jednostka</td>
-                                <td>{{fac_id.name}}, {{fac_id.postal_address}}, tel.: {{fac_id.phone_numbers}}</td>
-                            </tr>
+<div class="modal fade" id="courseModal{{courseId}}" tabindex="-1" id="lista-studentow" role="dialog"
+	 aria-labelledby="gridSystemModalLabel">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+						aria-hidden="true">&times;</span></button>
+				<p class="modal-title" id="gridSystemModalLabel">{{course_name}} ({{course_id}})</p>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="col-sm-12 przedmiot-modal">
+							<div class="col-sm-5">
+								<p class="tytul-przedmioty">Jednostka:</p>
+								<p class="opis-przedmioty"><span>{{fac_id.name}}, {{fac_id.postal_address}}, tel.: {{fac_id.phone_numbers}}</span>
+								</p>
+							</div>
+							<div class="col-sm-5">
+								<p class="tytul-przedmioty">Cykl:</p>
+								{{#if term}}
+								<p class="opis-przedmioty"><span>{{term.name}} od {{term.start_date}} do {{term.end_date}}</span>
+								</p>
+								{{/if}}
+							</div>
+							<div class="col-sm-2">
+								<p class="tytul-przedmioty">Prowadzący</p>
+								{{#lecturers}}
+								<p class="opis-przedmioty"><span>{{first_name}} {{last_name}}</span></p>
+								{{/lecturers}}
+							</div>
+							<div class="col-sm-2">
+								<p class="tytul-przedmioty">Koordynatorzy</p>
+								{{#if coordinators}}
+								{{#coordinators}}
+								<p class="opis-przedmioty"><span>{{first_name}} {{last_name}}</span></p>
+								{{/coordinators}}
+								{{/if}}
+							</div>
+							<div class="col-sm-2">
+								<p class="tytul-przedmioty">Krytera oceny:</p>
+								{{#if assessment_criteria}}
+								<p data-toggle="modal" data-target="#kryteria-oceny" class="kryteria-oceny"><span>{{assessment_criteria}}</span>
+								</p>
+								{{/if}}
+							</div>
+							<div class="col-sm-3">
+								<p class="tytul-przedmioty">Typ zajęć</p>
+								{{#groups}}
+								<p class="opis-przedmioty"><span>{{class_type}}, numer grupy: {{group_number}}</span>
+								</p>
+								{{/groups}}
+							</div>
+						</div>
+						<div class="col-sm-12">
+							<div class="col-sm-5">
+								<div class="row">
+									<div class="col-sm-6">
+										<p class="tytul-przedmioty">Język prowadzenia:</p>
                             {{#if lang_id}}
-                            <tr>
-                                <td>Język prowadzenia</td>
-                                <td>{{lang_id}}</td>
-                            </tr>
+										<p class="opis-przedmioty"><span>{{lang_id}}</span></p>
                             {{/if}}
-                            <tr>
-                                <td>Czy jest prowadzony</td>
-                                <td>{{is_currently_conducted}}</td>
-                            </tr>
-                            {{#if description}}
-                            <tr>
-                                <td>Opis</td>
-                                <td>
-                                    <div class="collapse" id="cD{{course_id}}">
-                                        <div class="well">
-                                            {{nl2br description}}
-                                        </div>
-                                    </div>
-                                    <a class="btn btn-default collapsed" data-toggle="collapse" href="#cD{{course_id}}">
-                                        <span class="if-collapsed">Pokaż opis</span>
-                                        <span class="if-not-collapsed">Ukryj opis</span>
-                                    </a>
-                                </td>
-                            </tr>
-                            {{/if}}
-                            {{#if bibliography}}
-                            <tr>
-                                <td>Bibliografia</td>
-                                <td>
-                                    <div class="collapse" id="cB{{course_id}}">
-                                        <div class="well">
-                                            {{nl2br bibliography}}
-                                        </div>
-                                    </div>
-                                    <a class="btn btn-default collapsed" data-toggle="collapse" href="#cB{{course_id}}">
-                                        <span class="if-collapsed">Pokaż bibliografię</span>
-                                        <span class="if-not-collapsed">Ukryj bibliografię</span>
-                                    </a>
-                                </td>
-                            </tr>
-                            {{/if}}
-                            {{#if assessment_criteria}}
-                            <tr>
-                                <td>Kryteria oceny</td>
-                                <td>
-                                    <div class="collapse" id="cC{{course_id}}">
-                                        <div class="well">
-                                            {{nl2br assessment_criteria}}
-                                        </div>
-                                    </div>
-                                    <a class="btn btn-default collapsed" data-toggle="collapse" href="#cC{{course_id}}">
-                                        <span class="if-collapsed">Pokaż kryteria</span>
-                                        <span class="if-not-collapsed">Ukryj kryteria</span>
-                                    </a>
-                                </td>
-                            </tr>
-                            {{/if}}
-                            {{#if term}}
-                            <tr>
-                                <td>Zajęcia w cyklu</td>
-                                <td>{{term.name}}</td>
-                            </tr>
-                            <tr>
-                                <td>Okres</td>
-                                <td>{{term.start_date}} - {{term.end_date}}</td>
-                            </tr>
-                            {{/if}}
-                            <tr>
-                                <td>Prowadzący grup</td>
-                                <td>
-                                    {{#lecturers}}
-                                    {{first_name}} {{last_name}},
-                                    {{/lecturers}}
-                                </td>
-                            </tr>
-                            {{#if coordinators}}
-                            <tr>
-                                <td>Koordynatorzy</td>
-                                <td>
-                                    {{#coordinators}}
-                                    {{first_name}} {{last_name}},
-                                    {{/coordinators}}
-                                </td>
-                            </tr>
-                            {{/if}}
-                            {{#groups}}
-                            <tr>
-                                <td>Typ zajęć</td>
-                                <td>{{class_type}}, numer grupy: {{group_number}}</td>
-                            </tr>
-                            {{/groups}}
-                            {{#if participants}}
-                            <tr>
-                                <td>Studenci</td>
-                                <td>
-                                    <div class="collapse" id="u{{user_id}}">
-                                        <div class="well">
-                                            {{#participants}}
-                                            <p>{{last_name}} {{first_name}}</p>
-                                            {{/participants}}
-                                        </div>
-                                    </div>
-                                    <a class="btn btn-default collapsed" data-toggle="collapse" href="#u{{user_id}}">
-                                        <span class="if-collapsed">Pokaż studentów</span>
-                                        <span class="if-not-collapsed">Ukryj studentów</span>
-                                    </a>
-                                </td>
-                            </tr>
-                            {{/if}}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-            </div>
-        </div>
-    </div>
-</div>
+									</div>
+									<div class="col-sm-6">
+										<p class="tytul-przedmioty">Czy jest prowadzony:</p>
+										<p class="opis-przedmioty"><span>{{is_currently_conducted}}</span></p>
+									</div>
+								</div>
+							</div>
+							<div class="col-sm-2">
+								<p class="tytul-przedmioty">Opis</p>
+								<p class="opis-przedmioty opis-przedmiotu" data-toggle="modal"
+								   data-target="#opis-przedmiotu"><span>{{description}}</span></p>
+							</div>
+							<div class="col-sm-2">
+								<p class="tytul-przedmioty">Bibliografia:</p>
+								{{#if bibliography}}
+								<p class="kryteria-oceny opis-przedmioty" data-toggle="modal"
+								   data-target="#bibliografia"><span>{{bibliography}}</span></p>
+								{{/if}}
+							</div>
+							<div class="col-sm-3">
+								<p class="tytul-przedmioty">Studenci:</p>
+								{{#if participants}}
+								{{#participants}}
+								<p class="lista-studentow opis-przedmioty" data-toggle="modal"
+								   data-target="#zobacz-liste-studentow"><span>{{last_name}} {{first_name}}</span></p>
+								{{/participants}}
+
+								{{/if}}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
