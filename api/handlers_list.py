@@ -9,7 +9,7 @@ from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
 from handlers.terms import TermsApi, TermApi
 from handlers.tt import TTApi
 from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
-from handlers.fb import FBApi
+from handlers.facebook import FacebookApi
 
 HANDLERS = [
     (r"/config", ApplicationConfigHandler),
@@ -40,7 +40,7 @@ HANDLERS = [
     (r"/friends/suggestions", FriendsSuggestionsApi),
     (r"/friends/([^/]+)", FriendsApi),
     (r"/friends", FriendsApi),
-    (r"/friends/fb", FBApi),
+    (r"/facebook", FacebookApi),
 
     (r"/lecturers", LecturersApi),
     (r"/lecturers/([^/]+)", LecturerByIdApi),
