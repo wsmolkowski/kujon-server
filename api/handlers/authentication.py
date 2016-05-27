@@ -63,7 +63,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
                 yield self.insert_user(user)
 
-                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+                user_doc = yield self.cookie_user_id(user[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
 
