@@ -15,7 +15,7 @@ from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
-    constants.HAS_PHOTO)
+    constants.HAS_PHOTO, constants.GOOGLE, constants.FB)
 
 
 class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
