@@ -1,4 +1,5 @@
 import tornado.gen
+import constants
 
 
 def authenticated(method):
@@ -9,7 +10,7 @@ def authenticated(method):
             self.fail(message="Request not authenticated.", code=401)
             return
         else:
-            if not current_user["usos_paired"]:
+            if constants.USOS_PAIRED in current_user and not current_user[constants.USOS_PAIRED]:
                 self.fail(message="User not paired with USOS.", code=401)
                 return
             self.user_doc = current_user
