@@ -15,7 +15,7 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#page-content').html(template(data));
-                    slide();
+                    // slide();
                     // bindListeners();
                 } else {
                     $('#page-content').html(templateError(data));

@@ -1,4 +1,6 @@
-define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html', 'text!templates/error.html', 'fullcalendarpl'], function($, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'fullcalendar',
+'text!templates/tt.html', 'text!templates/error.html', 'fullcalendarpl'], function(
+$, Handlebars, main, nice, easing, bootstrapTable, fullcalendar, tpl, tplError, fullcalendarpl) {
 'use strict';
     return {
         render: function() {
