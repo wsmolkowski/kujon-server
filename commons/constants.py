@@ -25,7 +25,7 @@ HAS_PHOTO = "has_photo"
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 
-FB = "fb"
+FB = "facebook"
 FB_ID = "id"
 FB_NAME = "name"
 FB_EMAIL = "email"

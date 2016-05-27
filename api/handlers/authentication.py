@@ -91,8 +91,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
-                scope=['public_profile', 'email', 'user_friends', 'user_managed_groups', 'user_birthday',
-                       'user_education_history', 'read_custom_friendlists'],
+                scope=['public_profile', 'email', 'user_friends'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
 
