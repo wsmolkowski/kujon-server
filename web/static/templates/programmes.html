@@ -1,27 +1,39 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h4>Kierunki</h4>
+<section id="cykle">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive prof">
+                <div class="naglowek-h2">
+                    <h2>Kierunki</h2>
+                </div>
+                <table id="myTable" class="table"
+                       data-toggle="table"
+                       data-pagination="true"
+                       data-search="true"
+                       data-sort-name="name">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Opis</th>
+                        <th data-sortable="true">Numer</th>
+                        <th data-sortable="true">Poziom</th>
+                        <th data-sortable="true">Tryb</th>
+                        <th data-sortable="true">Długość</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#data}}
+                    <tr>
+                        <td>{{programme.description}}</td>
+                        <td>{{programme.id}}</td>
+                        <td>{{programme.level_of_studies}}</td>
+                        <td>{{programme.mode_of_studies}}</td>
+                        <td>{{programme.duration}}</td>
+                    </tr>
+                    {{/data}}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
     </div>
-    <div class="panel-body">
-        <table id="terms-table" class="table table-hover table-responsive">
-            <thead>
-            <th>Opis</th>
-            <th>Numer</th>
-            <th>Poziom</th>
-            <th>Tryb</th>
-            <th>Długość</th>
-            </thead>
-            <tbody>
-            {{#data}}
-            <tr>
-                <td>{{programme.description}}</td>
-                <td>{{programme.id}}</td>
-                <td>{{programme.level_of_studies}}</td>
-                <td>{{programme.mode_of_studies}}</td>
-                <td>{{programme.duration}}</td>
-            </tr>
-            {{/data}}
-            </tbody>
-        </table>
-    </div>
-</div>
+</section>

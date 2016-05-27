@@ -5,7 +5,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            $('#page').html(template());
+            $('#page-content').html(template());
 
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
@@ -35,7 +35,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                                 callback(events);
                         }
                         else {
-                            $('#page').html(templateError(data));
+                            $('#page-content').html(templateError(data));
                         }
                     });
                 },

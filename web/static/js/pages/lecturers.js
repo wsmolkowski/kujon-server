@@ -1,6 +1,6 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/lecturers.html',
     'text!templates/error.html', 'datatables', 'text!templates/modal_lecturer.html', 'text!templates/modal_error.html'],
-    function($, Handlebars, main, tplLecturers, tplError, datatables, tplModalLecturer, tplModalError) {
+    function($, Handlebars, main, nice, easing, bootstrapTable, tplLecturers, tplError, datatables, tplModalLecturer, tplModalError) {
     'use strict';
     return {
         render: function() {
@@ -11,12 +11,12 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
 
             main.callLecturers(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data));
+                    $('#page-content').html(template(data));
                     $('#lecturers-table').DataTable(main.getDatableConfig());
 
                     bindModals();
                 } else {
-                    $('#page').html(templateError({'message': data.message}));
+                    $('#page-content').html(templateError({'message': data.message}));
                 }
             });
 

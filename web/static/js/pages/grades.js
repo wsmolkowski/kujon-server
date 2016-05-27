@@ -10,10 +10,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data));
+                    $('#page-content').html(template(data));
                     bindModals();
                 } else {
-                    $('#page').html(templateError({'message': data.message}));
+                    $('#page-content').html(templateError({'message': data.message}));
                 }
             });
 

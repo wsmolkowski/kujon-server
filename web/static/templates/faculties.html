@@ -1,29 +1,43 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h4>Jednostki</h4>
+<section id="cykle">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive prof">
+                <div class="naglowek-h2">
+                    <h2>Fakultety</h2>
+                </div>
+                <table id="myTable" class="table"
+                       data-toggle="table"
+                       data-pagination="true"
+                       data-search="true"
+                       data-sort-name="name">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Nazwa</th>
+                        <th data-sortable="true">Strona www</th>
+                        <th data-sortable="true">Adres na mapie</th>
+                        <th data-sortable="true">Numer telefonów</th>
+                        <th data-sortable="true">Statystyki</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#data}}
+                    <tr>
+                        <td>{{name}}</td>
+                        <td><a href="{{homepage_url}}" target="_blank"><img src="{{logo_urls.100x100}}"></a></td>
+                        <td><a href="https://maps.google.pl/?q={{postal_address}}"
+                               target="_blank">{{postal_address}}</a></td>
+                        <td>{{phone_numbers}}</td>
+                        <td>przedmioty: {{stats.course_count}}<br>
+                            kierunki: {{stats.programme_count}}<br>
+                            personel: {{stats.staff_count}}
+                        </td>
+                    </tr>
+                    {{/data}}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
     </div>
-    <div class="panel-body">
-        <table id="faculties-table" class="table table-hover table-responsive">
-            <thead>
-            <th>Nazwa</th>
-            <th>Strona www</th>
-            <th>Adres na mapie</th>
-            <th>Numer telefonu</th>
-            <th>Statystyki</th>
-            </thead>
-            <tbody>
-            {{#data}}
-            <tr>
-                <td>{{name}}</td>
-                <td><a href="{{homepage_url}}" target="_blank"><img src="{{logo_urls.100x100}}"></a></td>
-                <td><a href="https://maps.google.pl/?q={{postal_address}}" target="_blank">{{postal_address}}</a></td>
-                <th>{{phone_numbers}}</th>
-                <td>przedmioty: {{stats.course_count}}<br>
-                    kierunki: {{stats.programme_count}}<br>
-                    personel: {{stats.staff_count}}</td>
-            </tr>
-            {{/data}}
-            </tbody>
-        </table>
-    </div>
-</div>
+</section>

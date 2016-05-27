@@ -13,14 +13,17 @@ var require = {
         "jquery-cookie":        "/static/bower_components/jquery.cookie/jquery.cookie",
         "fullcalendar":         "/static/bower_components/fullcalendar/dist/fullcalendar.min",
         "fullcalendarpl":       "/static/bower_components/fullcalendar/dist/lang/pl",
-        "datatables":           "/static/bower_components/datatables/media/js/jquery.dataTables.min",
+        "cookiebar":            "/static/bower_components/cookiebar/dist/cookiebar.min",
+        "easing":               "/static/bower_components/jquery.easing/js/jquery.easing.min",
+        "nice-select":          "/static/bower_components/jquery-nice-select/js/jquery.nice-select.min",
+        "bootstrap-table":      "/static/bower_components/bootstrap-table/dist/bootstrap-table.min",
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
-        "navigation":           "/static/js/pages/navigation",
         "lib":                  "/static/js",
     },
     shim: {
         "bootstrap": { deps: ["jquery"] },
         "fullcalendarpl": { deps: ["fullcalendar"] },
+        "easing": { deps: ["jquery"] },
     }
 };

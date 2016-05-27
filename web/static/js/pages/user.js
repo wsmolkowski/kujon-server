@@ -1,4 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/user.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/user.html', 'text!templates/error.html'], function(
+$, Handlebars, main, tpl, tplError) {
 'use strict';
     return {
         render: function() {
@@ -7,9 +8,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/user.html', 'text!templa
 
             main.callUsers(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data.data));
+                    $('#page-content').html(template(data.data));
                 } else {
-                    $('#page').html(templateError({'message': data.message}));
+                    $('#page-content').html(templateError({'message': data.message}));
                 }
             });
 

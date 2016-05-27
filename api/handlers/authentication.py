@@ -82,7 +82,11 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
             user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
             self.reset_user_cookie(user_doc)
-            self.redirect(settings.DEPLOY_WEB + '/#home')
+
+            if not user_doc[constants.USOS_PAIRED]:
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja')
+            else:
+                self.redirect('/')
         else:
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
@@ -151,7 +155,10 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
-            self.redirect(settings.DEPLOY_WEB + '/#home')
+            if not user_doc[constants.USOS_PAIRED]:
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja', permanent=True)
+            else:
+                self.redirect(settings.DEPLOY_WEB + '/', permanent=True)
 
         else:
             yield self.authorize_redirect(
@@ -284,11 +291,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-                if header_email and header_token:
+                if header_email or header_token:
                     self.success('Udało się sparować konto USOS')
                 else:
                     yield self.email_registration(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/#home')
+                    self.redirect(settings.DEPLOY_WEB + '/')
             else:
                 self.redirect(settings.DEPLOY_WEB)
 

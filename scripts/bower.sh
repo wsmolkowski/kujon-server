@@ -11,3 +11,9 @@ bower install fullcalendar --save
 bower install jquery-cookie --save
 bower install datatables --save
 bower install fontawesome --save
+bower install jquery.cookiebar --save
+bower install jquery.easing --save
+bower install respond --save
+bower install html5shiv --save
+bower install jquery-nice-select --save
+bower install bootstrap-table --save

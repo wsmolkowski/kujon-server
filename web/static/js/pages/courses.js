@@ -1,7 +1,7 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!templates/course_details.html',
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/courses.html', 'text!templates/course_details.html',
         'text!templates/error.html', 'text!templates/modal_lecturer.html', 'text!templates/modal_user.html',
-        'datatables', 'text!templates/modal_error.html'],
-    function($, Handlebars, main, tpl, tplDetails, tplError, tplModalLecturer, tplModalUser, datatables, tplModalError) {
+         'text!templates/modal_error.html'],
+    function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplDetails, tplError, tplModalLecturer, tplModalUser, tplModalError) {
 'use strict';
     return {
         render: function() {
@@ -14,13 +14,35 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data));
-                    bindListeners();
+                    $('#page-content').html(template(data));
+                    slide();
+                    // bindListeners();
                 } else {
-                    $('#page').html(templateError(data));
+                    $('#page-content').html(templateError(data));
                 }
-                $('#students-table').DataTable(main.getDatableConfig());
+
+                // $('#students-table').DataTable(main.getDatableConfig());
             });
+
+            function slide(){
+                $('select').niceSelect({
+                    placeholder: 'Wybierz'
+                });
+
+                var $table = $('#myTable');
+
+                $table.on('expand-row.bs.table', function (e, index, row, $detail) {
+                    var res = $("#" + row._data.details).html();
+                    $detail.html(res);
+                });
+
+                $table.on("click-row.bs.table", function(e, row, $tr) {
+                    // In my real scenarion, trigger expands row with text detailFormatter..
+                    //$tr.find(">td>.detail-icon").trigger("click");
+                    $tr.find(">td>.detail-icon").triggerHandler("click");
+                });
+
+            }
 
             function bindListeners(){
                 $('a.panel-row').bind( 'click', function(){
@@ -111,6 +133,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     });
                 });
             }
+
         }
     }    
 });
