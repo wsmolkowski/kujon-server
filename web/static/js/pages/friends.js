@@ -1,6 +1,6 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
-    'text!templates/error.html', 'text!templates/modal_course.html', 'datatables','text!templates/modal_user.html'],
-    function($, Handlebars, main, tplFriends, tplError, tplCourseModal, datatables, tplModalUser) {
+    'text!templates/error.html', 'text!templates/modal_course.html','text!templates/modal_user.html'],
+    function($, Handlebars, main, tplFriends, tplError, tplCourseModal, tplModalUser) {
     'use strict';
     return {
         render: function() {
@@ -11,23 +11,23 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
 
             main.callFriendsSuggestion(function(suggestiondata){
                 if (suggestiondata.status == 'success'){
-                    $('#page').html(template(suggestiondata));
+                    $('#page-content').html(template(suggestiondata));
                     $('#suggested-table').DataTable();
 
 //                    bindModals();
                 } else {
-                    $('#page').html(templateError({'message': suggestiondata.message}));
+                    $('#page-content').html(templateError({'message': suggestiondata.message}));
                 }
             });
 
             main.callFriends(function(friendsdata){
                 if (friendsdata.status == 'success'){
-                    $('#page').html(template(friendsdata));
+                    $('#page-content').html(template(friendsdata));
                     $('#friends-table').DataTable();
 
 //                    bindModals();
                 } else {
-                    $('#page').html(templateError({'message': friendsdata.message}));
+                    $('#page-content').html(templateError({'message': friendsdata.message}));
                 }
             });
 

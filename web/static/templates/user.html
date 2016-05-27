@@ -1,93 +1,151 @@
-<div class="panel panel-default">
-    <div class="panel-body">
+<section id="profil">
+    <div class="container">
         <div class="row">
-            <div class="col-xs-2">
-                <img class="img-responsive" src="{{picture}}" alt="{{name}}" >
-            </div>
-            <div class="col-xs-10">
-                <h3 class="media-heading">{{name}} {{given_name}}</h3>
-                <table class="table table-hover table-responsive">
-                    <thead>
-                    <th></th>
-                    <th></th>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Konto</td>
-                        <td>{{user_type}}</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Email</td>
-                        <td>{{email}}</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Data utworzenia</td>
-                        <td>{{user_created}}</td>
-                        <td></td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="col-sm-12 content">
+                <div class="col-sm-2 col-xs-6 edit">
+                    <div class="profil">
+                        {{#if has_photo}}
+                        <img src="{{has_photo}}" alt="{{first_name}}" class="img-responsive profil-img">
+                        {{/if}}
+                    </div>
+                </div>
+                <div class="col-sm-10 col-xs-12">
+                    <div class="row">
+                        <div class="profil-head">
+                            <div class="row">
+                                <div class="col-sm-10">
+                                    <h2>{{first_name}} {{last_name}}</h2>
+                                    <p><span class="fa fa-university"></span><a class="nazwa-uniwersytetu"
+                                                                                data-toggle="modal"
+                                                                                data-target="#uniwersytet-1">{{usos_name}}
+                                        <span></span></a></p>
+                                </div>
+                                <div class="col-sm-2 text-right">
+                                    <p data-toggle="modal" data-target="#wykladowca-1">Usuń konto</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profil-info">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="dane"><p>Informacje z USOS</p></div>
+                                            <div class="row">
+                                                <div class="col-sm-6 col-xs-6 gg">
+                                                    <p><span>Nr indeksu</span></p>
+                                                    <p>833741</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Imię i nazwisko</span></p>
+                                                    <p>{{first_name}} {{last_name}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-6 nr-konta">
+                                                    <p><span>Nr konta</span></p>
+                                                    <p>{{id}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>E-mail</span></p>
+                                                    <p>{{user_email}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-6 status-profil">
+                                                    <p><span>Status studenta</span></p>
+                                                    <p class="active-status">{{student_status}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Data utworzenia konta</span></p>
+                                                    <p>{{user_created}}</p>
+                                                </div>
+                                                {{#student_programmes}}
+                                                <div class="col-sm-12 col-xs-12 kierunki">
+                                                    <p><span>Kierunki</span></p>
+                                                    <ol type="1">
+                                                        <li>{{id}}</li>
+                                                        <li>{{programme.description}} ({{programme.id}})</li>
+                                                    </ol>
+                                                </div>
+                                                {{/student_programmes}}
+
+                                            </div>
+                                        </div>
+                                        {{#if google}}
+                                        <div class="col-md-6">
+                                            <div class="dane"><p><span class="fa fa-google-plus"></span>Dane z Google
+                                            </p></div>
+                                            <div class="row">
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Konto</span></p>
+                                                    <p>{{google.name}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-12">
+                                                    <p><span>E-mail</span></p>
+                                                    <p>{{google.email}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{/if}}
+
+                                        {{#if fb}}
+                                        <div class="col-md-6">
+                                            <div class="dane dane-fb"><p><span class="fa fa-facebook"></span>Dane z
+                                                Facebook</p></div>
+                                            <div class="row">
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Konto</span></p>
+                                                    <p>Facebook</p>
+                                                </div>
+
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Data utworzenia</span></p>
+                                                    <p>2016/03/25</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-12">
+                                                    <p><span>E-mail</span></p>
+                                                    <p>{{user_email}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{/if}}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</section>
 
-
-        <div class="row">
-            <div class="col-xs-2">
-                {{#if has_photo}}
-                <img class="img-responsive" src="{{has_photo}}" alt="{{first_name}}">
-                {{/if}}
+<div class="modal fade" id="wykladowca-1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <p class="modal-title" id="myModalLabel">Usuwanie konta</p>
             </div>
-            <div class="col-xs-10">
-                <h3 class="media-heading">Informacje studenckie</h3>
-                <table class="table table-hover table-responsive">
-                    <thead>
-                    <th></th>
-                    <th></th>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Uczelnia</td>
-                        <td>{{usos_name}}</td>
-                    </tr>
-                    <tr>
-                        <td>Imię i Nazwisko</td>
-                        <td>{{first_name}} {{last_name}}</td>
-                    </tr>
-                    <tr>
-                        <td>Status studenta</td>
-                        <td>{{student_status}}</td>
-                    </tr>
-                    <tr>
-                        <td>Numer indeksu</td>
-                        <td>{{student_number}}</td>
-                    </tr>
-                    {{#if user_email}}
-                    <tr>
-                        <td>Email</td>
-                        <td>{{user_email}}</td>
-                    </tr>
-                    {{/if}}
-                    <tr>
-                        <td>Kierunki</td>
-                        <td></td>
-                    </tr>
-                    {{#student_programmes}}
-                    <tr>
-                        <td>{{id}}</td>
-                        <td>{{programme.description}} ({{programme.id}})</td>
-                    </tr>
-                    {{/student_programmes}}
-                    <tr>
-                        <td>Numer konta</td>
-                        <td>{{id}}</td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12 usuwanie-konta text-center">
+                        <h3>Czy na pewno chcesz usunąć<br> konto na <span>Kujon.mobi</span>?</h3>
+                        <div class="col-sm-8 col-sm-offset-2 col-xs-12">
+                            <div class="row">
+                                <div class="col-sm-7 col-xs-12">
+                                    <input class="col-xs-12" type="text" name="Usuń konto"
+                                           placeholder="Wpisz adres email">
+                                </div>
+                                <div class="col-sm-5 col-xs-12">
+                                    <button href={{API_URL}}/authentication/archive"
+                                            class="btn btn-default btn-usun col-xs-12" type="submit">Usuń konto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-
     </div>
 </div>

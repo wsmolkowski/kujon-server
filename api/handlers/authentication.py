@@ -53,27 +53,45 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
             user_doc = yield self.find_user_email(access['email'])
 
             if not user_doc:
-                user = dict()
-                user[constants.USER_TYPE] = 'facebook'
-                user[constants.USER_NAME] = access['name']
-                user[constants.USER_PICTURE] = access['picture']['data']['url']
-                user[constants.USER_EMAIL] = access['email']
-                user[constants.USOS_PAIRED] = False
-                user[constants.USER_CREATED] = datetime.now()
+                user_doc = dict()
+                user_doc[constants.USER_TYPE] = 'facebook'
+                user_doc[constants.USER_NAME] = access['name']
+                user_doc[constants.USER_EMAIL] = access['email']
 
-                yield self.insert_user(user)
+                user_doc[constants.FB] = dict()
+                user_doc[constants.FB][constants.FB_NAME] = access[constants.FB_NAME]
+                user_doc[constants.FB][constants.FB_EMAIL] = access[constants.FB_EMAIL]
+                user_doc[constants.FB][constants.FB_PICTURE] = access['picture']['data']['url']
+                user_doc[constants.FB][constants.FB_ACCESS_TOKEN] = access[constants.FB_ACCESS_TOKEN]
+                user_doc[constants.FB][constants.FB_ID] = access[constants.FB_ID]
+                user_doc[constants.FB][constants.FB_SESSION_EXPIRES] = datetime.now() + timedelta(seconds=int(access[constants.FB_SESSION_EXPIRES][0]))
 
-                user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
+                user_doc[constants.USOS_PAIRED] = False
+                user_doc[constants.USER_CREATED] = datetime.now()
+                yield self.insert_user(user_doc)
+            else:
+                user_doc[constants.FB] = dict()
+                user_doc[constants.FB][constants.FB_NAME] = access[constants.FB_NAME]
+                user_doc[constants.FB][constants.FB_EMAIL] = access[constants.FB_EMAIL]
+                user_doc[constants.FB][constants.FB_PICTURE] = access['picture']['data']['url']
+                user_doc[constants.FB][constants.FB_ACCESS_TOKEN] = access[constants.FB_ACCESS_TOKEN]
+                user_doc[constants.FB][constants.FB_ID] = access[constants.FB_ID]
+                user_doc[constants.FB][constants.FB_SESSION_EXPIRES] = datetime.now() + timedelta(seconds=int(access[constants.FB_SESSION_EXPIRES][0]))
+                user_doc[constants.UPDATE_TIME] = datetime.now()
+                yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
+            user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
             self.reset_user_cookie(user_doc)
 
-            self.redirect(settings.DEPLOY_WEB + '/#home')
+            if not user_doc[constants.USOS_PAIRED]:
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja')
+            else:
+                self.redirect('/')
         else:
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
-                scope=['public_profile', 'email', 'user_friends', 'user_managed_groups', 'user_birthday',
-                       'user_education_history', 'read_custom_friendlists'],
+                scope=['public_profile', 'email', 'user_friends'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
 
@@ -97,38 +115,50 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 access_token=access['access_token'])
 
             user_doc = yield self.find_user_email(user['email'])
-            now = datetime.now()
             if not user_doc:
-                insert_doc = dict()
-                insert_doc[constants.USER_TYPE] = 'google'
-                insert_doc[constants.USER_NAME] = user['name']
-                insert_doc[constants.USER_PICTURE] = user['picture']
-                insert_doc[constants.USER_EMAIL] = user['email']
-                insert_doc[constants.USOS_PAIRED] = False
-                insert_doc[constants.USER_CREATED] = now
+                user_doc = dict()
+                user_doc[constants.USER_TYPE] = 'google'
+                user_doc[constants.USER_NAME] = user['name']
+                user_doc[constants.USER_EMAIL] = user['email']
+                user_doc[constants.USOS_PAIRED] = False
+                user_doc[constants.USER_CREATED] = datetime.now()
 
-                insert_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
-                insert_doc[constants.GAUTH_EXPIRES_IN] = now + timedelta(seconds=access['expires_in'])
-                insert_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
-                insert_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
+                user_doc[constants.GOOGLE] = dict()
+                user_doc[constants.GOOGLE][constants.GOOGLE_NAME] = user[constants.GOOGLE_NAME]
+                user_doc[constants.GOOGLE][constants.GOOGLE_EMAIL] = user[constants.GOOGLE_EMAIL]
+                user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE] = user[constants.GOOGLE_PICTURE]
+                user_doc[constants.GOOGLE][constants.GOOGLE_ACCESS_TOKEN] = access[constants.GOOGLE_ACCESS_TOKEN]
+                user_doc[constants.GOOGLE][constants.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
+                                                                        seconds=access[constants.GOOGLE_EXPIRES_IN])
+                user_doc[constants.GOOGLE][constants.GOOGLE_ID_TOKEN] = access[constants.GOOGLE_ID_TOKEN]
+                user_doc[constants.GOOGLE][constants.GOOGLE_TOKEN_TYPE] = access[constants.GOOGLE_TOKEN_TYPE]
 
-                user_doc = yield self.insert_user(insert_doc)
+                user_doc = yield self.insert_user(user_doc)
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: user_doc}, self._COOKIE_FIELDS)
+                                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, self._COOKIE_FIELDS)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             else:
-                user_doc[constants.GAUTH_ACCESS_TOKEN] = access['access_token']
-                user_doc[constants.GAUTH_EXPIRES_IN] = now + timedelta(seconds=access['expires_in'])
-                user_doc[constants.GAUTH_ID_TOKEN] = access['id_token']
-                user_doc[constants.GAUTH_TOKEN_TYPE] = access['token_type']
-                user_doc[constants.UPDATE_TIME] = now
+                user_doc[constants.GOOGLE] = dict()
+                user_doc[constants.GOOGLE][constants.GOOGLE_NAME] = user[constants.GOOGLE_NAME]
+                user_doc[constants.GOOGLE][constants.GOOGLE_EMAIL] = user[constants.GOOGLE_EMAIL]
+                user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE] = user[constants.GOOGLE_PICTURE]
+                user_doc[constants.GOOGLE][constants.GOOGLE_ACCESS_TOKEN] = access[constants.GOOGLE_ACCESS_TOKEN]
+                user_doc[constants.GOOGLE][constants.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
+                                                                        seconds=access[constants.GOOGLE_EXPIRES_IN])
+                user_doc[constants.GOOGLE][constants.GOOGLE_ID_TOKEN] = access[constants.GOOGLE_ID_TOKEN]
+                user_doc[constants.GOOGLE][constants.GOOGLE_TOKEN_TYPE] = access[constants.GOOGLE_TOKEN_TYPE]
+
+                user_doc[constants.UPDATE_TIME] = datetime.now()
 
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
-            self.redirect(settings.DEPLOY_WEB + '/#home')
+            if not user_doc[constants.USOS_PAIRED]:
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja', permanent=True)
+            else:
+                self.redirect(settings.DEPLOY_WEB + '/', permanent=True)
 
         else:
             yield self.authorize_redirect(
@@ -246,6 +276,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 auth_user = yield self.get_authenticated_user()  # dict with access_token key/secret
                 user_doc.update(auth_user)
+                del(user_doc['access_token'])
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
 
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
@@ -260,11 +291,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-                if header_email and header_token:
+                if header_email or header_token:
                     self.success('Udało się sparować konto USOS')
                 else:
                     yield self.email_registration(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/#home')
+                    self.redirect(settings.DEPLOY_WEB + '/')
             else:
                 self.redirect(settings.DEPLOY_WEB)
 

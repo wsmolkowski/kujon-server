@@ -25,6 +25,14 @@ HAS_PHOTO = "has_photo"
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 
+FB = "facebook"
+FB_ID = "id"
+FB_NAME = "name"
+FB_EMAIL = "email"
+FB_ACCESS_TOKEN = "access_token"
+FB_SESSION_EXPIRES = "session_expires"
+FB_PICTURE = "picture"
+
 CREATED_TIME = "created_time"
 UPDATE_TIME = "update_time"
 ACCESS_TOKEN_KEY = "access_token_key"
@@ -107,10 +115,14 @@ SMTP_TEXT = 'text'
 SMTP_MIME_TYPE = 'mime_type'
 SMTP_CHARSET = 'charset'
 
-GAUTH_ACCESS_TOKEN = 'gauth_access_token'
-GAUTH_EXPIRES_IN = 'gauth_expires_in'
-GAUTH_ID_TOKEN = 'gauth_id_token'
-GAUTH_TOKEN_TYPE = 'gauth_token_type'
+GOOGLE = 'google'
+GOOGLE_NAME = 'name'
+GOOGLE_EMAIL = 'email'
+GOOGLE_PICTURE = 'picture'
+GOOGLE_ACCESS_TOKEN = 'access_token'
+GOOGLE_EXPIRES_IN = 'expires_in'
+GOOGLE_ID_TOKEN = 'id_token'
+GOOGLE_TOKEN_TYPE = 'token_type'
 
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'

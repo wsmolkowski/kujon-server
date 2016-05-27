@@ -17,14 +17,14 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friendssuggestions.html'
                 crossDomain: true,
                 success:  function (data) {
                     if (data.status == 'success'){
-                        $('#page').html(template(data));
+                        $('#page-content').html(template(data));
                     } else {
-                        $('#page').html(templateError({'message': data.data}));
+                        $('#page-content').html(templateError({'message': data.data}));
                     }
                 },
                 error: function(jqXHR, exception) {
                     var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.responseText + ' exception: ' + exception};
-                    $('#page').html(templateError(msg));
+                    $('#page-content').html(templateError(msg));
                 }
             });
         }

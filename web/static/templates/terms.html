@@ -1,29 +1,46 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h4>Cykle akademickie</h4>
+<section id="cykle">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive prof">
+                <div class="naglowek-h2">
+                    <h2>Cykle akademickie</h2>
+                </div>
+                <table id="myTable" class="table"
+                       data-toggle="table"
+                       data-pagination="true"
+                       data-search="true"
+                       data-sort-name="name">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Nazwa</th>
+                        <th data-sortable="true">Numer</th>
+                        <th data-sortable="true">Status</th>
+                        <th data-sortable="true">Data rozpoczęcia</th>
+                        <th data-sortable="true">Data końcowa</th>
+                        <th data-sortable="true">Data zakończenia</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#data}}
+                    <tr>
+                        <td>{{name}}</td>
+                        <td>{{term_id}}</td>
+
+                        {{#if active}}
+                        <td class="gly-ok">Tak<span> <i class="glyphicon glyphicon-ok"></i></span></td>
+                        {{else}}
+                        <td class="during"><span>Nie</span></td>
+                        {{/if}}
+                        <td>{{start_date}}</td>
+                        <td>{{end_date}}</td>
+                        <td>{{finish_date}}</td>
+                    </tr>
+                    {{/data}}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
     </div>
-    <div class="panel-body">
-        <table id="terms-table" class="table table-hover table-responsive">
-            <thead>
-            <th>Nazwa</th>
-            <th>Numer</th>
-            <th>Aktywny</th>
-            <th>Data początkowa</th>
-            <th>Data końcowa</th>
-            <th>Data zakończenia</th>
-            </thead>
-            <tbody>
-            {{#data}}
-            <tr>
-                <td>{{name}}</td>
-                <td>{{term_id}}</td>
-                <td>{{#if active}}TAK{{else}}NIE{{/if}}</td>
-                <td>{{start_date}}</td>
-                <td>{{end_date}}</td>
-                <td>{{finish_date}}</td>
-            </tr>
-            {{/data}}
-            </tbody>
-        </table>
-    </div>
-</div>
+</section>

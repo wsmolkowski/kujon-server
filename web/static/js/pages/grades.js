@@ -1,5 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/modal_course.html', 'datatables', 'text!templates/modal_error.html'],
-    function($, Handlebars, main, tpl, tplError, tplCourseModal, datatables, tplModalError) {
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/grades.html', 'text!templates/error.html', 'text!templates/modal_course.html', 'text!templates/modal_error.html'],
+    function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError, tplCourseModal, tplModalError) {
     'use strict';
     return {
         render: function() {
@@ -10,10 +10,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html', 'text!temp
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data));
+                    $('#page-content').html(template(data));
                     bindModals();
                 } else {
-                    $('#page').html(templateError({'message': data.message}));
+                    $('#page-content').html(templateError({'message': data.message}));
                 }
             });
 

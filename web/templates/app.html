@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block header_js %}
+
+<link href="/static/bower_components/bootstrap-table/dist/bootstrap-table.min.css" rel="stylesheet">
+<link href="/static/bower_components/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+
+<script type="text/javascript" src="/static/require.config.js"></script>
+<script type="text/javascript" data-main="/static/js/startup.js"
+        src="/static/bower_components/requirejs/require.js"></script>
+
+{% end %}
+
+{% block navigation %}
+<nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand page-scroll" href="/"><img src="/static/img/logo-app.png"
+                                                              class="img-responsive"/></a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="slidemenu">
+            <ul class="nav navbar-nav navbar-right login">
+
+                <li class="app-notify"><a href="#"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></a>
+                </li>
+                <li class="dropdown">
+                    <a href="profil.html" class="dropdown-toggle" data-toggle="dropdown"><img
+                            src="/static/img/profil-head.png" class="img-circle profil-nav">Jan Kowalski <span
+                            class="glyphicon glyphicon-menu-down"></span></a>
+                    <ul class="dropdown-menu">
+                        <!--
+                        <li><a href="index.html">Witamy</a></li>
+                        <li><a href="zalogowano.html">Zalogowano</a></li>
+                        <li><a href="wybor-uczelni.html">Wybór uczelni</a></li>
+                        -->
+
+                        <li><a href="#user">Użytkownik</a></li>
+                        <li><a href="#grades">Oceny</a></li>
+                        <li><a href="#tt">Plan</a></li>
+                        <li><a href="#courses">Przedmioty</a></li>
+                        <li><a href="#lecturers">Nauczyciele</a></li>
+                        <li><a href="#terms">Cykle</a></li>
+                        <li><a href="#programmes">Kierunki</a></li>
+                        <li><a href="#faculties">Jednostki</a></li>
+                        <li><a href="#contact">Kontakt</a></li>
+
+                        <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
+
+                        <!--
+                        <li><a href="#tt">Plan</a></li>
+                        <li><a href="#courses">Przedmioty</a></li>
+                        <li><a href="#grades">Oceny</a></li>
+                        -->
+
+                        <!--
+                        <li><a href="oceny.html">Oceny</a></li>
+                        <li><a href="plan-zajec.html">Plan zajęć</a></li>
+                        <li><a href="/kontakt">Kontakt</a></li>
+                        <li><a href="spinner.html">Spinner</a></li>
+                        <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
+                        -->
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-left">
+                <li><a href="#user">Użytkownik</a></li>
+                <li><a href="#grades">Oceny</a></li>
+                <li><a href="#tt">Plan</a></li>
+                <li><a href="#courses">Przedmioty</a></li>
+                <li><a href="#lecturers">Nauczyciele</a></li>
+                <li><a href="#terms">Cykle</a></li>
+                <li><a href="#programmes">Kierunki</a></li>
+                <li><a href="#faculties">Jednostki</a></li>
+                <li><a href="#contact">Kontakt</a></li>
+
+
+                <!--
+                <li><a href="#tt">Plan</a></li>
+                <li><a href="#courses">Przedmioty</a></li>
+                <li><a href="#grades">Oceny</a></li>
+                <li><a href="plan-zajec.html">Plan zajęć</a></li>
+                <li><a href="oceny.html">Oceny</a></li>
+                <li><a href="kontakt.html">Kontakt</a></li>
+                -->
+            </ul>
+
+
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+
+</nav>
+{% end %}
+
+{% block main %}
+<div id="page-content" class="content">
+    <section class="welcome">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 text-center">
+                    <h1>Witamy w <span>Kujon.mobi</span>!</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
+
+    <footer id="footer" class="navbar-static-bottom footer-index">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6">
+                    <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
+                        reserved.</p>
+                </div>
+                <div class="col-sm-6">
+                    <ul class="nav navbar-nav navbar-right navbar-bottom">
+                        <!--
+                        <li><a href="#">Lista uczelni</a></li>
+                        -->
+                        <li><a href="#">Regulamin</a></li>
+                        <li><a href="#">Polityka prywatności</a></li>
+                        <li><a href="#">Kontakt</a></li>
+                        <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
+                        <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+{% end %}

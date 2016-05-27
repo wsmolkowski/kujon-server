@@ -1,11 +1,13 @@
-define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html', 'text!templates/error.html', 'fullcalendarpl'], function($, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'fullcalendar',
+'text!templates/tt.html', 'text!templates/error.html', 'fullcalendarpl'], function(
+$, Handlebars, main, nice, easing, bootstrapTable, fullcalendar, tpl, tplError, fullcalendarpl) {
 'use strict';
     return {
         render: function() {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            $('#page').html(template());
+            $('#page-content').html(template());
 
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
@@ -35,7 +37,7 @@ define(['jquery', 'handlebars', 'main', 'fullcalendar', 'text!templates/tt.html'
                                 callback(events);
                         }
                         else {
-                            $('#page').html(templateError(data));
+                            $('#page-content').html(templateError(data));
                         }
                     });
                 },

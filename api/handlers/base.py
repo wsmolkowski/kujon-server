@@ -2,7 +2,6 @@
 
 import copy
 
-# import oauth2 as oauth
 from bson import json_util
 from tornado import gen, web, escape
 from tornado.escape import json_decode
@@ -129,9 +128,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE,
-                               escape.json_encode(json_util.dumps(user_doc)),
-                               constants.COOKIE_EXPIRES_DAYS)
+        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
 
 
 class UsosesApi(BaseHandler):

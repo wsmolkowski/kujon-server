@@ -1,5 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/programmes.html', 'text!templates/error.html', 'datatables'],
-function($, Handlebars, main, tpl, tplError, datatables) {
+define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/programmes.html', 'text!templates/error.html'],
+function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError) {
 'use strict';
     return {
         render: function() {
@@ -8,12 +8,12 @@ function($, Handlebars, main, tpl, tplError, datatables) {
 
             main.callProgrammes(function(data){
                 if (data.status == 'success'){
-                    $('#page').html(template(data));
+                    $('#page-content').html(template(data));
                 } else {
-                    $('#page').html(templateError({'message': data.message}));
+                    $('#page-content').html(templateError({'message': data.message}));
                 }
 
-                $('#terms-table').DataTable(main.getDatableConfig());
+                // $('#terms-table').DataTable(main.getDatableConfig());
 
             });
             

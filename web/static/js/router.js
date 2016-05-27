@@ -1,38 +1,20 @@
-define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery, main, crossroads, hasher) {
+define(['jquery', 'main', 'handlebars',  'crossroads', 'hasher', 'bootstrap', 'text!templates/spinner.html',], function(
+jquery, main, Handlebars, crossroads, hasher, bootstrap, spinnerTpl) {
 'use strict';
 
-    function setActiveLink(hash, param) {
+    var template = Handlebars.compile(spinnerTpl);
 
-        $.when(main.init()).then(function(){
-            main.showSpinner(); //pokaż kręcacz porządnie
+    function setActiveLink(hash) {
 
-            var config = main.getConfig();
+        $('#page-content').html(template());
 
-            if (hash == 'disclaimer') {
-                require(['lib/pages/disclaimer'], function(page) {
-                    page.render();
-                    main.hideSpinner();
-                });
-            }
-            else if (config.USER_LOGGED == true && config.USOS_PAIRED == false){
-                require(['lib/pages/register'], function(page) {
-                    page.render();
-                    main.hideSpinner();
-                });
-            } else if (config.USER_LOGGED == false) {
-                require(['lib/pages/index'], function(page) {
-                    page.render();
-                    main.hideSpinner();
-                });
-            } else {
+        require(['lib/pages/'+hash], function(page) {
+            page.render();
 
-                require(['lib/pages/'+hash], function(page) {
-                    page.render();
-                    main.hideSpinner();
-                    $('.navbar li.active').removeClass('active');
-                    $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
-                });
-            }
+            $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+            $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
+
+            //schowaj kręcacz (?)
         });
     }
 
@@ -90,14 +72,6 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('lecturers',id.id);
     });
 
-    crossroads.addRoute('register', function() {
-        setActiveLink('register');
-    });
-
-    crossroads.addRoute('about', function() {
-        setActiveLink('about');
-    });
-
     crossroads.addRoute('friends', function() {
         setActiveLink('friends');
     });
@@ -110,12 +84,8 @@ define(['jquery','main',  'crossroads', 'hasher', 'bootstrap'], function(jquery,
         setActiveLink('tt');
     });
 
-    crossroads.addRoute('home', function() {
-        setActiveLink('home');
-    });
-
-    crossroads.addRoute('disclaimer', function() {
-        setActiveLink('disclaimer');
+    crossroads.addRoute('contact', function() {
+        setActiveLink('contact');
     });
 
     crossroads.addRoute('404', function() {

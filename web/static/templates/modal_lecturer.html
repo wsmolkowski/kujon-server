@@ -1,103 +1,78 @@
 <div class="modal fade" id="lecturerModal{{lecturer_id}}" tabindex="-1" role="dialog"
-     aria-labelledby="lecturerModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="lecturerModalLabel">{{first_name}} {{last_name}}</h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-xs-2">
-                        <a href="#">
-                            {{#if has_photo}}
-                            <img src="{{has_photo}}" class="img-responsive" alt="{{first_name}} {{last_name}}"/>
-                            {{/if}}
-                        </a>
-                    </div>
-                    <div class="col-xs-10">
-                        <table class="table table-strip table-responsive">
-                            <tr>
-                                <td>Tytuł</td>
-                                <td>{{titles.before}}</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td>Status pracownika</td>
-                                <td>{{staff_status}}</td>
-                            </tr>
-                            {{#if office_hours.pl}}
-                            <tr>
-                                <td>Godziny przyjęć</td>
-                                <td>{{office_hours}}</td>
-                            </tr>
-                            {{/if}}
-                            <tr>
-                                <td>Pokój</td>
-                                <td>{{room.building_id}} - {{room.building_name.pl}}</td>
-                            </tr>
-                            <tr>
-                                <td>Email</td>
-                                <td><a href="{{email_url}}" target="_blank">Pokaż email</a></td>
-                            </tr>
-                            {{#if homepage_url}}
-                            <tr>
-                                <td>Strona domowa</td>
-                                <td><a href="{{homepage_url}}" target="_blank">{{homepage_url}}</a></td>
-                            </tr>
-                            {{/if}}
-                            {{#if interests.pl}}
-                            <tr>
-                                <td>Zainteresowania</td>
-                                <td>{{interests}}</td>
-                            </tr>
-                            {{/if}}
-                            {{#if employment_positions}}
-                            <tr>
-                                <td>Zatrudnienie</td>
-                                <td></td>
-                            </tr>
-                            {{#employment_positions}}
-                            <tr>
-                                <td></td>
-                                <td>{{position.name}} w {{faculty.name}}</td>
-                            </tr>
-                            {{/employment_positions}}
-                            {{/if}}
-                            {{#if course_editions_conducted}}
-                            <tr>
-                                <td>Prowadzone przedmioty</td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>
-                                    <div class="collapse" id="cC{{id}}">
-                                        <div class="well">
-                                            {{#course_editions_conducted}}
-                                            <p>
-                                                {{course_name}} ({{course_id}}), {{term_id}}
-                                            </p>
-                                            <br>
-                                            {{/course_editions_conducted}}
-                                        </div>
-                                    </div>
-                                    <a class="btn btn-default collapsed" data-toggle="collapse" href="#cC{{id}}">
-                                        <span class="if-collapsed">Pokaż przedmioty</span>
-                                        <span class="if-not-collapsed">Ukryj przedmioty</span>
-                                    </a>
-                                </td>
-                            </tr>
-                            {{/if}}
-                        </table>
-                    </div>
-                </div>
+	 aria-labelledby="myModalLabel">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+						aria-hidden="true">&times;</span></button>
+				<p class="modal-title" id="myModalLabel">Wykładowca {{first_name}} {{last_name}}</p>
+			</div>
+			<div class="modal-body wykladowcy-modal">
+				<div class="row">
+					<div class="col-sm-12 col-xs-12">
+						<div class="col-sm-3 col-xs-6 edit">
+							<div class="profil">
+								{{#if has_photo}}
+								<img src="{{has_photo}}" class="img-responsive profil-img">
+								{{/if}}
+							</div>
+						</div>
 
+						<div class="col-sm-8">
+							<div class="row">
+								<div class="col-sm-12">
+									<h2>{{first_name}} {{last_name}}</h2>
+								</div>
+								<div class="col-sm-6 status">
+									<p>Status</p>
+									<p><span>{{staff_status}}</span></p>
+								</div>
+								<div class="col-sm-6 adres">
+									<p>E-mail</p>
+									<a><a href="{{email_url}}"></a><span>Pokaż</span></a></p>
+								</div>
+								<div class="col-sm-6 sale">
+									<p>Pokój</p>
+									<p><span>{{room.building_id}} - {{room.building_name.pl}}</span></p>
+								</div>
+								{{#if homepage_url}}
+								<div class="col-sm-6 przedmioty">
+									<p>Strona domowa</p>
+									<p href="{{homepage_url}}" target="_blank"><span>{{homepage_url}}</span></p>
+								</div>
+								{{/if}}
+								{{#if interests.pl}}
+								<div class="col-sm-6 przedmioty">
+									<p>Zainteresowania</p>
+									<p><span>{{interests}}</span></p>
+								</div>
+								{{/if}}
+								{{#if employment_positions}}
+								{{#employment_positions}}
+								<div class="col-sm-6 przedmioty">
+									<p></p>
+									<p><span>{{position.name}} w {{faculty.name}}</span></p>
+								</div>
+								{{/employment_positions}}
+								{{/if}}
+								{{#if course_editions_conducted}}
+								<div class="col-sm-12 ostatnie-tematy">
+									<p>Przedmioty</p>
+									{{#course_editions_conducted}}
+									<ol>
+										<li>
+											<p>{{course_name}} ({{course_id}}), {{term_id}}</p>
+										</li>
+									</ol>
+									{{/course_editions_conducted}}
+								</div>
+								{{/if}}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Zamknij</button>
-            </div>
-        </div>
     </div>
+	</div>
 </div>

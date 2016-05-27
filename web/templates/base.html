@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Kujon - mobilny dostęp do danych studenckich</title>
+    <meta name="description" content="Kujon - mobilny dostęp do Uczelni">
+    <meta name="keywords" content="kujon, kujon.mobi, usos, usosweb na smartphone, uczelnia, aplikacja, uniwersytet">
+
+    <link rel="shortcut icon" href="/static/favicon-blue.ico">
+
+    <!-- Bootstrap -->
+    <link href="/static/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/bower_components/jquery.cookiebar/dist/jquery.cookiebar.min.css" rel="stylesheet">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,100italic,300italic,400italic,500,500italic,700,700italic,900,900italic'
+          rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="/static/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="/static/bower_components/html5shiv/dist/html5shiv.min.js"></script>
+    <script src="/static/bower_components/respond/dest/respond.min.js"></script>
+    <![endif]-->
+
+    {% block header_js %}
+    {% end %}
+
+</head>
+<body>
+<!-- <div class="ui-widget">
+        <div class="cookie-message ui-widget-header blue">
+          <p>Ta strona używa ciasteczek (cookies), dzięki którym nasz serwis może działać lepiej. <a href="#">Więcej informacji</a><span><span></p>
+        </div>
+  </div>-->
+
+{% block navigation %}
+{% end %}
+
+<div id="page-content">
+    {% block main %}
+    {% end %}
+</div>
+
+
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="col-sm-12">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h3>Logowanie</h3>
+                </div>
+            </div>
+            <div class="modal-body">
+
+                <div class="col-sm-12">
+
+                    <p>Zaloguj się za pośrednictwem jednego z poniższych portali społecznościowych.</p>
+                </div>
+                <div class="col-sm-12">
+                    <a href="{{API_URL}}/authentication/facebook" type="button"
+                       class="btn btn-primary btn-lg btn-block">
+                        Zaloguj się przez Facebook</a>
+                </div>
+                <div class="col-sm-12 col-xs-12">
+                    <div class="col-sm-5 col-xs-5 hr-left">
+                        <hr/>
+                    </div>
+                    <div class="col-sm-2 col-xs-2 text-center">
+                        <span>lub</span>
+                    </div>
+                    <div class="col-sm-5 col-xs-5 hr-right">
+                        <hr/>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <a href="{{API_URL}}/authentication/google" type="button" class="btn btn-danger btn-lg btn-block">
+                        Zaloguj się przez Google</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer id="footer" class="navbar-static-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6">
+                <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
+                    reserved.</p>
+            </div>
+            <div class="col-sm-6">
+                <ul class="nav navbar-nav navbar-right navbar-bottom">
+                    <li><a href="regulamin">Regulamin</a></li>
+                    <li><a href="regulamin">Polityka prywatności</a></li>
+                    <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
+                    <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
+                    <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+{% block footer_js %}
+{% end %}
+
+</body>
+</html>

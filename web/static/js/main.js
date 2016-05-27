@@ -1,9 +1,9 @@
-define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-cookie'], function($, Handlebars, tplError, jc)
+define("main", ["jquery", "handlebars", "text!templates/error.html"], function($, Handlebars, tplError)
 {
         /* variables */
 
         var templateError = Handlebars.compile(tplError);
-        var applicationConfig = JSON.parse($.cookie('KUJON_CONFIG_COOKIE'));
+        var API_URL = $('#api_url').val();
         var config;
 
 
@@ -30,7 +30,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
         }
 
         function buildApiUrl(api){
-            return applicationConfig.API_URL + api;
+            return API_URL + api;
         };
 
         function buildConfig(){
@@ -56,33 +56,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                 });
         };
 
-        function callAjaxPost(request_url, jsonData, callback){
-
-            $.ajax({
-                type: 'POST',
-                url: request_url,
-                data: JSON.stringify(jsonData),
-                //contentType: "application/json",
-                dataType: "json",
-                xhrFields: {
-                    withCredentials: true
-                },
-                beforeSend: function(){
-                    showSpinner();
-                },
-                complete: function(){
-                    hideSpinner();
-                },
-                crossDomain: true,
-                success:  function (data) {
-                    callback(data);
-                },
-                error: function(jqXHR, exception) {
-                    var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
-                    $('#page').html(templateError(msg));
-                }
-            });
-        };
 
         function callAjaxGet(request_url, callback){
 
@@ -107,10 +80,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
                     $('#page').html(templateError(msg));
                 }
             });
-        };
-
-        function usoses(callback){
-            callAjaxGet(buildApiUrl('/usoses'), callback);
         };
 
         function friendssuggestion(callback){
@@ -169,10 +138,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callAjaxGet(request_url, callback);
         };
 
-        function registerUsos(usosId){
-            var url = buildApiUrl('/authentication/register?usos_id=' + usosId);
-            window.location.href = url;
-        }
 
         /* public methods */
         return {
@@ -194,16 +159,13 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
 	                return pom;
                 });
 
-                return buildConfig();
+//                return buildConfig();
             },
             getConfig: function(){
                 return config;
             },
             applicationConfig: function(){
                 return applicationConfig;
-            },
-            callUsoses: function(callback){
-                usoses(callback);
             },
             callFriendsSuggestion: function(callback){
                 friendssuggestion(callback);
@@ -241,16 +203,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             callLecturerDetails: function(lecturerId, callback){
                 lecturerDetails(lecturerId, callback);
             },
-            isUserLoggedIn: function(){
-                if (! $.cookie(applicationConfig.KUJON_SECURE_COOKIE)){
-                    return false;
-                } else {
-                    return true;
-                }
-            },
-            isUserRegistered: function(){
-                return config.USOS_PAIRED;
-            },
             callTT: function(start, callback){
                 TT(start, callback);
             },
@@ -259,9 +211,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html", 'jquery-coo
             },
             hideSpinner: function(){
                 hideSpinner();
-            },
-            callRegisterUsos: function(usosId){
-                registerUsos(usosId);
             },
             getDatableConfig: function(){
                 return {

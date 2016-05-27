@@ -15,8 +15,9 @@ from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
-    constants.HAS_PHOTO)
-
+    constants.HAS_PHOTO, "{}.{}".format(constants.GOOGLE, constants.GOOGLE_NAME), "{}.{}".format(constants.GOOGLE, constants.GOOGLE_PICTURE),
+    "{}.{}".format(constants.GOOGLE, constants.GOOGLE_EMAIL), "{}.{}".format(constants.FB, constants.FB_NAME),
+    "{}.{}".format(constants.FB, constants.FB_PICTURE), "{}.{}".format(constants.FB, constants.FB_EMAIL))
 
 class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
     @decorators.authenticated
