@@ -390,8 +390,11 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                     courses[course[constants.COURSE_ID]] = course
 
             for course in courses:
-                course_edition_doc = yield self.api_course_edition(course, courses[course][constants.TERM_ID],
-                                                                   fetch_participants=True, finish=False)
+                # tutaj nie korzystamy z api_course_edition żeby nie odświeżać 2 razy
+                pipeline = {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
+                            constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                            constants.USER_ID: self.user_doc[constants.MONGO_ID]}
+                course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
                 if not course_edition_doc:
                     continue
 
