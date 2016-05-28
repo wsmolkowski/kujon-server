@@ -135,7 +135,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
                 user_doc = yield self.insert_user(user_doc)
                 user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                                    {constants.MONGO_ID: user_doc[constants.MONGO_ID]}, self._COOKIE_FIELDS)
+                                    {constants.MONGO_ID: user_doc}, self._COOKIE_FIELDS)
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             else:

@@ -129,7 +129,7 @@ MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
 MOBILE_X_HEADER_REFRESH = 'X-Kujonrefresh'
 EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
 
-DISABLE_SSL_CERT_VALIDATION = 'disable_ssl_certificate_validation'
+VALIDATE_SSL_CERT = 'validate_ssl_certificate'
 
 # WORKES_QUEUE_SIZE = 100
 # WORKERS_MAX = 10

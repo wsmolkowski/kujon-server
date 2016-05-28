@@ -22,7 +22,7 @@ class Application(tornado.web.Application):
             (r"/", MainHandler),
             (r"/kontakt", ContactHandler),
             (r"/regulamin", DisclaimerHandler),
-            (r"/rejestracja", RegisterHandler),
+            (r"/register", RegisterHandler),
         ]
 
         __settings = dict(

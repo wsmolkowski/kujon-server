@@ -139,7 +139,7 @@ def recreate_dictionaries():
         inserts = list()
         try:
             url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
-            http_client = utils.http_client()
+            http_client = utils.http_client(validate_cert=usos[constants.VALIDATE_SSL_CERT])
 
             response = yield http_client.fetch(url)
             if response.code is not 200 and response.reason != 'OK':
