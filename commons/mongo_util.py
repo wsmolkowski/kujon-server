@@ -130,39 +130,46 @@ def drop_collections(skip_collections=[]):
 
 
 @gen.coroutine
+def _do_recreate(db, usos):
+    try:
+        url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
+        http_client = utils.http_client(validate_cert=usos[constants.VALIDATE_SSL_CERT])
+        response = yield http_client.fetch(url)
+        if response.code is not 200 and response.reason != 'OK':
+            logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
+            logging.warning(response)
+        else:
+            class_types = escape.json_decode(response.body)
+
+    except Exception, ex:
+        logging.error("failed to recreate_dictionaries for %r", usos[constants.USOS_ID])
+        logging.exception(ex)
+        gen.Return(None)
+
+    if len(class_types) > 0:
+        class_type_list = list()
+        for class_type in class_types.values():
+            class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+            class_type[constants.CREATED_TIME] = datetime.now()
+            class_type[constants.UPDATE_TIME] = datetime.now()
+            class_type_list.append(class_type)
+        db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
+        logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+    else:
+        logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                                              usos[constants.USOS_ID]))
+
+
+@gen.coroutine
 def recreate_dictionaries():
     db = get_client()
-    recreate_time = datetime.now()
 
+    tasks = list()
     db.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
     for usos in db[constants.COLLECTION_USOSINSTANCES].find():
-        inserts = list()
-        try:
-            url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
-            http_client = utils.http_client(validate_cert=usos[constants.VALIDATE_SSL_CERT])
-            response = yield http_client.fetch(url)
-            if response.code is not 200 and response.reason != 'OK':
-                logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
-                logging.warning(response)
-            else:
-                class_types = escape.json_decode(response.body)
+        tasks.append(_do_recreate(db, usos))
 
-        except Exception, ex:
-            logging.error("failed to recreate_dictionaries for %r", usos[constants.USOS_ID])
-            logging.exception(ex)
-            continue
-
-        if len(class_types) > 0:
-            for class_type in class_types.values():
-                class_type[constants.USOS_ID] = usos[constants.USOS_ID]
-                class_type[constants.CREATED_TIME] = recreate_time
-                class_type[constants.UPDATE_TIME] = recreate_time
-                inserts.append(class_type)
-            db[constants.COLLECTION_COURSES_CLASSTYPES].insert(inserts)
-            logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
-        else:
-            logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                  usos[constants.USOS_ID]))
+    yield tasks
 
     raise gen.Return(True)
 
