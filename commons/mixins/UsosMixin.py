@@ -72,7 +72,7 @@ class UsosMixin(OAuthMixin):
         args.update(oauth)
 
         url += "?" + urllib_parse.urlencode(args)
-        http = utils.http_client()
+        http = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
         if photo:
             http_callback = functools.partial(self._on_usos_photo_request, callback)
         else:
@@ -125,10 +125,15 @@ class UsosMixin(OAuthMixin):
 
         url += "?" + urllib_parse.urlencode(arguments)
 
-        http_client = utils.http_client()
+        http_client = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+
+        if constants.VALIDATE_SSL_CERT in self.usos_doc and self.usos_doc.constants.DISABLE_SSL_CERT_VALIDATION:
+            validate_ssl_cert = True
+        else:
+            validate_ssl_cert = True
 
         request = httpclient.HTTPRequest(url, method='GET', use_gzip=settings.COMPRESS_RESPONSE,
-                                         user_agent=settings.PROJECT_TITLE)
+                                         user_agent=settings.PROJECT_TITLE, validate_cert=validate_ssl_cert)
 
         try:
             response = yield http_client.fetch(request)
