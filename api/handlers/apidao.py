@@ -139,7 +139,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
             course_doc['is_currently_conducted'])
 
-        classtypes = yield self.get_classtypes()
 
 
         # make lecturers unique list
@@ -158,8 +157,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 try:
                     group_doc = yield self.api_group(course_id, term_id, int(unit), finish=False)
                     if group_doc:
-                        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
-                        del (group_doc['class_type_id'])
                         groups.append(group_doc)
                 except Exception, ex:
                     yield self.exc(ex, finish=False)
@@ -298,7 +295,6 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
         course_edition_list = yield cursor.to_list(None)
 
-
         grades_sorted = list()
         for grade in course_edition_list:
             grade.pop(constants.MONGO_ID)
@@ -378,27 +374,17 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
 
     @gen.coroutine
     def api_lecturers(self):
-        courses = {}
         lecturers_returned = {}
-
         courses_editions_doc = yield self.api_courses_editions()
 
         if courses_editions_doc:
-
-            for term in courses_editions_doc[constants.COURSE_EDITIONS]:
-                for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
-                    courses[course[constants.COURSE_ID]] = course
-
-            for course in courses:
-                # tutaj nie korzystamy z api_course_edition żeby nie odświeżać 2 razy
-                pipeline = {constants.COURSE_ID: course, constants.TERM_ID: courses[course][constants.TERM_ID],
-                            constants.USOS_ID: self.user_doc[constants.USOS_ID],
-                            constants.USER_ID: self.user_doc[constants.MONGO_ID]}
-                course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(pipeline)
-                if not course_edition_doc:
-                    continue
-
-                for lecturer in course_edition_doc[constants.LECTURERS]:
+            # tutaj nie korzystamy z api_course_edition żeby nie odświeżać 2 razy
+            pipeline = {constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                        constants.USER_ID: self.user_doc[constants.MONGO_ID]}
+            cursor = self.db[constants.COLLECTION_COURSE_EDITION].find(pipeline)
+            course_edition_list = yield cursor.to_list(None)
+            for course in course_edition_list:
+                for lecturer in course[constants.LECTURERS]:
                     lecturer_id = lecturer[constants.USER_ID]
                     lecturers_returned[lecturer_id] = lecturer
 
@@ -624,6 +610,10 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
                 yield self.insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=finish)
+
+        classtypes = yield self.get_classtypes()
+        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
+        del (group_doc['class_type_id'])
 
         raise gen.Return(group_doc)
 
