@@ -125,12 +125,12 @@ class UsosMixin(OAuthMixin):
 
         url += "?" + urllib_parse.urlencode(arguments)
 
-        http_client = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
-
-        if constants.VALIDATE_SSL_CERT in self.usos_doc and self.usos_doc.constants.DISABLE_SSL_CERT_VALIDATION:
+        if constants.VALIDATE_SSL_CERT in self.usos_doc and self.usos_doc[constants.VALIDATE_SSL_CERT]:
             validate_ssl_cert = True
         else:
             validate_ssl_cert = True
+
+        http_client = utils.http_client(validate_cert=validate_ssl_cert)
 
         request = httpclient.HTTPRequest(url, method='GET', use_gzip=settings.COMPRESS_RESPONSE,
                                          user_agent=settings.PROJECT_TITLE, validate_cert=validate_ssl_cert)
