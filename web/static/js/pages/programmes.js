@@ -13,7 +13,7 @@ function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError) {
                     $('#page-content').html(templateError({'message': data.message}));
                 }
 
-                $('#terms-table').DataTable(main.getDatableConfig());
+                // $('#terms-table').DataTable(main.getDatableConfig());
 
             });
             

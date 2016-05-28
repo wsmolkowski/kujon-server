@@ -1,36 +1,41 @@
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <h4>Oceny</h4>
-    </div>
-    <div class="panel-body">
-        <table id="grades-table" class="table table-hover table-responsive">
-            <thead>
-            <th>Semestr</th>
-            <th>Przedmiot</th>
-            <th>Termin</th>
-            <th>Rodzaj</th>
-            <th>Ocena</th>
-            <th>Słownie</th>
-            </thead>
-            <tbody>
-
-            {{#data}}
-            <tr>
-                <td>{{term_id}}</td>
-                <td>
-                    <a class="btn btn-link course-btn" type="button" data-courseId="{{course_id}}" data-termId="{{term_id}}">{{course_name}}</a>
-                </td>
-                <td>{{exam_session_number}}</td>
-                <td>{{class_type}}</td>
-                <td>{{value_symbol}}</td>
-                <td>{{value_description}}</td>
-                </tr>
-            </tr>
-            {{/data}}
-
-            </tbody>
-        </table>
-    </div>
-</div>
+<section id="oceny">
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-12 content table-responsive oceny">
+				<div class="naglowek-h2">
+					<h2>Oceny</h2>
+				</div>
+				<table id="myTable" class="table"
+					   data-toggle="table"
+					   data-pagination="true"
+					   data-sort-name="name">
+					<thead>
+					<tr>
+						<th data-sortable="true">Semestr</th>
+						<th data-sortable="true">Przedmiot</th>
+						<th data-sortable="true">Termin</th>
+						<th data-sortable="true">Rodzaj</th>
+						<th data-sortable="true">Ocena</th>
+						<th data-sortable="true">Słownie</th>
+					</tr>
+					</thead>
+					<tbody>
+					{{#data}}
+					<tr>
+						<td>{{term_id}}</td>
+						<td><a class="btn btn-link course-btn" type="button" data-courseId="{{course_id}}"
+							   data-termId="{{term_id}}">{{course_name}}</a></td>
+						<td>{{exam_session_number}}</td>
+						<td>{{class_type}}</td>
+						<td>{{value_symbol}}</td>
+						<td>{{value_description}}</td>
+					</tr>
+					{{/data}}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</section>
 
 <div id="modalWrapper"></div>
