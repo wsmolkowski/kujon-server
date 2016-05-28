@@ -138,19 +138,26 @@ class UsosCrawler(UsosMixin, DaoMixin):
         raise gen.Return(None)
 
     @gen.coroutine
+    def __build_programmes_task(self, programm_id):
+        programme_doc = yield self.db_programme(programm_id, self.usos_id)
+
+        if programme_doc:
+            gen.Return(None)
+        try:
+            result = yield self.usos_programme(programm_id)
+            yield self.db_insert(constants.COLLECTION_PROGRAMMES, result)
+        except Exception, ex:
+            yield self._exc(ex)
+
+    @gen.coroutine
     def __build_programmes(self, user_info_id):
         programmes = yield self.db_users_info_programmes(user_info_id, self.usos_id)
+        tasks = list()
 
         for programme in programmes:
-            programme_doc = yield self.db_programme(programme['programme'][constants.ID], self.usos_id)
-            if programme_doc:
-                continue
-            try:
-                result = yield self.usos_programme(programme['programme'][constants.ID])
+            tasks.append(programme['programme'][constants.ID])
 
-                yield self.db_insert(constants.COLLECTION_PROGRAMMES, result)
-            except Exception, ex:
-                yield self._exc(ex)
+        yield tasks
 
         raise gen.Return(None)
 
@@ -183,25 +190,24 @@ class UsosCrawler(UsosMixin, DaoMixin):
         raise gen.Return(None)
 
     @gen.coroutine
+    def __build_course_edition_task(self, course_id, term_id):
+        try:
+            result = yield self.usos_course_edition(course_id, term_id, fetch_participants=True)
+            if result:
+                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+            else:
+                logging.warning('could not find course edition for {0}, {1}'.format(course_id, term_id))
+        except Exception, ex:
+            yield self._exc(ex)
+
+    @gen.coroutine
     def __build_course_edition(self):
         courses_editions = yield self.db_courses_editions(self.user_id)
+        tasks = list()
         for course_edition in courses_editions:
             course_id, term_id = course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]
-            course_edition_doc = yield self.db_course_edition(self.user_id, course_id, term_id, self.usos_id)
-            if course_edition_doc:
-                continue
-            try:
-                result = yield self.usos_course_edition(course_edition[constants.COURSE_ID],
-                                                        course_edition[constants.TERM_ID],
-                                                        fetch_participants=True)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
-                else:
-                    logging.warning('could not find course edition for course_id:{0} and term_id:{1}'.format(
-                        course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]))
-            except Exception, ex:
-                yield self._exc(ex)
-
+            tasks.append(self.__build_course_edition_task(course_id, term_id))
+        yield tasks
         raise gen.Return(None)
 
     @gen.coroutine
