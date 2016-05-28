@@ -52,7 +52,8 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 
-
+parser.add_argument('-d', '--debug', action='store_const', dest='option', const='debug',
+                    help="enable debug mode")
 parser.add_argument('-c', '--clean', action='store_const', dest='option', const='clean',
                     help="clean all database collection without usosinstances and course_class_types")
 parser.add_argument('-ca', '--cleanall', action='store_const', dest='option', const='cleanall',
@@ -66,12 +67,14 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
 
 
 def main():
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
 
     args = parser.parse_args()
 
-    if args.option == 'recreate':
+    if settings.DEBUG:
+        logging.getLogger().setLevel(logging.DEBUG)
+    if args.option == 'debug':
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif args.option == 'recreate':
         drop()
         recreate()
     elif args.option == 'clean':
