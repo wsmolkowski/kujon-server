@@ -140,7 +140,6 @@ def recreate_dictionaries():
         try:
             url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
             http_client = utils.http_client(validate_cert=usos[constants.VALIDATE_SSL_CERT])
-
             response = yield http_client.fetch(url)
             if response.code is not 200 and response.reason != 'OK':
                 logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
@@ -160,7 +159,7 @@ def recreate_dictionaries():
                 class_type[constants.UPDATE_TIME] = recreate_time
                 inserts.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(inserts)
-            logging.debug("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+            logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
         else:
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                   usos[constants.USOS_ID]))
