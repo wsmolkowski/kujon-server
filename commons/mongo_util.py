@@ -141,23 +141,22 @@ def _do_recreate(db, usos):
         else:
             class_types = escape.json_decode(response.body)
 
-    except Exception, ex:
-        logging.error("failed to recreate_dictionaries for %r", usos[constants.USOS_ID])
-        logging.exception(ex)
-        gen.Return(None)
+        if class_types and len(class_types) > 0:
+            class_type_list = list()
+            for class_type in class_types.values():
+                class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+                class_type[constants.CREATED_TIME] = datetime.now()
+                class_type[constants.UPDATE_TIME] = datetime.now()
+                class_type_list.append(class_type)
+            db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
+            logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+        else:
+            logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
+                                                                  usos[constants.USOS_ID]))
 
-    if len(class_types) > 0:
-        class_type_list = list()
-        for class_type in class_types.values():
-            class_type[constants.USOS_ID] = usos[constants.USOS_ID]
-            class_type[constants.CREATED_TIME] = datetime.now()
-            class_type[constants.UPDATE_TIME] = datetime.now()
-            class_type_list.append(class_type)
-        db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
-        logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
-    else:
-        logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                              usos[constants.USOS_ID]))
+    except Exception, ex:
+        logging.error("failed to recreate_dictionaries for %r : %r", usos[constants.USOS_ID], ex.message)
+    gen.Return(None)
 
 
 @gen.coroutine
