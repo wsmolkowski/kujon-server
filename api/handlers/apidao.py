@@ -56,11 +56,12 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
             yield self.insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
 
         if self.do_refresh():
+            tasks = list()
             for term in courses_editions_doc[constants.COURSE_EDITIONS]:
                 for course in courses_editions_doc[constants.COURSE_EDITIONS][term]:
-                    yield self.api_course_edition(course[constants.COURSE_ID], course[constants.TERM_ID],
-                                                                   fetch_participants=True, finish=False)
-
+                    tasks.append(self.api_course_edition(course[constants.COURSE_ID], course[constants.TERM_ID],
+                                                                   fetch_participants=True, finish=False))
+            yield tasks
         raise gen.Return(courses_editions_doc)
 
     @gen.coroutine
