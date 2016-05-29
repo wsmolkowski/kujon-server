@@ -9,7 +9,7 @@ from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
 from commons import settings
-from handlers import MainHandler, ContactHandler, DisclaimerHandler, RegisterHandler, DefaultErrorHandler
+from handlers import MainHandler, ContactHandler, DisclaimerHandler, RegisterHandler, DefaultErrorHandler, LoginHandler
 
 define("port", default=settings.WEB_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
@@ -23,6 +23,7 @@ class Application(tornado.web.Application):
             (r"/kontakt", ContactHandler),
             (r"/regulamin", DisclaimerHandler),
             (r"/rejestracja", RegisterHandler),
+            (r"/login", LoginHandler),
         ]
 
         __settings = dict(
