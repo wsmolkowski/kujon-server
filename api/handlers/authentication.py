@@ -270,7 +270,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
                 self.reset_user_cookie(user_doc)
-                self.redirect(settings.DEPLOY_WEB + '/#register')
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja')
 
             if user_doc:
 
