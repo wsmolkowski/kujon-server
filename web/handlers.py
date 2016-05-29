@@ -58,7 +58,7 @@ class MainHandler(BaseHandler):
         if user and constants.USOS_PAIRED in user and user[constants.USOS_PAIRED]:
             self.render("app.html", **CONFIG)
         elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
-            self.redirect('/register')
+            self.redirect('/rejestracja')
         else:
             self.render("index.html", **CONFIG)
 

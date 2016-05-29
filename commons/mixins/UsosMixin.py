@@ -125,7 +125,9 @@ class UsosMixin(OAuthMixin):
 
         url += "?" + urllib_parse.urlencode(arguments)
 
-        if constants.VALIDATE_SSL_CERT in self.usos_doc and self.usos_doc[constants.VALIDATE_SSL_CERT]:
+        usos_doc = self._find_usos()
+
+        if constants.VALIDATE_SSL_CERT in usos_doc and usos_doc[constants.VALIDATE_SSL_CERT]:
             validate_ssl_cert = True
         else:
             validate_ssl_cert = True
@@ -136,7 +138,7 @@ class UsosMixin(OAuthMixin):
                                          user_agent=settings.PROJECT_TITLE, validate_cert=validate_ssl_cert)
 
         try:
-            response = yield http_client.fetch(request, validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+            response = yield http_client.fetch(request, validate_cert=usos_doc[constants.VALIDATE_SSL_CERT])
 
             if response.code is not 200 and response.reason != 'OK':
                 raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
