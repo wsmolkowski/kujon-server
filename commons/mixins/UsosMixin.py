@@ -258,6 +258,7 @@ class UsosMixin(OAuthMixin):
                 course_id, term_id = course_conducted['id'].split('|')
 
                 try:
+                    # TODO: przerobić na rownloegle wywołanie wszystkich pobrań
                     course_doc = yield self.api_course(course_id)
                     if course_doc:
                         courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],

@@ -5,7 +5,7 @@ import tornado.web
 
 from apidao import ApiDaoHandler
 from base import BaseHandler
-from commons import decorators
+from commons import decorators, constants
 
 
 class CourseEditionApi(BaseHandler, ApiDaoHandler):
@@ -16,7 +16,7 @@ class CourseEditionApi(BaseHandler, ApiDaoHandler):
 
         try:
             course_doc = yield self.api_course_term(course_id, term_id)
-            self.success(course_doc, cache_age=86400)
+            self.success(course_doc, cache_age=constants.SECONDS_2WEEKS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -29,7 +29,7 @@ class CoursesApi(BaseHandler, ApiDaoHandler):
 
         try:
             course_doc = yield self.api_course(course_id)
-            self.success(course_doc, cache_age=86400)
+            self.success(course_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -42,7 +42,7 @@ class CoursesEditionsApi(BaseHandler, ApiDaoHandler):
 
         try:
             courses = yield self.api_courses()
-            self.success(courses, cache_age=86400)
+            self.success(courses, cache_age=constants.SECONDS_2WEEKS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -55,6 +55,6 @@ class CoursesEditionsByTermApi(BaseHandler, ApiDaoHandler):
 
         try:
             courses = yield self.api_courses_by_term()
-            self.success(courses, cache_age=86400)
+            self.success(courses, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)

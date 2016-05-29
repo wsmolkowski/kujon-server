@@ -19,7 +19,7 @@ class LecturersApi(BaseHandler, ApiDaoHandler):
             if not lecturers_doc:
                 self.error("Poczekaj, szukamy informacji o Twoich nauczycielach.")
             else:
-                self.success(lecturers_doc, cache_age=2592000)
+                self.success(lecturers_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -33,6 +33,6 @@ class LecturerByIdApi(BaseHandler, ApiDaoHandler):
         try:
             user_info_doc = yield self.api_lecturer(user_info_id)
 
-            self.success(user_info_doc, cache_age=2592000)
+            self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)

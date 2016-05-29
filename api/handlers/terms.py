@@ -3,7 +3,7 @@
 import tornado.web
 from apidao import ApiDaoHandler
 from base import BaseHandler
-from commons import decorators
+from commons import decorators, constants
 
 
 class TermsApi(BaseHandler, ApiDaoHandler):
@@ -18,7 +18,7 @@ class TermsApi(BaseHandler, ApiDaoHandler):
             if not terms_ordered:
                 self.error("Poczekaj szukamy cykli")
             else:
-                self.success(terms_ordered, 2592000)
+                self.success(terms_ordered, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -35,6 +35,6 @@ class TermApi(BaseHandler, ApiDaoHandler):
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
             else:
-                self.success(term_doc, cache_age=2592000)
+                self.success(term_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
