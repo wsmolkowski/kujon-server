@@ -3,7 +3,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
         /* variables */
 
         var templateError = Handlebars.compile(tplError);
-        var API_URL = $('#api_url').val();
+        var apiUrl = $('#api_url').val();
         var config;
 
 
@@ -30,7 +30,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
         }
 
         function buildApiUrl(api){
-            return API_URL + api;
+            return apiUrl + api;
         };
 
         function buildConfig(){
@@ -211,6 +211,9 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             },
             hideSpinner: function(){
                 hideSpinner();
+            },
+            getApiUrl: function(){
+                return apiUrl;
             },
             getDatableConfig: function(){
                 return {
