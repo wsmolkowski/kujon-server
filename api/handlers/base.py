@@ -136,7 +136,7 @@ class UsosesApi(BaseHandler):
     @gen.coroutine
     def get(self):
         data = yield self.get_usoses(showtokens=False)
-        self.success(data, cache_age=2592000)
+        self.success(data, cache_age=constants.SECONDS_1MONTH)
 
 
 class DefaultErrorHandler(BaseHandler):

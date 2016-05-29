@@ -133,8 +133,8 @@ def drop_collections(skip_collections=[]):
 def _do_recreate(db, usos):
     try:
         url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
-        http_client = utils.http_client(validate_cert=usos[constants.VALIDATE_SSL_CERT])
-        response = yield http_client.fetch(url)
+        http_client = utils.http_client()
+        response = yield http_client.fetch(url, validate_cert=usos[constants.VALIDATE_SSL_CERT])
         if response.code is not 200 and response.reason != 'OK':
             logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
             logging.warning(response)

@@ -5,7 +5,7 @@ import tornado.web
 
 from apidao import ApiDaoHandler
 from base import BaseHandler
-from commons import decorators
+from commons import decorators, constants
 
 LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studies', 'level_of_studies', 'duration')
 
@@ -22,7 +22,7 @@ class ProgrammesByIdApi(BaseHandler, ApiDaoHandler):
             if not programme:
                 self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
             else:
-                self.success(programme, cache_age=2592000)
+                self.success(programme, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -38,6 +38,6 @@ class ProgrammesApi(BaseHandler, ApiDaoHandler):
             if not programmes:
                 self.error("Poczekaj szukamy kierunków.")
             else:
-                self.success(programmes, cache_age=2592000)
+                self.success(programmes, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)

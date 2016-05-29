@@ -23,7 +23,7 @@ class FacultyByIdApi(BaseHandler, ApiDaoHandler):
             if not faculty_doc:
                 raise faculty_doc('Nie możemy znaleźć danych dla jednostki.', faculty_id)
 
-            self.success(faculty_doc, cache_age=86400)
+            self.success(faculty_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -58,6 +58,6 @@ class FacultiesApi(BaseHandler, ApiDaoHandler):
                 faculty_doc = yield self.api_faculty(faculty_id)
                 faculties.append(faculty_doc)
 
-            self.success(faculties, cache_age=86400)
+            self.success(faculties, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)

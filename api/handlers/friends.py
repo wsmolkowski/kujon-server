@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 from apidao import ApiDaoHandler
 from base import BaseHandler
 from commons import constants, helpers, decorators
-from commons.errors import ApiError
 
 
 class FriendsApi(BaseHandler, ApiDaoHandler):

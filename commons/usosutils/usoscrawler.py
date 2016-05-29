@@ -155,7 +155,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
         tasks = list()
 
         for programme in programmes:
-            tasks.append(programme['programme'][constants.ID])
+            tasks.append(self.__build_programmes_task(programme['programme'][constants.ID]))
 
         yield tasks
 

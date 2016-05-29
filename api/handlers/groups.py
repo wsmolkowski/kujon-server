@@ -27,7 +27,7 @@ class GroupsApi(BaseHandler, ApiDaoHandler):
             if not programmes:
                 self.error("Poczekaj szukamy danych o Twoich grupach.")
             else:
-                self.success(programmes, cache_age=86400)
+                self.success(programmes, cache_age=constants.SECONDS_1MONTH)
 
         except Exception, ex:
             yield self.exc(ex)

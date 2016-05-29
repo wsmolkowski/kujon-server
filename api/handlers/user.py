@@ -31,7 +31,7 @@ class UsersInfoByIdApi(BaseHandler, ApiDaoHandler):
             if not user_info_doc:
                 raise ApiError('Szukamy informacji o Tobie w USOS.')
 
-            self.success(user_info_doc, cache_age=2592000)
+            self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
 
@@ -65,7 +65,7 @@ class UserInfoApi(BaseHandler, ApiDaoHandler):
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
-            self.success(user_doc, cache_age=2592000)
+            self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)
 

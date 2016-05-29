@@ -69,7 +69,7 @@ def main():
     args = parser.parse_args()
 
     if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
 
     if args.option == 'recreate':
         drop()
