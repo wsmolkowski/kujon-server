@@ -25,7 +25,7 @@ class ArchiveHandler(BaseHandler):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        user_doc = yield self.get_current_user()
+        user_doc = self.get_current_user()
         if user_doc:
             yield self.archive_user(user_doc[constants.MONGO_ID])
 
@@ -83,6 +83,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
             user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
             self.reset_user_cookie(user_doc)
 
+            # + '?token={0}'.format(user_doc[constants.MONGO_ID])
             self.redirect(settings.DEPLOY_WEB)
         else:
             yield self.authorize_redirect(

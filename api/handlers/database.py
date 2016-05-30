@@ -93,9 +93,8 @@ class DatabaseHandler(RequestHandler):
 
     @gen.coroutine
     def find_user(self):
-        current_user = yield self.get_current_user()
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: current_user[constants.MONGO_ID]})
+            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
 
         raise gen.Return(user_doc)
 

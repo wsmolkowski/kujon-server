@@ -1,11 +1,9 @@
-import tornado.gen
 import constants
 
 
 def authenticated(method):
-    @tornado.gen.coroutine
     def wrapper(self, *args, **kwargs):
-        current_user = yield self.get_current_user()
+        current_user = self.get_current_user()
         if not current_user:
             self.fail(message="Request not authenticated.", code=401)
             return
@@ -16,6 +14,6 @@ def authenticated(method):
             self.user_doc = current_user
             result = method(self, *args, **kwargs)
             if result is not None:
-                yield result
+                return result
     return wrapper
 
