@@ -1,10 +1,13 @@
 # coding=UTF-8
 
+import logging
+
 import tornado.gen
 import tornado.web
+from bson import ObjectId
 from bson import json_util
 from tornado import gen
-from tornado.escape import json_decode
+from tornado.escape import json_decode, utf8
 from tornado.web import RequestHandler
 
 from commons import constants, settings
@@ -26,18 +29,19 @@ class BaseHandler(RequestHandler, JSendMixin):
         return self.application.settings['db']
 
     @gen.coroutine
-    def get_current_user(self):
-        response = None
-        if hasattr(self, 'user_doc') and self.user_doc:
-            response = self.user_doc
+    def set_current_user(self):
+        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+        if cookie:
+            cookie = json_decode(cookie)
+            response = json_util.loads(cookie)
+            raise gen.Return(response)
 
-        if not response:
-            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-            if cookie:
-                cookie = json_decode(cookie)
-                response = json_util.loads(cookie)
+        user_id = self.request.headers.get('X-Correlation-ID', False)
+        if user_id:
+            response = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
+            raise gen.Return(response)
 
-        raise gen.Return(response)
+        raise gen.Return(None)
 
     @tornado.gen.coroutine
     def get_usoses(self):
@@ -50,22 +54,49 @@ class BaseHandler(RequestHandler, JSendMixin):
 
         raise tornado.gen.Return(usoses)
 
+    @tornado.gen.coroutine
+    def prepare(self):
+        # self.set_header("Access-Control-Allow-Origin", "*")
+        # print list(self.request.headers.keys())
+        logging.info('X-Correlation-ID {0}'.format(self.request.headers.get('X-Correlation-ID', False)))
+        logging.info('KUJON_SECURE_COOKIE {0}'.format(self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)))
+        logging.info('token {0}'.format(self.get_argument('token', default=None, strip=True)))
+
+        # client = utils.http_client()
+        # request = HTTPRequest(url=settings.DEPLOY_API + '/config', method='GET',
+        #                       headers={'Accept': 'application/json',
+        #                                'Cookie': self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)})
+        # config = yield client.fetch(request)
+        #
+        # logging.info('config {0}'.format(config.body))
+        self.current_user = yield self.set_current_user()
+
+    def get_current_user(self):
+        return self.current_user
+
 
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        user = yield self.get_current_user()
-        if not user:
-            self.render("index.html", **CONFIG)
-            return
+
+        token = self.get_argument('token', default=None, strip=True)
+        if token:
+            user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
+        else:
+            user = self.get_current_user()
 
         if user and constants.USOS_PAIRED in user and user[constants.USOS_PAIRED]:
             self.render("app.html", **CONFIG)
         elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
-            self.redirect('/rejestracja')
+            data = CONFIG
+            usoses = yield self.get_usoses()
+            data['usoses'] = usoses
+            self.render("register.html", **CONFIG)
         else:
             self.render("index.html", **CONFIG)
+
+        self.set_header("Location", utf8(settings.DEPLOY_WEB))
 
 
 class ContactHandler(BaseHandler):
@@ -78,33 +109,6 @@ class DisclaimerHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("disclaimer.html", **CONFIG)
-
-
-class RegisterHandler(BaseHandler):
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
-        user = yield self.get_current_user()
-
-        if not user:
-            self.redirect("/")
-            return
-
-        if user and constants.USOS_PAIRED in user and user[constants.USOS_PAIRED]:
-            self.render("app.html", **CONFIG)
-        elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
-            data = CONFIG
-            usoses = yield self.get_usoses()
-            data['usoses'] = usoses
-            self.render("register.html", **CONFIG)
-        else:
-            self.redirect("/")
-
-
-class LoginHandler(BaseHandler):
-    @tornado.web.asynchronous
-    def get(self):
-        self.render("login.html", **CONFIG)
 
 
 class DefaultErrorHandler(BaseHandler):
