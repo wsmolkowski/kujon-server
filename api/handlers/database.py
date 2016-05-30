@@ -128,7 +128,7 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(updated)
 
     @gen.coroutine
-    def current_user(self, email):
+    def db_current_user(self, email):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
                                                                       (constants.ID, constants.ACCESS_TOKEN_KEY,
                                                                        constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,

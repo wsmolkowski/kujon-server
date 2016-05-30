@@ -13,13 +13,35 @@ from database import DatabaseHandler
 
 
 class BaseHandler(DatabaseHandler, JSendMixin):
+    _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
+                      constants.USOS_PAIRED, constants.USER_EMAIL)
+
     @gen.coroutine
     def prepare(self):
         if not hasattr(self, '_usoses') or not self._usoses:
             yield self.get_usoses(showtokens=True)
 
-    _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                      constants.USOS_PAIRED, constants.USER_EMAIL)
+        user = None
+        if hasattr(self, 'user_doc') and self.user_doc:
+            user = self.user_doc
+
+        if not user:
+            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+            if cookie:
+                cookie = json_decode(cookie)
+                user = json_util.loads(cookie)
+
+        if not user:
+            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+
+            if header_email and header_token:
+                token_exists = yield self.find_token(header_email)
+
+                if token_exists:
+                    user = yield self.db_current_user(header_email)
+
+        self.current_user = user
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -35,30 +57,8 @@ class BaseHandler(DatabaseHandler, JSendMixin):
     def get_auth_http_client():
         return utils.http_client()
 
-    @gen.coroutine
     def get_current_user(self):
-        response = None
-        if hasattr(self, 'user_doc') and self.user_doc:
-            response = self.user_doc
-
-        if not response:
-            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-            if cookie:
-                cookie = json_decode(cookie)
-                response = json_util.loads(cookie)
-
-        if not response:
-            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
-
-            if header_email and header_token:
-                token_exists = yield self.find_token(header_email)
-
-                if token_exists:
-                    user_doc = yield self.current_user(header_email)
-                    response = user_doc
-
-        raise gen.Return(response)
+        return self.current_user
 
     @gen.coroutine
     def config_data(self):
@@ -128,7 +128,13 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
+        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
+                               domain=settings.DEPLOY_WEB)
+        print self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+        self.add_header('X-Correlation-ID', str(user_doc[constants.MONGO_ID]))
+        print list(self._headers.keys())
+        self.set_header('X-Correlation-ID', str(user_doc[constants.MONGO_ID]))
+        print list(self._headers.keys())
 
 
 class UsosesApi(BaseHandler):
