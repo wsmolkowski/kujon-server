@@ -20,22 +20,6 @@ CONFIG = {
 }
 
 
-def authenticated(method):
-    @tornado.gen.coroutine
-    def wrapper(self, *args, **kwargs):
-        current_user = yield self.get_current_user()
-        if not current_user:
-            self.fail(message="Request not authenticated.", code=401)
-            return
-        else:
-            self.user_doc = current_user
-            result = method(self, *args, **kwargs)
-            if result is not None:
-                yield result
-
-    return wrapper
-
-
 class BaseHandler(RequestHandler, JSendMixin):
     @property
     def db(self):
@@ -52,17 +36,6 @@ class BaseHandler(RequestHandler, JSendMixin):
             if cookie:
                 cookie = json_decode(cookie)
                 response = json_util.loads(cookie)
-
-        if not response:
-            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
-
-            if header_email and header_token:
-                token_exists = yield self.find_token(header_email)
-
-                if token_exists:
-                    user_doc = yield self.current_user(header_email)
-                    response = user_doc
 
         raise gen.Return(response)
 
@@ -108,14 +81,13 @@ class DisclaimerHandler(BaseHandler):
 
 
 class RegisterHandler(BaseHandler):
-    @authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         user = yield self.get_current_user()
 
         if not user:
-            self.redirect("index.html", **CONFIG)
+            self.redirect("/")
             return
 
         if user and constants.USOS_PAIRED in user and user[constants.USOS_PAIRED]:

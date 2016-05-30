@@ -156,9 +156,9 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
             self.reset_user_cookie(user_doc)
             if not user_doc[constants.USOS_PAIRED]:
-                self.redirect(settings.DEPLOY_WEB + '/rejestracja', permanent=True)
+                self.redirect(settings.DEPLOY_WEB + '/rejestracja')
             else:
-                self.redirect(settings.DEPLOY_WEB + '/', permanent=True)
+                self.redirect(settings.DEPLOY_WEB + '/')
 
         else:
             yield self.authorize_redirect(
