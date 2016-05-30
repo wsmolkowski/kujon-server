@@ -12,6 +12,8 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
             var templateModalUser = Handlebars.compile(tplModalUser);
             var templateModalError = Handlebars.compile(tplModalError);
 
+            slide();
+
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#page-content').html(template(data));
@@ -20,8 +22,6 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
                 } else {
                     $('#page-content').html(templateError(data));
                 }
-
-                // $('#students-table').DataTable(main.getDatableConfig());
             });
 
             function slide(){
