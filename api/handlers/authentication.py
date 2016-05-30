@@ -16,7 +16,7 @@ from crawler import job_factory
 
 class LogoutHandler(BaseHandler):
     def get(self):
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.clear_all_cookies(path='/', domain=settings.SITE_DOMAIN)
         self.redirect(settings.DEPLOY_WEB)
 
 
@@ -29,7 +29,7 @@ class ArchiveHandler(BaseHandler):
         if user_doc:
             yield self.archive_user(user_doc[constants.MONGO_ID])
 
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.clear_all_cookies(path='/', domain=settings.SITE_DOMAIN)
         self.redirect(settings.DEPLOY_WEB)
 
 
