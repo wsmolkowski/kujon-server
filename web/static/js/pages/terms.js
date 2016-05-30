@@ -12,9 +12,6 @@ function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError) {
                 } else {
                     $('#page-content').html(templateError({'message': data.message}));
                 }
-
-                $('#terms-table').DataTable(main.getDatableConfig());
-
             });
             
             //a tutaj możesz np. zapiąć listenery
