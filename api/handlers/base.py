@@ -127,15 +127,8 @@ class BaseHandler(DatabaseHandler, JSendMixin):
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)))
-
-        # print self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
-        self.add_header('X-Correlation-ID', str(user_doc[constants.MONGO_ID]))
-        # self.add_header('CorrelationID', str(user_doc[constants.MONGO_ID]))
-        # print list(self._headers.keys())
-        # self.set_header('CorrelationID', str(user_doc[constants.MONGO_ID]))
-        self.set_header('X-Correlation-ID', str(user_doc[constants.MONGO_ID]))
-        # print list(self._headers.keys())
+        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
+                               domain=settings.SITE_DOMAIN)
 
 
 class UsosesApi(BaseHandler):

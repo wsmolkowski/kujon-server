@@ -36,11 +36,6 @@ class BaseHandler(RequestHandler, JSendMixin):
             response = json_util.loads(cookie)
             raise gen.Return(response)
 
-        user_id = self.request.headers.get('X-Correlation-ID', False)
-        if user_id:
-            response = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
-            raise gen.Return(response)
-
         raise gen.Return(None)
 
     @tornado.gen.coroutine
@@ -56,19 +51,8 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def prepare(self):
-        # self.set_header("Access-Control-Allow-Origin", "*")
-        # print list(self.request.headers.keys())
-        logging.info('X-Correlation-ID {0}'.format(self.request.headers.get('X-Correlation-ID', False)))
         logging.info('KUJON_SECURE_COOKIE {0}'.format(self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)))
-        logging.info('token {0}'.format(self.get_argument('token', default=None, strip=True)))
 
-        # client = utils.http_client()
-        # request = HTTPRequest(url=settings.DEPLOY_API + '/config', method='GET',
-        #                       headers={'Accept': 'application/json',
-        #                                'Cookie': self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)})
-        # config = yield client.fetch(request)
-        #
-        # logging.info('config {0}'.format(config.body))
         self.current_user = yield self.set_current_user()
 
     def get_current_user(self):
