@@ -142,6 +142,7 @@ def http_client(validate_cert=False):
                                                            proxy_port=settings.PROXY_PORT,
                                                            validate_cert=validate_cert))
 
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(validate_cert=validate_cert))
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(validate_cert=validate_cert))
+    httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
     return httpclient.AsyncHTTPClient()

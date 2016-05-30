@@ -13,7 +13,6 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
                 if (data.status == 'success'){
                     $('#page-content').html(template(data));
                     // $('#lecturers-table').DataTable(main.getDatableConfig());
-
                     bindModals();
                 } else {
                     $('#page-content').html(templateError({'message': data.message}));

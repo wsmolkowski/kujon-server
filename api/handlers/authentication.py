@@ -16,7 +16,7 @@ from crawler import job_factory
 
 class LogoutHandler(BaseHandler):
     def get(self):
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.clear_all_cookies(path='/', domain=settings.SITE_DOMAIN)
         self.redirect(settings.DEPLOY_WEB)
 
 
@@ -25,11 +25,11 @@ class ArchiveHandler(BaseHandler):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        user_doc = yield self.get_current_user()
+        user_doc = self.get_current_user()
         if user_doc:
             yield self.archive_user(user_doc[constants.MONGO_ID])
 
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
+        self.clear_all_cookies(path='/', domain=settings.SITE_DOMAIN)
         self.redirect(settings.DEPLOY_WEB)
 
 
@@ -83,10 +83,8 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
             user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
             self.reset_user_cookie(user_doc)
 
-            if not user_doc[constants.USOS_PAIRED]:
-                self.redirect(settings.DEPLOY_WEB + '/rejestracja')
-            else:
-                self.redirect('/')
+            # + '?token={0}'.format(user_doc[constants.MONGO_ID])
+            self.redirect(settings.DEPLOY_WEB)
         else:
             yield self.authorize_redirect(
                 redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
@@ -155,10 +153,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc = yield self.cookie_user_id(user_doc[constants.MONGO_ID])
 
             self.reset_user_cookie(user_doc)
-            if not user_doc[constants.USOS_PAIRED]:
-                self.redirect(settings.DEPLOY_WEB + '/rejestracja', permanent=True)
-            else:
-                self.redirect(settings.DEPLOY_WEB + '/', permanent=True)
+            self.redirect(settings.DEPLOY_WEB)
 
         else:
             yield self.authorize_redirect(
@@ -270,7 +265,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
                 self.reset_user_cookie(user_doc)
-                self.redirect(settings.DEPLOY_WEB + '/#register')
+                self.redirect(settings.DEPLOY_WEB)
 
             if user_doc:
 
@@ -295,7 +290,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                     self.success('Udało się sparować konto USOS')
                 else:
                     yield self.email_registration(user_doc)
-                    self.redirect(settings.DEPLOY_WEB + '/')
+                    self.redirect(settings.DEPLOY_WEB)
             else:
                 self.redirect(settings.DEPLOY_WEB)
 
