@@ -98,6 +98,9 @@
     </div><!-- /.container-fluid -->
 
 </nav>
+
+{% module xsrf_form_html() %}
+
 {% end %}
 
 {% block main %}
@@ -113,6 +116,7 @@
     </section>
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
+
 
     <footer id="footer" class="navbar-static-bottom footer-index">
         <div class="container">

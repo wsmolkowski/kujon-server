@@ -7,18 +7,20 @@
 				Napisz do nas!</span></p>
             </div>
             <div class="col-sm-12">
-                <form class="form-horizontal">
+                <form class="form-horizontal" enctype="multipart/form-data">
+
                     <div class="form-group">
                         <label for="title" class=" control-label text-left">Tytuł</label>
                         <div class="col-sm-3">
-                            <input type="email" class="form-control" id="inputEmail3"
+                            <input type="text" class="form-control" id="inputSubject"
                                    placeholder="Wpisz tytuł wiadomości">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="textarea" class="control-label text-left">Treść</label>
                         <div class=" col-sm-6">
-                            <textarea class="form-control" rows="10" placeholder="Wpisz treść wiadomości"></textarea>
+                            <textarea class="form-control" rows="10" placeholder="Wpisz treść wiadomości"
+                                      id="inputMessage"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
@@ -31,7 +33,8 @@
                     </div>
                     <div class="form-group">
                         <div class="col-sm-2">
-                            <button type="submit" class="btn btn-primary btn-zglos-problem">Wyślij wiadomość</button>
+                            <button id="contactSubmit" class="btn btn-primary btn-zglos-problem">Wyślij wiadomość
+                            </button>
                         </div>
                     </div>
                 </form>

@@ -20,7 +20,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", MainHandler),
-            (r"/kontakt", ContactHandler),
+            (r"/contact", ContactHandler),
             (r"/regulamin", DisclaimerHandler),
         ]
 
@@ -35,6 +35,7 @@ class Application(tornado.web.Application):
             facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
             default_handler_class=DefaultErrorHandler,
             xheaders=True,
+            xsrf_cookies=True,
         )
 
         tornado.web.Application.__init__(self, __handlers, **__settings)

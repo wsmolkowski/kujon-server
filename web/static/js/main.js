@@ -33,30 +33,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
             return apiUrl + api;
         };
 
-        function buildConfig(){
-            return $.ajax({
-                    type: 'GET',
-                    url: buildApiUrl('/config'),
-                    dataType: "json",
-                    xhrFields: {
-                      withCredentials: true
-                    },
-                    success:  function (data) {
-                      if (data.status == 'success'){
-                        updateConfig(data.data);
-
-                      } else {
-                        $('#page').html(templateError(data));
-                      }
-                    },
-                    error: function(jqXHR, exception) {
-                      var msg = {'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception};
-                      $('#page').html(templateError(msg));
-                    }
-                });
-        };
-
-
         function callAjaxGet(request_url, callback){
 
             $.ajax({
@@ -158,8 +134,6 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
 	                pom = ( pom || '' ).replace( "`", "\\`" );
 	                return pom;
                 });
-
-//                return buildConfig();
             },
             getConfig: function(){
                 return config;
@@ -213,37 +187,8 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                 hideSpinner();
             },
             getApiUrl: function(){
-                return apiUrl;
+                return apiUrl;l
             },
-            getDatableConfig: function(){
-                return {
-                    paging: false,
-                    "language": {
-                        "decimal":        "",
-                        "emptyTable":     "Brak danych do wyświetlenia",
-                        "info":           "_START_ do _END_ z _TOTAL_ wierszy",
-                        "infoEmpty":      "0 do 0 z 0 wierszy",
-                        "infoFiltered":   "(filtered from _MAX_ total entries)",
-                        "infoPostFix":    "",
-                        "thousands":      ",",
-                        "lengthMenu":     "Pokaż _MENU_ wierszy",
-                        "loadingRecords": "Wszytuję...",
-                        "processing":     "Przetwarzam...",
-                        "search":         "Szukaj:",
-                        "zeroRecords":    "Nie znaleziono rekordów",
-                        "paginate": {
-                            "first":      "Pierwszy",
-                            "last":       "Ostatni",
-                            "next":       "Następny",
-                            "previous":   "Poprzedni"
-                        },
-                        "aria": {
-                            "sortAscending":  ": activate to sort column ascending",
-                            "sortDescending": ": activate to sort column descending"
-                        }
-                    }
-                };
-            }
         };
 
 });
