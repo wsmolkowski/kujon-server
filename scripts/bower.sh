@@ -17,3 +17,4 @@ bower install respond --save
 bower install html5shiv --save
 bower install jquery-nice-select --save
 bower install bootstrap-table --save
+bower install jquery.selectBoxIt --save
