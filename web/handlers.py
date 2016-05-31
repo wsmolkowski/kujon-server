@@ -7,7 +7,7 @@ import tornado.web
 from bson import ObjectId
 from bson import json_util
 from tornado import gen
-from tornado.escape import json_decode, utf8
+from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
 from commons import constants, settings
@@ -24,6 +24,8 @@ CONFIG = {
 
 
 class BaseHandler(RequestHandler, JSendMixin):
+    SUPPORTED_METHODS = ('GET',)
+
     @property
     def db(self):
         return self.application.settings['db']
@@ -51,13 +53,16 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def prepare(self):
-        logging.info('KUJON_SECURE_COOKIE {0}'.format(self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)))
+        # self.set_header("Access-Control-Allow-Origin", '*')
+        # self.set_header("Access-Control-Allow-Credentials", "true")
 
         self.current_user = yield self.set_current_user()
 
     def get_current_user(self):
         return self.current_user
 
+    def check_xsrf_cookie(self):
+        pass
 
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -80,13 +85,21 @@ class MainHandler(BaseHandler):
         else:
             self.render("index.html", **CONFIG)
 
-        self.set_header("Location", utf8(settings.DEPLOY_WEB))
-
 
 class ContactHandler(BaseHandler):
+    SUPPORTED_METHODS = ('GET', 'POST')
+
     @tornado.web.asynchronous
-    def get(self):
-        self.render("contact.html", **CONFIG)
+    @tornado.gen.coroutine
+    def post(self):
+        try:
+            message = json_util.loads(self.request.body)
+
+            logging.info('{0}'.format(message))
+            self.success(data='Wiadomość otrzymana.')
+        except Exception as ex:
+            logging.exception(ex)
+            self.error(message=ex.message, data=ex.message, code=501)
 
 
 class DisclaimerHandler(BaseHandler):
