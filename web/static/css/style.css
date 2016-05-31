@@ -170,7 +170,6 @@ tbody>tr:hover{background:#f7f7f7;}
 .footer-index{position:fixed !important;bottom:0;background:white;}
 
 /*przedmioty*/
-#przedmioty>.container>.row>.content>.bootstrap-table>.fixed-table-body>table>thead>tr>th{}
 .opis-przedmiotu{cursor:pointer;}
 .detail-icon>i{top:0;left:0;right:0;margin-left:0;margin-right:0;margin-top:0;font-size: 13px;color: black;}
 .pull-right{padding-right:0;}
@@ -179,10 +178,28 @@ tbody>tr:hover{background:#f7f7f7;}
 .wybierz-rok>.col-sm-4>.nice-select>ul>.option{height: 30px;line-height: 30px;min-height:30px}
 .wybierz-rok>label{margin: 12px 0;}
 .lista-studentow{cursor:pointer;}
+#przedmioty>.container>.row>.content>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th:nth-child(2){border-right:1px solid #ddd;}
+
+/*lista studentów modal*/
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body{padding:0;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container{border:0;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th{width:auto;min-width:0;text-align:left;padding:4px 8px;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th>.th-inner{padding:0;color: black;font-weight:400;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td{width:auto;min-width:0;text-align:left;padding:8px;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td>.th-inner{padding:0;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr:last-child{border-bottom:1px solid #ddd;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td:first-child{text-align:left;padding: 8px 15px;}
+#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th:first-child{text-align:left;padding: 4px 15px;}
+#kryteria-oceny>.modal-dialog>.modal-content>.modal-body{padding:30px;}
+.kryteria-oceny{cursor:pointer;}
+
+/*bibliografia*/
+#bibliografia>.modal-dialog>.modal-content>.modal-body {padding: 30px;}
 
 /*Opis przedmiotu*/
 #opis-przedmiotu>.modal-dialog>.modal-content>.modal-body{padding:30px;}
 @import url('//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css');
+.table>thead>tr>th {vertical-align: bottom;border-bottom: 1px solid #ddd;}
 .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {padding: 8px;line-height: 1.42857143;vertical-align: top;}
 #przedmioty>.container>.row>.col-sm-12>.panel-group>.panel>table>tbody>tr>td{width:30%;border-right:1px solid #ddd;}
 #przedmioty>.container>.row>.col-sm-12>.panel-group>.panel>table>tbody>tr>td:last-child{width:10%;border-right:none;}
@@ -201,23 +218,6 @@ tbody>tr:hover{background:#f7f7f7;}
 .collapsed>table>tbody>tr>td>span{font-family: 'Glyphicons Halflings';content: "\e114";color: grey;-webkit-transform: rotate(-180deg);-moz-transform:rotate(-180deg);-ms-transform:rotate(-180deg);	-o-transform:rotate(-180deg);transform:rotate(-180deg);}
 .panel-heading.collapsed>table>tbody>tr>td{font-weight:400;}
 .panel-heading>table>tbody>tr>td{font-weight:500 ;}
- 
-/*lista studentów modal*/
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body{padding:0;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container{border:0;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th{width:auto;min-width:0;text-align:left;padding:4px 8px;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th>.th-inner{padding:0;color: black;font-weight:400;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td{width:auto;min-width:0;text-align:left;padding:8px;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td>.th-inner{padding:0;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr:last-child{border-bottom:1px solid #ddd;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td:first-child{text-align:left;padding: 8px 15px;}
-#zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th:first-child{text-align:left;padding: 4px 15px;}
-#kryteria-oceny>.modal-dialog>.modal-content>.modal-body{padding:30px;}
-.kryteria-oceny{cursor:pointer;}
-
-/*bibliografia*/
-#bibliografia>.modal-dialog>.modal-content>.modal-body {padding: 30px;}
-
 
 /*wykładowcy*/
 #wykladowcy>.container>.row>.naglowek-h2{padding:110px 15px 50px 15px;}
@@ -336,8 +336,8 @@ th.header{cursor:pointer;}
 #znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>.col-sm-12>td>.col-sm-2>p>.add{cursor:pointer;-webkit-transition: all 0.2s linear;-moz-transition: all 0.2s linear;-ms-transition: all 0.2s linear;-o-transition: all 0.2s linear;transition: all 0.2s linear;}
 #znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>.col-sm-12>td>.col-sm-2>p:hover>.add{color:#3fc74a;-webkit-transition: all 0.2s linear;-moz-transition: all 0.2s linear;-ms-transition: all 0.2s linear;-o-transition: all 0.2s linear;transition: all 0.2s linear;}
 #znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-body>.add-friends>tbody>tr{padding:0;}
-#znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-pagination>.pagination-detail{margin-top:50px;}
-#znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-pagination>.pagination{margin-top:50px;}
+#znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-pagination>.pagination-detail{margin-top:40px;}
+#znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-pagination>.pagination{margin-top:40px;}
 
 
 
@@ -436,6 +436,7 @@ header{background: url('../img/header.png') no-repeat;width:100%;background-size
 #slidemenu>.navbar-right>li:first-child {display: none}
 .navbar-nav>li {float: left;}
 .container-fluid>#slidemenu>.login>.app-notify{border-left:1px solid #ddd;border-right:1px solid #ddd;padding: 0 7px;display:block;}
+#kontakt>.container>.row>.col-sm-12>p>span{display:block;}
 }
 @media (max-width: 400px){
 header>.container>.row>.col-sm-10 {max-height: 360px;}
@@ -518,8 +519,6 @@ body.slide-active {overflow-x: hidden;padding:0;}
 .dane>p>.fa {padding-right: 10px;font-size: 20px;}
 .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.col-sm-4>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.col-sm-6>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.status-profil>p, .profil-info>.row>.col-sm-12>.row>.col-sm-6>.row>.gg>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.kierunki>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.kierunki>ol, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.nr-konta>p {font-size: 16px;}
 .nazwa-uniwersytetu {color: black;font-size: 16px;cursor: pointer;}
-
-#kontakt>.container>.row>.col-sm-12>p>span{display:block;}
 #kontakt>.container>.row>.col-sm-12>p>span{display:inline;}
 .table-responsive {width: 100%;margin-bottom: 15px;overflow-y: hidden;-ms-overflow-style:-ms-autohiding-scrollbar;}
 #profil>.container>.row>.col-sm-12>.col-xs-6{margin-left:25%;}

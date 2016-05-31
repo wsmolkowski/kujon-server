@@ -105,20 +105,22 @@
 
 {% block main %}
 <div id="page-content" class="content">
-    <section class="welcome">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12 text-center">
-                    <h1>Witamy w <span>Kujon.mobi</span>!</h1>
+    <div id="section-content">
+        <section class="welcome">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12 text-center">
+                        <h1>Witamy w <span>Kujon.mobi</span>!</h1>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
 
 
-    <footer id="footer" class="navbar-static-bottom footer-index">
+    <footer id="footer" class="navbar-static-bottom">
         <div class="container">
             <div class="row">
                 <div class="col-sm-6">
@@ -127,12 +129,9 @@
                 </div>
                 <div class="col-sm-6">
                     <ul class="nav navbar-nav navbar-right navbar-bottom">
-                        <!--
-                        <li><a href="#">Lista uczelni</a></li>
-                        -->
-                        <li><a href="#">Regulamin</a></li>
-                        <li><a href="#">Polityka prywatności</a></li>
-                        <li><a href="#">Kontakt</a></li>
+                        <li><a href="regulamin">Regulamin</a></li>
+                        <li><a href="regulamin">Polityka prywatności</a></li>
+                        <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
                         <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
                         <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
                     </ul>
@@ -140,5 +139,6 @@
             </div>
         </div>
     </footer>
+
 </div>
 {% end %}

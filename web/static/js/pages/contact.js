@@ -5,7 +5,7 @@ function($, Handlebars, tpl) {
         render: function() {
             var template = Handlebars.compile(tpl);
 
-            $('#page-content').html(template());
+            $('#section-content').html(template());
 
             function getCookie(name) {
                 var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");

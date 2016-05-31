@@ -8,9 +8,9 @@ function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError) {
 
             main.callProgrammes(function(data){
                 if (data.status == 'success'){
-                    $('#page-content').html(template(data));
+                    $('#section-content').html(template(data));
                 } else {
-                    $('#page-content').html(templateError({'message': data.message}));
+                    $('#section-content').html(templateError({'message': data.message}));
                 }
             });
 

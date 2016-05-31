@@ -4,7 +4,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/index.html'], function($
         render: function() {
             var template = Handlebars.compile(tpl);
 
-            $('#page-content').html(template());
+            $('#section-content').html(template());
 
         }
     }    

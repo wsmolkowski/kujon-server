@@ -7,7 +7,7 @@ $, Handlebars, main, nice, easing, bootstrapTable, fullcalendar, tpl, tplError, 
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            $('#page-content').html(template());
+            $('#section-content').html(template());
 
             $('#calendar').fullCalendar({
                 'defaultView': 'agendaWeek',
@@ -37,7 +37,7 @@ $, Handlebars, main, nice, easing, bootstrapTable, fullcalendar, tpl, tplError, 
                                 callback(events);
                         }
                         else {
-                            $('#page-content').html(templateError(data));
+                            $('#section-content').html(templateError(data));
                         }
                     });
                 },

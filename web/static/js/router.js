@@ -6,7 +6,7 @@ jquery, main, Handlebars, crossroads, hasher, bootstrap, spinnerTpl) {
 
     function setActiveLink(hash) {
 
-        $('#page-content').html(template());
+        $('#section-content').html(template());
 
         require(['lib/pages/'+hash], function(page) {
             page.render();
