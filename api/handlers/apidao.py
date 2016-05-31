@@ -562,7 +562,7 @@ class ApiDaoHandler(DatabaseHandler, UsosMixin):
         if not user_info_doc:
             user_info_doc = yield self.usos_user_info(user_id)
             if not user_info_doc:
-                raise ApiError("Nie znaleziono użytkownika: {}".format(user_id))
+                raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
             yield self.insert(constants.COLLECTION_USERS_INFO, user_info_doc)
