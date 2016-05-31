@@ -165,7 +165,6 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
 
 class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
-    @web.authenticated
     @web.asynchronous
     @gen.coroutine
     def get(self):
@@ -218,6 +217,8 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                 yield self.update_user(user_doc[constants.MONGO_ID], user_doc)
                 self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
+            logging.info(settings.DEPLOY_API + '/authentication/verify')
+
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades',
                 'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
@@ -228,7 +229,6 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
 
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    @web.authenticated
     @web.asynchronous
     @gen.coroutine
     def get(self):
@@ -286,9 +286,12 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
+                logging.info('{0} {1}'.format(header_token, header_email))
                 if header_email or header_token:
+                    logging.info('zakonczona rejestracja MOBI')
                     self.success('Udało się sparować konto USOS')
                 else:
+                    logging.info('zakonczona rejestracja WWW')
                     yield self.email_registration(user_doc)
                     self.redirect(settings.DEPLOY_WEB)
             else:
