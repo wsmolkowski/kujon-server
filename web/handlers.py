@@ -12,6 +12,7 @@ from tornado.web import RequestHandler
 
 from commons import constants, settings
 from commons.mixins.JSendMixin import JSendMixin
+from crawler import email_factory
 
 CONFIG_COOKIE_EXPIRATION = 1
 
@@ -61,8 +62,6 @@ class BaseHandler(RequestHandler, JSendMixin):
     def get_current_user(self):
         return self.current_user
 
-    def check_xsrf_cookie(self):
-        pass
 
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -87,16 +86,36 @@ class MainHandler(BaseHandler):
 
 
 class ContactHandler(BaseHandler):
-    SUPPORTED_METHODS = ('GET', 'POST')
+    SUPPORTED_METHODS = ('POST')
+
+    @gen.coroutine
+    def email_contact(self, subject, message):
+        email_job = email_factory.email_job(
+            '[KUJON.MOBI][CONTACT]: {0}'.format(subject),
+            settings.SMTP_EMAIL,
+            [settings.SMTP_EMAIL],
+            '\nNowa wiadomość od użytkownik: email: {0} mongo_id: {1}\n'
+            '\nwiadomość:\n{2}\n'.format(self.get_current_user()[constants.USER_EMAIL],
+                                         self.get_current_user()[constants.MONGO_ID],
+                                         message)
+        )
+
+        job_id = yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
+        raise gen.Return(job_id)
 
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
         try:
-            message = json_util.loads(self.request.body)
+            subject = self.get_argument('subject', default=None, strip=True)
+            message = self.get_argument('message', default=None, strip=True)
 
-            logging.info('{0}'.format(message))
-            self.success(data='Wiadomość otrzymana.')
+            logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
+                self.get_current_user()[constants.MONGO_ID], subject, message))
+
+            job_id = yield self.email_contact(subject, message)
+
+            self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)
