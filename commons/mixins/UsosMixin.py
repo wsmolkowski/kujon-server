@@ -283,7 +283,7 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.usos_request(path='services/courses/user', user_doc=self.user_doc, args={
-            'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades]',
+            'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|course_units_ids]',
             'active_terms_only': 'false',
         })
 
