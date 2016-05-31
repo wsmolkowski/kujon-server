@@ -11,23 +11,23 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
 
             main.callFriendsSuggestion(function(suggestiondata){
                 if (suggestiondata.status == 'success'){
-                    $('#page-content').html(template(suggestiondata));
+                    $('#section-content').html(template(suggestiondata));
                     $('#suggested-table').DataTable();
 
 //                    bindModals();
                 } else {
-                    $('#page-content').html(templateError({'message': suggestiondata.message}));
+                    $('#section-content').html(templateError({'message': suggestiondata.message}));
                 }
             });
 
             main.callFriends(function(friendsdata){
                 if (friendsdata.status == 'success'){
-                    $('#page-content').html(template(friendsdata));
+                    $('#section-content').html(template(friendsdata));
                     $('#friends-table').DataTable();
 
 //                    bindModals();
                 } else {
-                    $('#page-content').html(templateError({'message': friendsdata.message}));
+                    $('#section-content').html(templateError({'message': friendsdata.message}));
                 }
             });
 

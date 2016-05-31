@@ -1,6 +1,7 @@
 # coding=UTF-8
 
 import copy
+import logging
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -38,8 +39,10 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             if header_email and header_token:
                 token_exists = yield self.find_token(header_email)
 
-                if token_exists:
-                    user = yield self.db_current_user(header_email)
+                if not token_exists:
+                    logging.warning('google token does not exists for email: {0}'.format(header_email))
+
+                user = yield self.db_current_user(header_email)
 
         self.current_user = user
 

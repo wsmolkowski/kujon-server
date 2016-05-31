@@ -22,7 +22,29 @@ define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) 
 
     $(document).ready(function () {
 
+        $(".panel-heading").addClass("collapsed")
+
+        /* Check width on page load*/
+        if ( $(window).width() < 768) {
+         $('.dropdown').addClass('open');
+        }
+        else {}
+
+        var kolumnaPrawa =  $("div.border-logo-cykle").height();
+        var kolumnaLewa = $("div.border-logo-cykle").height();
+
+        if (kolumnaLewa > kolumnaPrawa)
+        {
+            $("div.border-logo-cykle").css({'height' : kolumnaLewa});
+        }
+        else
+        {
+            $("div.border-logo-cykle").css({'height' : kolumnaPrawa});
+        };
+
+
         //stick in the fixed 100% height behind the navbar but don't wrap it
+        $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
         $('#slide-nav.navbar .container').append($('<div id="navbar-height-col"></div>'));
         // Enter your ids or classes
         var toggler = '.navbar-toggle';
@@ -58,7 +80,10 @@ define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) 
             $(this).toggleClass('slide-active', !selected);
             $('#slidemenu').toggleClass('slide-active');
 
+
             $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
+
+
         });
 
 
@@ -67,9 +92,10 @@ define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) 
 
         $(window).on("resize", function () {
 
-            if ($(window).width() > 768 && $('.navbar-toggle').is(':hidden')) {
+            if ($(window).width() > 767 && $('.navbar-toggle').is(':hidden')) {
                 $(selected).removeClass('slide-active');
             }
+
 
         });
 

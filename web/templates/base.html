@@ -31,7 +31,7 @@
     {% end %}
 
 </head>
-<body>
+<body class="body-index">
 <!-- <div class="ui-widget">
         <div class="cookie-message ui-widget-header blue">
           <p>Ta strona używa ciasteczek (cookies), dzięki którym nasz serwis może działać lepiej. <a href="#">Więcej informacji</a><span><span></p>
@@ -41,72 +41,8 @@
 {% block navigation %}
 {% end %}
 
-<div id="page-content">
-    {% block main %}
-    {% end %}
-</div>
-
-
-<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="col-sm-12">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h3>Logowanie</h3>
-                </div>
-            </div>
-            <div class="modal-body">
-
-                <div class="col-sm-12">
-
-                    <p>Zaloguj się za pośrednictwem jednego z poniższych portali społecznościowych.</p>
-                </div>
-                <div class="col-sm-12">
-                    <a href="{{API_URL}}/authentication/facebook" type="button"
-                       class="btn btn-primary btn-lg btn-block">
-                        Zaloguj się przez Facebook</a>
-                </div>
-                <div class="col-sm-12 col-xs-12">
-                    <div class="col-sm-5 col-xs-5 hr-left">
-                        <hr/>
-                    </div>
-                    <div class="col-sm-2 col-xs-2 text-center">
-                        <span>lub</span>
-                    </div>
-                    <div class="col-sm-5 col-xs-5 hr-right">
-                        <hr/>
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                    <a href="{{API_URL}}/authentication/google" type="button" class="btn btn-danger btn-lg btn-block">
-                        Zaloguj się przez Google</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<footer id="footer" class="navbar-static-bottom">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-6">
-                <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
-                    reserved.</p>
-            </div>
-            <div class="col-sm-6">
-                <ul class="nav navbar-nav navbar-right navbar-bottom">
-                    <li><a href="regulamin">Regulamin</a></li>
-                    <li><a href="regulamin">Polityka prywatności</a></li>
-                    <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
-                    <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
-                    <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</footer>
+{% block main %}
+{% end %}
 
 {% block footer_js %}
 {% end %}

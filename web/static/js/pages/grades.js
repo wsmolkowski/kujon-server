@@ -11,10 +11,10 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
 
             main.callGrades(function(data){
                 if (data.status == 'success'){
-                    $('#page-content').html(template(data));
+                    $('#section-content').html(template(data));
                     bindModals();
                 } else {
-                    $('#page-content').html(templateError({'message': data.message}));
+                    $('#section-content').html(templateError({'message': data.message}));
                 }
             });
 
