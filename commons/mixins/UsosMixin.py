@@ -47,17 +47,6 @@ class UsosMixin(OAuthMixin):
 
     @_auth_return_future
     def usos_request(self, path, user_doc, callback=None, args={}, photo=False, base_url=None):
-        '''
-            USOS async authenticated request
-
-        :param path: service URI
-        :param user_doc
-        :param callback:
-        :param args: service arguments
-        :param photo: if photo to retrieve
-        :param base_url: usos_url
-        :return: json_decode
-        '''
 
         if not base_url:
             url = self._oauth_base_uri() + path
@@ -111,13 +100,7 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
-        '''
-            USOS async non authenticated request
 
-        :param path: service URI
-        :param arguments: service arguments
-        :return: json_decode
-        '''
         if not base_url:
             url = self._oauth_base_uri() + path
         else:
@@ -145,14 +128,10 @@ class UsosMixin(OAuthMixin):
 
             result = escape.json_decode(response.body)
         except httpclient.HTTPError, ex:
-            # jeżeli nie ma grupy
-            if ex.response.body =='{\"message\": \"Group matching query does not exist.\"}':
-                raise gen.Return(None)
             msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
                                                                                           ex.response.code,
                                                                                           ex.response.effective_url,
                                                                                           ex.response.body)
-            # logging.exception(ex)
             raise UsosClientError(msg)
 
         raise gen.Return(result)
@@ -167,9 +146,6 @@ class UsosMixin(OAuthMixin):
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
         }
         result = yield self.usos_request(path=url, user_doc=self.user_doc, args=args)
-        if 'code' in result:
-            raise UsosClientError(
-                'Błedna odpowiedź  course_id: {0}: {1} - {2} '.format(course_id, result['code'], result['message']))
 
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
@@ -215,10 +191,6 @@ class UsosMixin(OAuthMixin):
             result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
                 'fields': fields
             })
-
-        # if not positive response
-        if 'code' in result and result['code'] != 200:
-            raise gen.Return(None)
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
