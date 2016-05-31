@@ -7,6 +7,7 @@ from pprint import pprint
 import pymongo
 from tornado import escape
 from tornado import gen
+from tornado.httpclient import HTTPRequest
 
 import constants
 import settings
@@ -130,11 +131,15 @@ def drop_collections(skip_collections=[]):
 
 
 @gen.coroutine
-def _do_recreate(db, usos):
+def _do_recreate(db, usos_doc):
     try:
-        url = usos[constants.USOS_URL] + 'services/courses/classtypes_index'
-        http_client = utils.http_client()
-        response = yield http_client.fetch(url, validate_cert=usos[constants.VALIDATE_SSL_CERT])
+        url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
+        validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
+        http_client = utils.http_client(validate_cert)
+
+        request = HTTPRequest(url=url, validate_cert=validate_cert, method='GET')
+        response = yield http_client.fetch(request)
+
         if response.code is not 200 and response.reason != 'OK':
             logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
             logging.warning(response)
@@ -144,18 +149,19 @@ def _do_recreate(db, usos):
         if class_types and len(class_types) > 0:
             class_type_list = list()
             for class_type in class_types.values():
-                class_type[constants.USOS_ID] = usos[constants.USOS_ID]
+                class_type[constants.USOS_ID] = usos_doc[constants.USOS_ID]
                 class_type[constants.CREATED_TIME] = datetime.now()
                 class_type[constants.UPDATE_TIME] = datetime.now()
                 class_type_list.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
-            logging.info("dictionary course classtypes for usos %r inserted.", usos[constants.USOS_ID])
+            logging.info("dictionary course classtypes for usos %r inserted.", usos_doc[constants.USOS_ID])
         else:
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                  usos[constants.USOS_ID]))
+                                                                  usos_doc[constants.USOS_ID]))
 
     except Exception, ex:
-        logging.error("failed to recreate_dictionaries for %r : %r", usos[constants.USOS_ID], ex.message)
+        logging.error("failed to recreate_dictionaries for %r : %r", usos_doc[constants.USOS_ID], ex.message)
+        logging.exception(ex)
     gen.Return(None)
 
 
