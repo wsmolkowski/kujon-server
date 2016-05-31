@@ -110,9 +110,7 @@ class UsosMixin(OAuthMixin):
 
         usos_doc = self._find_usos()
 
-        if constants.VALIDATE_SSL_CERT in usos_doc and usos_doc[constants.VALIDATE_SSL_CERT]:
-            validate_ssl_cert = True
-        else:
+        if constants.VALIDATE_SSL_CERT in usos_doc:
             validate_ssl_cert = True
 
         http_client = utils.http_client(validate_cert=validate_ssl_cert)
