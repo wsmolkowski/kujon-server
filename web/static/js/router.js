@@ -1,4 +1,4 @@
-define(['jquery', 'main', 'handlebars',  'crossroads', 'hasher', 'bootstrap', 'text!templates/spinner.html',], function(
+define(['jquery', 'main', 'handlebars',  'crossroads', 'hasher', 'bootstrap', 'text!templates/spinner.html'], function(
 jquery, main, Handlebars, crossroads, hasher, bootstrap, spinnerTpl) {
 'use strict';
 
