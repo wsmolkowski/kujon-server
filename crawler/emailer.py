@@ -88,7 +88,7 @@ class EmailQueue(object):
             msg['From'] = job[constants.SMTP_FROM]
             msg['To'] = ','.join(job[constants.SMTP_TO])
 
-            self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+            smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
 
             yield self.update_job(job, constants.JOB_FINISH)
 
