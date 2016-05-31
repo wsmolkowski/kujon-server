@@ -20,12 +20,7 @@ SLEEP = 2
 
 class EmailQueue(object):
     def __init__(self):
-
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
-        self.smtp = smtplib.SMTP()
-        self.smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
-        self.smtp.starttls()
-        self.smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
         self.processing = []
 
@@ -76,9 +71,15 @@ class EmailQueue(object):
 
     @gen.coroutine
     def process_job(self, job):
+        smtp = smtplib.SMTP()
+
         try:
             self.processing.append(job)
             logging.info("processing job: {0}".format(job[constants.MONGO_ID]))
+
+            smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
+            smtp.starttls()
+            smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
             yield self.update_job(job, constants.JOB_START)
 
@@ -87,12 +88,13 @@ class EmailQueue(object):
             msg['From'] = job[constants.SMTP_FROM]
             msg['To'] = ','.join(job[constants.SMTP_TO])
 
-            self.smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+            smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
 
             yield self.update_job(job, constants.JOB_FINISH)
 
             logging.info("processed job: {0}".format(job[constants.MONGO_ID]))
         finally:
+            smtp.quit()
             self.processing.remove(job)
 
     @gen.coroutine

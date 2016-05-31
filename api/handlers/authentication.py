@@ -232,8 +232,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument('oauth_token')
-        oauth_verifier = self.get_argument('oauth_verifier')
+        oauth_token_key = self.get_argument('oauth_token', default=None, strip=True)
+        oauth_verifier = self.get_argument('oauth_verifier', default=None, strip=True)
 
         try:
             if not oauth_token_key or not oauth_verifier:
@@ -286,7 +286,6 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-                logging.info('{0} {1}'.format(header_token, header_email))
                 if header_email or header_token:
                     logging.info('zakonczona rejestracja MOBI')
                     self.success('Udało się sparować konto USOS')

@@ -132,6 +132,7 @@ def drop_collections(skip_collections=[]):
 
 @gen.coroutine
 def _do_recreate(db, usos_doc):
+    url = None
     try:
         url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
         validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
@@ -160,7 +161,8 @@ def _do_recreate(db, usos_doc):
                                                                   usos_doc[constants.USOS_ID]))
 
     except Exception, ex:
-        logging.error("failed to recreate_dictionaries for %r : %r", usos_doc[constants.USOS_ID], ex.message)
+        logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
+            usos_doc[constants.USOS_ID], url, ex.message))
         logging.exception(ex)
     gen.Return(None)
 

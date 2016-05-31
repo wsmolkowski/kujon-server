@@ -23,7 +23,6 @@ class Application(tornado.web.Application):
         _settings = dict(
             debug=settings.DEBUG,
             autoreload=settings.RELOAD,
-            login_url=settings.LOGIN_URL,
             compress_response=settings.COMPRESS_RESPONSE,
             cookie_secret=options.cookie_secret,
             google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},

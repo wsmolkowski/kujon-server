@@ -5,7 +5,7 @@ import tornado.web
 
 from apidao import ApiDaoHandler
 from base import BaseHandler
-from commons import constants, settings, decorators
+from commons import constants, decorators
 
 
 class LecturersApi(BaseHandler, ApiDaoHandler):
@@ -32,7 +32,6 @@ class LecturerByIdApi(BaseHandler, ApiDaoHandler):
 
         try:
             user_info_doc = yield self.api_lecturer(user_info_id)
-
             self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)
