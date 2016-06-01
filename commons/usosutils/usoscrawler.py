@@ -192,14 +192,12 @@ class UsosCrawler(ApiMixin):
 
         yield api_user_infos
 
-        api_units = list()
-        api_groups = list()
+        units_groups = list()
         for unit in course_units_ids:
-            api_units.append(self.__api_unit(unit))
-            api_groups.append(self.__api_group(unit))
+            units_groups.append(self.__api_unit(unit))
+            units_groups.append(self.__api_group(unit))
 
-        yield api_units
-        yield api_groups
+        yield units_groups
 
         raise gen.Return(None)
 
