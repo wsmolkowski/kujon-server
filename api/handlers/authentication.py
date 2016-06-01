@@ -278,8 +278,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.reset_user_cookie(user_doc)
 
-                self.db[constants.COLLECTION_JOBS_QUEUE].insert(
-                    job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+                self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                               job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 

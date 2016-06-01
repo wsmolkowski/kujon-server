@@ -33,7 +33,7 @@ class TestBaseClassApp(AsyncHTTPTestCase):
                    constants.ACCESS_TOKEN_SECRET: self.access_token_secret,
                    constants.ACCESS_TOKEN_KEY: self.access_token_key, constants.CREATED_TIME: datetime.now()}
 
-        userdocid = self.app.dao.insert('users', user_id)
+        userdocid = self.app.dao.db_insert('users', user_id)
         self.user_id = userdocid
         self.auth_uri = "mobile_id={0}&user_id={1}&usos={2}&access_token_key={3}&access_token_secret={4}".format(
             self.mobile_id, self.user_id, self.usos, self.access_token_key, self.access_token_secret)

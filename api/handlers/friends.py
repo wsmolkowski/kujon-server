@@ -54,7 +54,7 @@ class FriendsApi(BaseHandler, ApiDaoHandler):
                     result = dict()
                     result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
                     result[constants.FRIEND_ID] = str(user_info_id)
-                    friend_doc = yield self.db[constants.COLLECTION_FRIENDS].insert(result)
+                    friend_doc = yield self.db[constants.COLLECTION_FRIENDS].db_insert(result)
                     if friend_doc:
                         self.success(user_info_id)
                         return
@@ -105,7 +105,7 @@ class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
                         courses[course[constants.COURSE_ID]] = course
 
                 for course in courses:
-                    course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=False)
+                    course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID])
                     if not course_participants:
                         continue
 

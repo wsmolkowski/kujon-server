@@ -140,10 +140,15 @@ def http_client(validate_cert=False):
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT,
-                                                           validate_cert=validate_cert,
-                                                           max_clients=constants.MAX_HTTP_CLIENTS))
+                                                           validate_cert=False,
+                                                           max_clients=constants.MAX_HTTP_CLIENTS,
+                                                           user_agent=settings.PROJECT_TITLE,
+                                                           use_gzip=settings.COMPRESS_RESPONSE))
 
     else:
-        httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
+        httpclient.AsyncHTTPClient.configure(None,
+                                             user_agent=settings.PROJECT_TITLE,
+                                             use_gzip=settings.COMPRESS_RESPONSE,
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()

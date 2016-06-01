@@ -45,7 +45,7 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
                 "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "DEMO",
                 "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
 
-        user = self.dao.insert(constants.COLLECTION_USERS, self.user)
+        user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
         yield self.crawler.initial_user_crawl(ObjectId(str(user)))
 
         # then
@@ -63,7 +63,7 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
         self.user = {"mobile_id": "uw1",
                 "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "UW",
                 "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
-        user = self.dao.insert(constants.COLLECTION_USERS, self.user)
+        user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
 
         yield self.crawler.initial_user_crawl(ObjectId(str(user)))
 
@@ -73,7 +73,6 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
         self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_EDITIONS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
-        self.assertTrue(self.dao.count(constants.COLLECTION_COURSE_EDITION) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
@@ -86,7 +85,7 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
         user = {"mobile_id": "ps1",
                 "access_token_key": "uXLyCGpp5zfHPH4z4brg", "usos_id": "PS",
                 "access_token_secret": "VLd6AGJL574qpPNfJyKJ2NR7mxh9VEQJKZYtwaRy"}
-        user = self.dao.insert(constants.COLLECTION_USERS, user)
+        user = self.dao.db_insert(constants.COLLECTION_USERS, user)
 
         # when
         yield self.crawler.initial_user_crawl(ObjectId(str(user)))
@@ -97,7 +96,6 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
         self.assertTrue(self.dao.count(constants.COLLECTION_USERS_INFO) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_EDITIONS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
-        self.assertTrue(self.dao.count(constants.COLLECTION_COURSE_EDITION) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES_UNITS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_COURSES) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)

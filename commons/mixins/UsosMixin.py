@@ -115,8 +115,7 @@ class UsosMixin(OAuthMixin):
 
         http_client = utils.http_client(validate_cert=validate_ssl_cert)
 
-        request = httpclient.HTTPRequest(url, method='GET', use_gzip=settings.COMPRESS_RESPONSE,
-                                         user_agent=settings.PROJECT_TITLE, validate_cert=validate_ssl_cert)
+        request = httpclient.HTTPRequest(url, method='GET', validate_cert=validate_ssl_cert)
 
         try:
             response = yield http_client.fetch(request, validate_cert=usos_doc[constants.VALIDATE_SSL_CERT])
@@ -126,10 +125,7 @@ class UsosMixin(OAuthMixin):
 
             result = escape.json_decode(response.body)
         except httpclient.HTTPError, ex:
-            msg = "USOS HTTPError response: {0} code: {1} fetching: {2} body: {3}".format(ex.message,
-                                                                                          ex.response.code,
-                                                                                          ex.response.effective_url,
-                                                                                          ex.response.body)
+            msg = "USOS HTTPError response: {0} fetching: {1}".format(ex.message, url)
             raise UsosClientError(msg)
 
         raise gen.Return(result)
@@ -283,7 +279,7 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.usos_request(path='services/courses/user', user_doc=self.user_doc, args={
-            'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|course_units_ids]',
+            'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
             'active_terms_only': 'false',
         })
 

@@ -1,20 +1,19 @@
 # coding=UTF-8
 
 import logging
-import traceback
 from datetime import datetime
 
 from tornado import gen
 from tornado.web import RequestHandler
 
 from commons import constants, settings
-from commons.errors import ApiError, AuthenticationError
+from commons.mixins.DaoMixin import DaoMixin
 from crawler import email_factory
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
 
 
-class DatabaseHandler(RequestHandler):
+class DatabaseHandler(RequestHandler, DaoMixin):
     EXCEPTION_TYPE = 'api'
 
     @property
@@ -31,23 +30,23 @@ class DatabaseHandler(RequestHandler):
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 
-        yield self.insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
+        yield self.db_insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
 
         result = yield self.db[constants.COLLECTION_USERS].remove({constants.MONGO_ID: user_id})
 
         logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
             constants.COLLECTION_USERS, user_id, result))
 
-        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
-                          {constants.USER_ID: user_id,
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             {constants.USER_ID: user_id,
                            constants.CREATED_TIME: datetime.now(),
                            constants.UPDATE_TIME: None,
                            constants.JOB_MESSAGE: None,
                            constants.JOB_STATUS: constants.JOB_PENDING,
                            constants.JOB_TYPE: 'unsubscribe_usos'})
 
-        yield self.insert(constants.COLLECTION_JOBS_QUEUE,
-                          {constants.USER_ID: user_id,
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             {constants.USER_ID: user_id,
                            constants.CREATED_TIME: datetime.now(),
                            constants.UPDATE_TIME: None,
                            constants.JOB_MESSAGE: None,
@@ -74,7 +73,7 @@ class DatabaseHandler(RequestHandler):
             '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
         )
 
-        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def email_archive_user(self, recipient):
@@ -89,7 +88,7 @@ class DatabaseHandler(RequestHandler):
             '\nemail: {0}\n'.format(settings.SMTP_EMAIL)
         )
 
-        yield self.insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def find_user(self):
@@ -146,14 +145,8 @@ class DatabaseHandler(RequestHandler):
         yield self.update(constants.COLLECTION_USERS, user_doc[constants.MONGO_ID], document)
 
     @gen.coroutine
-    def insert(self, collection, document):
-        doc = yield self.db[collection].insert(document)
-        logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
-        raise gen.Return(doc)
-
-    @gen.coroutine
     def insert_user(self, document):
-        user_doc = yield self.insert(constants.COLLECTION_USERS, document)
+        user_doc = yield self.db_insert(constants.COLLECTION_USERS, document)
         raise gen.Return(user_doc)
 
     @gen.coroutine
@@ -179,7 +172,7 @@ class DatabaseHandler(RequestHandler):
         logging.debug('removed data from collection {0} for email {1} with result {2}'.format(
             constants.COLLECTION_TOKENS, token['email'], result))
 
-        user_doc = yield self.insert(constants.COLLECTION_TOKENS, token)
+        user_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
 
         yield self.ttl_index(constants.COLLECTION_TOKENS, 'exp')
         raise gen.Return(user_doc)
@@ -190,39 +183,7 @@ class DatabaseHandler(RequestHandler):
         raise gen.Return(token_doc)
 
     @gen.coroutine
-    def exc(self, exception, finish=True):
-        if isinstance(exception, ApiError):
-            exc_doc = exception.data()
-        else:
-            exc_doc = {
-                'exception': str(exception.message)
-            }
-
-        if hasattr(self, 'user_doc'):
-            exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-            exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-
-        exc_doc[constants.TRACEBACK] = traceback.format_exc()
-        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
-        exc_doc[constants.CREATED_TIME] = datetime.now()
-
-        ex_id = yield self.insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
-
-        logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
-
-        if finish:
-            if isinstance(exception, ApiError):
-                self.error(message=exception.message())
-            elif isinstance(exception, AuthenticationError):
-                self.error(message=exception.message)
-            else:
-                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem: {0}'.format(exception.message))
-
-        raise gen.Return()
-
-    @gen.coroutine
     def get_terms_with_order_keys(self, terms_list):
-        # TODO: jeżeli terms jeszcze są nie ściągniete to tutaj się wywala.
         terms_by_order = dict()
         for term in terms_list:
             term_coursor = self.db[constants.COLLECTION_TERMS].find(
@@ -246,11 +207,3 @@ class DatabaseHandler(RequestHandler):
             classtypes[ct['id']] = ct['name']['pl']
 
         raise gen.Return(classtypes)
-
-    @gen.coroutine
-    def remove(self, collection, pipeline):
-        result = yield self.db[collection].remove(pipeline)
-        logging.debug('removed from collection: {0} for pipeline:{1} with result {2}'.format(
-            collection, pipeline, result
-        ))
-        raise gen.Return(result)

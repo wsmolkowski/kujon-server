@@ -1,10 +1,15 @@
+# coding=UTF-8
+
 import logging
+import traceback
+from datetime import datetime
 
 import motor
 from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
+from commons.errors import ApiError, AuthenticationError
 
 
 class DaoMixin(object):
@@ -15,6 +20,37 @@ class DaoMixin(object):
         if not self._db:
             self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
         return self._db[settings.MONGODB_NAME]
+
+    @gen.coroutine
+    def exc(self, exception, finish=True):
+        if isinstance(exception, ApiError):
+            exc_doc = exception.data()
+        else:
+            exc_doc = {
+                'exception': str(exception.message)
+            }
+
+        if hasattr(self, 'user_doc'):
+            exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+            exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+
+        exc_doc[constants.TRACEBACK] = traceback.format_exc()
+        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
+        exc_doc[constants.CREATED_TIME] = datetime.now()
+
+        ex_id = yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+
+        logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+
+        if finish:
+            if isinstance(exception, ApiError):
+                self.error(message=exception.message())
+            elif isinstance(exception, AuthenticationError):
+                self.error(message=exception.message)
+            else:
+                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem: {0}'.format(exception.message))
+
+        raise gen.Return()
 
     @gen.coroutine
     def db_users_info_by_user_id(self, user_id, usos):
@@ -54,13 +90,13 @@ class DaoMixin(object):
         raise gen.Return(result)
 
     @gen.coroutine
-    def db_users_info_programmes(self, user_info_id, usos_id):
+    def db_users_info_programmes(self, user_id):
+        if isinstance(user_id, str):
+            user_id = ObjectId(user_id)
         programmes = []
-        data = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_info_id,
-                                                                        constants.USOS_ID: usos_id})
+        data = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id})
         if data:
             programmes = data['student_programmes']
-
         raise gen.Return(programmes)
 
     @gen.coroutine
@@ -76,12 +112,14 @@ class DaoMixin(object):
 
         result = list()
         data = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one({constants.USER_ID: user_id})
-        if data:
-            for term_data in data['course_editions'].values():
-                for term in term_data:
-                    tc = {constants.TERM_ID: term[constants.TERM_ID], constants.COURSE_ID:term[constants.COURSE_ID]}
-                    if tc not in result:
-                        result.append(tc)
+        if not data:
+            raise gen.Return(result)
+
+        for term_data in data['course_editions'].values():
+            for term in term_data:
+                tc = {constants.TERM_ID: term[constants.TERM_ID], constants.COURSE_ID: term[constants.COURSE_ID]}
+                if tc not in result:
+                    result.append(tc)
 
         raise gen.Return(result)
 
@@ -99,16 +137,6 @@ class DaoMixin(object):
             if term not in terms:
                 terms.append(term)
         raise gen.Return(terms)
-
-    @gen.coroutine
-    def db_course_edition(self, user_id, course_id, term_id, usos_id):
-        course_edition_doc = yield self.db[constants.COLLECTION_COURSE_EDITION].find_one(
-            {constants.USER_ID: user_id,
-             constants.COURSE_ID: course_id,
-             constants.TERM_ID: term_id,
-             constants.USOS_ID: usos_id})
-
-        raise gen.Return(course_edition_doc)
 
     @gen.coroutine
     def db_term(self, term_id, usos_id):

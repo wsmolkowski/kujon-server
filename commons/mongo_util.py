@@ -155,7 +155,7 @@ def _do_recreate(db, usos_doc):
                 class_type[constants.UPDATE_TIME] = datetime.now()
                 class_type_list.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
-            logging.info("dictionary course classtypes for usos %r inserted.", usos_doc[constants.USOS_ID])
+            logging.info("dictionary course classtypes for usos {0} inserted.".format(usos_doc[constants.USOS_ID]))
         else:
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                   usos_doc[constants.USOS_ID]))

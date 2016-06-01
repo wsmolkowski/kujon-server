@@ -47,6 +47,8 @@ class FacultiesApi(BaseHandler, ApiDaoHandler):
                 programme_doc = yield self.api_programme(programme_id, finish=False)
                 programmes.append(programme_doc)
 
+            programmes = filter(None, programmes)
+
             # get faculties
             faculties_ids = list()
             for programme_doc in programmes:
@@ -57,6 +59,8 @@ class FacultiesApi(BaseHandler, ApiDaoHandler):
             for faculty_id in faculties_ids:
                 faculty_doc = yield self.api_faculty(faculty_id)
                 faculties.append(faculty_doc)
+
+            faculties = filter(None, faculties)
 
             self.success(faculties, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:

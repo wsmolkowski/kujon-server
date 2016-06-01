@@ -24,6 +24,7 @@ VALUE_DESCRIPTION = "value_description"
 HAS_PHOTO = "has_photo"
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
+COORDINATORS = "coordinators"
 
 FB = "facebook"
 FB_ID = "id"
@@ -82,7 +83,6 @@ COLLECTION_COURSES = "courses"
 COLLECTION_USERS_INFO = "users_info"
 COLLECTION_COURSES_EDITIONS = "courses_editions"
 COLLECTION_TERMS = "terms"
-COLLECTION_COURSE_EDITION = "course_edition"
 COLLECTION_FRIENDS = "friends"
 COLLECTION_PROGRAMMES = "programmes"
 COLLECTION_GROUPS = "groups"
@@ -137,4 +137,4 @@ SECONDS_DAY = 86400
 SECONDS_1WEEK = 604800
 SECONDS_2WEEKS = 1209600
 
-MAX_HTTP_CLIENTS = 500
+MAX_HTTP_CLIENTS = 1000
