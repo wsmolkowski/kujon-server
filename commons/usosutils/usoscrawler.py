@@ -214,9 +214,11 @@ class UsosCrawler(ApiMixin):
 
             yield self.api_user_info()
             yield self.api_courses_editions()
-            yield self.api_tt(self.__get_monday())
-            yield self.api_programmes()
             yield self.__process_courses_editions()
+            yield self.api_terms()
+            yield self.api_programmes()
+            yield self.api_faculties()
+            yield self.api_tt(self.__get_monday())
             # yield self.__build_courses()
 
             yield self.__subscribe()

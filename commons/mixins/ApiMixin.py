@@ -499,6 +499,37 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(faculty_doc)
 
     @gen.coroutine
+    def api_faculties(self):
+        users_info_doc = yield self.api_user_info()
+
+        # get programmes for user
+        programmes_ids = list()
+        if 'student_programmes' in users_info_doc:
+            for programme in users_info_doc['student_programmes']:
+                programmes_ids.append(programme['programme']['id'])
+
+        programmes = []
+        for programme_id in programmes_ids:
+            programme_doc = yield self.api_programme(programme_id, finish=False)
+            programmes.append(programme_doc)
+
+        programmes = filter(None, programmes)
+
+        # get faculties
+        faculties_ids = list()
+        for programme_doc in programmes:
+            if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
+                faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
+
+        faculties = []
+        for faculty_id in faculties_ids:
+            faculty_doc = yield self.api_faculty(faculty_id)
+            faculties.append(faculty_doc)
+
+        faculties = filter(None, faculties)
+        raise gen.Return(faculties)
+
+    @gen.coroutine
     def api_group(self, course_id, term_id, group_id, finish=True):
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
