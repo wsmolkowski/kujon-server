@@ -3,12 +3,11 @@
 import tornado.gen
 import tornado.web
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import decorators, constants
 
 
-class CourseEditionApi(BaseHandler, ApiDaoHandler):
+class CourseEditionApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -21,7 +20,7 @@ class CourseEditionApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class CoursesApi(BaseHandler, ApiDaoHandler):
+class CoursesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -34,7 +33,7 @@ class CoursesApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class CoursesEditionsApi(BaseHandler, ApiDaoHandler):
+class CoursesEditionsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -47,7 +46,7 @@ class CoursesEditionsApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class CoursesEditionsByTermApi(BaseHandler, ApiDaoHandler):
+class CoursesEditionsByTermApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

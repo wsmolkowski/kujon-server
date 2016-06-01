@@ -2,8 +2,7 @@
 
 import tornado.web
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import decorators, constants
 
 LIMIT_FIELDS_FACULTY = (
@@ -11,7 +10,7 @@ LIMIT_FIELDS_FACULTY = (
     'phone_numbers')
 
 
-class FacultyByIdApi(BaseHandler, ApiDaoHandler):
+class FacultyByIdApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -28,7 +27,7 @@ class FacultyByIdApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class FacultiesApi(BaseHandler, ApiDaoHandler):
+class FacultiesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

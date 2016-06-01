@@ -2,14 +2,13 @@
 
 import tornado.web
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import constants, decorators
 
 LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
 
 
-class GroupsApi(BaseHandler, ApiDaoHandler):
+class GroupsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

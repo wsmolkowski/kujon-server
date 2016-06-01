@@ -4,12 +4,11 @@ import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import constants, helpers, decorators
 
 
-class FriendsApi(BaseHandler, ApiDaoHandler):
+class FriendsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -85,7 +84,8 @@ class FriendsApi(BaseHandler, ApiDaoHandler):
         except Exception, ex:
             yield self.exc(ex)
 
-class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
+
+class FriendsSuggestionsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

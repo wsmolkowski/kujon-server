@@ -3,12 +3,11 @@
 import tornado.gen
 import tornado.web
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import constants, decorators
 
 
-class LecturersApi(BaseHandler, ApiDaoHandler):
+class LecturersApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -24,7 +23,7 @@ class LecturersApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class LecturerByIdApi(BaseHandler, ApiDaoHandler):
+class LecturerByIdApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

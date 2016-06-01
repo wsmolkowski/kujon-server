@@ -68,7 +68,6 @@ class UsosCrawler(ApiMixin):
 
         raise gen.Return(None)
 
-
     @gen.coroutine
     def __subscribe(self):
 
@@ -289,7 +288,7 @@ class UsosCrawler(ApiMixin):
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
 
-            user_doc_archive = yield self.db_archive_user(user_id)
+            user_doc_archive = yield self.db_get_archive_user(user_id)
 
             if not user_doc_archive:
                 raise CrawlerException(

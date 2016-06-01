@@ -1,17 +1,16 @@
 # coding=UTF-8
 
+import facebook
 import tornado.gen
 import tornado.web
-import facebook
 from bson.objectid import ObjectId
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
-from commons import constants, helpers, decorators
+from base import ApiHandler
+from commons import constants, decorators
 from commons.errors import ApiError
 
 
-class FacebookApi(BaseHandler, ApiDaoHandler, tornado.auth.FacebookGraphMixin, tornado.web.RequestHandler):
+class FacebookApi(ApiHandler, tornado.auth.FacebookGraphMixin, tornado.web.RequestHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -50,18 +49,17 @@ class FacebookApi(BaseHandler, ApiDaoHandler, tornado.auth.FacebookGraphMixin, t
         else:
             # while user['cursor']
             print user
-        #     User.objects(email=user['email']).get()
-        # except DoesNotExist, e:
-        #     new_u = User()
-        #     new_u.first_name = user['first_name']
-        #     new_u.last_name = user['last_name']
-        #     new_u.email = user['email']  # THIS IS WHAT YOU NEED
-        #     new_u.username = user['username']
-        #     new_u.gender = user['gender']
-        #     new_u.locale = user['locale']
-        #     new_u.fb_id = user['id']
-        #     new_u.save()
-        # else:
-        #     # User exists
-        #     pass
-
+            #     User.objects(email=user['email']).get()
+            # except DoesNotExist, e:
+            #     new_u = User()
+            #     new_u.first_name = user['first_name']
+            #     new_u.last_name = user['last_name']
+            #     new_u.email = user['email']  # THIS IS WHAT YOU NEED
+            #     new_u.username = user['username']
+            #     new_u.gender = user['gender']
+            #     new_u.locale = user['locale']
+            #     new_u.fb_id = user['id']
+            #     new_u.save()
+            # else:
+            #     # User exists
+            #     pass

@@ -190,7 +190,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
-        classtypes = yield self.get_classtypes()
+        classtypes = yield self.db_classtypes()
 
         def classtype_name(key_id):
             for key, name in classtypes.items():
@@ -245,7 +245,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             courses[course[constants.TERM_ID]].append(course)
 
         # get course in order in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.get_terms_with_order_keys(terms)
+        terms_by_order = yield self.db_terms_with_order_keys(terms)
         terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
         courses_sorted_by_term = list()
         for order_key in terms_by_order:
@@ -549,7 +549,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.exc(ex, finish=finish)
                 raise gen.Return(None)
 
-        classtypes = yield self.get_classtypes()
+        classtypes = yield self.db_classtypes()
         group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
         del (group_doc['class_type_id'])
 
