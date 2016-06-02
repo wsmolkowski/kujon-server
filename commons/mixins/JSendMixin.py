@@ -15,10 +15,9 @@ class JSendMixin(object):
 
     def success(self, data, cache_age=None):
         '''
-        When an API call is successful, the JSend object is used as a simple
-        envelope for the results, using the data key.
 
         :param data:
+        :param cache_age:
         :return:
         '''
         if not cache_age:
@@ -29,9 +28,9 @@ class JSendMixin(object):
 
     def fail(self, message, code=501):
         '''
-        There was a problem with the data submitted, or some pre-condition
-        of the API call wasn't satisfied.
-        :param data:
+
+        :param message:
+        :param code:
         :return:
         '''
 
@@ -43,9 +42,8 @@ class JSendMixin(object):
 
     def error(self, message, data=None, code=None):
         '''
-        An error occurred in processing the request, i.e. an exception was
-        thrown.
-        :param message:
+
+        :param message: 
         :param data:
         :param code:
         :return:

@@ -33,11 +33,10 @@ class OAuth2Mixin(OAuthMixin):
     def _oauth_consumer_token(self):
         return self._CONSUMER_TOKEN
 
-    # def _oauth_get_user_future
     def set_up(self, usos_doc):
         '''
-            do execute before any other operations
-        :param base_url:
+
+        :param usos_doc:
         :return:
         '''
 
