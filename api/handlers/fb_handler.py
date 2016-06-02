@@ -1,51 +1,49 @@
 # coding=UTF-8
 
-import tornado.gen
-import tornado.web
-from bson.objectid import ObjectId
-
 import facebook
+from bson.objectid import ObjectId
+from tornado import auth
+from tornado import gen
+from tornado import web
+
 from base import ApiHandler
 from commons import constants, decorators
 from commons.errors import ApiError
 
 
-class FacebookApi(ApiHandler, tornado.auth.FacebookGraphMixin, tornado.web.RequestHandler):
+class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
             {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
-        self.friends = []
         if constants.FACEBOOK not in user_doc:
             raise ApiError('Użytkownik nie ma konta połączonego z Facebook.')
 
         token = user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN]
 
-        # TODO: Make this fetch async rather than blocking
         graph = facebook.GraphAPI(access_token=token, version='2.6')
-        profile = graph.get_object("me")
 
         # Get all of the authenticated user's friends
         friends = graph.get_connections(id='me', connection_name='friends')
-        allfriends = list()
-        while (friends['data']):
+        all_friends = list()
+        while friends['data']:
             try:
                 for friend in friends['data']:
-                    allfriends.append(friend['name'])
+                    all_friends.append(friend['name'])
                 friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
             except Exception, ex:
                 print "Key Error" + ex.message
-        print allfriends
+        print all_friends
         print friends
 
-    @tornado.web.asynchronous
+    @web.asynchronous
     def _save_user_profile(self, user):
         if not user:
-            raise tornado.web.HTTPError(500, "Facebook authentication failed.")
+            raise web.HTTPError(500, "Facebook authentication failed.")
         else:
             # while user['cursor']
             print user

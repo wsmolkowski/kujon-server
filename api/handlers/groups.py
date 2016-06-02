@@ -1,6 +1,7 @@
 # coding=UTF-8
 
-import tornado.web
+from tornado import gen
+from tornado import web
 
 from base import ApiHandler
 from commons import constants, decorators
@@ -10,8 +11,8 @@ LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers
 
 class GroupsApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self, course):
 
         try:

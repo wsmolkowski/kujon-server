@@ -1,8 +1,8 @@
 from handlers import authentication
 from handlers.base import UsosesApi, ApplicationConfigHandler
 from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
-from handlers.facebook import FacebookApi
 from handlers.faculties import FacultyByIdApi, FacultiesApi
+from handlers.fb_handler import FacebookApi
 from handlers.friends import FriendsSuggestionsApi, FriendsApi
 from handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from handlers.lecturers import LecturersApi, LecturerByIdApi

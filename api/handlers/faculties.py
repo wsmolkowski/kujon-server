@@ -1,6 +1,7 @@
 # coding=UTF-8
 
-import tornado.web
+from tornado import gen
+from tornado import web
 
 from base import ApiHandler
 from commons import decorators, constants
@@ -12,8 +13,8 @@ LIMIT_FIELDS_FACULTY = (
 
 class FacultyByIdApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self, faculty_id):
 
         try:
@@ -29,12 +30,11 @@ class FacultyByIdApi(ApiHandler):
 
 class FacultiesApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
         try:
             faculties = yield self.api_faculties()
-
             self.success(faculties, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
             yield self.exc(ex)

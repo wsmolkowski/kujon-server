@@ -90,9 +90,9 @@ def mkdir(newdir):
 
 
 def initialize_logging(logger_name):
-    try:
-        log_format = DEFAULT_FORMAT % logger_name
+    log_format = DEFAULT_FORMAT % logger_name
 
+    try:
         logging.basicConfig(
             format=log_format,
             level=logging.DEBUG if settings.DEBUG else logging.INFO,

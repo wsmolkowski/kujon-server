@@ -1,4 +1,5 @@
 # coding=UTF-8
+
 from datetime import datetime
 
 from tornado import gen
@@ -33,13 +34,12 @@ class OAuth2Mixin(OAuthMixin):
     def _oauth_consumer_token(self):
         return self._CONSUMER_TOKEN
 
-    # def _oauth_get_user_future
     def set_up(self, usos_doc):
-        '''
-            do execute before any other operations
-        :param base_url:
+        """
+
+        :param usos_doc:
         :return:
-        '''
+        """
 
         self._CONSUMER_TOKEN = dict(key=usos_doc[constants.CONSUMER_KEY], secret=usos_doc[constants.CONSUMER_SECRET])
         self._OAUTH_BASE_URL = usos_doc[constants.USOS_URL]

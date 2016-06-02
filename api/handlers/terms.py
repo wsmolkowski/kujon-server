@@ -1,6 +1,7 @@
 # coding=UTF-8
 
-import tornado.web
+from tornado import gen
+from tornado import web
 
 from base import ApiHandler
 from commons import decorators, constants
@@ -8,8 +9,8 @@ from commons import decorators, constants
 
 class TermsApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
 
         try:
@@ -25,8 +26,8 @@ class TermsApi(ApiHandler):
 
 class TermApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
+    @web.asynchronous
+    @gen.coroutine
     def get(self, term_id):
 
         try:

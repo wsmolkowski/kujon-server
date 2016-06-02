@@ -21,14 +21,16 @@ LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
-    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
-    'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted',
+    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
+    'student_programmes',
+    'user_type', constants.PHOTO_URL, 'has_photo', 'staff_status', 'employment_positions', 'room',
+    'course_editions_conducted',
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
@@ -67,6 +69,13 @@ class ApiMixin(DaoMixin, UsosMixin):
                 if course[constants.COURSE_ID] == course_id:
                     result = course
                     break
+
+        if not result:
+            try:
+                result = yield self.usos_course_edition(course_id, term_id, False)
+                logging.warning('found extra course_edition: {0}'.format(result))
+            except UsosClientError as ex:
+                raise self.exc(ex, finish=False)
 
         raise gen.Return(result)
 
@@ -125,7 +134,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
         course_doc['coordinators'] = course_edition['coordinators']
         course_doc['course_units_ids'] = course_edition['course_units_ids']
-        course_doc['grades'] = course_edition['grades']
+        if 'grades' in course_edition:
+            course_doc['grades'] = course_edition['grades']
+        else:
+            course_doc['grades'] = None
 
         if extra_fetch:
             api_groups = list()
@@ -270,8 +282,6 @@ class ApiMixin(DaoMixin, UsosMixin):
                         'exam_session_number': grade_value['exam_session_number'],
                         'exam_id': grade_value['exam_id'],
                         'value_description': grade_value['value_description']['pl'],
-                        'exam_id': grade_value['exam_id'],
-                        'exam_session_number': grade_value['exam_session_number'],
                         'value_symbol': grade_value['value_symbol'],
                         constants.CLASS_TYPE: 'UNKNOWN'
                     })
@@ -356,6 +366,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_tt(self, given_date):
 
+        monday = None
         if isinstance(given_date, str) or isinstance(given_date, unicode):
             try:
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
@@ -476,10 +487,10 @@ class ApiMixin(DaoMixin, UsosMixin):
                 user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
             # if user has photo
-            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
+            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
                 if photo_doc:
-                    user_info_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                    user_info_doc[constants.PHOTO_URL] = settings.DEPLOY_API + '/users_info_photos/' + str(
                         photo_doc[constants.MONGO_ID])
 
             yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)

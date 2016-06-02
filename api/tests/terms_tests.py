@@ -1,5 +1,6 @@
 from commons.tests.tests_base import TestBaseClassApp
 
+
 class ApiTermsTest(TestBaseClassApp):
     def testEmptyUserShouldReturn404(self):
         response = self.fetch('/api/terms/')

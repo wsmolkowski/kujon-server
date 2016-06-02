@@ -1,7 +1,6 @@
 import unittest
 
 
-
 def build_suite():
 
     test_suite = unittest.TestSuite()

@@ -112,13 +112,15 @@ class UsosMixin(OAuthMixin):
 
         if constants.VALIDATE_SSL_CERT in usos_doc:
             validate_ssl_cert = True
+        else:
+            validate_ssl_cert = False
 
         http_client = utils.http_client(validate_cert=validate_ssl_cert)
 
-        request = httpclient.HTTPRequest(url, method='GET', validate_cert=validate_ssl_cert)
+        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE)
 
         try:
-            response = yield http_client.fetch(request, validate_cert=usos_doc[constants.VALIDATE_SSL_CERT])
+            response = yield http_client.fetch(request)
 
             if response.code is not 200 and response.reason != 'OK':
                 raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
@@ -416,10 +418,11 @@ class UsosMixin(OAuthMixin):
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             result[constants.CREATED_TIME] = create_time
             result[constants.UPDATE_TIME] = create_time
+            raise gen.Return(result)
+
         except Exception, ex:
             logging.exception(ex)
-
-        raise gen.Return(result)
+            raise gen.Return(None)
 
     @gen.coroutine
     def usos_unsubscribe(self, usos_doc, user_doc):

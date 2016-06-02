@@ -88,14 +88,13 @@ class EventHandler(MainHandler):
             logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
                 mode, challenge, verify_token))
             self.fail(message='Required parameters not passed.')
-            return
+        else:
+            self.argument_mode = mode
+            self.argument_challenge = challenge
+            self.argument_verify_token = verify_token
 
-        self.argument_mode = mode
-        self.argument_challenge = challenge
-        self.argument_verify_token = verify_token
-
-        logging.debug('mode:{0} challenge:{1} verify_token:{2}'.format(
-            self.argument_mode, self.argument_challenge, self.argument_verify_token))
+            logging.debug('mode:{0} challenge:{1} verify_token:{2}'.format(
+                self.argument_mode, self.argument_challenge, self.argument_verify_token))
 
     @web.asynchronous
     @gen.coroutine
@@ -105,13 +104,12 @@ class EventHandler(MainHandler):
             if not user_exists:
                 logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
                 self.fail(message='Token verification failure.')
-                return
+            else:
+                logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
+                    self.argument_mode, self.argument_challenge, self.argument_verify_token))
 
-            logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
-                self.argument_mode, self.argument_challenge, self.argument_verify_token))
-
-            self.write(self.argument_challenge)
-            self.finish()
+                self.write(self.argument_challenge)
+                self.finish()
 
         except Exception, ex:
             yield self.exc(ex)

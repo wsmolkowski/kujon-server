@@ -26,4 +26,5 @@ sudo chmod -R g+w $LOGDIR
 echo 'starting services...'
 sudo service nginx start
 sudo supervisorctl start all
+sudo supervisorctl status
 echo 'services started'
