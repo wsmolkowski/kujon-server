@@ -68,6 +68,13 @@ class ApiMixin(DaoMixin, UsosMixin):
                     result = course
                     break
 
+        if not result:
+            try:
+                result = yield self.usos_course_edition(course_id, term_id, False)
+                logging.warning('found extra course_edition: {0}'.format(result))
+            except UsosClientError as ex:
+                raise self.exc(ex, finish=False)
+
         raise gen.Return(result)
 
     @gen.coroutine
@@ -125,7 +132,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
         course_doc['coordinators'] = course_edition['coordinators']
         course_doc['course_units_ids'] = course_edition['course_units_ids']
-        course_doc['grades'] = course_edition['grades']
+        if 'grades' in course_edition:
+            course_doc['grades'] = course_edition['grades']
+        else:
+            course_doc['grades'] = None
 
         if extra_fetch:
             api_groups = list()
