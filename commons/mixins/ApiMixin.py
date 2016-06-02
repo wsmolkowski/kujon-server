@@ -270,8 +270,6 @@ class ApiMixin(DaoMixin, UsosMixin):
                         'exam_session_number': grade_value['exam_session_number'],
                         'exam_id': grade_value['exam_id'],
                         'value_description': grade_value['value_description']['pl'],
-                        'exam_id': grade_value['exam_id'],
-                        'exam_session_number': grade_value['exam_session_number'],
                         'value_symbol': grade_value['value_symbol'],
                         constants.CLASS_TYPE: 'UNKNOWN'
                     })
