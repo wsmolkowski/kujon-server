@@ -21,14 +21,16 @@ LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.HAS_PHOTO, 'staff_status', 'room',
+    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
 USER_INFO_LIMIT_FIELDS = (
-    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', 'has_photo', 'student_programmes',
-    'user_type', constants.HAS_PHOTO, 'staff_status', 'employment_positions', 'room', 'course_editions_conducted',
+    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
+    'student_programmes',
+    'user_type', constants.PHOTO_URL, 'has_photo', 'staff_status', 'employment_positions', 'room',
+    'course_editions_conducted',
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
@@ -485,10 +487,10 @@ class ApiMixin(DaoMixin, UsosMixin):
                 user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
             # if user has photo
-            if constants.HAS_PHOTO in user_info_doc and user_info_doc[constants.HAS_PHOTO]:
+            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
                 if photo_doc:
-                    user_info_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                    user_info_doc[constants.PHOTO_URL] = settings.DEPLOY_API + '/users_info_photos/' + str(
                         photo_doc[constants.MONGO_ID])
 
             yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)

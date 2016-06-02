@@ -7,13 +7,13 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from base import ApiHandler
-from commons import constants, settings, decorators
+from commons import constants, decorators
 from commons.errors import ApiError
 from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
-    constants.HAS_PHOTO, "{}.{}".format(constants.GOOGLE, constants.GOOGLE_NAME),
+    constants.PHOTO_URL, "{}.{}".format(constants.GOOGLE, constants.GOOGLE_NAME),
     "{}.{}".format(constants.GOOGLE, constants.GOOGLE_PICTURE),
     "{}.{}".format(constants.GOOGLE, constants.GOOGLE_EMAIL),
     "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_NAME),
@@ -61,14 +61,13 @@ class UserInfoApi(ApiHandler):
             user_doc.update(user_info)
 
             # check if get photo needed
-            if constants.HAS_PHOTO in user_doc and user_doc[constants.HAS_PHOTO]:
-                user_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
-                    user_info[constants.HAS_PHOTO])
+            if constants.PHOTO_URL in user_doc and user_doc[constants.PHOTO_URL]:
+                user_doc[constants.PHOTO_URL] = user_info[constants.PHOTO_URL]
             else:
                 if constants.GOOGLE in user_doc and constants.GOOGLE_PICTURE in user_doc[constants.GOOGLE]:
-                    user_doc[constants.HAS_PHOTO] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
+                    user_doc[constants.PHOTO_URL] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
                 if constants.FACEBOOK in user_doc and constants.FACEBOOK_PICTURE in user_doc[constants.FACEBOOK]:
-                    user_doc[constants.HAS_PHOTO] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+                    user_doc[constants.PHOTO_URL] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
 
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
