@@ -337,13 +337,19 @@ class DaoMixin(object):
 
         raise gen.Return(terms_by_order)
 
+    _classtypes = dict()
+
     @gen.coroutine
     def db_classtypes(self):
-        classtypes = dict()
-        cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-            {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
-        while (yield cursor.fetch_next):
-            ct = cursor.next_object()
-            classtypes[ct['id']] = ct['name']['pl']
 
-        raise gen.Return(classtypes)
+        if self.user_doc[constants.USOS_ID] not in self._classtypes:
+            class_type = dict()
+            cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
+                {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+            while (yield cursor.fetch_next):
+                ct = cursor.next_object()
+                class_type[ct['id']] = ct['name']['pl']
+
+            self._classtypes[self.user_doc[constants.USOS_ID]] = class_type
+
+        raise gen.Return(self._classtypes[self.user_doc[constants.USOS_ID]])
