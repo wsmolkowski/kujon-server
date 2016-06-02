@@ -83,16 +83,6 @@ class DaoMixin(object):
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
         raise gen.Return(doc)
 
-    # @gen.coroutine
-    # def db_remove(self, collection, key, key_value):
-    #     if key == constants.MONGO_ID:
-    #         if isinstance(key_value, str):
-    #             key_value = ObjectId(key_value)
-    #
-    #     result = yield self.db[collection].remove({key: key_value})
-    #     logging.debug("removed from collection {0} with {1}".format(collection, result))
-    #     raise gen.Return(result)
-
     @gen.coroutine
     def db_remove(self, collection, pipeline):
         result = yield self.db[collection].remove(pipeline)
