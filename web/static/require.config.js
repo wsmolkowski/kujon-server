@@ -14,17 +14,21 @@ var require = {
         "fullcalendar":         "/static/bower_components/fullcalendar/dist/fullcalendar.min",
         "fullcalendarpl":       "/static/bower_components/fullcalendar/dist/lang/pl",
         "cookiebar":            "/static/bower_components/cookiebar/dist/cookiebar.min",
-        "easing":               "/static/bower_components/jquery.easing/js/jquery.easing.min",
         "nice-select":          "/static/bower_components/jquery-nice-select/js/jquery.nice-select.min",
         "bootstrap-table":      "/static/bower_components/bootstrap-table/dist/bootstrap-table.min",
         "bootstrap-table-pl":   "/static/bower_components/bootstrap-table/dist/locale/bootstrap-table-pl-PL.min",
+        "easing":               "/static/bower_components/jquery.easing/js/jquery.easing.min",
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
         "lib":                  "/static/js",
+        "locales":              "/static/bower_components/bootstrap-table/dist/locale/",
     },
     shim: {
         "bootstrap": { deps: ["jquery"] },
+        "bootstrap-table": { deps: ["jquery"] },
+        "bootstrap-table-pl": { deps: ["jquery", "bootstrap-table"] },
         "fullcalendarpl": { deps: ["fullcalendar"] },
         "easing": { deps: ["jquery"] },
+        "nice-select": { deps: ["jquery", "bootstrap-table", "bootstrap-table-pl"] },
     }
 };

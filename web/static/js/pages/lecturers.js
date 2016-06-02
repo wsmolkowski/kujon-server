@@ -1,6 +1,6 @@
-define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/lecturers.html',
+define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
     'text!templates/error.html', 'text!templates/modal_lecturer.html', 'text!templates/modal_error.html'],
-    function($, Handlebars, main, nice, easing, bootstrapTable, tplLecturers, tplError, tplModalLecturer, tplModalError) {
+    function($, Handlebars, main, tplLecturers, tplError, tplModalLecturer, tplModalError) {
     'use strict';
     return {
         render: function() {

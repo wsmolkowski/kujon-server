@@ -1,8 +1,7 @@
-define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'bootstrap-table-pl',
-        'text!templates/courses.html', 'text!templates/course_details.html',
+define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!templates/course_details.html',
         'text!templates/error.html', 'text!templates/modal_lecturer.html', 'text!templates/modal_user.html',
         'text!templates/modal_error.html'],
-    function($, Handlebars, main, nice, easing, bootstrapTable, bootstrapTablePl, tpl, tplDetails, tplError, tplModalLecturer, tplModalUser, tplModalError) {
+    function($, Handlebars, main, tpl, tplDetails, tplError, tplModalLecturer, tplModalUser, tplModalError) {
 'use strict';
     return {
         render: function() {
