@@ -17,6 +17,7 @@ var require = {
         "easing":               "/static/bower_components/jquery.easing/js/jquery.easing.min",
         "nice-select":          "/static/bower_components/jquery-nice-select/js/jquery.nice-select.min",
         "bootstrap-table":      "/static/bower_components/bootstrap-table/dist/bootstrap-table.min",
+        "bootstrap-table-pl":   "/static/bower_components/bootstrap-table/dist/locale/bootstrap-table-pl-PL.min",
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
         "lib":                  "/static/js",
