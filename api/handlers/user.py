@@ -7,7 +7,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from base import ApiHandler
-from commons import constants, settings, decorators
+from commons import constants, decorators
 from commons.errors import ApiError
 from commons.usosutils import usosinstances
 
@@ -57,11 +57,6 @@ class UserInfoApi(ApiHandler):
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
             user_doc.update(user_info)
-
-            # check if get photo needed
-            if constants.HAS_PHOTO in user_doc and user_doc[constants.HAS_PHOTO]:
-                user_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
-                    user_info[constants.HAS_PHOTO])
 
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
