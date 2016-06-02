@@ -290,15 +290,27 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_grades_byterm(self):
+        result = list()
+
+        def find_grades(term_id):
+            for term_grades in result:
+                for key, value in term_grades.items():
+                    if key == constants.TERM_ID and value == term_id:
+                        return term_grades
+            return None
 
         grades = yield self.api_grades()
 
-        result = dict()
         for grade in grades:
-            if grade[constants.TERM_ID] not in result:
-                result[grade[constants.TERM_ID]] = [grade]
+            term_grades = find_grades(grade[constants.TERM_ID])
+            if term_grades:
+                term_grades['grades'].append(grade)
+                result.append(term_grades)
             else:
-                result[grade[constants.TERM_ID]].append(grade)
+                result.append({
+                    constants.TERM_ID: grade[constants.TERM_ID],
+                    'grades': [grade]
+                })
 
         raise gen.Return(result)
 
