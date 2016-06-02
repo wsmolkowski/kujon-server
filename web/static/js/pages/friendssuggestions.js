@@ -1,4 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'text!templates/friendssuggestions.html', 'text!templates/error.html'], function($, Handlebars, main, tpl, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/friendssuggestions.html', 'text!templates/error.html'],
+function($, Handlebars, main, tpl, tplError) {
 'use strict';
 
     return {

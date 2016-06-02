@@ -1,4 +1,5 @@
-define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) {
+define(['static/js/router.js', 'jquery', 'easing', 'bootstrap-table', 'bootstrap-table-pl', 'nice-select'],
+function(router, $, easing, bootstrapTable, bootstrapTablePl, nice) {
 
      //jQuery to collapse the navbar on scroll
     $(window).scroll(function() {
