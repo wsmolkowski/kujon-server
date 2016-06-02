@@ -1,13 +1,12 @@
 import logging
 import os
 import traceback
+from datetime import datetime
 from functools import wraps
 
-from datetime import datetime
 
-
-def search_key_value_onlist(list, key, value):
-    for item in list:
+def search_key_value_onlist(list_check, key, value):
+    for item in list_check:
         if item[key] == value:
             return item
 

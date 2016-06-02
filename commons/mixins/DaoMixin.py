@@ -163,7 +163,9 @@ class DaoMixin(object):
             try:
                 course_id = int(group_id)
             except ValueError:
-                raise Exception('Provided group_id {0} is not integer'.format(course_id))
+                raise Exception('Provided group_id {0} is not integer'.format(group_id))
+        else:
+            course_id = group_id
 
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
             {constants.GROUP_ID: course_id, constants.USOS_ID: usos_id})
@@ -199,8 +201,8 @@ class DaoMixin(object):
         raise gen.Return([])
 
     @gen.coroutine
-    def db_users_info(self, id, usos_id):
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: id,
+    def db_users_info(self, user_id, usos_id):
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
                                                                                  constants.USOS_ID: usos_id})
         raise gen.Return(user_info_doc)
 

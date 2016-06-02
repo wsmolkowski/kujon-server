@@ -246,7 +246,7 @@ class UsosCrawler(ApiMixin):
 
                     yield self.db_insert(constants.COLLECTION_NOTIFIER_STATUS, data)
                 except Exception, ex:
-                    yield self._exc(ex)
+                    yield self.exc(ex, finish=False)
 
         except Exception, ex:
             self.exc(ex, finish=False)

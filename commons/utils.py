@@ -90,9 +90,9 @@ def mkdir(newdir):
 
 
 def initialize_logging(logger_name):
-    try:
-        log_format = DEFAULT_FORMAT % logger_name
+    log_format = DEFAULT_FORMAT % logger_name
 
+    try:
         logging.basicConfig(
             format=log_format,
             level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -140,7 +140,7 @@ def http_client(validate_cert=False):
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT,
-                                                           validate_cert=validate_cert,
+                                                           validate_cert=False,
                                                            max_clients=constants.MAX_HTTP_CLIENTS))
 
     else:

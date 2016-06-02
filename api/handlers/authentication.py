@@ -257,33 +257,32 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
 
             if not usos_doc:
                 self.fail('Nieznany USOS {0}'.format(usos_id))
-                return
-
-            self.set_up(usos_doc)
-
-            user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            user_doc[constants.UPDATE_TIME] = datetime.now()
-
-            if email:
-                user_doc[constants.USER_EMAIL] = email
-            if token:
-                user_doc[constants.MOBI_TOKEN] = token
-
-            if new_user:
-                user_doc[constants.CREATED_TIME] = datetime.now()
-                new_id = yield self.db_insert_user(user_doc)
-                logging.info('insert: ' + str(new_id))
-                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
             else:
-                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
+                self.set_up(usos_doc)
 
-            logging.info(settings.DEPLOY_API + '/authentication/verify')
+                user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+                user_doc[constants.UPDATE_TIME] = datetime.now()
 
-            yield self.authorize_redirect(extra_params={
-                'scopes': 'studies|offline_access|student_exams|grades',
-                'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
-            })
+                if email:
+                    user_doc[constants.USER_EMAIL] = email
+                if token:
+                    user_doc[constants.MOBI_TOKEN] = token
+
+                if new_user:
+                    user_doc[constants.CREATED_TIME] = datetime.now()
+                    new_id = yield self.db_insert_user(user_doc)
+                    logging.info('insert: ' + str(new_id))
+                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
+                else:
+                    yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
+
+                logging.info(settings.DEPLOY_API + '/authentication/verify')
+
+                yield self.authorize_redirect(extra_params={
+                    'scopes': 'studies|offline_access|student_exams|grades',
+                    'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
+                })
 
         except Exception, ex:
             yield self.exc(ex)

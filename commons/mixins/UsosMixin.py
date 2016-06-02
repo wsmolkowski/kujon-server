@@ -112,6 +112,8 @@ class UsosMixin(OAuthMixin):
 
         if constants.VALIDATE_SSL_CERT in usos_doc:
             validate_ssl_cert = True
+        else:
+            validate_ssl_cert = False
 
         http_client = utils.http_client(validate_cert=validate_ssl_cert)
 
@@ -416,10 +418,11 @@ class UsosMixin(OAuthMixin):
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             result[constants.CREATED_TIME] = create_time
             result[constants.UPDATE_TIME] = create_time
+            raise gen.Return(result)
+
         except Exception, ex:
             logging.exception(ex)
-
-        raise gen.Return(result)
+            raise gen.Return(None)
 
     @gen.coroutine
     def usos_unsubscribe(self, usos_doc, user_doc):

@@ -6,11 +6,9 @@ def authenticated(method):
         current_user = self.get_current_user()
         if not current_user:
             self.fail(message="Request not authenticated.", code=401)
-            return
+        elif constants.USOS_PAIRED in current_user and not current_user[constants.USOS_PAIRED]:
+            self.fail(message="User not paired with USOS.", code=401)
         else:
-            if constants.USOS_PAIRED in current_user and not current_user[constants.USOS_PAIRED]:
-                self.fail(message="User not paired with USOS.", code=401)
-                return
             self.user_doc = current_user
             result = method(self, *args, **kwargs)
             if result is not None:

@@ -142,10 +142,11 @@ def _do_recreate(db, usos_doc):
         response = yield http_client.fetch(request)
 
         if response.code is not 200 and response.reason != 'OK':
-            logging.warning('Błedna odpowiedź USOS dla {0}'.format(url))
-            logging.warning(response)
-        else:
-            class_types = escape.json_decode(response.body)
+            logging.error('Błedna odpowiedź USOS dla {0}'.format(url))
+            logging.error(response)
+            raise gen.Return(None)
+
+        class_types = escape.json_decode(response.body)
 
         if class_types and len(class_types) > 0:
             class_type_list = list()

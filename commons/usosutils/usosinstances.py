@@ -14,13 +14,13 @@ USOSINSTANCES = [
      'name': 'Uniwersytet Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
      'logo': '/static/img/logo/logo-uw-64x64.jpg',
-     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',                         # jeszcze stary nie zmieniony na Kujon.mobi
+     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',  # jeszcze stary nie zmieniony na Kujon.mobi
      'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',  # jeszcze stary nie zmieniony na Kujon.mobi
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'enabled': True,
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UJ',                           #fiuty zablokowali dostep dla zewnetrznych aplikacji
+    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
@@ -29,7 +29,7 @@ USOSINSTANCES = [
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-    },
+     },
     {'usos_id': 'UAM',
      'name': 'Uniwersytet im Adama Mickiewicza w Poznaniu',
      'url': 'https://usosapps.amu.edu.pl/',
@@ -39,7 +39,7 @@ USOSINSTANCES = [
      'contact': 'd.walczyk@tu.kielce.pl',
      'enabled': True,
      'validate_ssl_certificate': True,
-    },
+     },
     {'usos_id': 'PW',
      'name': 'Politechnika Warszawska',
      'url': 'https://apps.usos.pw.edu.pl/',
@@ -130,7 +130,7 @@ USOSINSTANCES = [
      'enabled': False,
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UP',                   # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
+    {'usos_id': 'UP',  # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
@@ -340,14 +340,14 @@ USOSINSTANCES = [
      'enabled': True,
      'validate_ssl_certificate': True,
      },
-     {'usos_id': 'DEMO',
-      'name': 'Uniwersytet DEMO w Nibylandi',
-      'url': 'https://usosapps.demo.usos.edu.pl/',
-      'logo': '/static/img/logo/logo-demo-64x64.jpg',
-      'consumer_key': 'u9xbMGsj9rfER3QBPCBR',
-      'consumer_secret': 'f6TDvucnwDUJ8ZX7HCFa4kvNEFnE7MzByezgBy5v',
-      'contact': 'dsksysadm@adm.uw.edu.pl',
-      'enabled': True,
-      'validate_ssl_certificate': True,
-    },
+    {'usos_id': 'DEMO',
+     'name': 'Uniwersytet DEMO w Nibylandi',
+     'url': 'https://usosapps.demo.usos.edu.pl/',
+     'logo': '/static/img/logo/logo-demo-64x64.jpg',
+     'consumer_key': 'u9xbMGsj9rfER3QBPCBR',
+     'consumer_secret': 'f6TDvucnwDUJ8ZX7HCFa4kvNEFnE7MzByezgBy5v',
+     'contact': 'dsksysadm@adm.uw.edu.pl',
+     'enabled': True,
+     'validate_ssl_certificate': True,
+     },
 ]

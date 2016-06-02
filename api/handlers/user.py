@@ -43,10 +43,10 @@ class UserInfoApi(ApiHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        '''
+        """
         :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO and
                     school name from usosinstances.USOSINSTANCES
-        '''
+        """
 
         try:
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(

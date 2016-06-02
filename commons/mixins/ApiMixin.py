@@ -354,6 +354,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_tt(self, given_date):
 
+        monday = None
         if isinstance(given_date, str) or isinstance(given_date, unicode):
             try:
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
