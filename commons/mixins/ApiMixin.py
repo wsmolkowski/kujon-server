@@ -465,7 +465,11 @@ class ApiMixin(DaoMixin, UsosMixin):
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
         if not user_info_doc:
-            user_info_doc = yield self.usos_user_info(user_id)
+            try:
+                user_info_doc = yield self.usos_user_info(user_id)
+            except UsosClientError as ex:
+                yield self.exc(ex, finish=False)
+
             if not user_info_doc:
                 raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
             if not user_id:

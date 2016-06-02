@@ -86,7 +86,7 @@ class MainHandler(BaseHandler):
 
 
 class ContactHandler(BaseHandler):
-    SUPPORTED_METHODS = ('POST')
+    SUPPORTED_METHODS = ('POST',)
 
     @gen.coroutine
     def email_contact(self, subject, message):
