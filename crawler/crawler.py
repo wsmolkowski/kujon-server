@@ -105,8 +105,6 @@ class MongoDbQueue(object):
 
             if job[constants.JOB_TYPE] == 'initial_user_crawl':
                 yield self.crawler.initial_user_crawl(job[constants.USER_ID])
-            elif job[constants.JOB_TYPE] == 'update_user_crawl':
-                yield self.crawler.update_user_crawl(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'archive_user':
                 yield self.remove_user_data(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'unsubscribe_usos':

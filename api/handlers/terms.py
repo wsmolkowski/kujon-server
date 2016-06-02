@@ -1,12 +1,12 @@
 # coding=UTF-8
 
 import tornado.web
-from apidao import ApiDaoHandler
-from base import BaseHandler
+
+from base import ApiHandler
 from commons import decorators, constants
 
 
-class TermsApi(BaseHandler, ApiDaoHandler):
+class TermsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -23,7 +23,7 @@ class TermsApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class TermApi(BaseHandler, ApiDaoHandler):
+class TermApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

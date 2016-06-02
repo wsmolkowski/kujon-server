@@ -1,21 +1,19 @@
 # coding=UTF-8
 
 import logging
-import traceback
 from datetime import datetime
 from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, utils
+from commons import constants
 from commons.AESCipher import AESCipher
-from commons.errors import CrawlerException
-from commons.mixins.DaoMixin import DaoMixin
-from commons.mixins.UsosMixin import UsosMixin
+from commons.errors import CrawlerException, UsosClientError
+from commons.mixins.ApiMixin import ApiMixin
 
 
-class UsosCrawler(UsosMixin, DaoMixin):
+class UsosCrawler(ApiMixin):
     EXCEPTION_TYPE = 'usoscrawler'
     EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
 
@@ -43,74 +41,8 @@ class UsosCrawler(UsosMixin, DaoMixin):
         return self.user_doc[constants.MONGO_ID]
 
     @gen.coroutine
-    def _exc(self, exception):
-        try:
-            exc_doc = {
-                'args': exception.args,
-                'message': str(exception),
-                constants.TRACEBACK: traceback.format_exc(),
-                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
-                constants.CREATED_TIME: datetime.now()
-            }
-
-            if hasattr(self, 'user_doc') and self.user_doc:
-                exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-                exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-                exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
-
-            yield self.db_insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
-            logging.error(exc_doc)
-        except Exception, ex:
-            logging.exception(ex)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __build_user_info(self, user_info_id=None):
-
-        user_info_doc = yield self.db_users_info_by_user_id(self.user_id, self.usos_id)
-
-        if self.user_id and user_info_doc:
-            logging.debug("not building user info - it already exists for %r", self.user_id)
-            raise gen.Return(user_info_doc[constants.ID])
-        try:
-            if user_info_id:
-                result = yield self.usos_user_info(user_info_id)
-            else:
-                result = yield self.usos_user_info()
-
-            # if user has photo - download
-            if constants.HAS_PHOTO in result and result[constants.HAS_PHOTO]:
-                photo_doc = yield self.usos_photo(result[constants.ID])
-                yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
-                result[constants.HAS_PHOTO] = photo_doc[constants.MONGO_ID]
-
-            yield self.db_insert(constants.COLLECTION_USERS_INFO, result)
-
-        except Exception, ex:
-            yield self._exc(ex)
-
-        raise gen.Return(result[constants.ID])
-
-    @gen.coroutine
-    def __build_course_editions_conducted(self, courses_conducted):
-
-        for courseterm in courses_conducted:
-
-            course_id, term_id = courseterm[constants.ID].split('|')
-
-            course_doc = yield self.db_course_edition(self.user_id, course_id, term_id, self.usos_id)
-            if course_doc:
-                continue
-
-            try:
-                result = yield self.usos_course_edition(course_id, term_id, fetch_participants=False)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
-                else:
-                    raise CrawlerException("Brak edycji kursu %r.", course_id)
-            except Exception, ex:
-                yield self._exc(ex)
+    def get_usos(self, key, value):
+        raise gen.Return(self._usos_doc)
 
     @gen.coroutine
     def __subscribe(self):
@@ -120,95 +52,7 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
-                yield self._exc(ex)
-
-    @gen.coroutine
-    def __build_time_table(self, given_date):
-        try:
-            result = yield self.time_table(given_date)
-        except Exception, ex:
-            yield self._exc(ex)
-            raise gen.Return(None)
-
-        if result:
-            yield self.db_insert(constants.COLLECTION_TT, result)
-        else:
-            logging.debug("no time tables for date: %r inserted empty", given_date)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __build_programmes_task(self, programm_id):
-        programme_doc = yield self.db_programme(programm_id, self.usos_id)
-
-        if programme_doc:
-            gen.Return(None)
-        try:
-            result = yield self.usos_programme(programm_id)
-            yield self.db_insert(constants.COLLECTION_PROGRAMMES, result)
-        except Exception, ex:
-            yield self._exc(ex)
-
-    @gen.coroutine
-    def __build_programmes(self, user_info_id):
-        programmes = yield self.db_users_info_programmes(user_info_id, self.usos_id)
-        tasks = list()
-
-        for programme in programmes:
-            tasks.append(self.__build_programmes_task(programme['programme'][constants.ID]))
-
-        yield tasks
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __build_courses_editions(self):
-
-        course_edition = yield self.db_courses_editions(self.user_id)
-
-        if not course_edition:
-            result = yield self.usos_courses_editions()
-            course_edition = yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, result)
-            raise gen.Return(course_edition)
-        else:
-            raise gen.Return(course_edition)
-
-    @gen.coroutine
-    def __build_terms(self):
-        terms = yield self.db_terms(self.user_id)
-        for term_id in terms:
-            term_doc = yield self.db_term(term_id, self.usos_id)
-            if term_doc:
-                continue
-
-            try:
-                result = yield self.usos_term(term_id)
-                yield self.db_insert(constants.COLLECTION_TERMS, result)
-            except Exception, ex:
-                yield self._exc(ex)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __build_course_edition_task(self, course_id, term_id):
-        try:
-            result = yield self.usos_course_edition(course_id, term_id, fetch_participants=True)
-            if result:
-                yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
-            else:
-                logging.warning('could not find course edition for {0}, {1}'.format(course_id, term_id))
-        except Exception, ex:
-            yield self._exc(ex)
-
-    @gen.coroutine
-    def __build_course_edition(self):
-        courses_editions = yield self.db_courses_editions(self.user_id)
-        tasks = list()
-        for course_edition in courses_editions:
-            course_id, term_id = course_edition[constants.COURSE_ID], course_edition[constants.TERM_ID]
-            tasks.append(self.__build_course_edition_task(course_id, term_id))
-        yield tasks
-        raise gen.Return(None)
+                yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def __build_courses(self):
@@ -232,7 +76,6 @@ class UsosCrawler(UsosMixin, DaoMixin):
             try:
                 result = yield self.usos_course(course_id)
                 if result:
-
                     # change faculty_id to faculty name
                     faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
                     if not faculty_doc:
@@ -244,47 +87,29 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
             except Exception, ex:
-                yield self._exc(ex)
+                yield self.exc(ex, finish=False)
 
         raise gen.Return(None)
 
     @gen.coroutine
-    def __build_users_info(self, user_info_ids):
-        for user_info_id in user_info_ids:
-            user_info_doc = yield self.db_users_info(user_info_id, self.usos_id)
-            if user_info_doc:
-                yield self.__build_user_info(user_info_id)
-                yield self.__build_programmes(user_info_id)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __build_units(self, units):
-
-        for unit_id in units:
-            unit_doc = yield self.db_unit(unit_id, self.usos_id)
-            if unit_doc:
-                continue  # units already exists
-
+    def __api_unit(self, unit_id):
+        unit_doc = yield self.db_unit(unit_id, self.usos_id)
+        if not unit_doc:
             try:
                 result = yield self.usos_unit(unit_id)
                 if result:
                     yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except Exception, ex:
-                yield self._exc(ex)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=False)
 
         raise gen.Return(None)
 
     @gen.coroutine
-    def __build_groups(self, groups):
-
-        for group_id in groups:
-            group_doc = yield self.db_group(group_id, self.usos_id)
-            if group_doc:
-                continue  # group already exists
-
+    def __api_group(self, group_id):
+        group_doc = yield self.db_group(group_id, self.usos_id)
+        if not group_doc:
             try:
                 result = yield self.usos_group(group_id)
                 if result:
@@ -292,51 +117,64 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 else:
                     msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
                     logging.info(msg)
-            except Exception, ex:
-                yield self._exc(ex)
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=False)
 
         raise gen.Return(None)
 
     @gen.coroutine
-    def __process_user_data(self):
-        units_found = list()
-        courses_editions = yield self.db_courses_editions(self.user_id)
+    def __process_courses_editions(self):
+        courses_editions = yield self.api_courses_editions()
 
-        for data in courses_editions:
-            term_id, course_id = data[constants.TERM_ID], data[constants.COURSE_ID]
+        users_ids = list()
+        courses_terms = list()
+        course_units_ids = list()
 
-            try:
-                result = yield self.usos_course_edition(course_id, term_id, fetch_participants=True)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_COURSE_EDITION, result)
+        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+            for course in courses:
 
-                # collect units
-                if result and 'course_units_ids' in result:
-                    for unit in result['course_units_ids']:
-                        if unit not in units_found:
-                            units_found.append(unit)
+                courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
+                                                          course[constants.TERM_ID],
+                                                          extra_fetch=False))
 
-            except Exception, ex:
-                yield self._exc(ex)
+                for lecturer in course[constants.LECTURERS]:
+                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                        users_ids.append(lecturer[constants.USER_ID])
+                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                        users_ids.append(lecturer[constants.ID])
 
-        yield self.__build_units(units_found)
-        yield self.__build_groups(units_found)
+                for participant in course[constants.PARTICIPANTS]:
+                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                        users_ids.append(participant[constants.USER_ID])
+                    if constants.ID in participant and participant[constants.ID] not in users_ids:
+                        users_ids.append(participant[constants.ID])
+
+                for coordinator in course[constants.COORDINATORS]:
+                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                        users_ids.append(coordinator[constants.USER_ID])
+                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                        users_ids.append(coordinator[constants.ID])
+
+                for course_unit in course['course_units_ids']:
+                    if course_unit not in course_units_ids:
+                        course_units_ids.append(course_unit)
+
+        yield courses_terms
+
+        api_user_infos = list()
+        for user_id in users_ids:
+            api_user_infos.append(self.api_user_info(user_id))
+
+        yield api_user_infos
+
+        units_groups = list()
+        for unit in course_units_ids:
+            units_groups.append(self.__api_unit(unit))
+            units_groups.append(self.__api_group(unit))
+
+        yield units_groups
 
         raise gen.Return(None)
-
-    @staticmethod
-    def __find_users_related(users, result):
-        if result and 'participants' in result:
-            participants = result.pop('participants')
-            for participant in participants:
-                if participant not in users:
-                    users.append(participant)
-
-        if result and 'lecturers' in result:
-            lecturers = result.pop('lecturers')
-            for lecturer in lecturers:
-                if lecturer not in users:
-                    users.append(lecturer)
 
     @gen.coroutine
     def initial_user_crawl(self, user_id):
@@ -347,43 +185,18 @@ class UsosCrawler(UsosMixin, DaoMixin):
 
             self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
 
-            user_info_id = yield self.__build_user_info()
+            yield self.api_user_info()
+            yield self.api_courses_editions()
+            yield self.__process_courses_editions()
+            yield self.api_terms()
+            yield self.api_programmes()
+            yield self.api_faculties()
+            yield self.api_tt(self.__get_monday())
+            # yield self.__build_courses()
+
             yield self.__subscribe()
-
-            monday = self.__get_monday()
-            yield self.__build_time_table(monday)
-            yield self.__build_time_table(self.__get_next_monday(monday))
-
-            yield self.__build_programmes(user_info_id)
-            yield self.__build_courses_editions()
-            yield self.__build_terms()
-            yield self.__build_course_edition()
-            yield self.__process_user_data()
-            yield self.__build_courses()
-
         except Exception, ex:
-            yield self._exc(ex)
-
-    @gen.coroutine
-    def daily_crawl(self):
-        users = yield self.db_users()
-        for user_doc in users:
-            try:
-                logging.debug('updating daily crawl for user: {0}'.format(user_doc[constants.MONGO_ID]))
-
-                self._user_doc = yield self.db_get_user(user_doc[constants.MONGO_ID])
-                if not self.user_doc:
-                    raise CrawlerException("Daily crawler not started. Unknown user with id: %r.",
-                                           user_doc[constants.MONGO_ID])
-
-                self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
-
-                courses_editions = yield self.__build_courses_editions()
-                if courses_editions:
-                    yield self.__build_course_edition()
-                    yield self.__process_user_data()
-            except Exception, ex:
-                yield self._exc(ex)
+            yield self.exc(ex, finish=False)
 
     @staticmethod
     def __get_next_monday(monday):
@@ -396,44 +209,12 @@ class UsosCrawler(UsosMixin, DaoMixin):
         return monday
 
     @gen.coroutine
-    def update_user_crawl(self, user_id):
-        try:
-            self._user_doc = yield self.db_get_user(user_id)
-            if not self.user_doc:
-                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
-
-            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
-
-            courses_conducted = yield self.db_courses_conducted(user_id)
-
-            yield self.__build_course_editions_conducted(courses_conducted)
-        except Exception, ex:
-            yield self._exc(ex)
-
-    @gen.coroutine
-    def update_time_tables(self):
-        monday = self.__get_monday()
-        next_monday = self.__get_next_monday(monday)
-
-        users = yield self.db_users()
-        for user_doc in users:
-            try:
-                logging.debug(
-                    'updating time table for user: {0} and monday: {1}'.format(user_doc[constants.MONGO_ID], monday))
-                self.__build_time_table(monday)
-                self.__build_time_table(next_monday)
-
-                logging.debug('updating time table for user: {0}'.format(user_doc[constants.MONGO_ID]))
-            except Exception, ex:
-                yield self._exc(ex)
-
-    @gen.coroutine
     def unsubscribe(self, user_id):
         try:
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
 
-            user_doc_archive = yield self.db_archive_user(user_id)
+            user_doc_archive = yield self.db_get_archive_user(user_id)
 
             if not user_doc_archive:
                 raise CrawlerException(
@@ -446,12 +227,13 @@ class UsosCrawler(UsosMixin, DaoMixin):
                 try:
                     yield self.usos_unsubscribe(usos_doc, user_doc_archive)
                 except Exception, ex:
-                    yield self._exc(ex)
+                    yield self.exc(ex, finish=False)
         except Exception, ex:
-            yield self._exc(ex)
+            yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def notifier_status(self):
+        # unused
         try:
             timestamp = datetime.now()
 
@@ -467,4 +249,20 @@ class UsosCrawler(UsosMixin, DaoMixin):
                     yield self._exc(ex)
 
         except Exception, ex:
-            self._exc(ex)
+            self.exc(ex, finish=False)
+
+# @gen.coroutine
+# def main():
+#     crawler = UsosCrawler()
+#     user_id = '574eb275d54c4b8a3c02ac55'
+#     yield crawler.initial_user_crawl(user_id)
+
+#
+# if __name__ == '__main__':
+#     from tornado import ioloop
+#     from tornado.options import parse_command_line
+#
+#     parse_command_line()
+#     logging.getLogger().setLevel(logging.DEBUG)
+#     io_loop = ioloop.IOLoop.current()
+#     io_loop.run_sync(main)

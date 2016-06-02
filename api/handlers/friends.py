@@ -4,12 +4,11 @@ import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import constants, helpers, decorators
 
 
-class FriendsApi(BaseHandler, ApiDaoHandler):
+class FriendsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -54,7 +53,7 @@ class FriendsApi(BaseHandler, ApiDaoHandler):
                     result = dict()
                     result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
                     result[constants.FRIEND_ID] = str(user_info_id)
-                    friend_doc = yield self.db[constants.COLLECTION_FRIENDS].insert(result)
+                    friend_doc = yield self.db[constants.COLLECTION_FRIENDS].db_insert(result)
                     if friend_doc:
                         self.success(user_info_id)
                         return
@@ -85,7 +84,8 @@ class FriendsApi(BaseHandler, ApiDaoHandler):
         except Exception, ex:
             yield self.exc(ex)
 
-class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
+
+class FriendsSuggestionsApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -105,7 +105,7 @@ class FriendsSuggestionsApi(BaseHandler, ApiDaoHandler):
                         courses[course[constants.COURSE_ID]] = course
 
                 for course in courses:
-                    course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID], fetch_participants=False)
+                    course_participants = yield self.api_course_edition(course, courses[course][constants.TERM_ID])
                     if not course_participants:
                         continue
 

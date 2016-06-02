@@ -6,16 +6,18 @@ import logging
 from bson import json_util
 from tornado import gen, web, escape
 from tornado.escape import json_decode
+from tornado.web import RequestHandler
 
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
+from commons.mixins.ApiMixin import ApiMixin
+from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
-from database import DatabaseHandler
+from crawler import email_factory
 
 
-class BaseHandler(DatabaseHandler, JSendMixin):
-    _COOKIE_FIELDS = (constants.ID, constants.ACCESS_TOKEN_KEY, constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                      constants.USOS_PAIRED, constants.USER_EMAIL)
+class BaseHandler(RequestHandler, DaoMixin):
+    EXCEPTION_TYPE = 'base'
 
     @gen.coroutine
     def prepare(self):
@@ -37,7 +39,7 @@ class BaseHandler(DatabaseHandler, JSendMixin):
             header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
             if header_email and header_token:
-                token_exists = yield self.find_token(header_email)
+                token_exists = yield self.db_find_token(header_email)
 
                 if not token_exists:
                     logging.warning('google token does not exists for email: {0}'.format(header_email))
@@ -133,8 +135,43 @@ class BaseHandler(DatabaseHandler, JSendMixin):
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
 
+    @gen.coroutine
+    def db_email_registration(self, user_doc):
 
-class UsosesApi(BaseHandler):
+        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+        recipient = user_doc[constants.USER_EMAIL]
+
+        email_job = email_factory.email_job(
+            'Rejestracja w Kujon.mobi',
+            settings.SMTP_EMAIL,
+            recipient if type(recipient) is list else [recipient],
+            '\nCześć,\n'
+            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
+            '\nPozdrawiamy,'
+            '\nzespół Kujon.mobi'
+            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
+        )
+
+        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+
+
+class ApiHandler(BaseHandler, ApiMixin, JSendMixin):
+    EXCEPTION_TYPE = 'api'
+
+    def do_refresh(self):  # overwrite from ApiMixin
+        if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
+            return True
+        return False
+
+    _db = None
+
+    @property
+    def db(self):
+        return self.application.settings['db']
+
+
+class UsosesApi(BaseHandler, JSendMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
@@ -142,14 +179,14 @@ class UsosesApi(BaseHandler):
         self.success(data, cache_age=constants.SECONDS_1MONTH)
 
 
-class DefaultErrorHandler(BaseHandler):
+class DefaultErrorHandler(BaseHandler, JSendMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
         self.fail(message='Strona o podanym adresie nie istnieje.', code=404)
 
 
-class ApplicationConfigHandler(BaseHandler):
+class ApplicationConfigHandler(BaseHandler, JSendMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):

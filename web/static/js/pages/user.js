@@ -14,8 +14,6 @@ $, Handlebars, main, tpl, tplError) {
                     $('#section-content').html(templateError({'message': data.message}));
                 }
             });
-
-            //a tutaj możesz np. zapiąć listenery
         }
     }    
 });

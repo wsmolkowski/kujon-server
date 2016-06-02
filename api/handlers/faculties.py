@@ -2,8 +2,7 @@
 
 import tornado.web
 
-from apidao import ApiDaoHandler
-from base import BaseHandler
+from base import ApiHandler
 from commons import decorators, constants
 
 LIMIT_FIELDS_FACULTY = (
@@ -11,7 +10,7 @@ LIMIT_FIELDS_FACULTY = (
     'phone_numbers')
 
 
-class FacultyByIdApi(BaseHandler, ApiDaoHandler):
+class FacultyByIdApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -28,35 +27,13 @@ class FacultyByIdApi(BaseHandler, ApiDaoHandler):
             yield self.exc(ex)
 
 
-class FacultiesApi(BaseHandler, ApiDaoHandler):
+class FacultiesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         try:
-            users_info_doc = yield self.api_user_info()
-
-            # get programmes for user
-            programmes_ids = list()
-            if 'student_programmes' in users_info_doc:
-                for programme in users_info_doc['student_programmes']:
-                    programmes_ids.append(programme['programme']['id'])
-
-            programmes = []
-            for programme_id in programmes_ids:
-                programme_doc = yield self.api_programme(programme_id, finish=False)
-                programmes.append(programme_doc)
-
-            # get faculties
-            faculties_ids = list()
-            for programme_doc in programmes:
-                if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
-                    faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
-
-            faculties = []
-            for faculty_id in faculties_ids:
-                faculty_doc = yield self.api_faculty(faculty_id)
-                faculties.append(faculty_doc)
+            faculties = yield self.api_faculties()
 
             self.success(faculties, cache_age=constants.SECONDS_2MONTHS)
         except Exception, ex:
