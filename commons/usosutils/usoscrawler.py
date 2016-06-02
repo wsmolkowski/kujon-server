@@ -222,24 +222,6 @@ class UsosCrawler(ApiMixin):
         except Exception, ex:
             yield self._exc(ex)
 
-    @gen.coroutine
-    def daily_crawl(self):
-        users = yield self.db_users()
-        for user_doc in users:
-            try:
-                logging.debug('updating daily crawl for user: {0}'.format(user_doc[constants.MONGO_ID]))
-
-                self._user_doc = yield self.db_get_user(user_doc[constants.MONGO_ID])
-                if not self.user_doc:
-                    raise CrawlerException("Daily crawler not started. Unknown user with id: %r.",
-                                           user_doc[constants.MONGO_ID])
-
-                self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
-
-                yield self.__process_courses_editions()
-            except Exception, ex:
-                yield self._exc(ex)
-
     @staticmethod
     def __get_next_monday(monday):
         return monday + timedelta(days=7)
@@ -249,38 +231,6 @@ class UsosCrawler(ApiMixin):
         today = date.today()
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
-
-    @gen.coroutine
-    def update_user_crawl(self, user_id):
-        try:
-            self._user_doc = yield self.db_get_user(user_id)
-            if not self.user_doc:
-                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
-
-            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
-
-            courses_conducted = yield self.db_courses_conducted(user_id)
-
-            # yield self.__build_course_editions_conducted(courses_conducted)
-        except Exception, ex:
-            yield self._exc(ex)
-
-    @gen.coroutine
-    def update_time_tables(self):
-        monday = self.__get_monday()
-        next_monday = self.__get_next_monday(monday)
-
-        users = yield self.db_users()
-        for user_doc in users:
-            try:
-                logging.debug(
-                    'updating time table for user: {0} and monday: {1}'.format(user_doc[constants.MONGO_ID], monday))
-                self.api_tt(monday)
-                self.api_tt(next_monday)
-
-                logging.debug('updating time table for user: {0}'.format(user_doc[constants.MONGO_ID]))
-            except Exception, ex:
-                yield self._exc(ex)
 
     @gen.coroutine
     def unsubscribe(self, user_id):
@@ -307,6 +257,7 @@ class UsosCrawler(ApiMixin):
 
     @gen.coroutine
     def notifier_status(self):
+        # unused
         try:
             timestamp = datetime.now()
 
@@ -329,10 +280,7 @@ class UsosCrawler(ApiMixin):
 #     crawler = UsosCrawler()
 #     user_id = '574eb275d54c4b8a3c02ac55'
 #     yield crawler.initial_user_crawl(user_id)
-#     # yield crawler.daily_crawl()
-#     # yield crawler.update_user_crawl(user_id)
-#     # yield crawler.update_time_tables()
-#
+
 #
 # if __name__ == '__main__':
 #     from tornado import ioloop
