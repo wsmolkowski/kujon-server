@@ -285,7 +285,7 @@ class DaoMixin(object):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
                                                                       (constants.ID, constants.ACCESS_TOKEN_KEY,
                                                                        constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                                                                       constants.USOS_PAIRED)
+                                                                       constants.USOS_PAIRED, constants.USER_EMAIL)
                                                                       )
         raise gen.Return(user_doc)
 
