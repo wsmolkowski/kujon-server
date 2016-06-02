@@ -17,7 +17,10 @@ def drop():
     logging.info('drop_collections end')
 
 
-def clean(skip_collection=[]):
+def clean(skip_collection=None):
+    if not skip_collection:
+        skip_collection = []
+        
     logging.info('clean_database start')
     mongo_util.drop_collections(skip_collection)
     logging.info('clean_database end')
