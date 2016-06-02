@@ -164,6 +164,12 @@ class ApiHandler(BaseHandler, ApiMixin, JSendMixin):
             return True
         return False
 
+    _db = None
+
+    @property
+    def db(self):
+        return self.application.settings['db']
+
 
 class UsosesApi(BaseHandler, JSendMixin):
     @web.asynchronous

@@ -21,12 +21,9 @@ class DaoMixin(object):
 
     @property
     def db(self):
-        try:
-            return self.application.settings['db']
-        except Exception as ex:
-            if not self._db:
-                self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-            return self._db[settings.MONGODB_NAME]
+        if not self._db:
+            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
+        return self._db[settings.MONGODB_NAME]
 
     @gen.coroutine
     def exc(self, exception, finish=True):

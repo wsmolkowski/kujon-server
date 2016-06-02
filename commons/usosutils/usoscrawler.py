@@ -1,14 +1,13 @@
 # coding=UTF-8
 
 import logging
-import traceback
 from datetime import datetime
 from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, utils
+from commons import constants
 from commons.AESCipher import AESCipher
 from commons.errors import CrawlerException, UsosClientError
 from commons.mixins.ApiMixin import ApiMixin
@@ -46,29 +45,6 @@ class UsosCrawler(ApiMixin):
         raise gen.Return(self._usos_doc)
 
     @gen.coroutine
-    def _exc(self, exception):
-        try:
-            exc_doc = {
-                'args': exception.args,
-                'message': str(exception),
-                constants.TRACEBACK: traceback.format_exc(),
-                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE,
-                constants.CREATED_TIME: datetime.now()
-            }
-
-            if hasattr(self, 'user_doc') and self.user_doc:
-                exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-                exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-                exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
-
-            yield self.db_insert(constants.COLLECTION_EXCEPTIONS, utils.serialize(exc_doc))
-            logging.error(exc_doc)
-        except Exception, ex:
-            logging.exception(ex)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
     def __subscribe(self):
 
         for event_type in self.EVENT_TYPES:
@@ -76,7 +52,7 @@ class UsosCrawler(ApiMixin):
                 subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception, ex:
-                yield self._exc(ex)
+                yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def __build_courses(self):
@@ -111,7 +87,7 @@ class UsosCrawler(ApiMixin):
                 else:
                     logging.warning("no course for course_id: %r.", course_id)
             except Exception, ex:
-                yield self._exc(ex)
+                yield self.exc(ex, finish=False)
 
         raise gen.Return(None)
 
@@ -220,7 +196,7 @@ class UsosCrawler(ApiMixin):
 
             yield self.__subscribe()
         except Exception, ex:
-            yield self._exc(ex)
+            yield self.exc(ex, finish=False)
 
     @staticmethod
     def __get_next_monday(monday):
@@ -251,9 +227,9 @@ class UsosCrawler(ApiMixin):
                 try:
                     yield self.usos_unsubscribe(usos_doc, user_doc_archive)
                 except Exception, ex:
-                    yield self._exc(ex)
+                    yield self.exc(ex, finish=False)
         except Exception, ex:
-            yield self._exc(ex)
+            yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def notifier_status(self):
@@ -273,7 +249,7 @@ class UsosCrawler(ApiMixin):
                     yield self._exc(ex)
 
         except Exception, ex:
-            self._exc(ex)
+            self.exc(ex, finish=False)
 
 # @gen.coroutine
 # def main():
