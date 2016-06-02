@@ -53,7 +53,7 @@ class UsosCrawler(ApiMixin):
                 if subscribe_doc:
                     yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
                 else:
-                    raise CrawlerException('Could not subscribe for {0}'.format(event_type))
+                    raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
             except Exception, ex:
                 yield self.exc(ex, finish=False)
 
