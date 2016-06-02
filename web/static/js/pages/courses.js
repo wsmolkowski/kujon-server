@@ -20,7 +20,8 @@ define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-tabl
                     $('#section-content').html(templateError(data));
                 }
             });
-            var $table = $('#myTable');
+
+            var $table = $('.table');
 
             $table.on('expand-row.bs.table', function (e, index, row, $detail) {
                 var res = $("#" + row._data.details).html();

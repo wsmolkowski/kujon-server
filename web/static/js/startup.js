@@ -1,6 +1,6 @@
 define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) {
 
-    //jQuery to collapse the navbar on scroll
+     //jQuery to collapse the navbar on scroll
     $(window).scroll(function() {
         if ($(".navbar").offset().top > 50) {
             $(".navbar-fixed-top").addClass("top-nav-collapse");
@@ -23,25 +23,6 @@ define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) 
     $(document).ready(function () {
 
         $(".panel-heading").addClass("collapsed")
-
-        /* Check width on page load*/
-        if ( $(window).width() < 768) {
-         $('.dropdown').addClass('open');
-        }
-        else {}
-
-        var kolumnaPrawa =  $("div.border-logo-cykle").height();
-        var kolumnaLewa = $("div.border-logo-cykle").height();
-
-        if (kolumnaLewa > kolumnaPrawa)
-        {
-            $("div.border-logo-cykle").css({'height' : kolumnaLewa});
-        }
-        else
-        {
-            $("div.border-logo-cykle").css({'height' : kolumnaPrawa});
-        };
-
 
         //stick in the fixed 100% height behind the navbar but don't wrap it
         $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
@@ -83,21 +64,31 @@ define(['static/js/router.js', 'jquery', 'easing'], function(router, $, easing) 
 
             $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
 
+            var kolumnaPrawa =  $("div.border-logo-cykle").height();
+            var kolumnaLewa = $("div.border-logo-cykle").height();
+
+            if (kolumnaLewa > kolumnaPrawa)
+            {
+                $("div.border-logo-cykle").css({'height' : kolumnaLewa});
+            }
+            else
+            {
+                $("div.border-logo-cykle").css({'height' : kolumnaPrawa});
+            };
 
         });
 
 
         var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
 
+    });
 
-        $(window).on("resize", function () {
+    $(window).on("resize", function () {
 
-            if ($(window).width() > 767 && $('.navbar-toggle').is(':hidden')) {
-                $(selected).removeClass('slide-active');
-            }
+        if ($(window).width() > 929 && $('.navbar-toggle').is(':hidden')) {
+            $(selected).removeClass('slide-active');
+        }
 
-
-        });
 
     });
 
