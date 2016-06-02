@@ -265,6 +265,15 @@ class DaoMixin(object):
     def db_cookie_user_id(self, user_id):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
                                                                       constants.COOKIE_FIELDS)
+
+        if constants.GOOGLE in user_doc:
+            user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
+            del (user_doc[constants.GOOGLE])
+
+        if constants.FACEBOOK in user_doc:
+            user_doc[constants.PICTURE] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+            del (user_doc[constants.FACEBOOK])
+
         raise gen.Return(user_doc)
 
     @gen.coroutine

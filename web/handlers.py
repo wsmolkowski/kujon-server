@@ -54,9 +54,6 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def prepare(self):
-        # self.set_header("Access-Control-Allow-Origin", '*')
-        # self.set_header("Access-Control-Allow-Credentials", "true")
-
         self.current_user = yield self.set_current_user()
 
     def get_current_user(self):

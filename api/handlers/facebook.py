@@ -1,10 +1,10 @@
 # coding=UTF-8
 
-import facebook
 import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
+import facebook
 from base import ApiHandler
 from commons import constants, decorators
 from commons.errors import ApiError
@@ -20,10 +20,10 @@ class FacebookApi(ApiHandler, tornado.auth.FacebookGraphMixin, tornado.web.Reque
             {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
 
         self.friends = []
-        if constants.FB not in user_doc:
+        if constants.FACEBOOK not in user_doc:
             raise ApiError('Użytkownik nie ma konta połączonego z Facebook.')
 
-        token = user_doc[constants.FB][constants.FB_ACCESS_TOKEN]
+        token = user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN]
 
         # TODO: Make this fetch async rather than blocking
         graph = facebook.GraphAPI(access_token=token, version='2.6')

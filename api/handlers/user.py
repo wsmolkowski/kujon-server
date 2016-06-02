@@ -7,7 +7,7 @@ import tornado.web
 from bson.objectid import ObjectId
 
 from base import ApiHandler
-from commons import constants, decorators
+from commons import constants, settings, decorators
 from commons.errors import ApiError
 from commons.usosutils import usosinstances
 
@@ -15,8 +15,10 @@ LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
     constants.HAS_PHOTO, "{}.{}".format(constants.GOOGLE, constants.GOOGLE_NAME),
     "{}.{}".format(constants.GOOGLE, constants.GOOGLE_PICTURE),
-    "{}.{}".format(constants.GOOGLE, constants.GOOGLE_EMAIL), "{}.{}".format(constants.FB, constants.FB_NAME),
-    "{}.{}".format(constants.FB, constants.FB_PICTURE), "{}.{}".format(constants.FB, constants.FB_EMAIL))
+    "{}.{}".format(constants.GOOGLE, constants.GOOGLE_EMAIL),
+    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_NAME),
+    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_PICTURE),
+    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_EMAIL))
 
 
 class UsersInfoByIdApi(ApiHandler):
@@ -57,6 +59,16 @@ class UserInfoApi(ApiHandler):
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
             user_doc.update(user_info)
+
+            # check if get photo needed
+            if constants.HAS_PHOTO in user_doc and user_doc[constants.HAS_PHOTO]:
+                user_doc[constants.HAS_PHOTO] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                    user_info[constants.HAS_PHOTO])
+            else:
+                if constants.GOOGLE in user_doc and constants.GOOGLE_PICTURE in user_doc[constants.GOOGLE]:
+                    user_doc[constants.HAS_PHOTO] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
+                if constants.FACEBOOK in user_doc and constants.FACEBOOK_PICTURE in user_doc[constants.FACEBOOK]:
+                    user_doc[constants.HAS_PHOTO] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
 
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)

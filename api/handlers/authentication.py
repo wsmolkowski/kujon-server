@@ -117,27 +117,27 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 user_doc[constants.USER_NAME] = access['name']
                 user_doc[constants.USER_EMAIL] = access['email']
 
-                user_doc[constants.FB] = dict()
-                user_doc[constants.FB][constants.FB_NAME] = access[constants.FB_NAME]
-                user_doc[constants.FB][constants.FB_EMAIL] = access[constants.FB_EMAIL]
-                user_doc[constants.FB][constants.FB_PICTURE] = access['picture']['data']['url']
-                user_doc[constants.FB][constants.FB_ACCESS_TOKEN] = access[constants.FB_ACCESS_TOKEN]
-                user_doc[constants.FB][constants.FB_ID] = access[constants.FB_ID]
-                user_doc[constants.FB][constants.FB_SESSION_EXPIRES] = datetime.now() + timedelta(
-                    seconds=int(access[constants.FB_SESSION_EXPIRES][0]))
+                user_doc[constants.FACEBOOK] = dict()
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_EMAIL] = access[constants.FACEBOOK_EMAIL]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE] = access['picture']['data']['url']
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN] = access[constants.FACEBOOK_ACCESS_TOKEN]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_ID] = access[constants.FACEBOOK_ID]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
+                    seconds=int(access[constants.FACEBOOK_SESSION_EXPIRES][0]))
 
                 user_doc[constants.USOS_PAIRED] = False
                 user_doc[constants.USER_CREATED] = datetime.now()
                 yield self.db_insert_user(user_doc)
             else:
-                user_doc[constants.FB] = dict()
-                user_doc[constants.FB][constants.FB_NAME] = access[constants.FB_NAME]
-                user_doc[constants.FB][constants.FB_EMAIL] = access[constants.FB_EMAIL]
-                user_doc[constants.FB][constants.FB_PICTURE] = access['picture']['data']['url']
-                user_doc[constants.FB][constants.FB_ACCESS_TOKEN] = access[constants.FB_ACCESS_TOKEN]
-                user_doc[constants.FB][constants.FB_ID] = access[constants.FB_ID]
-                user_doc[constants.FB][constants.FB_SESSION_EXPIRES] = datetime.now() + timedelta(
-                    seconds=int(access[constants.FB_SESSION_EXPIRES][0]))
+                user_doc[constants.FACEBOOK] = dict()
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_EMAIL] = access[constants.FACEBOOK_EMAIL]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE] = access['picture']['data']['url']
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN] = access[constants.FACEBOOK_ACCESS_TOKEN]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_ID] = access[constants.FACEBOOK_ID]
+                user_doc[constants.FACEBOOK][constants.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
+                    seconds=int(access[constants.FACEBOOK_SESSION_EXPIRES][0]))
                 user_doc[constants.UPDATE_TIME] = datetime.now()
                 yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
 

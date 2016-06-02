@@ -25,14 +25,24 @@ HAS_PHOTO = "has_photo"
 PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 COORDINATORS = "coordinators"
+PICTURE = 'picture'
 
-FB = "facebook"
-FB_ID = "id"
-FB_NAME = "name"
-FB_EMAIL = "email"
-FB_ACCESS_TOKEN = "access_token"
-FB_SESSION_EXPIRES = "session_expires"
-FB_PICTURE = "picture"
+FACEBOOK = "facebook"
+FACEBOOK_ID = "id"
+FACEBOOK_NAME = "name"
+FACEBOOK_EMAIL = "email"
+FACEBOOK_ACCESS_TOKEN = "access_token"
+FACEBOOK_SESSION_EXPIRES = "session_expires"
+FACEBOOK_PICTURE = "picture"
+
+GOOGLE = 'google'
+GOOGLE_NAME = 'name'
+GOOGLE_EMAIL = 'email'
+GOOGLE_PICTURE = 'picture'
+GOOGLE_ACCESS_TOKEN = 'access_token'
+GOOGLE_EXPIRES_IN = 'expires_in'
+GOOGLE_ID_TOKEN = 'id_token'
+GOOGLE_TOKEN_TYPE = 'token_type'
 
 CREATED_TIME = "created_time"
 UPDATE_TIME = "update_time"
@@ -101,7 +111,8 @@ COLLECTION_NOTIFIER_STATUS = 'notifier_status'
 COLLECTION_NOTIFICATION_QUEUE = 'notification_queue'
 COLLECTION_NOTIFICATION_QUEUE_LOG = 'notification_queue_log'
 
-COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME)
+COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME, USER_PICTURE,
+                 GOOGLE, FACEBOOK)
 
 EXCEPTION_TYPE = 'exception_type'
 TRACEBACK = 'traceback'
@@ -116,15 +127,6 @@ SMTP_TO = 'to'
 SMTP_TEXT = 'text'
 SMTP_MIME_TYPE = 'mime_type'
 SMTP_CHARSET = 'charset'
-
-GOOGLE = 'google'
-GOOGLE_NAME = 'name'
-GOOGLE_EMAIL = 'email'
-GOOGLE_PICTURE = 'picture'
-GOOGLE_ACCESS_TOKEN = 'access_token'
-GOOGLE_EXPIRES_IN = 'expires_in'
-GOOGLE_ID_TOKEN = 'id_token'
-GOOGLE_TOKEN_TYPE = 'token_type'
 
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
