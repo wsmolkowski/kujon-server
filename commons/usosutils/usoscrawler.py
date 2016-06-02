@@ -50,7 +50,10 @@ class UsosCrawler(ApiMixin):
         for event_type in self.EVENT_TYPES:
             try:
                 subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
-                yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+                if subscribe_doc:
+                    yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+                else:
+                    raise CrawlerException('Could not subscribe for {0}'.format(event_type))
             except Exception, ex:
                 yield self.exc(ex, finish=False)
 
