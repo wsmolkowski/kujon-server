@@ -84,13 +84,9 @@ class DaoMixin(object):
         raise gen.Return(doc)
 
     @gen.coroutine
-    def db_remove(self, collection, key, key_value):
-        if key == constants.MONGO_ID:
-            if isinstance(key_value, str):
-                key_value = ObjectId(key_value)
-
-        result = yield self.db[collection].remove({key: key_value})
-        logging.debug("removed from collection {0} with {1}".format(collection, result))
+    def db_remove(self, collection, pipeline):
+        result = yield self.db[collection].remove(pipeline)
+        logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         raise gen.Return(result)
 
     @gen.coroutine
@@ -233,10 +229,7 @@ class DaoMixin(object):
 
         yield self.db_insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
 
-        result = yield self.db[constants.COLLECTION_USERS].remove({constants.MONGO_ID: user_id})
-
-        logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
-            constants.COLLECTION_USERS, user_id, result))
+        yield self.db_remove(constants.COLLECTION_USERS, {constants.MONGO_ID: user_id})
 
         yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
                              {constants.USER_ID: user_id,
@@ -292,7 +285,7 @@ class DaoMixin(object):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
                                                                       (constants.ID, constants.ACCESS_TOKEN_KEY,
                                                                        constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                                                                       constants.USOS_PAIRED)
+                                                                       constants.USOS_PAIRED, constants.USER_EMAIL)
                                                                       )
         raise gen.Return(user_doc)
 
@@ -316,10 +309,7 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_insert_token(self, token):
-        result = yield self.db[constants.COLLECTION_TOKENS].remove({'email': token['email']})
-
-        logging.debug('removed data from collection {0} for email {1} with result {2}'.format(
-            constants.COLLECTION_TOKENS, token['email'], result))
+        yield self.db_remove(constants.COLLECTION_TOKENS, {'email': token['email']})
 
         user_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
 
