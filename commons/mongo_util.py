@@ -138,7 +138,7 @@ def _do_recreate(db, usos_doc):
         validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
         http_client = utils.http_client(validate_cert)
 
-        request = HTTPRequest(url=url, validate_cert=validate_cert, method='GET')
+        request = HTTPRequest(url=url, method='GET')
         response = yield http_client.fetch(request)
 
         if response.code is not 200 and response.reason != 'OK':
