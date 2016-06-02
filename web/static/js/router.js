@@ -1,5 +1,5 @@
-define(['jquery', 'main', 'handlebars',  'crossroads', 'hasher', 'bootstrap', 'text!templates/spinner.html'], function(
-jquery, main, Handlebars, crossroads, hasher, bootstrap, spinnerTpl) {
+define(['handlebars', 'crossroads', 'hasher', 'text!templates/spinner.html'], function(
+Handlebars, crossroads, hasher, spinnerTpl) {
 'use strict';
 
     var template = Handlebars.compile(spinnerTpl);

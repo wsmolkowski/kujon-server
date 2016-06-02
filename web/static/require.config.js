@@ -24,11 +24,13 @@ var require = {
         "locales":              "/static/bower_components/bootstrap-table/dist/locale/",
     },
     shim: {
-        "bootstrap": { deps: ["jquery"] },
-        "bootstrap-table": { deps: ["jquery"] },
-        "bootstrap-table-pl": { deps: ["jquery", "bootstrap-table"] },
-        "fullcalendarpl": { deps: ["fullcalendar"] },
-        "easing": { deps: ["jquery"] },
-        "nice-select": { deps: ["jquery", "bootstrap-table", "bootstrap-table-pl"] },
-    }
+        "easing": ["jquery",],
+        "bootstrap": ["easing",],
+        "bootstrap-table": ["bootstrap"],
+        "signals": ["bootstrap-table",],
+        "text": ["bootstrap-table",],
+        "hasher": ["bootstrap-table",],
+        "crossroads": ["bootstrap-table",],
+        "handlebars": ["bootstrap-table",],
+  }
 };

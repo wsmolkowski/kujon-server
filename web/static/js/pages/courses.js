@@ -20,6 +20,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 }
             });
 
+            /*
             var $table = $('.table');
 
             $table.on('expand-row.bs.table', function (e, index, row, $detail) {
@@ -33,6 +34,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 $tr.find(">td>.detail-icon").triggerHandler("click");
             });
 
+            */
 
             function bindListeners(){
                 $('a.panel-row').bind( 'click', function(){
