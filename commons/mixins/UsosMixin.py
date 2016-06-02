@@ -117,10 +117,10 @@ class UsosMixin(OAuthMixin):
 
         http_client = utils.http_client(validate_cert=validate_ssl_cert)
 
-        request = httpclient.HTTPRequest(url, method='GET', validate_cert=validate_ssl_cert)
+        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE)
 
         try:
-            response = yield http_client.fetch(request, validate_cert=usos_doc[constants.VALIDATE_SSL_CERT])
+            response = yield http_client.fetch(request)
 
             if response.code is not 200 and response.reason != 'OK':
                 raise UsosClientError('Błedna odpowiedź USOS dla {0}'.format(url))
