@@ -2,7 +2,7 @@
 # http://stackoverflow.com/questions/37068709/python-tornado-queue-toro-task-consuming-in-parallel
 
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime
 
 import motor
 from tornado import queues, gen
@@ -28,17 +28,6 @@ class MongoDbQueue(object):
 
     @gen.coroutine
     def load_work(self):
-
-        # check if data for users should be updated
-        delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
-
-        cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find(
-            {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
-        ).sort([(constants.UPDATE_TIME, -1)])
-
-        while (yield cursor.fetch_next):
-            job = cursor.next_object()
-            yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
         cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})

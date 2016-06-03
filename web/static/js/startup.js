@@ -1,5 +1,5 @@
-define(['static/js/router.js', 'jquery', 'bootstrap', 'bootstrap-table', 'easing'],
-function(router, $, bootstrap, bootstrapTable, easing) {
+define(['jquery',  'bootstrap', 'bootstrap-table', 'router'],
+function($, bootstrap, bootstrapTable, router) {
 
     /*
 
