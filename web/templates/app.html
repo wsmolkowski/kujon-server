@@ -29,21 +29,14 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div id="slidemenu">
             <ul class="nav navbar-nav navbar-right login">
-
                 <li class="app-notify"><a href="#"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></a>
                 </li>
                 <li class="dropdown">
-                    <a href="profil.html" class="dropdown-toggle" data-toggle="dropdown"><img
+                    <a href="/#user" class="dropdown-toggle" data-toggle="dropdown"><img
                             src="{{current_user['picture']}}"
                             class="img-circle profil-nav">{{current_user['name']}} <span
                             class="glyphicon glyphicon-menu-down"></span></a>
                     <ul class="dropdown-menu">
-                        <!--
-                        <li><a href="index.html">Witamy</a></li>
-                        <li><a href="zalogowano.html">Zalogowano</a></li>
-                        <li><a href="wybor-uczelni.html">Wybór uczelni</a></li>
-                        -->
-
                         <li><a href="#user">Użytkownik</a></li>
                         <li><a href="#grades">Oceny</a></li>
                         <li><a href="#tt">Plan</a></li>
@@ -53,22 +46,7 @@
                         <li><a href="#programmes">Kierunki</a></li>
                         <li><a href="#faculties">Jednostki</a></li>
                         <li><a href="#contact">Kontakt</a></li>
-
                         <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
-
-                        <!--
-                        <li><a href="#tt">Plan</a></li>
-                        <li><a href="#courses">Przedmioty</a></li>
-                        <li><a href="#grades">Oceny</a></li>
-                        -->
-
-                        <!--
-                        <li><a href="oceny.html">Oceny</a></li>
-                        <li><a href="plan-zajec.html">Plan zajęć</a></li>
-                        <li><a href="/kontakt">Kontakt</a></li>
-                        <li><a href="spinner.html">Spinner</a></li>
-                        <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
-                        -->
                     </ul>
                 </li>
             </ul>
@@ -82,22 +60,9 @@
                 <li><a href="#programmes">Kierunki</a></li>
                 <li><a href="#faculties">Jednostki</a></li>
                 <li><a href="#contact">Kontakt</a></li>
-
-
-                <!--
-                <li><a href="#tt">Plan</a></li>
-                <li><a href="#courses">Przedmioty</a></li>
-                <li><a href="#grades">Oceny</a></li>
-                <li><a href="plan-zajec.html">Plan zajęć</a></li>
-                <li><a href="oceny.html">Oceny</a></li>
-                <li><a href="kontakt.html">Kontakt</a></li>
-                -->
             </ul>
-
-
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
-
 </nav>
 
 {% module xsrf_form_html() %}
@@ -105,7 +70,7 @@
 {% end %}
 
 {% block main %}
-<div id="page-content" class="content">
+<div id="page-content">
     <div id="section-content">
         <section class="welcome">
             <div class="container">
@@ -116,7 +81,7 @@
                 </div>
             </div>
         </section>
-    </div>
+    </div> <!-- section-content -->
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
 
@@ -142,5 +107,5 @@
         </div>
     </footer>
 
-</div>
+</div> <!-- page content -->
 {% end %}
