@@ -64,7 +64,7 @@ section>.container>.row>.content{margin-top: 110px;}
 .prof>table{border:1px solid #ddd;border-radius: 4px !important;border-collapse: inherit !important;}
 .glyphicon {top:3px;left: 5px;}
 
-/*wybór uczelni*/
+/*wybĂłr uczelni*/
 #niemauczelni>.modal-dialog>.modal-content>.modal-body>.row>.col-sm-12>p{padding: 0 50px;font-size: 18px;}
 #niemauczelni>.modal-dialog>.modal-content>.modal-body>.row>.col-sm-12{margin:40px 0;}
 #niemauczelni>.modal-dialog>.modal-content>.modal-body>.row>.col-sm-12>.zamknij{margin: 40px 0 0 0;color:black;cursor:pointer;font-weight:500;font-size:13px;}
@@ -182,7 +182,7 @@ tbody>tr:hover{background:#f7f7f7;}
 .lista-studentow{cursor:pointer;}
 #przedmioty>.container>.row>.content>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th:nth-child(2){border-right:1px solid #ddd;}
 
-/*lista studentów modal*/
+/*lista studentĂłw modal*/
 #zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body{padding:0;}
 #zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container{border:0;}
 #zobacz-liste-studentow>.modal-dialog>.modal-content>.modal-body>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>thead>tr>th{width:auto;min-width:0;text-align:left;padding:4px 8px;}
@@ -221,7 +221,7 @@ tbody>tr:hover{background:#f7f7f7;}
 .panel-heading.collapsed>table>tbody>tr>td{font-weight:400;}
 .panel-heading>table>tbody>tr>td{font-weight:500 ;}
 
-/*wykładowcy*/
+/*wykĹadowcy*/
 #wykladowcy>.container>.row>.naglowek-h2{padding:110px 15px 50px 15px;}
 .wykladowcy-modal>.row>.col-sm-12>.col-sm-8>.row>.col-sm-12>h2{font-weight:400;margin:0;}
 .wykladowcy-modal>.row>.col-sm-12>.col-sm-8>.row>.col-sm-12>p{line-height:1.4;margin:0;}
@@ -428,7 +428,7 @@ header>.container>.row>.col-sm-10 {margin-top: 70px;max-height: 685px;}
 .logowanie-modal>.modal-dialog>.modal-content>.modal-body>.col-sm-12>.col-sm-2>span {font-size: 14px;}
 .hr-left {padding-left: 0;}
 .hr-right {padding-right: 0;}
-	
+
 /*media*/
 @media (min-width: 769px){
 header{background: url('../img/header.png') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
@@ -450,7 +450,7 @@ header>.container>.row>.col-sm-10 {max-height: 414px;}
 .navbar-form {padding: 0px;}
 }
 
-@media (max-width:767px) { 
+@media (max-width:767px) {
 header{background: url('../img/header-mobile.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
 #wybor-uczelni>.container>.row>.col-sm-12>.form-group>input {padding: 2% 0 0 40px;    background: url(../img/search.png) no-repeat 3% 57%;}
 .navbar-landing.slide-active{position:fixed;}
@@ -517,8 +517,8 @@ body.slide-active {overflow-x: hidden;padding:0;}
 .navbar-nav>li>a {padding-top: 19px;padding-bottom: 20px;}
 #znajomi>.container>.row>.table-responsive>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>.col-sm-6{padding:0;margin-top:30px;}
 }
-	
-	
+
+
 
 
 .fixed-table-container.table-no-bordered {
@@ -659,7 +659,7 @@ border-color: #ddd;}
 -moz-box-shadow: inset 0px -1px 0px 0px rgba(57,118,255,1);
 box-shadow: inset 0px -1px 0px 0px rgba(57,118,255,1);color:#3976FF !important;background-color: transparent;
     border-color: transparent;}
-	
+
 .pagination {margin:0;float: right;}
 .pagination>li>a{    padding: 7px 0px;
     width: 34px;text-align:center;}
@@ -677,7 +677,7 @@ box-shadow: inset 0px -1px 0px 0px rgba(57,118,255,1);color:#3976FF !important;b
 tr.detail-view>td{padding:15px !important;}
 tr.detail-view>td>.col-sm-12{padding:15px;}
 .bootstrap-table>.fixed-table-toolbar>.pull-right{padding:0 !important;-webkit-box-shadow: inset 0 0px 0px rgba(0,0,0,0)!important;
-    border: 0 !important; 
+    border: 0 !important;
      box-shadow: inset 0 0px 0px rgba(0,0,0,0) !important; }
 #przedmioty>.container>.row>.col-sm-12>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td:last-child{width:5%;margin: 0 auto;padding: 25px 8px 25px 8px ;text-align: center; border-top:1px solid #ddd;}
 
@@ -685,11 +685,11 @@ tr.detail-view>td>.col-sm-12{padding:15px;}
 	#przedmioty>.container>.row>.col-sm-12>.bootstrap-table>.fixed-table-container>.fixed-table-body>table>tbody>tr>td:last-child{min-width:77px;
 }
 }
-	
-	
+
+
 /*errror*/
 .error{margin-top: 50px;min-height:auto;}
-	
+
 @media (min-width: 930px) {
 .navbar {
     border-radius: 4px;
@@ -890,5 +890,4 @@ tr.detail-view>td>.col-sm-12 {
 .content>.container>.row>.col-sm-12>h1{font-size: 54px;font-weight: 300;margin-bottom: 50px;}
 .content>.container>.row>.col-sm-12>p{font-size: 16px;font-weight: 400;}
 .content>.container>.row>.col-sm-12>h1>span{color: #3976ff;}*/
-
 
