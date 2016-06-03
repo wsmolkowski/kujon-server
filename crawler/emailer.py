@@ -2,7 +2,7 @@
 
 import logging
 import smtplib
-from datetime import timedelta, datetime
+from datetime import datetime
 from email.header import Header
 from email.mime.text import MIMEText
 
@@ -28,17 +28,16 @@ class EmailQueue(object):
 
     @gen.coroutine
     def load_work(self):
-
-        # check if data for users should be updated
-        delta = datetime.now() - timedelta(minutes=constants.CRAWL_USER_UPDATE)
-
-        cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find(
-            {constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FINISH}
-        ).sort([(constants.UPDATE_TIME, -1)])
-
-        while (yield cursor.fetch_next):
-            job = cursor.next_object()
-            yield self.update_job(job, constants.JOB_PENDING)
+        # try re-run failed jobs
+        # delta = datetime.now() - timedelta(minutes=60)
+        #
+        # cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({
+        #     constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FAIL}). \
+        #     sort([(constants.UPDATE_TIME, -1)])
+        #
+        # while (yield cursor.fetch_next):
+        #     job = cursor.next_object()
+        #     yield self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
         cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
