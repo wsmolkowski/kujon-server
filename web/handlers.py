@@ -124,6 +124,12 @@ class DisclaimerHandler(BaseHandler):
         self.render("disclaimer.html", **CONFIG)
 
 
+class WykladowcyHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.render("wykladowcy.html", **CONFIG)
+
+
 class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
