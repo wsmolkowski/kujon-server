@@ -147,22 +147,21 @@ class UsosCrawler(ApiMixin):
                                                           course[constants.TERM_ID],
                                                           extra_fetch=False))
 
-                # fetching users disabled in crawler not needed.
-                # for lecturer in course[constants.LECTURERS]:
-                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.USER_ID])
-                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.ID])
-                # for participant in course[constants.PARTICIPANTS]:
-                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                #         users_ids.append(participant[constants.USER_ID])
-                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
-                #         users_ids.append(participant[constants.ID])
-                # for coordinator in course[constants.COORDINATORS]:
-                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.USER_ID])
-                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.ID])
+                for lecturer in course[constants.LECTURERS]:
+                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                        users_ids.append(lecturer[constants.USER_ID])
+                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                        users_ids.append(lecturer[constants.ID])
+                for participant in course[constants.PARTICIPANTS]:
+                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                        users_ids.append(participant[constants.USER_ID])
+                    if constants.ID in participant and participant[constants.ID] not in users_ids:
+                        users_ids.append(participant[constants.ID])
+                for coordinator in course[constants.COORDINATORS]:
+                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                        users_ids.append(coordinator[constants.USER_ID])
+                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                        users_ids.append(coordinator[constants.ID])
 
                 for course_unit in course['course_units_ids']:
                     if course_unit not in course_units_ids:

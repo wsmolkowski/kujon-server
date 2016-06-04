@@ -190,7 +190,9 @@ class UsosMixin(OAuthMixin):
             result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
                 'fields': fields
             })
-
+        if 'code' in result and result['code'] is not 200:
+            gen.Return(result)
+            return
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -216,9 +218,12 @@ class UsosMixin(OAuthMixin):
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
 
         # strip employment_positions from english names
+        tasks_get_faculties = list()
         for position in result['employment_positions']:
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
+            tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
+        yield tasks_get_faculties
 
         # strip english from building name
         if 'room' in result and result['room'] and 'building_name' in result['room']:
@@ -227,16 +232,16 @@ class UsosMixin(OAuthMixin):
         # change course_editions_conducted to list of courses
         courses_conducted = []
         if result['course_editions_conducted']:
-            tasks = list()
+            tasks_courses = list()
             courses = list()
             for course_conducted in result['course_editions_conducted']:
                 course_id, term_id = course_conducted['id'].split('|')
                 if course_id not in courses:
                     courses.append(course_id)
-                    tasks.append(self.api_course(course_id))
+                    tasks_courses.append(self.api_course(course_id))
 
             try:
-                tasks_results = yield(tasks)
+                tasks_results = yield(tasks_courses)
                 for course_doc in tasks_results:
                     courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
                                               constants.COURSE_ID: course_id,
@@ -253,7 +258,7 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.call_async('services/fac/faculty', arguments={
-            'fields': 'name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
+            'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
             'fac_id': faculty_id
         })
 

@@ -18,7 +18,7 @@ LIMIT_FIELDS = (
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
-LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
+LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers', 'path')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
@@ -73,7 +73,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not result:
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
-                logging.debug('found extra course_edition for : {0} {1} not saving in mongo.'.format(course_id, term_id))
+                logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
             except UsosClientError as ex:
                 raise self.exc(ex, finish=False)
 
@@ -113,6 +113,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
+        # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
             # sort participants
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
@@ -535,10 +536,12 @@ class ApiMixin(DaoMixin, UsosMixin):
                 programmes_ids.append(programme['programme']['id'])
 
         programmes = []
+        tasks_progammes = list()
         for programme_id in programmes_ids:
-            programme_doc = yield self.api_programme(programme_id, finish=False)
+            tasks_progammes.append(self.api_programme(programme_id, finish=False))
+        task_progammes_result = yield tasks_progammes
+        for programme_doc in task_progammes_result:
             programmes.append(programme_doc)
-
         programmes = filter(None, programmes)
 
         # get faculties
@@ -548,8 +551,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
 
         faculties = []
+        tasks_faculties = list()
         for faculty_id in faculties_ids:
-            faculty_doc = yield self.api_faculty(faculty_id)
+            tasks_faculties.append(self.api_faculty(faculty_id))
+        tasks_faculties_result = yield tasks_faculties
+        for faculty_doc in tasks_faculties_result:
             faculties.append(faculty_doc)
 
         faculties = filter(None, faculties)
