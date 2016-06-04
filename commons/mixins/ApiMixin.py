@@ -73,7 +73,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not result:
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
-                logging.warning('found extra course_edition: {0}'.format(result))
+                logging.debug('found extra course_edition for : {0} {1} not saving in mongo.'.format(course_id, term_id))
             except UsosClientError as ex:
                 raise self.exc(ex, finish=False)
 
@@ -113,7 +113,6 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
-        # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
             # sort participants
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
