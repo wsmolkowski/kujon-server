@@ -140,12 +140,12 @@ class ApiMixin(DaoMixin, UsosMixin):
             course_doc['grades'] = None
 
         if extra_fetch:
-            api_groups = list()
+            tasks_groups = list()
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    api_groups.append(self.api_group(course_id, term_id, int(unit), finish=False))
+                    tasks_groups.append(self.api_group(int(unit), finish=False))
 
-            groups = yield api_groups
+            groups = yield tasks_groups
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
@@ -562,30 +562,42 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(faculties)
 
     @gen.coroutine
-    def api_group(self, course_id, term_id, group_id, finish=True):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+    def api_unit(self, unit_id, finish=False):
+        pipeline = {constants.UNIT_ID: unit_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID],
-                    constants.TERM_ID: term_id, 'course_unit_id': group_id}
+        unit_doc = yield self.db[constants.COLLECTION_COURSES_UNITS].find_one(pipeline)
 
+        if not unit_doc:
+            try:
+                result = yield self.usos_unit(unit_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
+                else:
+                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=finish)
+        raise gen.Return(None)
+
+    @gen.coroutine
+    def api_group(self, group_id, finish=False):
+        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_GROUPS, pipeline)
 
-        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline, LIMIT_FIELDS_GROUPS)
-
+        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = yield self.usos_group(group_id)
-                yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
+                result = yield self.usos_group(group_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
+                else:
+                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
+                    logging.info(msg)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=finish)
-                raise gen.Return(None)
-
-        classtypes = yield self.db_classtypes()
-        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
-        del (group_doc['class_type_id'])
-
-        raise gen.Return(group_doc)
+        raise gen.Return(None)
 
     @gen.coroutine
     def api_photo(self, user_info_id):

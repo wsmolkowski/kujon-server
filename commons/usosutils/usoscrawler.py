@@ -102,37 +102,6 @@ class UsosCrawler(ApiMixin):
         raise gen.Return(None)
 
     @gen.coroutine
-    def __api_unit(self, unit_id):
-        unit_doc = yield self.db_unit(unit_id, self.usos_id)
-        if not unit_doc:
-            try:
-                result = yield self.usos_unit(unit_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
-                else:
-                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError, ex:
-                yield self.exc(ex, finish=False)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __api_group(self, group_id):
-        group_doc = yield self.db_group(group_id, self.usos_id)
-        if not group_doc:
-            try:
-                result = yield self.usos_group(group_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
-                else:
-                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
-                    logging.info(msg)
-            except UsosClientError, ex:
-                yield self.exc(ex, finish=False)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
 
@@ -178,7 +147,7 @@ class UsosCrawler(ApiMixin):
         units_groups = list()
         for unit in course_units_ids:
             units_groups.append(self.__api_unit(unit))
-            units_groups.append(self.__api_group(unit))
+            units_groups.append(self.api_group(unit))
 
         yield units_groups
 

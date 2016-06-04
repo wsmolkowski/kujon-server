@@ -145,34 +145,6 @@ class DaoMixin(object):
         raise gen.Return(term_doc)
 
     @gen.coroutine
-    def db_unit(self, unit_it, usos_id):
-        if not isinstance(unit_it, int):
-            try:
-                unit_it = int(unit_it)
-            except ValueError:
-                raise Exception('Provided unit_it {0} is not integer'.format(unit_it))
-
-        unit_doc = yield self.db[constants.COLLECTION_COURSES_UNITS].find_one(
-            {constants.UNIT_ID: unit_it, constants.USOS_ID: usos_id})
-
-        raise gen.Return(unit_doc)
-
-    @gen.coroutine
-    def db_group(self, group_id, usos_id):
-        if not isinstance(group_id, int):
-            try:
-                course_id = int(group_id)
-            except ValueError:
-                raise Exception('Provided group_id {0} is not integer'.format(group_id))
-        else:
-            course_id = group_id
-
-        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(
-            {constants.GROUP_ID: course_id, constants.USOS_ID: usos_id})
-
-        raise gen.Return(group_doc)
-
-    @gen.coroutine
     def db_faculty(self, fac_id, usos_id):
         faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
                                                                               constants.USOS_ID: usos_id})
