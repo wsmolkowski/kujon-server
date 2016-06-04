@@ -57,6 +57,25 @@ class UsosCrawler(ApiMixin):
             except Exception, ex:
                 yield self.exc(ex, finish=False)
 
+
+    @gen.coroutine
+    def __build_courses_task(self, course_id):
+        try:
+            result = yield self.usos_course(course_id)
+            if result:
+                # change faculty_id to faculty name
+                faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
+                if not faculty_doc:
+                    faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
+                    yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+
+                result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
+                yield self.db_insert(constants.COLLECTION_COURSES, result)
+            else:
+                logging.warning("no course for course_id: %r.", course_id)
+        except Exception, ex:
+            yield self.exc(ex, finish=False)
+
     @gen.coroutine
     def __build_courses(self):
 
@@ -75,22 +94,10 @@ class UsosCrawler(ApiMixin):
                 courses.append(course_edition[constants.COURSE_ID])
 
         # get courses
+        tasks = list()
         for course_id in courses:
-            try:
-                result = yield self.usos_course(course_id)
-                if result:
-                    # change faculty_id to faculty name
-                    faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
-                    if not faculty_doc:
-                        faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
-                        yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
-
-                    result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
-                    yield self.db_insert(constants.COLLECTION_COURSES, result)
-                else:
-                    logging.warning("no course for course_id: %r.", course_id)
-            except Exception, ex:
-                yield self.exc(ex, finish=False)
+            tasks.append(self.__build_courses_task(course_id))
+        yield tasks
 
         raise gen.Return(None)
 
