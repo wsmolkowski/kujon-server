@@ -136,9 +136,9 @@ def _do_recreate(db, usos_doc):
     try:
         url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
         validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
-        http_client = utils.http_client(validate_cert)
+        http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET')
+        request = HTTPRequest(url=url, method='GET', validate_cert=validate_cert)
         response = yield http_client.fetch(request)
 
         if response.code is not 200 and response.reason != 'OK':

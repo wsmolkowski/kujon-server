@@ -7,6 +7,7 @@ from datetime import datetime
 from tornado import gen, escape
 from tornado import httpclient
 from tornado.auth import OAuthMixin, _auth_return_future
+from tornado.httpclient import HTTPRequest
 
 from commons import constants, utils, settings
 from commons.errors import UsosClientError
@@ -61,13 +62,14 @@ class UsosMixin(OAuthMixin):
         args.update(oauth)
 
         url += "?" + urllib_parse.urlencode(args)
-        http = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+        http_client = utils.http_client()
         if photo:
             http_callback = functools.partial(self._on_usos_photo_request, callback)
         else:
             http_callback = functools.partial(self._on_usos_request, callback)
 
-        http.fetch(url, callback=http_callback)
+        request = HTTPRequest(url=url, method='GET', validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+        http_client.fetch(request, callback=http_callback)
 
     def _on_usos_request(self, future, response):
         if response.error:
@@ -115,9 +117,10 @@ class UsosMixin(OAuthMixin):
         else:
             validate_ssl_cert = False
 
-        http_client = utils.http_client(validate_cert=validate_ssl_cert)
+        http_client = utils.http_client()
 
-        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE)
+        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE,
+                                         validate_cert=validate_ssl_cert)
 
         try:
             response = yield http_client.fetch(request)
@@ -224,20 +227,23 @@ class UsosMixin(OAuthMixin):
         # change course_editions_conducted to list of courses
         courses_conducted = []
         if result['course_editions_conducted']:
+            tasks = list()
+            courses = list()
             for course_conducted in result['course_editions_conducted']:
                 course_id, term_id = course_conducted['id'].split('|')
+                if course_id not in courses:
+                    courses.append(course_id)
+                    tasks.append(self.api_course(course_id))
 
-                try:
-                    # TODO: przerobić na rownloegle wywołanie wszystkich pobrań
-                    course_doc = yield self.api_course(course_id)
-                    if course_doc:
-                        courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                                  constants.COURSE_ID: course_id,
-                                                  constants.TERM_ID: term_id})
-                    else:
-                        raise UsosClientError('brak kursu %r'.format(course_id))
-                except Exception, ex:
-                    yield self.exc(ex, finish=False)
+            try:
+                tasks_results = yield(tasks)
+                for course_doc in tasks_results:
+                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                              constants.COURSE_ID: course_id,
+                                              constants.TERM_ID: term_id})
+            except Exception, ex:
+                yield self.exc(ex, finish=False)
+
             result['course_editions_conducted'] = courses_conducted
 
         raise gen.Return(result)

@@ -87,6 +87,7 @@ class NotificatorQueue(object):
                 'contents': {'en': 'Testowa notyfikacja'}
             }
 
+            # tu jest weryfikacja certu, bo to nie zapytanie do USOSa
             request = HTTPRequest(self._NOTIFICATION_URL, body=json.dumps(body), method='POST', headers=headers)
 
             response = yield client.fetch(request)

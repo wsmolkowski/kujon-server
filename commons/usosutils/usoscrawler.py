@@ -57,6 +57,25 @@ class UsosCrawler(ApiMixin):
             except Exception, ex:
                 yield self.exc(ex, finish=False)
 
+
+    @gen.coroutine
+    def __build_courses_task(self, course_id):
+        try:
+            result = yield self.usos_course(course_id)
+            if result:
+                # change faculty_id to faculty name
+                faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
+                if not faculty_doc:
+                    faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
+                    yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+
+                result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
+                yield self.db_insert(constants.COLLECTION_COURSES, result)
+            else:
+                logging.warning("no course for course_id: %r.", course_id)
+        except Exception, ex:
+            yield self.exc(ex, finish=False)
+
     @gen.coroutine
     def __build_courses(self):
 
@@ -75,22 +94,10 @@ class UsosCrawler(ApiMixin):
                 courses.append(course_edition[constants.COURSE_ID])
 
         # get courses
+        tasks = list()
         for course_id in courses:
-            try:
-                result = yield self.usos_course(course_id)
-                if result:
-                    # change faculty_id to faculty name
-                    faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
-                    if not faculty_doc:
-                        faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
-                        yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
-
-                    result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
-                    yield self.db_insert(constants.COLLECTION_COURSES, result)
-                else:
-                    logging.warning("no course for course_id: %r.", course_id)
-            except Exception, ex:
-                yield self.exc(ex, finish=False)
+            tasks.append(self.__build_courses_task(course_id))
+        yield tasks
 
         raise gen.Return(None)
 
@@ -140,23 +147,22 @@ class UsosCrawler(ApiMixin):
                                                           course[constants.TERM_ID],
                                                           extra_fetch=False))
 
-                for lecturer in course[constants.LECTURERS]:
-                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                        users_ids.append(lecturer[constants.USER_ID])
-                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                        users_ids.append(lecturer[constants.ID])
-
-                for participant in course[constants.PARTICIPANTS]:
-                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                        users_ids.append(participant[constants.USER_ID])
-                    if constants.ID in participant and participant[constants.ID] not in users_ids:
-                        users_ids.append(participant[constants.ID])
-
-                for coordinator in course[constants.COORDINATORS]:
-                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                        users_ids.append(coordinator[constants.USER_ID])
-                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                        users_ids.append(coordinator[constants.ID])
+                # fetching users disabled in crawler not needed.
+                # for lecturer in course[constants.LECTURERS]:
+                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.USER_ID])
+                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.ID])
+                # for participant in course[constants.PARTICIPANTS]:
+                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                #         users_ids.append(participant[constants.USER_ID])
+                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
+                #         users_ids.append(participant[constants.ID])
+                # for coordinator in course[constants.COORDINATORS]:
+                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.USER_ID])
+                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.ID])
 
                 for course_unit in course['course_units_ids']:
                     if course_unit not in course_units_ids:
@@ -254,18 +260,3 @@ class UsosCrawler(ApiMixin):
         except Exception, ex:
             self.exc(ex, finish=False)
 
-# @gen.coroutine
-# def main():
-#     crawler = UsosCrawler()
-#     user_id = '574eb275d54c4b8a3c02ac55'
-#     yield crawler.initial_user_crawl(user_id)
-
-#
-# if __name__ == '__main__':
-#     from tornado import ioloop
-#     from tornado.options import parse_command_line
-#
-#     parse_command_line()
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     io_loop = ioloop.IOLoop.current()
-#     io_loop.run_sync(main)
