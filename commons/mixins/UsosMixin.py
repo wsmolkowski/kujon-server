@@ -68,8 +68,8 @@ class UsosMixin(OAuthMixin):
         else:
             http_callback = functools.partial(self._on_usos_request, callback)
 
-        request = HTTPRequest(url=url, method='GET', validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT], callback=http_callback)
-        response = yield http_client.fetch(request)
+        request = HTTPRequest(url=url, method='GET', validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+        http_client.fetch(request, callback=http_callback)
 
     def _on_usos_request(self, future, response):
         if response.error:

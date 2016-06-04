@@ -1,7 +1,7 @@
 # coding=UTF-8
 
 import logging
-import datetime
+from datetime import datetime
 from pprint import pprint
 
 import pymongo
