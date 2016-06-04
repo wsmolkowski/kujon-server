@@ -135,7 +135,7 @@ def cookie_secret():
     print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
 
 
-def http_client(validate_cert=False):
+def http_client():
     if settings.PROXY_URL and settings.PROXY_PORT:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
