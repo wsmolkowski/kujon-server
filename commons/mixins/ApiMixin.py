@@ -18,7 +18,8 @@ LIMIT_FIELDS = (
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
-LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers', 'path')
+LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
+                        'path', 'stats')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
