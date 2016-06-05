@@ -12,11 +12,29 @@ from commons.mixins.UsosMixin import UsosMixin
 class ApiMixinSearch(DaoMixin, UsosMixin):
 
     @gen.coroutine
+    def _save_query(self, query):
+        pass
+
+    @staticmethod
+    def validate_query_input(query):
+        if len(query) < 3 or len(query) > 30:
+            raise ApiError("Niepoprawne zapytnie. Spróbuj wyszukać fragment dłuższy niż 3 znaki i krótszy niż 30.")
+        return True
+
+    @gen.coroutine
     def api_search_user(self, query):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+        start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield self.usos_search_users(query, usos_doc)
-
+        self.validate_query_input(query)
+        yield self._save_query(query)
+        search_doc = yield self.usos_search_users(query, start)
         raise gen.Return(search_doc)
 
+    @gen.coroutine
+    def api_search_course(self, query):
+
+        start = self.get_argument('start', default=0, strip=True)
+        yield self._save_query(query)
+        search_doc = yield self.usos_search_courses(query, start)
+        raise gen.Return(search_doc)

@@ -463,13 +463,16 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_search_users(self, query, usos_doc):
+    def usos_search_users(self, query, start=0):
         result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc,  args={
                 'query': query,
+                'start': int(start),
                 'num': 20,
-                'fields': 'items[user[id|first_name|last_name|student_status|staff_status|employment_positions|titles]|match]',
+                'fields': 'items[user[id|first_name|last_name|student_status|staff_status|employment_positions|titles]|match]|next_page',
                 'lang': 'pl'
             })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
         if 'items' in result:
             for elem in result['items']:
                 user = elem['user']
@@ -485,5 +488,19 @@ class UsosMixin(OAuthMixin):
                 for position in user['employment_positions']:
                     position['position']['name'] = position['position']['name']['pl']
                     position['faculty']['name'] = position['faculty']['name']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_courses(self, query, start=0):
+        result = yield self.usos_request(path='services/courses/search', user_doc=self.user_doc, args={
+            'name': query,
+            'start': int(start),
+            'num': 20,
+            'fields': 'items[course_name]|match|next_page]',
+            'lang': 'pl'
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
 
         raise gen.Return(result)
