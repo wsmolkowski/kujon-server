@@ -132,6 +132,12 @@ class UsosMixin(OAuthMixin):
 
         raise gen.Return(result)
 
+    @staticmethod
+    def validate_usos_responce(result):
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+            return
+
     @gen.coroutine
     def usos_course(self, course_id):
         create_time = datetime.now()
@@ -142,7 +148,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
         }
         result = yield self.usos_request(path=url, user_doc=self.user_doc, args=args)
-
+        self.validate_usos_responce(result)
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
         result['learning_outcomes'] = result['learning_outcomes']['pl']
@@ -162,7 +168,7 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.call_async('services/terms/term', arguments={'term_id': term_id})
-
+        self.validate_usos_responce(result)
         result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
@@ -187,9 +193,7 @@ class UsosMixin(OAuthMixin):
             result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
                 'fields': fields
             })
-        if 'code' in result and result['code'] is not 200:
-            gen.Return(result)
-            return
+        self.validate_usos_responce(result)
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -258,7 +262,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
             'fac_id': faculty_id
         })
-
+        self.validate_usos_responce(result)
         result[constants.FACULTY_ID] = faculty_id
         result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
@@ -276,6 +280,7 @@ class UsosMixin(OAuthMixin):
             'course_unit_id': group_id,
             'group_number': 1,
         })
+        self.validate_usos_responce(result)
         if result:
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             result[constants.CREATED_TIME] = create_time
@@ -292,7 +297,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
             'active_terms_only': 'false',
         })
-
+        self.validate_usos_responce(result)
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
@@ -318,6 +323,8 @@ class UsosMixin(OAuthMixin):
                     'term_id': term_id
                 }
             result = yield self.usos_request(path='services/courses/course_edition', user_doc=self.user_doc, args=args)
+            self.validate_usos_responce(result)
+
         except Exception, ex:
             logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
@@ -340,7 +347,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
             'programme_id': programme_id,
         })
-
+        self.validate_usos_responce(result)
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -367,7 +374,7 @@ class UsosMixin(OAuthMixin):
         result = yield self.usos_request(path='services/photos/photo', user_doc=self.user_doc, args={
             'user_id': user_info_id,
         }, photo=True)
-
+        self.validate_usos_responce(result)
         result[constants.ID] = user_info_id
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
@@ -383,7 +390,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'id|course_id|term_id|groups|classtype_id',
             'unit_id': unit_id,
         })
-
+        self.validate_usos_responce(result)
         result[constants.UNIT_ID] = result.pop(constants.ID)
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
@@ -400,7 +407,7 @@ class UsosMixin(OAuthMixin):
             'start': given_date,
             'days': '7'
         })
-
+        self.validate_usos_responce(result)
         tt = dict()
         tt[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         tt[constants.TT_STARTDATE] = str(given_date)
@@ -420,7 +427,7 @@ class UsosMixin(OAuthMixin):
                 'callback_url': settings.DEPLOY_EVENT,
                 'verify_token': verify_token
             })
-
+            self.validate_usos_responce(result)
             result['event_type'] = event_type
             result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
@@ -436,6 +443,7 @@ class UsosMixin(OAuthMixin):
     def usos_unsubscribe(self, usos_doc, user_doc):
         result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc,
                                          base_url=usos_doc[constants.USOS_URL])
+        self.validate_usos_responce(result)
         logging.debug('unsubscribe ok')
         raise gen.Return(result)
 
@@ -444,12 +452,11 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.usos_request(path='services/events/subscriptions', user_doc=self.user_doc)
-
+        self.validate_usos_responce(result)
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-
         raise gen.Return(result)
 
     @gen.coroutine
@@ -460,6 +467,7 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
+        self.validate_usos_responce(result)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -471,8 +479,7 @@ class UsosMixin(OAuthMixin):
                 'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
                 'lang': 'pl'
             })
-        if 'code' in result and result != '200':
-            raise UsosClientError(result['message'])
+        self.validate_usos_responce(result)
         if 'items' in result:
             for elem in result['items']:
                 user = elem['user']
@@ -500,9 +507,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'items[course_name]|match|next_page]',
             'lang': 'pl'
         })
-        if 'code' in result and result != '200':
-            raise UsosClientError(result['message'])
-
+        self.validate_usos_responce(result)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -514,9 +519,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'id|match|postal_address',
             'lang': 'pl'
         })
-        if 'code' in result and result != '200':
-            raise UsosClientError(result['message'])
-
+        self.validate_usos_responce(result)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -528,9 +531,7 @@ class UsosMixin(OAuthMixin):
             'fields': 'id|type|title|supervisors|faculty[id|name]',
             'lang': 'pl'
         })
-        if 'code' in result and result != '200':
-            raise UsosClientError(result['message'])
-
+        self.validate_usos_responce(result)
         raise gen.Return(result)
 
     @gen.coroutine
@@ -539,8 +540,7 @@ class UsosMixin(OAuthMixin):
             'user_id': user_info_id,
             'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
         })
-        if 'code' in result and result != '200':
-            raise UsosClientError(result['message'])
+        self.validate_usos_responce(result)
         if 'authored_theses' in result:
             for these in result['authored_theses']:
                 these['faculty']['name'] = these['faculty']['name']['pl']

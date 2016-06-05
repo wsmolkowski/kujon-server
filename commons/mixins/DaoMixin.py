@@ -52,7 +52,7 @@ class DaoMixin(object):
             elif isinstance(exception, AuthenticationError):
                 self.error(message=exception.message)
             else:
-                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem: {0}'.format(exception.message))
+                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
 
