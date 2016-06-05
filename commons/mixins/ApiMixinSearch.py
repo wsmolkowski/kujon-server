@@ -1,10 +1,8 @@
 # coding=UTF-8
 
-from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, helpers
-from commons.errors import ApiError, UsosClientError
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 

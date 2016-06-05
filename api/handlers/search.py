@@ -13,7 +13,6 @@ class SearchUsersApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self, query):
         try:
-
             if not self.validate_query_input(query):
                 return
 
@@ -48,7 +47,6 @@ class SearchFacultiesApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self, query):
         try:
-
             if not self.validate_query_input(query):
                 return
 
@@ -66,7 +64,6 @@ class SearchProgrammesApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self, query):
         try:
-
             if not self.validate_query_input(query):
                 return
 
