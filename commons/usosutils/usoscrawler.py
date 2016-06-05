@@ -57,50 +57,6 @@ class UsosCrawler(ApiMixin):
             except Exception, ex:
                 yield self.exc(ex, finish=False)
 
-
-    @gen.coroutine
-    def __build_courses_task(self, course_id):
-        try:
-            result = yield self.usos_course(course_id)
-            if result:
-                # change faculty_id to faculty name
-                faculty_doc = yield self.db_faculty(result[constants.FACULTY_ID], self.usos_id)
-                if not faculty_doc:
-                    faculty_doc = yield self.usos_faculty(result[constants.FACULTY_ID])
-                    yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
-
-                result[constants.FACULTY_NAME] = faculty_doc[constants.FACULTY_NAME]
-                yield self.db_insert(constants.COLLECTION_COURSES, result)
-            else:
-                logging.warning("no course for course_id: %r.", course_id)
-        except Exception, ex:
-            yield self.exc(ex, finish=False)
-
-    @gen.coroutine
-    def __build_courses(self):
-
-        courses = list()
-        existing_courses = list()
-        # get courses that exists in mongo and remove from list to fetch
-        existing_courses_extended = yield self.db_courses(self.usos_id)
-        for course_extended in existing_courses_extended:
-            existing_courses.append(course_extended[constants.COURSE_ID])
-
-        # get courses from course_edition
-        courses_editions = yield self.db_courses_editions(self.user_id)
-        for course_edition in courses_editions:
-            if course_edition[constants.COURSE_ID] not in existing_courses:
-                existing_courses.append(course_edition[constants.COURSE_ID])
-                courses.append(course_edition[constants.COURSE_ID])
-
-        # get courses
-        tasks = list()
-        for course_id in courses:
-            tasks.append(self.__build_courses_task(course_id))
-        yield tasks
-
-        raise gen.Return(None)
-
     @gen.coroutine
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
