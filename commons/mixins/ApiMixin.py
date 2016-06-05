@@ -614,3 +614,8 @@ class ApiMixin(DaoMixin, UsosMixin):
             photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)
+
+
+
+
+
