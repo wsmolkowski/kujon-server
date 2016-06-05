@@ -38,3 +38,10 @@ class ApiMixinSearch(DaoMixin, UsosMixin):
         yield self._save_query(query)
         search_doc = yield self.usos_search_courses(query, start)
         raise gen.Return(search_doc)
+
+    @gen.coroutine
+    def api_search_faculty(self, query):
+        start = self.get_argument('start', default=0, strip=True)
+        yield self._save_query(query)
+        search_doc = yield self.usos_search_faculty(query, start)
+        raise gen.Return(search_doc)

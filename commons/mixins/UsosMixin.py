@@ -468,7 +468,7 @@ class UsosMixin(OAuthMixin):
                 'query': query,
                 'start': int(start),
                 'num': 20,
-                'fields': 'items[user[id|first_name|last_name|student_status|staff_status|employment_positions|titles]|match]|next_page',
+                'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
                 'lang': 'pl'
             })
         if 'code' in result and result != '200':
@@ -498,6 +498,20 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[course_name]|match|next_page]',
+            'lang': 'pl'
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_faculty(self, query, start=0):
+        result = yield self.usos_request(path='services/fac/search', user_doc=self.user_doc, args={
+            'query': query,
+            'start': int(start),
+            'num': 20,
+            'fields': 'id|match|postal_address',
             'lang': 'pl'
         })
         if 'code' in result and result != '200':
