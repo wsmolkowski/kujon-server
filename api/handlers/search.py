@@ -11,7 +11,7 @@ class SearchUsersApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def post(self, query):
+    def get(self, query):
         try:
 
             if not self.validate_query_input(query):
@@ -29,7 +29,7 @@ class SearchCoursesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def post(self, query):
+    def get(self, query):
         try:
             if not self.validate_query_input(query):
                 return
@@ -46,7 +46,7 @@ class SearchFacultiesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def post(self, query):
+    def get(self, query):
         try:
 
             if not self.validate_query_input(query):
@@ -64,7 +64,7 @@ class SearchProgrammesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
-    def post(self, query):
+    def get(self, query):
         try:
 
             if not self.validate_query_input(query):
