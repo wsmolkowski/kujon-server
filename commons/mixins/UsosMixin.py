@@ -461,3 +461,29 @@ class UsosMixin(OAuthMixin):
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
         raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_users(self, query, usos_doc):
+        result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc,  args={
+                'query': query,
+                'num': 20,
+                'fields': 'items[user[id|first_name|last_name|student_status|staff_status|employment_positions|titles]|match]',
+                'lang': 'pl'
+            })
+        if 'items' in result:
+            for elem in result['items']:
+                user = elem['user']
+
+                # change student status to name
+                if 'student_status' in user:
+                    user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
+
+                # change staff_status to dictionary
+                user['staff_status'] = usoshelper.dict_value_staff_status(user['staff_status'])
+
+                # remove english names
+                for position in user['employment_positions']:
+                    position['position']['name'] = position['position']['name']['pl']
+                    position['faculty']['name'] = position['faculty']['name']['pl']
+
+        raise gen.Return(result)

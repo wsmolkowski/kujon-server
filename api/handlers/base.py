@@ -12,6 +12,7 @@ from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiMixinFriends import ApiMixinFriends
+from commons.mixins.ApiMixinSearch import ApiMixinSearch
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
@@ -157,7 +158,14 @@ class BaseHandler(RequestHandler, DaoMixin):
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, JSendMixin):
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
+
+    def data_received(self, chunk):
+        super
+
+    def _oauth_get_user(self, access_token, callback):
+        super
+
     EXCEPTION_TYPE = 'api'
 
     def do_refresh(self):  # overwrite from ApiMixin

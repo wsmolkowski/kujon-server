@@ -2,7 +2,6 @@
 
 import tornado.gen
 import tornado.web
-from bson.objectid import ObjectId
 from base import ApiHandler
 from commons import constants, decorators
 
