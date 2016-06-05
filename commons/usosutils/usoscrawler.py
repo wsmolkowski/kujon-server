@@ -146,7 +146,7 @@ class UsosCrawler(ApiMixin):
 
         units_groups = list()
         for unit in course_units_ids:
-            units_groups.append(self.__api_unit(unit))
+            units_groups.append(self.api_unit(unit))
             units_groups.append(self.api_group(unit))
 
         yield units_groups
@@ -169,8 +169,6 @@ class UsosCrawler(ApiMixin):
             yield self.api_programmes()
             yield self.api_faculties()
             yield self.api_tt(self.__get_monday())
-            # yield self.__build_courses()
-
             yield self.__subscribe()
         except Exception, ex:
             yield self.exc(ex, finish=False)

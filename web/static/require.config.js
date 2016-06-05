@@ -34,5 +34,6 @@ var require = {
         "hasher": ["bootstrap-table",],
         "crossroads": ["bootstrap-table",],
         "handlebars": ["bootstrap-table",],
+        "fullcalendarpl" : ["fullcalendar"]
   }
 };

@@ -36,10 +36,6 @@
                                                     <p><span>Nr indeksu</span></p>
                                                     <p>833741</p>
                                                 </div>
-                                                <div class="col-sm-6 col-xs-6">
-                                                    <p><span>Imię i nazwisko</span></p>
-                                                    <p>{{first_name}} {{last_name}}</p>
-                                                </div>
                                                 <div class="col-sm-6 col-xs-6 nr-konta">
                                                     <p><span>Nr konta</span></p>
                                                     <p>{{id}}</p>
@@ -56,15 +52,15 @@
                                                     <p><span>Data utworzenia konta</span></p>
                                                     <p>{{user_created}}</p>
                                                 </div>
-                                                {{#student_programmes}}
                                                 <div class="col-sm-12 col-xs-12 kierunki">
                                                     <p><span>Kierunki</span></p>
                                                     <ol type="1">
-                                                        <li>{{id}}</li>
+                                                        {{#student_programmes}}
                                                         <li>{{programme.description}} ({{programme.id}})</li>
+                                                        {{/student_programmes}}
                                                     </ol>
                                                 </div>
-                                                {{/student_programmes}}
+
 
                                             </div>
                                         </div>
