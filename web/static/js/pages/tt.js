@@ -31,6 +31,7 @@ $, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
                                         room_number: $(this).attr('room_number'),
                                         building_name: $(this).attr('building_name'),
                                         group_number: $(this).attr('group_number'),
+                                        lecturer: $(this).attr('lecturers'),
                                         type: $(this).attr('type'),
                                     });
                                 });
@@ -48,7 +49,8 @@ $, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
                     var description = "sala: " + event.room_number + "<br>"
                     description += "budynek: " + event.building_name + "<br>"
                     description += "grupa: " + event.group_number + "<br>"
-                    description += "typ: " + event.type
+                    description += "typ: " + event.type + "<br>"
+                    description += "prowadzący: " + event.lecturer[0].first_name + " " + event.lecturer[0].last_name
                     element.tooltip({title: description, html: true, container: "body", placement: 'right'});
                 }
             });

@@ -102,37 +102,6 @@ class UsosCrawler(ApiMixin):
         raise gen.Return(None)
 
     @gen.coroutine
-    def __api_unit(self, unit_id):
-        unit_doc = yield self.db_unit(unit_id, self.usos_id)
-        if not unit_doc:
-            try:
-                result = yield self.usos_unit(unit_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
-                else:
-                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError, ex:
-                yield self.exc(ex, finish=False)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
-    def __api_group(self, group_id):
-        group_doc = yield self.db_group(group_id, self.usos_id)
-        if not group_doc:
-            try:
-                result = yield self.usos_group(group_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
-                else:
-                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
-                    logging.info(msg)
-            except UsosClientError, ex:
-                yield self.exc(ex, finish=False)
-
-        raise gen.Return(None)
-
-    @gen.coroutine
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
 
@@ -147,22 +116,21 @@ class UsosCrawler(ApiMixin):
                                                           course[constants.TERM_ID],
                                                           extra_fetch=False))
 
-                # fetching users disabled in crawler not needed.
-                # for lecturer in course[constants.LECTURERS]:
-                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.USER_ID])
-                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.ID])
-                # for participant in course[constants.PARTICIPANTS]:
-                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                #         users_ids.append(participant[constants.USER_ID])
-                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
-                #         users_ids.append(participant[constants.ID])
-                # for coordinator in course[constants.COORDINATORS]:
-                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.USER_ID])
-                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.ID])
+                for lecturer in course[constants.LECTURERS]:
+                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                        users_ids.append(lecturer[constants.USER_ID])
+                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                        users_ids.append(lecturer[constants.ID])
+                for participant in course[constants.PARTICIPANTS]:
+                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                        users_ids.append(participant[constants.USER_ID])
+                    if constants.ID in participant and participant[constants.ID] not in users_ids:
+                        users_ids.append(participant[constants.ID])
+                for coordinator in course[constants.COORDINATORS]:
+                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                        users_ids.append(coordinator[constants.USER_ID])
+                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                        users_ids.append(coordinator[constants.ID])
 
                 for course_unit in course['course_units_ids']:
                     if course_unit not in course_units_ids:
@@ -178,8 +146,8 @@ class UsosCrawler(ApiMixin):
 
         units_groups = list()
         for unit in course_units_ids:
-            units_groups.append(self.__api_unit(unit))
-            units_groups.append(self.__api_group(unit))
+            units_groups.append(self.api_unit(unit))
+            units_groups.append(self.api_group(unit))
 
         yield units_groups
 
@@ -201,8 +169,6 @@ class UsosCrawler(ApiMixin):
             yield self.api_programmes()
             yield self.api_faculties()
             yield self.api_tt(self.__get_monday())
-            # yield self.__build_courses()
-
             yield self.__subscribe()
         except Exception, ex:
             yield self.exc(ex, finish=False)

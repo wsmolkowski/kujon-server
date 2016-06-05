@@ -18,7 +18,8 @@ LIMIT_FIELDS = (
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
-LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers')
+LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
+                        'path', 'stats')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
@@ -73,7 +74,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not result:
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
-                logging.debug('found extra course_edition for : {0} {1} not saving in mongo.'.format(course_id, term_id))
+                logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
             except UsosClientError as ex:
                 raise self.exc(ex, finish=False)
 
@@ -113,6 +114,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
+        # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
             # sort participants
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
@@ -139,12 +141,12 @@ class ApiMixin(DaoMixin, UsosMixin):
             course_doc['grades'] = None
 
         if extra_fetch:
-            api_groups = list()
+            tasks_groups = list()
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    api_groups.append(self.api_group(course_id, term_id, int(unit), finish=False))
+                    tasks_groups.append(self.api_group(int(unit), finish=False))
 
-            groups = yield api_groups
+            groups = yield tasks_groups
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
@@ -535,10 +537,12 @@ class ApiMixin(DaoMixin, UsosMixin):
                 programmes_ids.append(programme['programme']['id'])
 
         programmes = []
+        tasks_progammes = list()
         for programme_id in programmes_ids:
-            programme_doc = yield self.api_programme(programme_id, finish=False)
+            tasks_progammes.append(self.api_programme(programme_id, finish=False))
+        task_progammes_result = yield tasks_progammes
+        for programme_doc in task_progammes_result:
             programmes.append(programme_doc)
-
         programmes = filter(None, programmes)
 
         # get faculties
@@ -548,38 +552,53 @@ class ApiMixin(DaoMixin, UsosMixin):
                 faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
 
         faculties = []
+        tasks_faculties = list()
         for faculty_id in faculties_ids:
-            faculty_doc = yield self.api_faculty(faculty_id)
+            tasks_faculties.append(self.api_faculty(faculty_id))
+        tasks_faculties_result = yield tasks_faculties
+        for faculty_doc in tasks_faculties_result:
             faculties.append(faculty_doc)
 
         faculties = filter(None, faculties)
         raise gen.Return(faculties)
 
     @gen.coroutine
-    def api_group(self, course_id, term_id, group_id, finish=True):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
+    def api_unit(self, unit_id, finish=False):
+        pipeline = {constants.UNIT_ID: unit_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID],
-                    constants.TERM_ID: term_id, 'course_unit_id': group_id}
+        unit_doc = yield self.db[constants.COLLECTION_COURSES_UNITS].find_one(pipeline)
 
+        if not unit_doc:
+            try:
+                result = yield self.usos_unit(unit_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
+                else:
+                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
+            except UsosClientError, ex:
+                yield self.exc(ex, finish=finish)
+        raise gen.Return(None)
+
+    @gen.coroutine
+    def api_group(self, group_id, finish=False):
+        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_GROUPS, pipeline)
 
-        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline, LIMIT_FIELDS_GROUPS)
-
+        group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = yield self.usos_group(group_id)
-                yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
+                result = yield self.usos_group(group_id)
+                if result:
+                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
+                else:
+                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
+                    logging.info(msg)
             except UsosClientError, ex:
                 yield self.exc(ex, finish=finish)
-                raise gen.Return(None)
-
-        classtypes = yield self.db_classtypes()
-        group_doc[constants.CLASS_TYPE] = classtypes[group_doc['class_type_id']]
-        del (group_doc['class_type_id'])
-
-        raise gen.Return(group_doc)
+        raise gen.Return(None)
 
     @gen.coroutine
     def api_photo(self, user_info_id):
@@ -595,3 +614,8 @@ class ApiMixin(DaoMixin, UsosMixin):
             photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)
+
+
+
+
+

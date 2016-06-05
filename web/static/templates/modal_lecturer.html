@@ -58,13 +58,13 @@
 								{{#if course_editions_conducted}}
 								<div class="col-sm-12 ostatnie-tematy">
 									<p>Przedmioty</p>
-									{{#course_editions_conducted}}
 									<ol>
+										{{#course_editions_conducted}}
 										<li>
 											<p>{{course_name}} ({{course_id}}), {{term_id}}</p>
 										</li>
+										{{/course_editions_conducted}}
 									</ol>
-									{{/course_editions_conducted}}
 								</div>
 								{{/if}}
 							</div>

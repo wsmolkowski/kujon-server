@@ -62,13 +62,13 @@ class UsosMixin(OAuthMixin):
         args.update(oauth)
 
         url += "?" + urllib_parse.urlencode(args)
-        http_client = utils.http_client()
+        http_client = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
         if photo:
             http_callback = functools.partial(self._on_usos_photo_request, callback)
         else:
             http_callback = functools.partial(self._on_usos_request, callback)
 
-        request = HTTPRequest(url=url, method='GET', validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
+        request = HTTPRequest(url=url, method='GET')
         http_client.fetch(request, callback=http_callback)
 
     def _on_usos_request(self, future, response):
@@ -113,14 +113,11 @@ class UsosMixin(OAuthMixin):
         usos_doc = self._find_usos()
 
         if constants.VALIDATE_SSL_CERT in usos_doc:
-            validate_ssl_cert = True
+            http_client = utils.http_client(validate_cert=True)
         else:
-            validate_ssl_cert = False
+            http_client = utils.http_client()
 
-        http_client = utils.http_client()
-
-        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE,
-                                         validate_cert=validate_ssl_cert)
+        request = httpclient.HTTPRequest(url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE)
 
         try:
             response = yield http_client.fetch(request)
@@ -190,7 +187,9 @@ class UsosMixin(OAuthMixin):
             result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
                 'fields': fields
             })
-
+        if 'code' in result and result['code'] is not 200:
+            gen.Return(result)
+            return
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
@@ -216,9 +215,12 @@ class UsosMixin(OAuthMixin):
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
 
         # strip employment_positions from english names
+        tasks_get_faculties = list()
         for position in result['employment_positions']:
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
+            tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
+        yield tasks_get_faculties
 
         # strip english from building name
         if 'room' in result and result['room'] and 'building_name' in result['room']:
@@ -227,16 +229,16 @@ class UsosMixin(OAuthMixin):
         # change course_editions_conducted to list of courses
         courses_conducted = []
         if result['course_editions_conducted']:
-            tasks = list()
+            tasks_courses = list()
             courses = list()
             for course_conducted in result['course_editions_conducted']:
                 course_id, term_id = course_conducted['id'].split('|')
                 if course_id not in courses:
                     courses.append(course_id)
-                    tasks.append(self.api_course(course_id))
+                    tasks_courses.append(self.api_course(course_id))
 
             try:
-                tasks_results = yield(tasks)
+                tasks_results = yield(tasks_courses)
                 for course_doc in tasks_results:
                     courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
                                               constants.COURSE_ID: course_id,
@@ -253,7 +255,7 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         result = yield self.call_async('services/fac/faculty', arguments={
-            'fields': 'name|homepage_url|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
+            'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
             'fac_id': faculty_id
         })
 
@@ -458,4 +460,75 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_users(self, query, start=0):
+        result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc,  args={
+                'query': query,
+                'start': int(start),
+                'num': 20,
+                'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
+                'lang': 'pl'
+            })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+        if 'items' in result:
+            for elem in result['items']:
+                user = elem['user']
+
+                # change student status to name
+                if 'student_status' in user:
+                    user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
+
+                # change staff_status to dictionary
+                user['staff_status'] = usoshelper.dict_value_staff_status(user['staff_status'])
+
+                # remove english names
+                for position in user['employment_positions']:
+                    position['position']['name'] = position['position']['name']['pl']
+                    position['faculty']['name'] = position['faculty']['name']['pl']
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_courses(self, query, start=0):
+        result = yield self.usos_request(path='services/courses/search', user_doc=self.user_doc, args={
+            'name': query,
+            'start': int(start),
+            'num': 20,
+            'fields': 'items[course_name]|match|next_page]',
+            'lang': 'pl'
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_faculty(self, query, start=0):
+        result = yield self.usos_request(path='services/fac/search', user_doc=self.user_doc, args={
+            'query': query,
+            'start': int(start),
+            'num': 20,
+            'fields': 'id|match|postal_address',
+            'lang': 'pl'
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_search_programmes(self, query, start=0):
+        result = yield self.usos_request(path='services/progs/search', user_doc=self.user_doc, args={
+            'query': query,
+            'start': int(start),
+            'num': 20,
+            'fields': 'items[match|programme[id]]|next_page',
+            'lang': 'pl'
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+
         raise gen.Return(result)
