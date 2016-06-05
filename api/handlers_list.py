@@ -11,6 +11,7 @@ from handlers.terms import TermsApi, TermApi
 from handlers.tt import TTApi
 from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 from handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
+from handlers.theses import ThesesApi
 
 HANDLERS = [
     (r"/config", ApplicationConfigHandler),
@@ -58,6 +59,8 @@ HANDLERS = [
     (r"/search/courses/([^/]+)", SearchCoursesApi),
     (r"/search/faculties/([^/]+)", SearchFacultiesApi),
     (r"/search/programmes/([^/]+)", SearchProgrammesApi),
+
+    (r"/theses", ThesesApi),
 
 ]
 

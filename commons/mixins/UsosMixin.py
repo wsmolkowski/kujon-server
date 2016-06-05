@@ -525,10 +525,24 @@ class UsosMixin(OAuthMixin):
             'query': query,
             'start': int(start),
             'num': 20,
-            'fields': 'items[match|programme[id]]|next_page',
+            'fields': 'id|type|title|supervisors|faculty[id|name]',
             'lang': 'pl'
         })
         if 'code' in result and result != '200':
             raise UsosClientError(result['message'])
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_theses(self, user_info_id):
+        result = yield self.usos_request(path='services/theses/user', user_doc=self.user_doc, args={
+            'user_id': user_info_id,
+            'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+        })
+        if 'code' in result and result != '200':
+            raise UsosClientError(result['message'])
+        if 'authored_theses' in result:
+            for these in result['authored_theses']:
+                these['faculty']['name'] = these['faculty']['name']['pl']
 
         raise gen.Return(result)

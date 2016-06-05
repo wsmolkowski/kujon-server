@@ -13,6 +13,7 @@ from commons.AESCipher import AESCipher
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiMixinFriends import ApiMixinFriends
 from commons.mixins.ApiMixinSearch import ApiMixinSearch
+from commons.mixins.ApiMixinTheses import ApiMixinTheses
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
@@ -158,7 +159,7 @@ class BaseHandler(RequestHandler, DaoMixin):
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, ApiMixinTheses, JSendMixin):
 
     def data_received(self, chunk):
         super
