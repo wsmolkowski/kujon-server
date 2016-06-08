@@ -45,7 +45,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                         var idContent = '#courseDetails' + courseId;
 
                         if (courseInfo.status == 'success'){
-                            //$(idContent).html(templateDetails(courseInfo.data));
 
                               var row = table.row(tr);
                               if (row.child.isShown()) {
@@ -114,6 +113,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                 */
             };
 
+            /*
             function bindModals(){
                 $('#errorModal').modal();
 
@@ -172,7 +172,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     });
                 });
             }
-
+            */
         }
     }    
 });
