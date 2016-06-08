@@ -15,6 +15,13 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
+
+                    $('#przedmioty-table').bootstrapTable({
+                        classes: "table-hover",
+                        pagination: true,
+                        sortName: "name"
+                    });
+
                 } else {
                     $('#section-content').html(templateError(data));
                 }
