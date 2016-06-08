@@ -14,12 +14,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
                     $('#section-content').html(template(data));
                     bindModals();
 
-                    $('#table-wykladowcy').bootstrapTable({
-                        classes: "table-hover",
-                        pagination: true,
-                        sortName: "name"
-                    });
-
                 } else {
                     $('#section-content').html(templateError({'message': data.message}));
                 }

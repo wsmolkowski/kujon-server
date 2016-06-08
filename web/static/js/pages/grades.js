@@ -13,12 +13,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
 
-                    $('#table-oceny').bootstrapTable({
-                        classes: "table-hover",
-                        pagination: true,
-                        sortName: "name"
-                    });
-
                     bindModals();
                 } else {
                     $('#section-content').html(templateError({'message': data.message}));
