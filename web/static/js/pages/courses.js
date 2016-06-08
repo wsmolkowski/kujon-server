@@ -66,51 +66,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
 
               });
-                /*
-              // Add event listener for opening and closing details
-              $('#courses-modal').on('click', 'td.details-control', function () {
-                  var tr = $(this).closest('tr');
-                  var row = table.row(tr);
 
-                  if (row.child.isShown()) {
-                      // This row is already open - close it
-                      row.child.hide();
-                      tr.removeClass('shown');
-                  } else {
-                      // Open this row
-                      row.child(format(tr.data('child-value'))).show();
-                      tr.addClass('shown');
-                  }
-              });
-                $('a.panel-row').bind( 'click', function(){
-                    var courseId = $(this).attr("course-id");
-                    var termId = $(this).attr("term-id");
-
-                    if ($(this).attr("aria-expanded") == "false") {
-                        $(this).attr("aria-expanded","true");
-
-                        // escape special chars for courseId that are escaped in helper {{replspechars}}
-                        var courseId_notescaped= ( courseId || '' ).replace( "\\(", "(" );
-	                    courseId_notescaped = ( courseId_notescaped || '' ).replace( "\\)", ")" );
-	                    courseId_notescaped = ( courseId_notescaped || '' ).replace( "\\`", "`" );
-
-                        main.callCourseEditionDetails(courseId_notescaped, termId, function(courseInfo){
-                            var idContent = '#courseDetails' + courseId;
-
-                            if (courseInfo.status == 'success'){
-                                $(idContent).html(templateDetails(courseInfo.data));
-                                bindModals();
-                            } else {
-                                $(idContent).html(templateError({'message': courseInfo.message}));
-                            }
-
-                        });
-
-                    } else {
-                        $(this).attr("aria-expanded","false");
-                    }
-                })
-                */
             };
 
             /*
