@@ -275,9 +275,8 @@ class ApiMixin(DaoMixin, UsosMixin):
         result = list()
         for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
             for course in courses:
-                if len(course['grades']['course_grades'])>0:
+                if len(course['grades']['course_grades']) > 0:
                     for grade_key, grade_value in course['grades']['course_grades'].items():
-
                         grade = {
                             'exam_session_number': grade_value['exam_session_number'],
                             'exam_id': grade_value['exam_id'],
@@ -295,21 +294,23 @@ class ApiMixin(DaoMixin, UsosMixin):
                         result.append(course_with_grade)
 
                 if len(course['grades']['course_units_grades']) > 0:
-                    grade = {
-                        constants.TERM_ID: term,
-                        constants.COURSE_ID: course[constants.COURSE_ID],
-                        constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
-                        'grades': list()
-                    }
+
+                    grades = list()
                     for unit in course['grades']['course_units_grades']:
                         for unit2 in course['grades']['course_units_grades'][unit]:
                             elem = course['grades']['course_units_grades'][unit][unit2]
                             elem['value_description'] = elem['value_description']['pl']
                             elem['unit'] = unit
-                            grade['grades'].append(elem)
+                            grades.append(elem)
+
                     # jeżeli są jakieś oceny
                     if len(grade['grades']) > 0:
-                        result.append(grade)
+                        result.append({
+                            constants.TERM_ID: term,
+                            constants.COURSE_ID: course[constants.COURSE_ID],
+                            constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
+                            'grades': grades
+                        })
 
         # wczytanie wszystkich unitów z ocen i zamiana ID typu zajęc na typ zajęć
         units = list()
@@ -320,7 +321,8 @@ class ApiMixin(DaoMixin, UsosMixin):
                         units.append(grade['unit'])
         usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
         pipeline = {'unit_id': {"$in": map(int, units)}, constants.USOS_ID: usos_doc[constants.USOS_ID]}
-        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline, (constants.UNIT_ID, constants.CLASS_TYPE_ID))
+        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline,
+                                                                  (constants.UNIT_ID, constants.CLASS_TYPE_ID))
         units_doc = yield cursor.to_list(None)
         for unit in units_doc:
             unit[constants.CLASS_TYPE_ID] = classtypes[(unit[constants.CLASS_TYPE_ID])]
@@ -333,7 +335,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                         for unit_doc in units_doc:
                             if int(unit) == unit_doc[constants.UNIT_ID]:
                                 grade[constants.CLASS_TYPE] = unit_doc[constants.CLASS_TYPE_ID]
-                                del(grade['unit'])
+                                del (grade['unit'])
 
         raise gen.Return(result)
 
@@ -662,8 +664,3 @@ class ApiMixin(DaoMixin, UsosMixin):
             photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)
-
-
-
-
-
