@@ -12,10 +12,13 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             var templateModalUser = Handlebars.compile(tplModalUser);
             var templateModalError = Handlebars.compile(tplModalError);
 
+            main.init();
+
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
-                    $('#courses-table').DataTable(main.getDataTableConfig());
+                    bindListeners();
+
                 } else {
                     $('#section-content').html(templateError(data));
                 }
@@ -24,8 +27,49 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
 
             function bindListeners(){
-            // Add event listener for opening and closing details
+                var table = $('#courses-table').DataTable(main.getDataTableConfig());
+
+
+              // Add event listener for opening and closing details
               $('#courses-table').on('click', 'td.details-control', function () {
+                    var courseId = $(this).attr("course-id");
+                    var termId = $(this).attr("term-id");
+                    var courseId_notescaped= ( courseId || '' ).replace( "\\(", "(" );
+
+                    courseId_notescaped = ( courseId_notescaped || '' ).replace( "\\)", ")" );
+                    courseId_notescaped = ( courseId_notescaped || '' ).replace( "\\`", "`" );
+
+                    var tr = $(this).closest('tr');
+
+                    main.callCourseEditionDetails(courseId_notescaped, termId, function(courseInfo){
+                        var idContent = '#courseDetails' + courseId;
+
+                        if (courseInfo.status == 'success'){
+                            //$(idContent).html(templateDetails(courseInfo.data));
+
+                              var row = table.row(tr);
+                              if (row.child.isShown()) {
+                                  // This row is already open - close it
+                                  row.child.hide();
+                                  tr.removeClass('shown');
+                              } else {
+                                  // Open this row
+                                  row.child(templateDetails(courseInfo.data)).show();
+                                  tr.addClass('shown');
+                              }
+
+                            //bindModals();
+                        } else {
+                            $(idContent).html(templateError({'message': courseInfo.message}));
+                        }
+
+                    });
+
+
+              });
+                /*
+              // Add event listener for opening and closing details
+              $('#courses-modal').on('click', 'td.details-control', function () {
                   var tr = $(this).closest('tr');
                   var row = table.row(tr);
 
@@ -39,7 +83,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                       tr.addClass('shown');
                   }
               });
-
                 $('a.panel-row').bind( 'click', function(){
                     var courseId = $(this).attr("course-id");
                     var termId = $(this).attr("term-id");
@@ -68,6 +111,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                         $(this).attr("aria-expanded","false");
                     }
                 })
+                */
             };
 
             function bindModals(){
