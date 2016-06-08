@@ -15,28 +15,31 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
             main.callCourseseditions(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
+                    $('#courses-table').DataTable(main.getDataTableConfig());
                 } else {
                     $('#section-content').html(templateError(data));
                 }
             });
 
-            /*
-            var $table = $('.table');
 
-            $table.on('expand-row.bs.table', function (e, index, row, $detail) {
-                var res = $("#" + row._data.details).html();
-                $detail.html(res);
-            });
-
-            $table.on("click-row.bs.table", function(e, row, $tr) {
-                // In my real scenarion, trigger expands row with text detailFormatter..
-                //$tr.find(">td>.detail-icon").trigger("click");
-                $tr.find(">td>.detail-icon").triggerHandler("click");
-            });
-
-            */
 
             function bindListeners(){
+            // Add event listener for opening and closing details
+              $('#courses-table').on('click', 'td.details-control', function () {
+                  var tr = $(this).closest('tr');
+                  var row = table.row(tr);
+
+                  if (row.child.isShown()) {
+                      // This row is already open - close it
+                      row.child.hide();
+                      tr.removeClass('shown');
+                  } else {
+                      // Open this row
+                      row.child(format(tr.data('child-value'))).show();
+                      tr.addClass('shown');
+                  }
+              });
+
                 $('a.panel-row').bind( 'click', function(){
                     var courseId = $(this).attr("course-id");
                     var termId = $(this).attr("term-id");

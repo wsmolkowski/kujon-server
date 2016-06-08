@@ -14,6 +14,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
                     $('#section-content').html(template(data));
                     bindModals();
 
+                    $('#table-lecturers').DataTable(main.getDataTableConfig());
+                    $('#table-lista-studentow').DataTable(main.getDataTableConfig());
+
                 } else {
                     $('#section-content').html(templateError({'message': data.message}));
                 }
