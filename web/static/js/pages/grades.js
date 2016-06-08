@@ -21,7 +21,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
             });
 
             function bindModals(){
-                $('.course-btn').click(function(){
+                $('.courses-modal').click(function(){
                     var courseId = $(this).attr("data-courseId");
                     var termId = $(this).attr("data-termId");
                     var modalId = '#courseModal' + courseId;

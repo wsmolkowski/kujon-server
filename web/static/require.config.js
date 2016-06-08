@@ -21,7 +21,6 @@ var require = {
         "datatables":           "/static/bower_components/datatables/media/js/jquery.dataTables.min",
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
-        "scripts":                 "/static/js/scripts",
         "router":               "/static/js/router",
         "startup":               "/static/js/startup",
         "lib":                  "/static/js",
@@ -30,14 +29,13 @@ var require = {
     shim: {
         "bootstrap": ["jquery",],
         "datatables": ["bootstrap"],
-        "scripts": ["datatables"],
-        "router": ["scripts",],
-        "signals": ["scripts",],
-        "text": ["scripts",],
-        "hasher": ["scripts",],
-        "crossroads": ["scripts",],
-        "handlebars": ["scripts",],
-        "fullcalendar": ["scripts",],
+        "router": ["datatables",],
+        "signals": ["datatables",],
+        "text": ["datatables",],
+        "hasher": ["datatables",],
+        "crossroads": ["datatables",],
+        "handlebars": ["datatables",],
+        "fullcalendar": ["datatables",],
         "fullcalendarpl" : ["fullcalendar"]
   }
 };
