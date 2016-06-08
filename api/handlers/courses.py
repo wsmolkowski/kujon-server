@@ -40,7 +40,7 @@ class CoursesEditionsApi(ApiHandler):
     def get(self):
 
         try:
-            courses = yield self.api_courses()
+            courses = yield self.api_courses(fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
             self.success(courses, cache_age=constants.SECONDS_2WEEKS)
         except Exception, ex:
             yield self.exc(ex)
@@ -53,7 +53,7 @@ class CoursesEditionsByTermApi(ApiHandler):
     def get(self):
 
         try:
-            courses = yield self.api_courses_by_term()
+            courses = yield self.api_courses_by_term(fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
             self.success(courses, cache_age=constants.SECONDS_1MONTH)
         except Exception, ex:
             yield self.exc(ex)
