@@ -1,5 +1,5 @@
-define(['jquery', 'handlebars', 'main', 'nice-select', 'easing', 'bootstrap-table', 'text!templates/programmes.html', 'text!templates/error.html'],
-function($, Handlebars, main, nice, easing, bootstrapTable, tpl, tplError) {
+define(['jquery', 'handlebars', 'main', 'text!templates/programmes.html', 'text!templates/error.html'],
+function($, Handlebars, main, tpl, tplError) {
 'use strict';
     return {
         render: function() {

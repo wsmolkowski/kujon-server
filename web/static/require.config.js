@@ -22,19 +22,20 @@ var require = {
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
         "router":               "/static/js/router",
+        "startup":               "/static/js/startup",
         "lib":                  "/static/js",
         "locales":              "/static/bower_components/bootstrap-table/dist/locale/",
     },
     shim: {
         "bootstrap": ["jquery",],
         "datatables": ["bootstrap"],
-        "bootstrap-table": ["bootstrap"],
-        "router": ["bootstrap",],
+        "startup": ["datatables"],
         "signals": ["bootstrap",],
         "text": ["bootstrap",],
         "hasher": ["bootstrap",],
         "crossroads": ["bootstrap",],
         "handlebars": ["bootstrap",],
-        "fullcalendarpl" : ["fullcalendar"]
+        "fullcalendar": ["bootstrap",],
+        "fullcalendarpl" : ["bootstrap"]
   }
 };

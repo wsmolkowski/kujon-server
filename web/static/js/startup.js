@@ -1,5 +1,5 @@
-define(['jquery',  'bootstrap', 'bootstrap-table', 'router', 'datatables'],
-function($, bootstrap, bootstrapTable, router, datatables) {
+define(['jquery',  'bootstrap', 'router', 'datatables'],
+function($, bootstrap, router, datatables) {
 
     $(document).ready(function () {
         //stick in the fixed 100% height behind the navbar but don't wrap it
