@@ -10,10 +10,7 @@
 					<tr>
 						<th data-sortable="true">Semestr</th>
 						<th data-sortable="true">Przedmiot</th>
-						<th data-sortable="true">Termin</th>
-						<th data-sortable="true">Rodzaj</th>
 						<th data-sortable="true">Ocena</th>
-						<th data-sortable="true">Słownie</th>
 					</tr>
 					</thead>
 					<tbody>
@@ -23,10 +20,11 @@
 						<td class="courses-modal" data-toggle="modal" data-target="#list-student"
 							data-courseId="{{course_id}}" data-termId="{{term_id}}">{{course_name}}
 						</td>
-						<td>{{exam_session_number}}</td>
-						<td>{{class_type}}</td>
-						<td>{{value_symbol}}</td>
-						<td>{{value_description}}</td>
+						<td>
+							{{#grades}}
+								{{class_type}} termin: {{exam_session_number}} ocena: {{value_symbol}}<br>
+							{{/grades}}
+						</td>
 					</tr>
 					{{/data}}
 					</tbody>
