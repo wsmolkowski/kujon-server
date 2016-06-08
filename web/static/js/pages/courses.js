@@ -66,11 +66,9 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                     });
 
-
               });
 
             };
-
 
             function bindModals(){
                 $('#errorModal').modal();
