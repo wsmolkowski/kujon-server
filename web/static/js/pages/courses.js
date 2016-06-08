@@ -62,6 +62,8 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                             $(idContent).html(templateError({'message': courseInfo.message}));
                         }
 
+                        bindModals();
+
                     });
 
 
@@ -69,11 +71,11 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
             };
 
-            /*
+
             function bindModals(){
                 $('#errorModal').modal();
 
-                $('.lecturer-btn').click(function(){
+                $('.description-courses').click(function(){
                     var lecturerId = $(this).attr("data-lecturerId");
                     var modalId = '#lecturerModal' + lecturerId;
 
@@ -128,7 +130,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     });
                 });
             }
-            */
+
         }
     }    
 });

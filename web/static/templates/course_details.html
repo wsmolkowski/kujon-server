@@ -5,32 +5,34 @@
                 <p class="title-courses">Jednostka:</p>
                 <p class="description-courses"><span>{{fac_id.name}}</span></p>
             </td>
-            <td class="col-sm-5">
+            <td class="col-sm-4">
                 <p class="title-courses">Czy jest prowadzony:</p>
                 <p class="description-courses"><span>{{is_currently_conducted}}</span></p>
             </td>
-            <td class="col-sm-5">
+            <td class="col-sm-2">
                 <p class="title-courses">Cykl</p>
                 <p class="description-courses"><span>{{term.name}}</span></p>
             </td>
-            <td class="col-sm-5">
+            <td class="col-sm-3">
                 <p class="title-courses">Okres</p>
                 <p class="description-courses"><span>{{term.start_date}} - {{term.end_date}}</span></p>
             </td>
-            <td class="col-sm-2">
+            <td class="col-sm-5">
                 <p class="title-courses">Prowadzący</p>
                 {{#coordinators}}
-                <button class="description-courses" type="button" data-lecturerId="{{user_id}}">
+                <button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                        data-lecturerId="{{user_id}}">
                     <span>{{first_name}} {{last_name}}</span>
                 </button>
                 <br>
                 {{/coordinators}}
             </td>
             {{#if coordinators}}
-            <td class="col-sm-2">
+            <td class="col-sm-6">
                 <p class="title-courses">Koordynatorzy</p>
                 {{#lecturers}}
-                <button class="description-courses" type="button" data-lecturerId="{{user_id}}">
+                <button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                        data-lecturerId="{{user_id}}">
                     <span>{{first_name}} {{last_name}}</span>
                 </button>
                 <br>
@@ -41,10 +43,12 @@
             <td class="col-sm-2">
                 <p class="title-courses">Krytera oceny:</p>
                 <p data-toggle="modal" data-target="#kryteria-grades" class="kryteria-grades">
+                    <!--
                     <span>{{nl2br assessment_criteria}}</span></p>
+                    -->
             </td>
             {{/if}}
-            <td class="col-sm-3">
+            <td class="col-sm-4">
                 <p class="title-courses">Grupy:</p>
                 {{#groups}}
         <tr>
@@ -67,24 +71,36 @@
             {{/if}}
             {{#if description}}
             <td class="col-sm-2">
-                <p class="title-courses">Opis</p>
-                <p class="description-courses description-courses" data-toggle="modal"
-                   data-target="#description-courses"><span>{{nl2br description}}</span></p>
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseDescription">Opis</p>
+                <div class="collapse" id="collapseDescription">
+                    <div class="well">
+                        <p class="description-courses description-courses">
+                            <span>{{nl2br description}}</span></p>
+                    </div>
+                </div>
+
             </td>
             {{/if}}
             {{#if bibliography}}
             <td class="col-sm-2">
-                <p class="title-courses">Bibliografia:</p>
-                <p class="description-courses"><span>{{nl2br bibliography}}</span>
-                </p>
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseBiblio">Bibliografia:</p>
+                <div class="collapse" id="collapseBiblio">
+                    <div class="well">
+                        <p class="description-courses"><span>{{nl2br bibliography}}</span></p>
+                    </div>
+                </div>
+
             </td>
             {{/if}}
             <td class="col-sm-3">
-                <p class="title-courses">Studenci</p>
-                {{#participants}}
-                <p class="description-courses">
-                    <span>{{last_name}} {{first_name}}</span></p>
-                {{/participants}}
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseStudents">Studenci</p>
+                <div class="collapse" id="collapseStudents">
+                    <div class="well">
+                        {{#participants}}
+                        <p class="description-courses"><span>{{last_name}} {{first_name}}</span></p>
+                        {{/participants}}
+                    </div>
+                </div>
             </td>
         </tr>
     </table>
