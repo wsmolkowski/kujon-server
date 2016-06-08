@@ -187,7 +187,45 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                 hideSpinner();
             },
             getApiUrl: function(){
-                return apiUrl;l
+                return apiUrl;
+            },
+            getDataTableConfig: function(){
+                return {
+                        "dom": '<f<t>ilp>',
+                        language: {
+                        paginate: {
+                            first:    '«',
+                            previous: '‹',
+                            next:     '›',
+                            last:     '»'
+                        },
+                        aria: {
+                            paginate: {
+                                first:    'pierwsza',
+                                previous: 'poprzednia',
+                                next:     'następna',
+                                last:     'ostatnia'
+                            }
+                        },
+
+                        "searchPlaceholder": "Szukaj według nazwy",
+                        "info": "Wyświetlanie stron od _PAGE_ z _PAGES_",
+                        "lengthMenu": "_MENU_ pozycji na stronę",
+                        "sSearch": " ",
+                        "sSortAscending": " - kliknij/powrót do sortowania  click/return to sort ascending",
+                        "sSortDescending": " - kliknij/powrót do sortowania click/return to sort descending",
+                        "sFirst": "Pierwsza strona",
+                        "sLast": "Ostatnia strona",
+                        "sNext": "Następna strona",
+                        "sPrevious": "Poprzednia strona",
+                        "sInfoEmpty": "Brak pozycji do pokazania ",
+                        "sInfoFiltered": " - filtrowanie z _MAX_ pozycji. ",
+                        "sInfoPostFix": " ",
+                        "sLengthMenu": "Wyświetla _MENU_ pozycji",
+                        "sProcessing": "Tabela jest zajęta",
+                        "sZeroRecords": "Brak pozycji do wyświetlenia"
+                    }
+                    };
             },
         };
 

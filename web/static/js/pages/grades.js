@@ -12,6 +12,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
             main.callGrades(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
+                    $('#table-grades').DataTable(main.getDataTableConfig());
 
                     bindModals();
                 } else {

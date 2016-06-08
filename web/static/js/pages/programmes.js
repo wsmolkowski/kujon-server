@@ -9,6 +9,7 @@ function($, Handlebars, main, tpl, tplError) {
             main.callProgrammes(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
+                    $('#table-programmes').DataTable(main.getDataTableConfig());
                 } else {
                     $('#section-content').html(templateError({'message': data.message}));
                 }
