@@ -18,6 +18,7 @@ var require = {
         "bootstrap-table":      "/static/bower_components/bootstrap-table/dist/bootstrap-table.min",
         "bootstrap-table-pl":   "/static/bower_components/bootstrap-table/dist/locale/bootstrap-table-pl-PL.min",
         "easing":               "/static/bower_components/jquery.easing/js/jquery.easing.min",
+        "datatables":           "/static/bower_components/datatables/media/js/jquery.dataTables.min",
         "templates":            "/static/templates",
         "main":                 "/static/js/main",
         "router":               "/static/js/router",
@@ -26,14 +27,14 @@ var require = {
     },
     shim: {
         "bootstrap": ["jquery",],
+        "datatables": ["bootstrap"],
         "bootstrap-table": ["bootstrap"],
-        "router": ["bootstrap-table",],
-        "easing": ["bootstrap-table",],
-        "signals": ["bootstrap-table",],
-        "text": ["bootstrap-table",],
-        "hasher": ["bootstrap-table",],
-        "crossroads": ["bootstrap-table",],
-        "handlebars": ["bootstrap-table",],
+        "router": ["bootstrap",],
+        "signals": ["bootstrap",],
+        "text": ["bootstrap",],
+        "hasher": ["bootstrap",],
+        "crossroads": ["bootstrap",],
+        "handlebars": ["bootstrap",],
         "fullcalendarpl" : ["fullcalendar"]
   }
 };

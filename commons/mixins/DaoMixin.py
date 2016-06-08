@@ -57,6 +57,22 @@ class DaoMixin(object):
         raise gen.Return()
 
     @gen.coroutine
+    def get_usos_instances(self):
+        result = []
+        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
+
+        while (yield cursor.fetch_next):
+            usos = cursor.next_object()
+            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+
+            if settings.ENCRYPT_USOSES_KEYS:
+                usos = dict(self.aes.decrypt_usos(usos))
+
+            result.append(usos)
+
+        raise gen.Return(result)
+
+    @gen.coroutine
     def db_users_info_by_user_id(self, user_id, usos):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)

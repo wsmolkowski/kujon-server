@@ -103,16 +103,7 @@ class BaseHandler(RequestHandler, DaoMixin):
     def get_usoses(self, showtokens):
 
         if not self._usoses:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-
-            while (yield cursor.fetch_next):
-                usos = cursor.next_object()
-                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-
-                if settings.ENCRYPT_USOSES_KEYS:
-                    usos = dict(self.aes.decrypt_usos(usos))
-
-                self._usoses.append(usos)
+            self._usoses = yield self.get_usos_instances()
 
         result_usoses = copy.deepcopy(self._usoses)
         if not showtokens:
