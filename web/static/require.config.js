@@ -38,6 +38,6 @@ var require = {
         "crossroads": ["scripts",],
         "handlebars": ["scripts",],
         "fullcalendar": ["scripts",],
-        "fullcalendarpl" : ["scripts"]
+        "fullcalendarpl" : ["fullcalendar"]
   }
 };
