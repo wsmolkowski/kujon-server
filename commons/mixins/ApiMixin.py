@@ -2,9 +2,9 @@
 
 import logging
 from collections import OrderedDict
-from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
+from datetime import date, timedelta, datetime
 from tornado import gen
 
 from commons import constants, settings
@@ -49,7 +49,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
 
         courses_editions_doc = yield self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            pipeline, (constants.COURSE_EDITIONS,))
+            pipeline, (constants.COURSE_EDITIONS, constants.UPDATE_TIME))
 
         if not courses_editions_doc:
             courses_editions_doc = yield self.usos_courses_editions()
@@ -114,7 +114,6 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
 
-        # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
             # sort participants
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
@@ -197,7 +196,8 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(course_doc)
 
     @gen.coroutine
-    def api_courses(self):
+    def api_courses(self, fields=None):
+
         courses_editions = yield self.api_courses_editions()
 
         if not courses_editions:
@@ -241,12 +241,20 @@ class ApiMixin(DaoMixin, UsosMixin):
                 del course['course_units_ids']
                 courses.append(course)
 
-        raise gen.Return(courses)
+        # limit to fields
+        if fields:
+            selected_courses = list()
+            for course in courses:
+                filtered_course = {k: course[k] for k in set(fields) & set(course.keys())}
+                selected_courses.append(filtered_course)
+        else:
+            selected_courses = courses
+        raise gen.Return(selected_courses)
 
     @gen.coroutine
-    def api_courses_by_term(self):
+    def api_courses_by_term(self, fields):
 
-        courses_edition = yield self.api_courses()
+        courses_edition = yield self.api_courses(fields=fields)
 
         # grouping grades by term
         courses = dict()
@@ -304,7 +312,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                             grades.append(elem)
 
                     # jeżeli są jakieś oceny
-                    if len(grade['grades']) > 0:
+                    if len(grades) > 0:
                         result.append({
                             constants.TERM_ID: term,
                             constants.COURSE_ID: course[constants.COURSE_ID],
