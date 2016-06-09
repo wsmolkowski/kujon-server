@@ -914,6 +914,8 @@ border-radius: 4px;}
     top: -112px;
 }
 }
+#faculties td:nth-child(2){text-align:center;}
+#faculties td:nth-child(2)>img{max-width:80px;}
 .caret:before{font-family: 'Glyphicons Halflings'; content:"\e259";}
 .open>button>span>.caret:before{font-family: 'Glyphicons Halflings';content:"\e260";}
 .bootstrap-select.btn-group .dropdown-toggle .caret {
@@ -947,6 +949,25 @@ table.dataTable tbody td.no-padding {
     padding: 0;
 }
 /*przedmioty*/
+.collapsing {
+    position: relative;
+    height: auto;
+    overflow: hidden;
+    -webkit-transition-timing-function: ease;
+    -o-transition-timing-function: ease;
+    transition-timing-function: ease;
+    -webkit-transition-duration: 0s;
+    -o-transition-duration: 0s;
+    transition-duration: 0s;
+    -webkit-transition-property: visibility;
+    -o-transition-property: visibility;
+    transition-property: visibility;
+}
+.slider button{background: white none repeat scroll 0% 0%;
+box-shadow: none;
+border: none;
+margin: 0;
+padding: 0;}
 .slider tr>td{border:none;}
 .slider tr{border:none;}
 table.dataTable.row-border tbody th, table.dataTable.row-border tbody td, table.dataTable.display tbody th, table.dataTable.display tbody td {

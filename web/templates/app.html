@@ -113,6 +113,8 @@
 {% end %}
 
 {% block footer_js %}
+<script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+
 <script>
 
     $(document).ready(function () {
@@ -144,6 +146,7 @@
             $(this).toggleClass('slide-active', !selected);
             $('#slidemenu').toggleClass('slide-active');
             $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
+        });
     });
 
     var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';

@@ -53,12 +53,14 @@
                 </div>
             </td>
             {{/if}}
-            <td class="col-sm-3 ">
+            <td class="col-sm-2">
                 <p class="title-courses">Grupy:</p>
-                {{#groups}}
-        <tr>
-            <td>Typ zajęć</td>
-            <p class="description-courses"><span>{{class_type}}, numer grupy: {{group_number}}</span></p>
+                <p class="description-courses"><span>{{#groups}}</span></p>
+            </td>
+            <td class="col-sm-2">
+                <p class="title-courses">Typ zajęć:</p>
+                <p class="description-courses"><span>{{class_type}}, numer grupy: {{group_number}}</span></p>
+            </td>
         </tr>
         {{/groups}}
         </td>
@@ -86,7 +88,7 @@
             </td>
             {{/if}}
             {{#if bibliography}}
-            <td class="col-sm-3">
+            <td class="col-sm-2">
                 <p class="title-courses" data-toggle="collapse" data-target="#collapseBiblio">Bibliografia:</p>
                 <div class="collapse" id="collapseBiblio">
                     <div class="well">
@@ -95,7 +97,7 @@
                 </div>
             </td>
             {{/if}}
-            <td class="col-sm-3">
+            <td class="col-sm-2">
                 <p class="title-courses" data-toggle="collapse" data-target="#collapseStudents">Studenci:</p>
                 <div class="collapse" id="collapseStudents">
                     <div class="well">
