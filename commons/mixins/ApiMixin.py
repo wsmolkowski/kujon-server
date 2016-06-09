@@ -252,7 +252,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(selected_courses)
 
     @gen.coroutine
-    def api_courses_by_term(self, fields):
+    def api_courses_by_term(self, fields=None):
 
         courses_edition = yield self.api_courses(fields=fields)
 
