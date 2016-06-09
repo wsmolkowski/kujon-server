@@ -1,2 +1,2 @@
-# kujon - dostęp do danych studenckich (mobi/www)
+# kujon.mobi - dostęp do danych studenckich (mobi/www)
 
