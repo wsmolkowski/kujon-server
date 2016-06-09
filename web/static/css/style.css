@@ -1,17 +1,25 @@
+* {
+margin: 0;
+}
 body{font-size:13px;font-family: 'Roboto', sans-serif;}
-html{height:100%;}
-html,body{font-family:'Roboto', sans-serif;font-weight:400;}
-section{padding-bottom: 120px;min-height: 100%;}
+html,body{font-family:'Roboto', sans-serif;font-weight:400;height: 100%;}
 h2{font-weight:300;}
-.body-index{width:100%;height: 100%;}
 .navbar {border:none;}
 .nawigacja-app{border-bottom:1px solid #ddd;;background: white;border-radius: 0;margin: 0;height:60px;}
 .active-nav{font-weight:600 !important;}
 .gly-ok{color:#37d93f;}
 .gly-remove{color:#f34949;}
 .during{color:#3976ff;}
+#page-content{height: 100%;}
+section{margin-bottom:80px;}
 section>.container>.row>.content{margin-top: 110px;}
-#section-content{height:100%;}
+.section-welcome{height:100% !important;}
+#section-content{min-height: 100%;display:table;
+    height: auto;
+    margin: 0 auto -60px;
+}
+#footer {width: 100%;height: 60px;}
+
 /*menu*/
 .dropdown-menu {position: absolute;top: 100%;left: 0;z-index: 1000;display: none;float: left;min-width: 100%;-webkit-box-shadow: -1px 0px 0px 0px #ddd;-moz-box-shadow: -1px 0px 0px 0px #ddd;box-shadow: -1px 0px 0px 0px #ddd;border: none !important;padding: 0px;font-size: 13px;text-align: left;list-style: none;background-color: #fff;-webkit-background-clip: padding-box;background-clip: padding-box;border: none;border: none;border-radius: 0px;}
 .dropdown-menu>li>a {display: block;border-bottom:1px solid #ddd;padding: 11px 20px;clear: both;font-weight: 400;line-height: 1.42857143;color: #333;white-space: nowrap;}
@@ -38,8 +46,10 @@ section>.container>.row>.content{margin-top: 110px;}
 .loader{font-size:1.5em;padding: 16px 15px;}
 
 /*Witamy*/
-.welcome{background:white;height:100%;display:table;width: 100%;padding: 0;min-height:500px;}
-.welcome>.container{height: 100%; display:table-cell; vertical-align: middle;}
+.welcome{    padding: 100px 0;
+    vertical-align: middle;
+    display: table-cell;}
+.welcome>.container{}
 .welcome>.container>.row{float:none;margin:-25px auto 0 auto;}
 .welcome>.container>.row>.col-sm-12{margin:0;}
 .welcome>.container>.row>.col-sm-12>h1{font-size: 54px;font-weight: 300;margin-bottom: 30px;}
@@ -163,14 +173,14 @@ tbody>tr:hover{background:#f7f7f7;}
 
 /*footer*/
 
-#footer {width: 100%;margin-top: -60px;height: 60px;}
+
 #footer>.container>.row>.col-sm-6>p{padding:20px 0;margin: 0;}
 #footer>.container>.row>.col-sm-6>ul>li>a{padding-top:20px;}
 .footer-block{color:#424242;}
 .footer-block>a{color:#3976FF;text-decoration:none;}
 .navbar-bottom>li>a:focus, .navbar-bottom>li>a:hover {text-decoration: none;background-color: transparent !important;}
 .navbar-bottom>li>a{padding-top:0;color:#424242;}
-.footer-index{position:fixed !important;bottom:0;background:white;}
+.footer-index{background:white;}
 
 /*przedmioty*/
 .courses-description{cursor:pointer;}
@@ -282,7 +292,7 @@ label {display: inline-block;max-width: 100%;margin-bottom: 5px;font-weight: 500
 .navbar-collapse {padding-right: 15px;padding-left: 15px;overflow-x: visible;-webkit-overflow-scrolling: touch;border-top:  none;-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.1);box-shadow: inset 0 1px 0 rgba(255,255,255,.1);}
 
 .no-margin-top {margin-top: 0px!important}
-#page-content {right: 0;height: 100%;}
+#page-content {right: 0;}
 #page-content.slide-active {padding-top: 0;}
 #slide-nav .navbar-toggle {cursor: pointer;position: relative;line-height: 0;margin: 0;width: 30px;height: 40px;padding: 13px 0 0 0;border: 0;background: transparent;}
 #slide-nav .navbar-toggle > .icon-bar {width: 100%;display: block;height: 3px;margin: 5px 0 0 0;}
@@ -913,6 +923,36 @@ border-radius: 4px;}
     left: 123px;
     top: -112px;
 }
+}
+@media (max-width: 1000px){
+	
+#grades .dataTables_wrapper .dataTables_filter {
+     position: relative;
+	float:left;margin-left: -5px;
+}
+#lecturers .dataTables_wrapper .dataTables_filter {
+    position: relative;
+	float:left;margin-left: -5px;
+}
+#courses .dataTables_wrapper .dataTables_filter {
+   position: relative;
+	float:left;margin-left: -5px;
+}
+#terms .dataTables_wrapper .dataTables_filter {
+     position: relative;
+float:left;margin-left: -5px;}
+#programmes .dataTables_wrapper .dataTables_filter {
+      position: relative;
+	float:left;margin-left: -5px;
+}
+#faculties .dataTables_wrapper .dataTables_filter {
+    position: relative;
+	float:left;margin-left: -5px;
+}
+	.heading {
+    margin-bottom: 20px;
+}
+	
 }
 #faculties td:nth-child(2){text-align:center;}
 #faculties td:nth-child(2)>img{max-width:80px;}
