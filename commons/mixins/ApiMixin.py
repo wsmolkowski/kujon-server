@@ -294,23 +294,23 @@ class ApiMixin(DaoMixin, UsosMixin):
                         result.append(course_with_grade)
 
                 if len(course['grades']['course_units_grades']) > 0:
+                    grade = {
+                        constants.TERM_ID: term,
+                        constants.COURSE_ID: course[constants.COURSE_ID],
+                        constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
+                        'grades': list()
+                    }
 
-                    grades = list()
                     for unit in course['grades']['course_units_grades']:
                         for unit2 in course['grades']['course_units_grades'][unit]:
                             elem = course['grades']['course_units_grades'][unit][unit2]
                             elem['value_description'] = elem['value_description']['pl']
                             elem['unit'] = unit
-                            grades.append(elem)
+                            grade['grades'].append(elem)
 
                     # jeżeli są jakieś oceny
                     if len(grade['grades']) > 0:
-                        result.append({
-                            constants.TERM_ID: term,
-                            constants.COURSE_ID: course[constants.COURSE_ID],
-                            constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
-                            'grades': grades
-                        })
+                        result.append(grade)
 
         # wczytanie wszystkich unitów z ocen i zamiana ID typu zajęc na typ zajęć
         units = list()
