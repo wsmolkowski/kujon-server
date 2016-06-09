@@ -1,8 +1,9 @@
 body{font-size:13px;font-family: 'Roboto', sans-serif;}
+html{height:100%;}
 html,body{font-family:'Roboto', sans-serif;font-weight:400;}
 section{padding-bottom: 120px;min-height: 100%;}
 h2{font-weight:300;}
-.body-index{width:100%}
+.body-index{width:100%;height: 100%;}
 .navbar {border:none;}
 .nawigacja-app{border-bottom:1px solid #ddd;;background: white;border-radius: 0;margin: 0;height:60px;}
 .active-nav{font-weight:600 !important;}
@@ -139,12 +140,15 @@ section>.container>.row>.content{margin-top: 110px;}
 .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.col-sm-4>p,
 .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.col-sm-6>p,
 .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.status-profil>p, .profil-info>.row>.col-sm-12>.row>.col-sm-6>.row>.gg>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.kierunki>p, .profil-info>.row>.col-sm-12>.row>.col-md-6>.row>.nr-konta>p{font-size:13px;}
-.profil{border:1px solid #ddd;border-radius:10px;background:white;}
 .edit>.col-sm-12>.row{margin-top: 20px;}
 .edit>.col-sm-12>.row>p{margin-bottom:5px;}
 .edit>.col-sm-12>.row>p>span{color:#888;}
 .edit>p{margin:30px 0;}
-.profil-img{width: 100%;margin: 0 auto;padding: 10px;}
+.profil-img{width: 100%;
+margin: 0 auto;
+padding: 10px;
+border: 1px solid #ddd;
+border-radius: 10px;}
 .prof>table>thead>tr>th{border-left: 1px solid #ddd;border-bottom:0px solid #ddd !important;color:#aaa;font-weight:400;}
 .prof>table>thead>tr>th:first-child{border-left:none !important;}
 .prof>table>tbody>tr>td:first-child{border-left:none !important;width: 43%;}
@@ -278,7 +282,7 @@ label {display: inline-block;max-width: 100%;margin-bottom: 5px;font-weight: 500
 .navbar-collapse {padding-right: 15px;padding-left: 15px;overflow-x: visible;-webkit-overflow-scrolling: touch;border-top:  none;-webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.1);box-shadow: inset 0 1px 0 rgba(255,255,255,.1);}
 
 .no-margin-top {margin-top: 0px!important}
-#page-content {right: 0;/*height: 100%;*/}
+#page-content {right: 0;height: 100%;}
 #page-content.slide-active {padding-top: 0;}
 #slide-nav .navbar-toggle {cursor: pointer;position: relative;line-height: 0;margin: 0;width: 30px;height: 40px;padding: 13px 0 0 0;border: 0;background: transparent;}
 #slide-nav .navbar-toggle > .icon-bar {width: 100%;display: block;height: 3px;margin: 5px 0 0 0;}
@@ -965,10 +969,10 @@ table.dataTable.display tbody tr.even>.sorting_1, table.dataTable.order-column.s
     background-color: #fff;
 }
 @media (min-width:1000px){
-#courses-table>tbody>tr>td:last-child {
+#courses-table>tbody>tr>td.details-control {
     min-width: 77px;
 }}
-#courses-table>tbody>tr>td:last-child{
+#courses-table>tbody>tr>td.details-control{
     width: 5%;
     margin: 0 auto;
     padding: 25px 2px 25px 2px;
