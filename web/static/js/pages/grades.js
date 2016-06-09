@@ -9,6 +9,8 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
             var templateCourseModal = Handlebars.compile(tplCourseModal);
             var templateModalError = Handlebars.compile(tplModalError);
 
+            main.init();
+
             main.callGrades(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
