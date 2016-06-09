@@ -137,48 +137,46 @@
         </div>
     </footer>
 
-
-    <div class="modal fade logowanie-modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal fade logowanie-modal in" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         style="display: block;">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="col-sm-12">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
+                                aria-hidden="true">×</span></button>
                         <h3>Logowanie</h3>
                     </div>
                 </div>
                 <div class="modal-body">
-
-                    <div class="col-sm-12">
-
+                    <div class="col-sm-12 col-xs-12">
                         <p>Zaloguj się za pośrednictwem jednego z poniższych portali społecznościowych.</p>
-                    </div>
-                    <div class="col-sm-12">
+                </div>
+                    <div class="col-sm-12 col-xs-12">
                         <a href="{{API_URL}}/authentication/facebook" type="button"
-                           class="btn btn-primary btn-lg btn-block">
-                            Zaloguj się przez Facebook</a>
+                           class="btn btn-primary btn-lg btn-block">Zaloguj się przez <span>Facebook</span></a>
                     </div>
                     <div class="col-sm-12 col-xs-12">
                         <div class="col-sm-5 col-xs-5 hr-left">
-                            <hr/>
-                        </div>
+                            <hr>
+                    </div>
                         <div class="col-sm-2 col-xs-2 text-center">
                             <span>lub</span>
-                        </div>
-                        <div class="col-sm-5 col-xs-5 hr-right">
-                            <hr/>
-                        </div>
                     </div>
-                    <div class="col-sm-12">
-                        <a href="{{API_URL}}/authentication/google" type="button"
-                           class="btn btn-danger btn-lg btn-block">
-                            Zaloguj się przez Google</a>
+                        <div class="col-sm-5 col-xs-5 hr-right">
+                            <hr>
                     </div>
                 </div>
+                    <div class="col-sm-12 col-xs-12">
+                        <a href="{{API_URL}}/authentication/google" type="button"
+                           class="btn btn-danger btn-lg btn-block">Zaloguj się przez <span>Google+</span></a>
+                    </div>
+            </div>
             </div>
         </div>
+
     </div>
+
 </div>
 
 {% end %}
@@ -193,14 +191,44 @@
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="/static/bower_components/jquery.easing/js/jquery.easing.min.js"></script>
 <script src="/static/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="/static/js/scrolling-nav.js"></script>
-<script src="/static/js/scripts.js"></script>
-<script type="text/javascript">
-	  $(document).ready(function(){
-		 $.cookieBar({
-		 });
-	  });
 
+<script type="text/javascript">
+
+    $.cookieBar({
+        fixed: true,
+        message: '<span>Ta strona używa ciasteczek (cookies), dzięki którym nasz serwis może działać lepiej.</span> ',
+        acceptButton: true,
+        acceptFunction: null,
+        declineButton: false,
+        declineText: 'Disable Cookies',
+        declineFunction: null,
+        policyButton: true,
+        policyText: 'Więcej informacji',
+        policyURL: '/privacy-policy/',
+        autoEnable: true,
+        acceptText: '×',
+        acceptOnContinue: false,
+        acceptOnScroll: false,
+        acceptAnyClick: false,
+        expireDays: 365,
+        renewOnVisit: false,
+        forceShow: false,
+        effect: 'slide',
+        element: 'body',
+        append: false,
+        bottom: true,
+        zindex: '100',
+        domain: 'www.example.com',
+        referrer: 'www.example.com'
+    });
+
+    $(window).scroll(function() {
+        if ($(".navbar").offset().top > 50) {
+            $(".navbar-fixed-top").addClass("top-nav-collapse");
+        } else {
+            $(".navbar-fixed-top").removeClass("top-nav-collapse");
+        }
+    });
 
 
 </script>
