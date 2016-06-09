@@ -2,9 +2,9 @@
 
 import logging
 from collections import OrderedDict
-from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
+from datetime import date, timedelta, datetime
 from tornado import gen
 
 from commons import constants, settings
@@ -197,7 +197,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(course_doc)
 
     @gen.coroutine
-    def api_courses(self):
+    def api_courses(self, fields=None):
         courses_editions = yield self.api_courses_editions()
 
         if not courses_editions:
@@ -241,12 +241,21 @@ class ApiMixin(DaoMixin, UsosMixin):
                 del course['course_units_ids']
                 courses.append(course)
 
-        raise gen.Return(courses)
+        # limit to fields
+        if fields:
+            selected_courses = list()
+            for course in courses:
+                filtered_course = {k: course[k] for k in set(fields) & set(course.keys())}
+                selected_courses.append(filtered_course)
+        else:
+            selected_courses = courses
+
+        raise gen.Return(selected_courses)
 
     @gen.coroutine
-    def api_courses_by_term(self):
+    def api_courses_by_term(self, fields=None):
 
-        courses_edition = yield self.api_courses()
+        courses_edition = yield self.api_courses(fields)
 
         # grouping grades by term
         courses = dict()
