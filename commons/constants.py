@@ -26,6 +26,7 @@ PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 COORDINATORS = "coordinators"
 PICTURE = 'picture'
+GRADES = 'grades'
 
 FACEBOOK = "facebook"
 FACEBOOK_ID = "id"
