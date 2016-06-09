@@ -26,7 +26,11 @@
 							<div class="col-sm-2">
 								<p class="tytul-przedmioty">Prowadzący</p>
 								{{#lecturers}}
-								<p class="opis-przedmioty"><span>{{first_name}} {{last_name}}</span></p>
+								<button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+										data-lecturerId="{{user_id}}">
+									<span>{{first_name}} {{last_name}}</span>
+								</button>
+								<br>
 								{{/lecturers}}
 							</div>
 							<div class="col-sm-2">
@@ -38,10 +42,14 @@
 								{{/if}}
 							</div>
 							<div class="col-sm-2">
-								<p class="tytul-przedmioty">Krytera oceny:</p>
+								<p class="title-courses" data-toggle="collapse" data-target="#collapseCriteria">Krytera
+									oceny:</p>
 								{{#if assessment_criteria}}
-								<p data-toggle="modal" data-target="#kryteria-oceny" class="kryteria-oceny"><span>{{assessment_criteria}}</span>
-								</p>
+								<div class="collapse" id="collapseCriteria">
+									<div class="well">
+										<p class="description-courses"><span>{{assessment_criteria}}</span></p>
+									</div>
+								</div>
 								{{/if}}
 							</div>
 							<div class="col-sm-3">
@@ -68,25 +76,42 @@
 								</div>
 							</div>
 							<div class="col-sm-2">
-								<p class="tytul-przedmioty">Opis</p>
-								<p class="opis-przedmioty opis-przedmiotu" data-toggle="modal"
-								   data-target="#opis-przedmiotu"><span>{{description}}</span></p>
+								<p class="title-courses" data-toggle="collapse" data-target="#collapseDescription">
+									Opis:</p>
+								<div class="collapse" id="collapseDescription">
+									<div class="well">
+										<p class="description-courses">
+											<span>{{nl2br description}}</span></p>
+									</div>
+								</div>
 							</div>
 							<div class="col-sm-2">
-								<p class="tytul-przedmioty">Bibliografia:</p>
 								{{#if bibliography}}
-								<p class="kryteria-oceny opis-przedmioty" data-toggle="modal"
-								   data-target="#bibliografia"><span>{{bibliography}}</span></p>
+								<p class="title-courses" data-toggle="collapse" data-target="#collapseBiblio">
+									Bibliografia:</p>
+								<div class="collapse" id="collapseBiblio">
+									<div class="well">
+										<p class="description-courses"><span>{{nl2br bibliography}}</span></p>
+									</div>
+								</div>
 								{{/if}}
 							</div>
 							<div class="col-sm-3">
-								<p class="tytul-przedmioty">Studenci:</p>
 								{{#if participants}}
-								{{#participants}}
-								<p class="lista-studentow opis-przedmioty" data-toggle="modal"
-								   data-target="#zobacz-liste-studentow"><span>{{last_name}} {{first_name}}</span></p>
-								{{/participants}}
-
+								<p class="title-courses" data-toggle="collapse" data-target="#collapseStudents">
+									Studenci:</p>
+								<div class="collapse" id="collapseStudents">
+									<div class="well">
+										{{#participants}}
+										<button data-toggle="modal" data-target="#lecturers-1"
+												class="description-courses"
+												data-lecturerId="{{user_id}}">
+											<span>{{first_name}} {{last_name}}</span>
+										</button>
+										<br>
+										{{/participants}}
+									</div>
+								</div>
 								{{/if}}
 							</div>
 						</div>

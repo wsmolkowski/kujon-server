@@ -29,6 +29,7 @@ var require = {
     shim: {
         "bootstrap": ["jquery",],
         "datatables": ["bootstrap"],
+        "startup": ["datatables",],
         "router": ["datatables",],
         "signals": ["datatables",],
         "text": ["datatables",],
