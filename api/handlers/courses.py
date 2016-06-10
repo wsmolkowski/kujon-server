@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
@@ -53,7 +53,8 @@ class CoursesEditionsByTermApi(ApiHandler):
     def get(self):
 
         try:
-            courses = yield self.api_courses_by_term(fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
+            courses = yield self.api_courses_by_term(
+                fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
             self.success(courses, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             yield self.exc(ex)

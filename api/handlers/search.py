@@ -3,12 +3,11 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators
 
 
 class SearchUsersApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -25,7 +24,6 @@ class SearchUsersApi(ApiHandler):
 
 
 class SearchCoursesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -42,7 +40,6 @@ class SearchCoursesApi(ApiHandler):
 
 
 class SearchFacultiesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -59,7 +56,6 @@ class SearchFacultiesApi(ApiHandler):
 
 
 class SearchProgrammesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine

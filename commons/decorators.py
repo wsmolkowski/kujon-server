@@ -1,4 +1,4 @@
-import constants
+from commons import constants
 
 
 def authenticated(method):
@@ -13,5 +13,5 @@ def authenticated(method):
             result = method(self, *args, **kwargs)
             if result is not None:
                 return result
-    return wrapper
 
+    return wrapper

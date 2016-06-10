@@ -3,7 +3,7 @@
 from tornado import gen
 from tornado import web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 LIMIT_FIELDS_FACULTY = (
