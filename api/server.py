@@ -11,9 +11,9 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
+from api.handlers.base import DefaultErrorHandler
+from api.handlers_list import HANDLERS
 from commons import settings, constants
-from handlers.base import DefaultErrorHandler
-from handlers_list import HANDLERS
 
 define("port", default=settings.API_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
