@@ -13,8 +13,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
                 main.ajaxGet('/friends/suggestions').then(function(data) {
                     if (data.status == 'success') {
                         $('#section-content').html(template(data.data));
-                        $('#table-friends').DataTable();
-                        //  bindModals();
+                        $('#table-friends').DataTable(main.getDataTableConfig());
+                        $('#table-find-friends').DataTable(main.getDataTableConfig());
+                        bindModals();
+
                     } else {
                         $('#section-content').html(templateError({
                             'message': data.message
@@ -22,37 +24,18 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
                     }
                 });
 
-                /*
-                main.ajaxGet('/friends').then(function(friendsdata) {
-                    if (friendsdata.status == 'success') {
-                        $('#section-content').html(template(friendsdata));
-                        $('#friends-table').DataTable();
-
-                        //  bindModals();
-                    } else {
-                        $('#section-content').html(templateError({
-                            'message': friendsdata.message
-                        }));
-                    }
-                });
-                */
-
                 function bindModals() {
 
                     $('.friends-btn').click(function() {
                         var friendId = $(this).attr("data-friendId");
-                        var modalId = '#friendModal' + friendId;
+                        var modalId = '#userModal' + friendId;
 
                         $(modalId).modal();
 
                         main.ajaxGet('/users/' + friendId).then(function(friendInfo) {
                             if (friendInfo.status == 'success') {
-
                                 friendInfo.data['friend_id'] = friendId;
-                                var htmlModal = templateModalUser(friendInfo.data);
-
-                                $('#modalWrapper').html(htmlModal);
-
+                                $('#modalWrapper').html(templateModalUser(friendInfo.data));
                                 $(modalId).modal('show');
 
                                 $(modalId).on('hidden.bs.modal', function(e) {
