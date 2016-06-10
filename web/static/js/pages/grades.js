@@ -11,7 +11,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
 
             main.init();
 
-            main.callGrades(function(data){
+            main.ajaxGet('/grades').then(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
                     $('#table-grades').DataTable(main.getDataTableConfig());
@@ -36,16 +36,14 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
                         $(modalId).hide();
                     });
 
-                    main.callCourseEditionDetails(courseId, termId, function(courseInfo){
+                    var url = '/courseseditions/' + courseId + '/' + encodeURIComponent(termId);
+                    main.ajaxGet(url).then(function(courseInfo){
                         if (courseInfo.status == 'success'){
                             courseInfo.data['courseId'] = courseId;
-
                             $('#modalWrapper').html(templateCourseModal(courseInfo.data));
-
                             $(modalId).modal('show');
                         } else {
                             $('#modalWrapper').html(templateModalError(courseInfo));
-
                             $('#errorModal').modal('show');
                         }
                     });

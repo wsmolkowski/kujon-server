@@ -1,6 +1,7 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
-    'text!templates/error.html', 'text!templates/modal_course.html','text!templates/modal_user.html'],
-    function($, Handlebars, main, tplFriends, tplError, tplCourseModal, tplModalUser) {
+    'text!templates/error.html', 'text!templates/modal_course.html', 'text!templates/modal_user.html'
+],
+function($, Handlebars, main, tplFriends, tplError, tplCourseModal, tplModalUser) {
     'use strict';
     return {
         render: function() {
@@ -9,63 +10,65 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
             var templateError = Handlebars.compile(tplError);
             var templateModalUser = Handlebars.compile(tplModalUser);
 
-            main.callFriendsSuggestion(function(suggestiondata){
-                if (suggestiondata.status == 'success'){
+            main.ajaxGet('/friends/suggestions').then(function(suggestiondata) {
+                if (suggestiondata.status == 'success') {
                     $('#section-content').html(template(suggestiondata));
                     $('#suggested-table').DataTable();
 
-//                    bindModals();
+                    //  bindModals();
                 } else {
-                    $('#section-content').html(templateError({'message': suggestiondata.message}));
+                    $('#section-content').html(templateError({
+                        'message': suggestiondata.message
+                    }));
                 }
             });
 
-            main.callFriends(function(friendsdata){
-                if (friendsdata.status == 'success'){
+            main.ajaxGet('/friends').then(function(friendsdata) {
+                if (friendsdata.status == 'success') {
                     $('#section-content').html(template(friendsdata));
                     $('#friends-table').DataTable();
 
-//                    bindModals();
+                    //  bindModals();
                 } else {
-                    $('#section-content').html(templateError({'message': friendsdata.message}));
+                    $('#section-content').html(templateError({
+                        'message': friendsdata.message
+                    }));
                 }
             });
 
+            function bindModals() {
 
+                $('.friends-btn').click(function() {
+                  var friendId = $(this).attr("data-friendId");
+                  var modalId = '#friendModal' + friendId;
 
-            function bindModals(){
+                  $(modalId).modal();
 
-                $('.friends-btn').click(function(){
-                    var friendId = $(this).attr("data-friendId");
-                    var modalId = '#friendModal' + friendId;
+                  main.ajaxGet('/users/') + friendId).then(function(friendInfo) {
+                  if (friendInfo.status == 'success') {
 
-                    $(modalId).modal();
+                      friendInfo.data['friend_id'] = friendId;
+                      var htmlModal = templateModalUser(friendInfo.data);
 
-                    main.callUserDetails(friendId, function(friendInfo){
-                        if (friendInfo.status == 'success'){
+                      $('#modalWrapper').html(htmlModal);
 
-                            friendInfo.data['friend_id'] = friendId;
-                            var htmlModal = templateModalUser(friendInfo.data);
+                      $(modalId).modal('show');
 
-                            $('#modalWrapper').html(htmlModal);
+                      $(modalId).on('hidden.bs.modal', function(e) {
+                          $(this).remove();
+                          $('#modalWrapper').html();
+                          $(modalId).hide();
+                      });
 
-                            $(modalId).modal('show');
-
-                            $(modalId).on('hidden.bs.modal', function (e) {
-                                $(this).remove();
-                                $('#modalWrapper').html();
-                                $(modalId).hide();
-                            });
-
-                        } else {
-                            $(modalId).modal('show');
-                            $(modalBodyId).html(templateError({'message': userInfo.message}));
-                        }
-                    });
-
+                  } else {
+                      $(modalId).modal('show');
+                      $(modalBodyId).html(templateError({
+                          'message': userInfo.message
+                      }));
+                  }
                 });
-
-            };
-        }
-    }    
+            });
+        };
+    }
+}
 });
