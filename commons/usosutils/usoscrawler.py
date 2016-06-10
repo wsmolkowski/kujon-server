@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import logging
 from datetime import datetime
 from datetime import timedelta, date
 
@@ -9,7 +8,7 @@ from tornado import gen
 
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.errors import CrawlerException, UsosClientError
+from commons.errors import CrawlerException
 from commons.mixins.ApiMixin import ApiMixin
 
 
@@ -54,7 +53,7 @@ class UsosCrawler(ApiMixin):
                     yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
                 else:
                     raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
-            except Exception, ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
 
     @gen.coroutine
@@ -65,7 +64,7 @@ class UsosCrawler(ApiMixin):
         courses_terms = list()
         course_units_ids = list()
 
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
 
                 courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
@@ -126,7 +125,7 @@ class UsosCrawler(ApiMixin):
             yield self.api_faculties()
             yield self.api_tt(self.__get_monday())
             yield self.__subscribe()
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
 
     @staticmethod
@@ -157,9 +156,9 @@ class UsosCrawler(ApiMixin):
             if constants.USOS_ID in user_doc_archive:
                 try:
                     yield self.usos_unsubscribe(usos_doc, user_doc_archive)
-                except Exception, ex:
+                except Exception as ex:
                     yield self.exc(ex, finish=False)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
 
     @gen.coroutine
@@ -176,9 +175,9 @@ class UsosCrawler(ApiMixin):
                     data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
 
                     yield self.db_insert(constants.COLLECTION_NOTIFIER_STATUS, data)
-                except Exception, ex:
+                except Exception as ex:
                     yield self.exc(ex, finish=False)
 
-        except Exception, ex:
+        except Exception as ex:
             self.exc(ex, finish=False)
 

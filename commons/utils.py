@@ -14,8 +14,8 @@ try:
 except ImportError:
     from httplib2 import socks
 
-import settings
-import constants
+from commons import settings
+from commons import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
@@ -33,7 +33,7 @@ def get_proxy():
 
 
 def serialize_dictionary(data):
-    for key, value in data.items():
+    for key, value in list(data.items()):
         if isinstance(value, list):
             data[key] = serialize_list(value)
         elif isinstance(value, dict):
@@ -126,13 +126,6 @@ def initialize_logging(logger_name):
     # re-get the log after logging is initialized
     global log
     log = logging.getLogger(__name__)
-
-
-def cookie_secret():
-    import base64
-    import uuid
-
-    print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
 
 
 def http_client(validate_cert=False):

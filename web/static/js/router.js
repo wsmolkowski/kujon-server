@@ -1,6 +1,6 @@
 define(['handlebars', 'crossroads', 'hasher', 'text!templates/spinner.html'], function(
-Handlebars, crossroads, hasher, spinnerTpl) {
-'use strict';
+    Handlebars, crossroads, hasher, spinnerTpl) {
+    'use strict';
 
     var template = Handlebars.compile(spinnerTpl);
 
@@ -8,11 +8,11 @@ Handlebars, crossroads, hasher, spinnerTpl) {
 
         $('#section-content').html(template());
 
-        require(['lib/pages/'+hash], function(page) {
+        require(['lib/pages/' + hash], function(page) {
             page.render();
 
             $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
-            $('.navbar a[href="#'+hash+'"]').parent().addClass('active');
+            $('.navbar a[href="#' + hash + '"]').parent().addClass('active');
 
             //schowaj kręcacz (?)
         });
@@ -36,7 +36,7 @@ Handlebars, crossroads, hasher, spinnerTpl) {
     });
 
     crossroads.addRoute('user/{id}', function(id) {
-        setActiveLink('user',id.id);
+        setActiveLink('user', id.id);
     });
 
 
@@ -49,7 +49,7 @@ Handlebars, crossroads, hasher, spinnerTpl) {
     });
 
     crossroads.addRoute('courses/{id}', function(id) {
-        setActiveLink('courses',id.id);
+        setActiveLink('courses', id.id);
     });
 
     crossroads.addRoute('terms', function() {
@@ -69,7 +69,7 @@ Handlebars, crossroads, hasher, spinnerTpl) {
     });
 
     crossroads.addRoute('lecturers/{id}', function(id) {
-        setActiveLink('lecturers',id.id);
+        setActiveLink('lecturers', id.id);
     });
 
     crossroads.addRoute('friends', function() {
@@ -93,7 +93,7 @@ Handlebars, crossroads, hasher, spinnerTpl) {
     });
 
     function parseHash(newHash, oldHash) {
-        crossroads.parse(newHash); 
+        crossroads.parse(newHash);
     }
 
     crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;

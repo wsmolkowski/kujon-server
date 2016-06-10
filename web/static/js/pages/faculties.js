@@ -6,7 +6,7 @@ function($, Handlebars, main, tpl, tplError) {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            main.callFaculties(function(data){
+            main.ajaxGet('/faculties').then(function(data){
                 if (data.status == 'success'){
                     $('#section-content').html(template(data));
                     $('#table-faculties').DataTable(main.getDataTableConfig());
@@ -15,5 +15,5 @@ function($, Handlebars, main, tpl, tplError) {
                 }
             });
         }
-    }    
+    }
 });

@@ -2,12 +2,12 @@
 
 import tornado.gen
 import tornado.web
-from base import ApiHandler
+
+from api.handlers.base import ApiHandler
 from commons import decorators
 
 
 class SearchUsersApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -19,12 +19,11 @@ class SearchUsersApi(ApiHandler):
             add = yield self.api_search_user(query)
             self.success(add)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
 class SearchCoursesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -36,12 +35,11 @@ class SearchCoursesApi(ApiHandler):
             result_doc = yield self.api_search_course(query)
             self.success(result_doc)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
 class SearchFacultiesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -53,12 +51,11 @@ class SearchFacultiesApi(ApiHandler):
             result_doc = yield self.api_search_faculty(query)
             self.success(result_doc)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
 class SearchProgrammesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -70,5 +67,5 @@ class SearchProgrammesApi(ApiHandler):
             result_doc = yield self.api_search_programmes(query)
             self.success(result_doc)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

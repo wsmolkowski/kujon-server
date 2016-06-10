@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
@@ -16,7 +16,7 @@ class CourseEditionApi(ApiHandler):
         try:
             course_doc = yield self.api_course_term(course_id, term_id)
             self.success(course_doc, cache_age=constants.SECONDS_2WEEKS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -29,7 +29,7 @@ class CoursesApi(ApiHandler):
         try:
             course_doc = yield self.api_course(course_id)
             self.success(course_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -42,7 +42,7 @@ class CoursesEditionsApi(ApiHandler):
         try:
             courses = yield self.api_courses(fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
             self.success(courses, cache_age=constants.SECONDS_2WEEKS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -53,7 +53,8 @@ class CoursesEditionsByTermApi(ApiHandler):
     def get(self):
 
         try:
-            courses = yield self.api_courses_by_term(fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
+            courses = yield self.api_courses_by_term(
+                fields=[constants.COURSE_ID, constants.COURSE_NAME, constants.TERM_ID])
             self.success(courses, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

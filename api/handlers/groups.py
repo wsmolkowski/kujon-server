@@ -3,7 +3,7 @@
 from tornado import gen
 from tornado import web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import constants, decorators
 
 LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
@@ -29,5 +29,5 @@ class GroupsApi(ApiHandler):
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

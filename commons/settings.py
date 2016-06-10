@@ -1,5 +1,9 @@
 import os
-from ConfigParser import RawConfigParser
+
+try:
+    from ConfigParser import RawConfigParser  # 2.7
+except ImportError:
+    from configparser import RawConfigParser  # 3.5
 
 config = RawConfigParser(allow_no_value=True)
 DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
@@ -7,6 +11,7 @@ DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
 
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 if DEVELOPMENT:
     config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))

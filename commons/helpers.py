@@ -10,7 +10,8 @@ def search_key_value_onlist(list_check, key, value):
         if item[key] == value:
             return item
 
-def in_dictlist((key, value), my_dictlist):
+
+def in_dictlist(key, value, my_dictlist):
     """
     :param my_dictlist:
     :return:

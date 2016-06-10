@@ -2,9 +2,9 @@
 
 import logging
 from collections import OrderedDict
+from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
-from datetime import date, timedelta, datetime
 from tornado import gen
 
 from commons import constants, settings
@@ -62,7 +62,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         courses_editions = yield self.api_courses_editions()
         result = None
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             if term != term_id:
                 continue
 
@@ -95,7 +95,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 course_doc = yield self.usos_course(course_id)
                 yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception, ex:
+            except Exception as ex:
                 logging.exception(ex)
                 raise ApiError("Nie znaleźliśmy kursu", course_id)
 
@@ -174,7 +174,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=True)
                 raise gen.Return(None)
 
@@ -206,7 +206,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         classtypes = yield self.db_classtypes()
 
         def classtype_name(key_id):
-            for key, name in classtypes.items():
+            for key, name in list(classtypes.items()):
                 if str(key_id) == str(key):
                     return name
             return key_id
@@ -268,7 +268,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         # get course in order in order_keys as dictionary and reverse sort
         terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
         courses_sorted_by_term = list()
         for order_key in terms_by_order:
             courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
@@ -282,10 +282,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         courses_editions = yield self.api_courses_editions()
 
         result = list()
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
                 if len(course['grades']['course_grades']) > 0:
-                    for grade_key, grade_value in course['grades']['course_grades'].items():
+                    for grade_key, grade_value in list(course['grades']['course_grades'].items()):
                         grade = {
                             'exam_session_number': grade_value['exam_session_number'],
                             'exam_id': grade_value['exam_id'],
@@ -354,7 +354,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         def find_grades(term_id):
             for term_grades in result:
-                for key, value in term_grades.items():
+                for key, value in list(term_grades.items()):
                     if key == constants.TERM_ID and value == term_id:
                         return term_grades
             return None
@@ -379,7 +379,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         courses_editions = yield self.api_courses_editions()
 
         result = list()
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
                 for lecturer in course[constants.LECTURERS]:
                     if lecturer not in result:
@@ -430,7 +430,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 programme_doc = yield self.usos_programme(programme_id)
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
@@ -443,7 +443,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
                 monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-            except Exception, ex:
+            except Exception as ex:
                 self.error("Niepoprawny format daty: RRRR-MM-DD.")
                 yield self.exc(ex)
         else:
@@ -460,7 +460,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 tt_doc = yield self.time_table(monday)
                 yield self.db_insert(constants.COLLECTION_TT, tt_doc)
-            except Exception, ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return(None)
 
@@ -636,7 +636,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(None)
 
@@ -655,7 +655,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 else:
                     msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
                     logging.info(msg)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(None)
 

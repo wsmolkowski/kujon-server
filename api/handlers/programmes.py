@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studies', 'level_of_studies', 'duration')
@@ -22,7 +22,7 @@ class ProgrammesByIdApi(ApiHandler):
                 self.error("Poczekaj szukamy kierunku: {0)".format(programme_id))
             else:
                 self.success(programme, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -38,5 +38,5 @@ class ProgrammesApi(ApiHandler):
                 self.error("Poczekaj szukamy kierunków.")
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
