@@ -1,52 +1,99 @@
-<div class="panel panel-default">
-    <div class="panel-heading col-xs-6">
-        <h4>Osoby, które możesz znać</h4>
-    </div>
-    <div class="panel-heading col-xs-6">
-        <h4>Znajomi</h4>
-    </div>
-    <div class="panel-body">
-        <div class="col-xs-6">
-            <table id="table-znajomi" class="table table-hover table-responsive">
-            <thead>
-            <th>Osoba</th>
-            <th>Zajęcia</th>
-            <th></th>
-            </thead>
-            <tbody>
-            {{#suggestiondata}}
-            <tr>
-                <td><a class="btn btn-link friend-btn" type="button" data-friendId="{{user_id}}">{{last_name}} {{first_name}}</a></td>
-                <td>13</td>
-                <td>
-                    <a class="btn btn-primary btn-xs">Dodaj znajomego</a>
-                    <a class="btn btn-default btn-xs">Nie znam</a>
-                </td>
-            </tr>
-            {{/suggestiondata}}
-            </tbody>
-        </table>
-        </div>
-        <div class="col-xs-6">
-        <table id="friends-table" class="table table-hover table-responsive">
-            <thead>
-            <th>Nazwisko</th>
-            <th></th>
-            <th></th>
-            </thead>
-            <tbody>
-            {{#friendsdata}}
-            <tr>
-                <td><a class="btn btn-link friend-btn" type="button" data-friendId="{{user_id}}">{{last_name}} {{first_name}}</a></td>
-                <td>
-                    <a class="btn btn-danger btn-xs">Usuń</a>
-                </td>
-            </tr>
-            {{/friendsdata}}
-            </tbody>
-        </table>
-        </div>
-    </div>
-</div>
+<section id="friends">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-xs-12 content">
+                <div class="heading">
+                    <h2>Znajomi</h2>
+                </div>
+                <div class="eksport">
+                    <a href="#" class="btn btn-default btn-welcome" type="submit">Eksportuj z Facebook</a>
+                </div>
+            </div>
+            <div class="col-sm-8 col-xs-12">
+                <!--Tabela znajomi -->
+                <table id="table-friends" class="table" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th>Lista znajomych {{ total }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#friends}}
+                    <tr class="col-sm-6 col-xs-10">
+                        <td>
+                            <!--
+                            <div class="col-sm-2 col-xs-2">
+                                <img src="img/znajomi.png" class="img-responsive" />
+                            </div>
+                          -->
+                            <div class="col-sm-8 col-xs-8">
+                                <h5><span class="btn btn-link friends-btn" type="button" data-friendId="{{user_id}}">{{first_name}} {{last_name}}</span>
+                                </h5>
+                            </div>
+                            <div class="col-sm-2 col-xs-2 text-right">
+                                <p><span class="del">Usuń</span></p>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/friends}}
+                </table>
 
-<div id="modalWrapper"></div>
+            </div>
+            <div class="col-sm-4 table-responsive">
+                <!--Tabela dodaj znajomych -->
+                <table id="table-find-friends" class="table add-friends" cellspacing="0" width="100%">
+                    <thead>
+                    <tr class="col-sm-12 col-xs-12">
+                        <th class="title-find-friends">Osoby, które możesz znać</th>
+                        <th class="refresh"><a href="#">Odśwież</a></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="col-sm-12 col-xs-12">
+                        <td>
+                            <div class="col-sm-2 col-xs-2">
+                                <img src="img/znajomi.png" class="img-responsive"/>
+                            </div>
+                            <div class="col-sm-8 col-xs-8">
+                                <h5>Jan Kowalski</h5>
+                                <p>Uniwersytet im. Adama Mickiewicza w Poznaniu</p>
+                            </div>
+                            <div class="col-sm-2 col-xs-2 text-right">
+                                <p><span class="add">Dodaj</span></p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="col-sm-12 col-xs-12">
+                        <td>
+                            <div class="col-sm-2 col-xs-2">
+                                <img src="img/znajomi.png" class="img-responsive"/>
+                            </div>
+                            <div class="col-sm-8 col-xs-8">
+                                <h5>Jan Kowalski</h5>
+                                <p>Uniwersytet im. Adama Mickiewicza w Poznaniu</p>
+                            </div>
+                            <div class="col-sm-2 col-xs-2 text-right">
+                                <p><span class="add">Dodaj</span></p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="col-sm-12 col-xs-12">
+                        <td>
+                            <div class="col-sm-2 col-xs-2">
+                                <img src="img/znajomi.png" class="img-responsive"/>
+                            </div>
+                            <div class="col-sm-8 col-xs-8">
+                                <h5>Jan Kowalski</h5>
+                                <p>Uniwersytet im. Adama Mickiewicza w Poznaniu</p>
+                            </div>
+                            <div class="col-sm-2 col-xs-2 text-right">
+                                <p><span class="add">Dodaj</span></p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
