@@ -19,15 +19,13 @@
                     </thead>
                     <tbody>
                     {{#friends}}
-                    <tr class="col-sm-6 col-xs-10">
-                        <td>
-                            <!--
+                    <tr class="col-sm-6 col-xs-12">
+                        <td class="friends-btn" data-friendId="{{user_id}}">
                             <div class="col-sm-2 col-xs-2">
-                                <img src="img/znajomi.png" class="img-responsive" />
+                                <img src="/static/img/friend.png" class="img-responsive"/>
                             </div>
-                          -->
                             <div class="col-sm-8 col-xs-8">
-                                <h5><span class="btn btn-link friends-btn" type="button" data-friendId="{{user_id}}">{{first_name}} {{last_name}}</span>
+                                <h5><span class="btn btn-link">{{first_name}} {{last_name}}</span>
                                 </h5>
                             </div>
                             <div class="col-sm-2 col-xs-2 text-right">
@@ -45,7 +43,6 @@
                     <thead>
                     <tr class="col-sm-12 col-xs-12">
                         <th class="title-find-friends">Osoby, które możesz znać</th>
-                        <th class="refresh"><a href="#">Odśwież</a></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -97,3 +94,5 @@
         </div>
     </div>
 </section>
+
+<div id="modalWrapper"></div>
