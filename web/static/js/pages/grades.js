@@ -23,18 +23,13 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
             });
 
             function bindModals(){
-                $('.courses-modal').click(function(){
+                $('#table-grades').on('click', '.courses-modal', function(){
                     var courseId = $(this).attr("data-courseId");
                     var termId = $(this).attr("data-termId");
                     var modalId = '#courseModal' + courseId;
                     $('#errorModal').modal();
 
                     $(modalId).modal();
-                    $(modalId).on('hidden.bs.modal', function (e) {
-                        $(this).remove();
-                        $('#modalWrapper').html();
-                        $(modalId).hide();
-                    });
 
                     var url = '/courseseditions/' + courseId + '/' + encodeURIComponent(termId);
                     main.ajaxGet(url).then(function(courseInfo){
@@ -42,13 +37,23 @@ define(['jquery', 'handlebars', 'main', 'text!templates/grades.html',
                             courseInfo.data['courseId'] = courseId;
                             $('#modalWrapper').html(templateCourseModal(courseInfo.data));
                             $(modalId).modal('show');
+                            $(modalId).on('hidden.bs.modal', function (e) {
+                                $(this).remove();
+                                $('#modalWrapper').html();
+                                $(modalId).hide();
+                            });
                         } else {
                             $('#modalWrapper').html(templateModalError(courseInfo));
+                            $('#errorModal').on('hidden.bs.modal', function (e) {
+                                $(this).remove();
+                                $('#modalWrapper').html();
+                                $(modalId).hide();
+                            });
                             $('#errorModal').modal('show');
                         }
                     });
                 });
             }
         }
-    }    
+    }
 });

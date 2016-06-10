@@ -46,10 +46,10 @@ class FriendsSuggestionsApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self):
         try:
-            frendssuggestions = yield self.api_friendssuggestions()
-            if not frendssuggestions:
+            friends_suggestions = yield self.api_friends_suggestions()
+            if not friends_suggestions:
                 self.error("Poczekaj szukamy sugerowanych przyjaciół.")
             else:
-                self.success(frendssuggestions, cache_age=constants.SECONDS_1WEEK)
+                self.success(friends_suggestions, cache_age=constants.SECONDS_1WEEK)
         except Exception as ex:
             yield self.exc(ex)

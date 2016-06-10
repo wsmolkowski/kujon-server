@@ -101,20 +101,19 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
                     $('.user-btn').click(function() {
                         var userId = $(this).attr("data-userId");
                         var modalId = '#userModal' + userId;
-                        var modalBodyId = '#userBody' + userId;
 
                         $(modalId).modal();
-
-                        $(modalId).on('hidden.bs.modal', function(e) {
-                            $(this).remove();
-                            $('#modalWrapper').html();
-                            $(modalId).hide();
-                        });
 
                         main.ajaxGet('/users/' + userId).then(function(userInfo) {
                             if (userInfo.status == 'success') {
                                 userInfo.data['user_id'] = userId;
                                 $('#modalWrapper').html(templateModalUser(userInfo.data));
+
+                                $(modalId).on('hidden.bs.modal', function(e) {
+                                    $(this).remove();
+                                    $('#modalWrapper').html();
+                                    $(modalId).hide();
+                                });
                                 $(modalId).modal('show');
                             } else {
                                 $('#modalWrapper').html(templateModalError(userInfo));

@@ -27,7 +27,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/lecturers.html',
 
                 function bindModals() {
 
-                    $('.lecturer-btn').click(function() {
+                    $('#table-lecturers').on('click', '.lecturer-btn', function() {
                         var lecturerId = $(this).attr("data-lecturerId");
                         var modalId = '#lecturerModal' + lecturerId;
                         $('#errorModal').modal();
