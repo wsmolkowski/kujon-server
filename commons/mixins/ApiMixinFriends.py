@@ -99,10 +99,11 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
                             continue
 
                         # checking if participant is already added
-                        poz = helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
+                        poz = helpers.in_dictlist(constants.FRIEND_ID, participant_id, friends_added)
                         if poz:
                             continue
                         del participant[constants.ID]
+
                         # count how many courses have together
                         if participant_id in suggested_participants:
                             suggested_participants[participant_id]['count'] += 1
@@ -120,4 +121,8 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
         else:
             # sort by count descending and limit to 20 records
             suggested_participants = sorted(suggested_participants, key=lambda k: k['count'], reverse=True)
-            raise gen.Return(suggested_participants[:20])
+
+            raise gen.Return({
+                'total': len(suggested_participants),
+                'friends': suggested_participants
+            })
