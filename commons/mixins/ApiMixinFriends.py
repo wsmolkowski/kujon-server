@@ -98,7 +98,7 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
                         if user_info[constants.ID] == participant_id:
                             continue
 
-                        # checking if participant is allready added
+                        # checking if participant is already added
                         poz = helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
                         if poz:
                             continue
