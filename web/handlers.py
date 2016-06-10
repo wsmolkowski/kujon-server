@@ -37,6 +37,8 @@ class BaseHandler(RequestHandler, JSendMixin):
         if cookie:
             cookie = json_decode(cookie)
             response = json_util.loads(cookie)
+            if constants.USER_NAME not in response and constants.USER_EMAIL in response:
+                response[constants.USER_NAME] = response[constants.USER_EMAIL]
             raise gen.Return(response)
 
         raise gen.Return(None)
