@@ -128,13 +128,6 @@ def initialize_logging(logger_name):
     log = logging.getLogger(__name__)
 
 
-def cookie_secret():
-    import base64
-    import uuid
-
-    print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
-
-
 def http_client(validate_cert=False):
     if settings.PROXY_URL and settings.PROXY_PORT:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
