@@ -3,12 +3,11 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators
 
 
 class ThesesApi(ApiHandler):
-
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -19,4 +18,3 @@ class ThesesApi(ApiHandler):
             return
         except Exception as ex:
             yield self.exc(ex)
-

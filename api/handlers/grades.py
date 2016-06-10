@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
@@ -31,5 +31,3 @@ class GradesForUserByTermApi(ApiHandler):
             self.success(grades_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             yield self.exc(ex)
-
-

@@ -8,6 +8,7 @@ DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 if DEVELOPMENT:
     config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
 else:

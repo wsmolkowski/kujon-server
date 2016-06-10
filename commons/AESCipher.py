@@ -4,8 +4,7 @@ from base64 import b64encode, b64decode
 from Crypto import Random
 from Crypto.Cipher import AES
 
-from commons import constants
-from commons import settings
+from commons import constants, settings
 
 
 class AESCipher(object):

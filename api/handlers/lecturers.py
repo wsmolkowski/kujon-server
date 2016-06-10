@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import constants, decorators
 
 

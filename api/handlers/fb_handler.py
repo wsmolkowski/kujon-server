@@ -6,7 +6,7 @@ from tornado import auth
 from tornado import gen
 from tornado import web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import constants, decorators
 from commons.errors import ApiError
 

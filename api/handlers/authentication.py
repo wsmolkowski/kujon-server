@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId, json_util
 from tornado import auth, gen, web, escape
 
-from base import BaseHandler, ApiHandler
+from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants, settings, decorators
 from commons.errors import AuthenticationError
 from commons.mixins.GoogleMixin import GoogleMixin

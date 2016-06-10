@@ -1,6 +1,6 @@
 import json
 
-import constants
+from commons import constants
 
 
 class Error(Exception):
