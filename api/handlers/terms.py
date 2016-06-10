@@ -20,7 +20,7 @@ class TermsApi(ApiHandler):
                 self.error("Poczekaj szukamy cykli")
             else:
                 self.success(terms_ordered, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -37,5 +37,5 @@ class TermApi(ApiHandler):
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
             else:
                 self.success(term_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

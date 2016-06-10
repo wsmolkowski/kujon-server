@@ -1,10 +1,11 @@
-from base64 import b64encode, b64decode
 import hashlib
+from base64 import b64encode, b64decode
+
 from Crypto import Random
 from Crypto.Cipher import AES
 
-import settings
-import constants
+from commons import constants
+from commons import settings
 
 
 class AESCipher(object):

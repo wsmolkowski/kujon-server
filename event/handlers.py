@@ -58,7 +58,6 @@ class MainHandler(RequestHandler, JSendMixin):
 
         return
 
-
     @gen.coroutine
     def process_event(self, event_data):
         self.event_data = event_data
@@ -111,7 +110,7 @@ class EventHandler(MainHandler):
                 self.write(self.argument_challenge)
                 self.finish()
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
     @web.asynchronous
@@ -122,7 +121,7 @@ class EventHandler(MainHandler):
             yield self.process_event(event_data)
 
             self.success(data='ok')
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 

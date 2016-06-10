@@ -115,7 +115,7 @@ class MongoDbQueue(object):
                 logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
                     job, self.queue.qsize(), len(self.processing)))
                 yield self.process_job(job)
-            except Exception, ex:
+            except Exception as ex:
                 msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
                 logging.exception(msg)
                 yield self.update_job(job, constants.JOB_FAIL, msg)

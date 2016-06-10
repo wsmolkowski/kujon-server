@@ -35,7 +35,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
                 for friend in friends['data']:
                     all_friends.append(friend['name'])
                 friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
-            except Exception, ex:
+            except Exception as ex:
                 print "Key Error" + ex.message
         print all_friends
         print friends

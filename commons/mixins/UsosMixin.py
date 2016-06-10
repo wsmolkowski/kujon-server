@@ -243,7 +243,7 @@ class UsosMixin(OAuthMixin):
                     courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
                                               constants.COURSE_ID: course_id,
                                               constants.TERM_ID: term_id})
-            except Exception, ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
 
             result['course_editions_conducted'] = courses_conducted
@@ -319,7 +319,7 @@ class UsosMixin(OAuthMixin):
                     'term_id': term_id
                 }
             result = yield self.usos_request(path='services/courses/course_edition', user_doc=self.user_doc, args=args)
-        except Exception, ex:
+        except Exception as ex:
             logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
 
@@ -429,7 +429,7 @@ class UsosMixin(OAuthMixin):
             result[constants.UPDATE_TIME] = create_time
             raise gen.Return(result)
 
-        except Exception, ex:
+        except Exception as ex:
             logging.exception(ex)
             raise gen.Return(None)
 

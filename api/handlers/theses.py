@@ -2,6 +2,7 @@
 
 import tornado.gen
 import tornado.web
+
 from base import ApiHandler
 from commons import decorators
 
@@ -16,6 +17,6 @@ class ThesesApi(ApiHandler):
             theses_doc = yield self.api_theses()
             self.success(theses_doc)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 

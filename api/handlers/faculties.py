@@ -24,7 +24,7 @@ class FacultyByIdApi(ApiHandler):
                 raise faculty_doc('Nie możemy znaleźć danych dla jednostki.', faculty_id)
 
             self.success(faculty_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -36,5 +36,5 @@ class FacultiesApi(ApiHandler):
         try:
             faculties = yield self.api_faculties()
             self.success(faculties, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
