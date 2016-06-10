@@ -1,5 +1,9 @@
 import os
-from ConfigParser import RawConfigParser
+
+try:
+    from ConfigParser import RawConfigParser  # 2.7
+except ImportError:
+    from configparser import RawConfigParser  # 3.5
 
 config = RawConfigParser(allow_no_value=True)
 DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
