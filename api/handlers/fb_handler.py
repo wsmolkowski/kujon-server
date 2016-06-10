@@ -1,4 +1,5 @@
 # coding=UTF-8
+import logging
 
 import facebook
 from bson.objectid import ObjectId
@@ -36,9 +37,10 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
                     all_friends.append(friend['name'])
                 friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
             except Exception as ex:
-                print "Key Error" + ex.message
-        print all_friends
-        print friends
+                logging.error("Key Error" + ex.message)
+
+        logging.debug(all_friends)
+        logging.debug(friends)
 
     @web.asynchronous
     def _save_user_profile(self, user):
@@ -46,7 +48,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
             raise web.HTTPError(500, "Facebook authentication failed.")
         else:
             # while user['cursor']
-            print user
+            logging.info(user)
             #     User.objects(email=user['email']).get()
             # except DoesNotExist, e:
             #     new_u = User()
