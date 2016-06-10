@@ -16,7 +16,7 @@ class GradesForUserApi(ApiHandler):
         try:
             grades_doc = yield self.api_grades()
             self.success(grades_doc, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -29,7 +29,7 @@ class GradesForUserByTermApi(ApiHandler):
         try:
             grades_doc = yield self.api_grades_byterm()
             self.success(grades_doc, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 

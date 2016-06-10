@@ -2,6 +2,7 @@
 
 import tornado.gen
 import tornado.web
+
 from base import ApiHandler
 from commons import constants, decorators
 
@@ -14,7 +15,7 @@ class FriendsApi(ApiHandler):
         try:
             friends = yield self.api_friends()
             self.success(friends, cache_age=constants.SECONDS_1WEEK)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
     @decorators.authenticated
@@ -25,7 +26,7 @@ class FriendsApi(ApiHandler):
             add = yield self.api_friends_add(user_info_id)
             self.success(add)
             return
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
     @decorators.authenticated
@@ -35,7 +36,7 @@ class FriendsApi(ApiHandler):
         try:
             remove = yield self.api_friends_remove(user_info_id)
             self.success(remove)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -50,5 +51,5 @@ class FriendsSuggestionsApi(ApiHandler):
                 self.error("Poczekaj szukamy sugerowanych przyjaciół.")
             else:
                 self.success(frendssuggestions, cache_age=constants.SECONDS_1WEEK)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

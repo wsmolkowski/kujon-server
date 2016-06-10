@@ -18,7 +18,7 @@ class GoogleMixin(object):
                 raise Exception(
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
             result = json.loads(tokeninfo.body)
-        except Exception, ex:
+        except Exception as ex:
             logging.exception(ex)
             raise Exception('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
         else:

@@ -29,5 +29,5 @@ class GroupsApi(ApiHandler):
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

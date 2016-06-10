@@ -284,7 +284,7 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                     'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
                 })
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -356,5 +356,5 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             else:
                 self.redirect(settings.DEPLOY_WEB)
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

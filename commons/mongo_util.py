@@ -161,7 +161,7 @@ def _do_recreate(db, usos_doc):
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                   usos_doc[constants.USOS_ID]))
 
-    except Exception, ex:
+    except Exception as ex:
         logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
             usos_doc[constants.USOS_ID], url, ex.message))
         logging.exception(ex)
@@ -201,7 +201,7 @@ def recreate_database():
     try:
         recreate_usos()
         yield recreate_dictionaries()
-    except Exception, ex:
+    except Exception as ex:
         msg = "Problem during database recreate: {0}".format(ex.message)
         logging.exception(msg, ex)
         raise gen.Return(False)

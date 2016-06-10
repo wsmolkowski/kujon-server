@@ -2,9 +2,9 @@
 
 import logging
 from collections import OrderedDict
+from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
-from datetime import date, timedelta, datetime
 from tornado import gen
 
 from commons import constants, settings
@@ -95,7 +95,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 course_doc = yield self.usos_course(course_id)
                 yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception, ex:
+            except Exception as ex:
                 logging.exception(ex)
                 raise ApiError("Nie znaleźliśmy kursu", course_id)
 
@@ -174,7 +174,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=True)
                 raise gen.Return(None)
 
@@ -430,7 +430,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 programme_doc = yield self.usos_programme(programme_id)
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
@@ -443,7 +443,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
                 monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-            except Exception, ex:
+            except Exception as ex:
                 self.error("Niepoprawny format daty: RRRR-MM-DD.")
                 yield self.exc(ex)
         else:
@@ -460,7 +460,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 tt_doc = yield self.time_table(monday)
                 yield self.db_insert(constants.COLLECTION_TT, tt_doc)
-            except Exception, ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return(None)
 
@@ -636,7 +636,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(None)
 
@@ -655,7 +655,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 else:
                     msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
                     logging.info(msg)
-            except UsosClientError, ex:
+            except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(None)
 
