@@ -9,9 +9,7 @@ from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest
 
-import constants
-import settings
-import utils
+from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
 from commons.usosutils import usosinstances
 from crawler import job_factory

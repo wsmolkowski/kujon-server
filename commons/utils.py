@@ -14,8 +14,8 @@ try:
 except ImportError:
     from httplib2 import socks
 
-import settings
-import constants
+from commons import settings
+from commons import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
