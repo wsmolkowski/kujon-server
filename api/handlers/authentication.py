@@ -56,6 +56,9 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = 'authentication'
 
     def reset_user_cookie(self, user_doc):
+        if constants.USER_NAME not in user_doc and constants.USER_EMAIL in user_doc:
+            user_doc[constants.USER_NAME] = user_doc[constants.USER_EMAIL]
+
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
