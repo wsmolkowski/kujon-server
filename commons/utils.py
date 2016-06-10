@@ -33,7 +33,7 @@ def get_proxy():
 
 
 def serialize_dictionary(data):
-    for key, value in data.items():
+    for key, value in list(data.items()):
         if isinstance(value, list):
             data[key] = serialize_list(value)
         elif isinstance(value, dict):

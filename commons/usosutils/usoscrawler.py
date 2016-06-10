@@ -64,7 +64,7 @@ class UsosCrawler(ApiMixin):
         courses_terms = list()
         course_units_ids = list()
 
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
 
                 courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
