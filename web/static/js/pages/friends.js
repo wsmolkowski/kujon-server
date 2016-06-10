@@ -25,8 +25,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
                 });
 
                 function bindModals() {
-
-                    $('.friends-btn').click(function() {
+                    $('#table-friends').on('click', '.btn-friends', function() {
                         var friendId = $(this).attr("data-friendId");
                         var modalId = '#userModal' + friendId;
 
@@ -34,21 +33,26 @@ define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
 
                         main.ajaxGet('/users/' + friendId).then(function(friendInfo) {
                             if (friendInfo.status == 'success') {
-                                friendInfo.data['friend_id'] = friendId;
+                                friendInfo.data['user_id'] = friendId;
                                 $('#modalWrapper').html(templateModalUser(friendInfo.data));
-                                $(modalId).modal('show');
+                                $(modalId).on('hidden.bs.modal', function(e) {
+                                    $(this).remove();
+                                    $(modalId).hide();
+                                    $('#modalWrapper').html();
+                                });
 
+                                $(modalId).modal('show');
+                            } else {
+                                $('#modalWrapper').html(templateModalError(userInfo));
                                 $(modalId).on('hidden.bs.modal', function(e) {
                                     $(this).remove();
                                     $('#modalWrapper').html();
-                                    $(modalId).hide();
+                                    $('#modalWrapper').on('hidden.bs.modal', function(e) {
+                                        $(this).remove();
+                                        $('#modalWrapper').html();
+                                        $(modalId).hide();
+                                    });
                                 });
-
-                            } else {
-                                $(modalId).modal('show');
-                                $(modalBodyId).html(templateError({
-                                    'message': userInfo.message
-                                }));
                             }
                         })
                     });

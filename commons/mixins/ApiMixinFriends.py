@@ -67,7 +67,7 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
             raise ApiError('Użytkownik nie jest przyjacielem.')
 
     @gen.coroutine
-    def api_friendssuggestions(self):
+    def api_friends_suggestions(self):
         user_info = yield self.api_user_info()
 
         courses = dict()

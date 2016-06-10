@@ -14,9 +14,8 @@
                     </thead>
                     <tbody>
                     {{#data}}
-                    <tr>
-                        <td><span class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">{{last_name}}</span>
-                        </td>
+                    <tr class="lecturer-btn" data-lecturerId="{{user_id}}">
+                        <td>{{last_name}}</td>
                         <td>{{first_name}}</td>
                     </tr>
                     {{/data}}
