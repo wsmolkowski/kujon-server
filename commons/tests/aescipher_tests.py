@@ -8,6 +8,7 @@ class AESCipherTest(unittest.TestCase):
 
     def testAESCipher(self):
         # assume
+
         aes = AESCipher()
 
         usos = USOSINSTANCES[0]
