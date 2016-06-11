@@ -510,7 +510,8 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'id|match|postal_address',
-            'lang': 'pl'
+            'lang': 'pl',
+            'visibility': 'all'
         })
 
         raise gen.Return(result)
