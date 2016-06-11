@@ -27,6 +27,8 @@ LECTURERS = "lecturers"
 COORDINATORS = "coordinators"
 PICTURE = 'picture'
 GRADES = 'grades'
+SEARCH_QUERY = 'query'
+SEARCH_ENDPOINT = 'endpoint'
 
 FACEBOOK = "facebook"
 FACEBOOK_ID = "id"
@@ -111,6 +113,7 @@ COLLECTION_SUBSCRIPTION = 'subscriptions'
 COLLECTION_NOTIFIER_STATUS = 'notifier_status'
 COLLECTION_NOTIFICATION_QUEUE = 'notification_queue'
 COLLECTION_NOTIFICATION_QUEUE_LOG = 'notification_queue_log'
+COLLECTION_SEARCH = 'search'
 
 COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME, USER_PICTURE,
                  GOOGLE, FACEBOOK)

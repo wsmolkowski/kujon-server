@@ -16,7 +16,7 @@ class SearchUsersApi(ApiHandler):
             if not self.validate_query_input(query):
                 return
 
-            add = yield self.api_search_user(query)
+            add = yield self.api_search_users(query)
             self.success(add)
             return
         except Exception as ex:
@@ -32,7 +32,7 @@ class SearchCoursesApi(ApiHandler):
             if not self.validate_query_input(query):
                 return
 
-            result_doc = yield self.api_search_course(query)
+            result_doc = yield self.api_search_courses(query)
             self.success(result_doc)
             return
         except Exception as ex:
@@ -48,7 +48,7 @@ class SearchFacultiesApi(ApiHandler):
             if not self.validate_query_input(query):
                 return
 
-            result_doc = yield self.api_search_faculty(query)
+            result_doc = yield self.api_search_faculties(query)
             self.success(result_doc)
             return
         except Exception as ex:

@@ -621,7 +621,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
-        pipeline = {constants.UNIT_ID: unit_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
