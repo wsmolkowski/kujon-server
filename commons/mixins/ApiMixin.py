@@ -277,6 +277,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_grades(self):
+
         classtypes = yield self.db_classtypes()
 
         courses_editions = yield self.api_courses_editions()
@@ -328,14 +329,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 if 'unit' in grade:
                     if grade['unit'] not in units:
                         units.append(grade['unit'])
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-        pipeline = {'unit_id': {"$in": map(int, units)}, constants.USOS_ID: usos_doc[constants.USOS_ID]}
-        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline,
-                                                                  (constants.UNIT_ID, constants.CLASS_TYPE_ID))
-        units_doc = yield cursor.to_list(None)
+
+        units_doc = yield self.api_units(units)
+
         for unit in units_doc:
             unit[constants.CLASS_TYPE_ID] = classtypes[(unit[constants.CLASS_TYPE_ID])]
-
         for course in result:
             if 'grades' in course:
                 for grade in course['grades']:
@@ -439,7 +437,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     def api_tt(self, given_date):
 
         monday = None
-        if isinstance(given_date, str) or isinstance(given_date, unicode):
+        if isinstance(given_date, str):
             try:
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
                 monday = given_date - timedelta(days=(given_date.weekday()) % 7)
@@ -633,12 +631,30 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 result = yield self.usos_unit(unit_id)
                 if result:
-                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
+                    unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
-        raise gen.Return(None)
+        raise gen.Return(unit_doc)
+
+    @gen.coroutine
+    def api_units(self, units_id, finish=False):
+        pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))}, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline).sort("unit_id")
+        units_doc = yield cursor.to_list(None)
+
+        if not units_doc:
+            try:
+                tasks_units = list()
+                for unit in units_id:
+                    tasks_units.append(self.api_unit(unit))
+                yield tasks_units
+                cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline)
+                units_doc = yield cursor.to_list(None)
+            except UsosClientError as ex:
+                yield self.exc(ex, finish=finish)
+        raise gen.Return(units_doc)
 
     @gen.coroutine
     def api_group(self, group_id, finish=False):

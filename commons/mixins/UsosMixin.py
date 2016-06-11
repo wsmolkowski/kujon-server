@@ -386,7 +386,7 @@ class UsosMixin(OAuthMixin):
         })
 
         result[constants.UNIT_ID] = result.pop(constants.ID)
-        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
         result[constants.UPDATE_TIME] = create_time
 

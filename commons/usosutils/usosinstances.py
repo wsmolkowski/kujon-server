@@ -17,15 +17,16 @@ USOSINSTANCES = [
      'consumer_key': 'KBt6uWPWUekUzFtNTyY9',  # jeszcze stary nie zmieniony na Kujon.mobi
      'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',  # jeszcze stary nie zmieniony na Kujon.mobi
      'contact': 'dsksysadm@adm.uw.edu.pl',
+     'phone': '225520527',
      'enabled': True,
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji
+    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
-     'consumer_key': 'QbYhMjzfXUmZr77nQ2KM',
-     'consumer_secret': 'rhJnuea4gPbqHJSw5Qy2JFwjeP3ZmyhtwhwTeWtm',
+     'consumer_key': 'vRqbE7mY3xLyTp9Aft8N',
+     'consumer_secret': '9pEQCu4YhaKku555kPWCqN2AYgg4rcf3d2Ba9Ye3',
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,

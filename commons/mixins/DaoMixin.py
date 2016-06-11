@@ -31,7 +31,7 @@ class DaoMixin(object):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': str(exception.message)
+                'exception': exception
             }
 
         if hasattr(self, 'user_doc'):
