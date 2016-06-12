@@ -39,7 +39,6 @@ class ArchiveHandler(ApiHandler):
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
-    @decorators.authenticated
     @web.asynchronous
     @gen.coroutine
     def get(self):
