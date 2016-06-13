@@ -20,6 +20,7 @@ from crawler import job_factory
 class ArchiveHandler(ApiHandler):
     @gen.coroutine
     def db_email_archive_user(self, recipient):
+
         email_job = email_factory.email_job(
             'Usunęliśmy Twoje konto w Kujon.mobi',
             settings.SMTP_EMAIL,
@@ -37,6 +38,7 @@ class ArchiveHandler(ApiHandler):
     @gen.coroutine
     def get(self):
         user_doc = self.get_current_user()
+
         if user_doc:
             yield self.db_archive_user(user_doc[constants.MONGO_ID])
 
@@ -58,6 +60,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
                                domain=settings.SITE_DOMAIN)
 
         yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
+            'type': 'login',
             constants.USER_ID: user_doc[constants.MONGO_ID],
             constants.CREATED_TIME: datetime.now(),
             'host': self.request.host,
