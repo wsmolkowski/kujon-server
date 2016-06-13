@@ -4,7 +4,7 @@ import tornado.gen
 import tornado.web
 
 from api.handlers.base import ApiHandler
-from commons import decorators
+from commons import decorators, constants
 
 
 class ThesesApi(ApiHandler):
@@ -13,7 +13,10 @@ class ThesesApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self):
         try:
-            theses_doc = yield self.api_theses()
+
+            users_info_doc = yield self.api_user_info()
+            theses_doc = yield self.usos_theses(users_info_doc[constants.ID])
+
             self.success(theses_doc)
             return
         except Exception as ex:
