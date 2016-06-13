@@ -31,7 +31,7 @@ class DaoMixin(object):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': exception
+                'exception': str(exception)
             }
 
         if hasattr(self, 'user_doc'):
@@ -341,3 +341,14 @@ class DaoMixin(object):
             self._classtypes[self.user_doc[constants.USOS_ID]] = class_type
 
         raise gen.Return(self._classtypes[self.user_doc[constants.USOS_ID]])
+
+    @gen.coroutine
+    def insert_search_query(self, query, endpoint):
+        query_doc = dict()
+        query_doc[constants.CREATED_TIME] = datetime.now()
+        if self.user_doc and constants.MONGO_ID in self.user_doc:
+            query_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        query_doc[constants.SEARCH_QUERY] = query
+        query_doc[constants.SEARCH_ENDPOINT] = endpoint
+        query_doc = yield self.db_insert(constants.COLLECTION_SEARCH, query_doc)
+        raise gen.Return(query_doc)
