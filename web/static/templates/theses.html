@@ -1,0 +1,53 @@
+<section id="faculties">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive">
+                <div class="heading">
+                    <h2>Prace</h2>
+                </div>
+                <table id="table-faculties" class="table" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Numer</th>
+                        <th data-sortable="true">Typ</th>
+                        <th data-sortable="true">Tytuł</th>
+                        <th data-sortable="true">Jednostka</th>
+                        <th data-sortable="true">Koordynatorzy</th>
+                        <th data-sortable="true">Autorzy</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#data}}
+                    <tr>
+                        <td>{{id}}</td>
+                        <td>{{type}}</td>
+                        <td>{{title}}</td>
+                        <td>{{faculty.id}} {{faculty.name}}</td>
+                        <td>
+                            {{#supervisors}}
+                            <button data-toggle="modal" data-target="#lecturers-1" class="description-lecturer"
+                                    data-lecturerId="{{id}}">
+                                <span>{{first_name}} {{last_name}}</span>
+                            </button>
+                            <br>
+                            {{/supervisors}}
+                        </td>
+                        <td>
+                            {{#authors}}
+                            <button data-toggle="modal" data-target="#lecturers-1" class="description-user"
+                                    data-userId="{{id}}">
+                                <span>{{first_name}} {{last_name}}</span>
+                            </button>
+                            <br>
+                            {{/authors}}
+                        </td>
+                    </tr>
+                    {{/data}}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</section>

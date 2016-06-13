@@ -689,3 +689,19 @@ class ApiMixin(DaoMixin, UsosMixin):
             photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)
+
+    @gen.coroutine
+    def api_thesis(self):
+
+        pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID]}
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_THESES, pipeline)
+
+        theses_doc = yield self.db[constants.COLLECTION_THESES].find_one(pipeline)
+
+        if not theses_doc:
+            users_info_doc = yield self.api_user_info()
+            theses_doc = yield self.usos_theses(users_info_doc[constants.ID])
+            yield self.db_insert(constants.COLLECTION_THESES, theses_doc)
+
+        raise gen.Return(theses_doc['authored_theses'])

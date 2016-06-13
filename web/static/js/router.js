@@ -88,6 +88,10 @@ define(['handlebars', 'crossroads', 'hasher', 'text!templates/spinner.html'], fu
         setActiveLink('contact');
     });
 
+    crossroads.addRoute('theses', function() {
+        setActiveLink('theses');
+    });
+
     crossroads.addRoute('404', function() {
         setActiveLink('404');
     });
