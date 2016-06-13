@@ -14,7 +14,7 @@ class AbstractSearch(ApiHandler):
         query = self.request.path.split('/')[-1]  # could be better?
 
         #  walidacja powinna być zrobiona w części klienckiej
-        if len(query) < 3 or len(query) > 30:
+        if len(query) <= 3 or len(query) >= 30:
             self.fail('Niepoprawne zapytnie. Spróbuj wyszukać fragment dłuższy niż 3 znaki i krótszy niż 30.')
 
     @tornado.gen.coroutine
