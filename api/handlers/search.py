@@ -31,7 +31,10 @@ class SearchUsersApi(AbstractSearch):
     def get(self, query):
         try:
             result_doc = yield self.api_search_users(query)
-            self.success(result_doc)
+            if result_doc['items']:
+                self.success(result_doc)
+            else:
+                self.error('Niestety nie znaleźliśmy danych.')
         except Exception as ex:
             yield self.exc(ex)
 
@@ -43,7 +46,10 @@ class SearchCoursesApi(AbstractSearch):
     def get(self, query):
         try:
             result_doc = yield self.api_search_courses(query)
-            self.success(result_doc)
+            if result_doc['items']:
+                self.success(result_doc)
+            else:
+                self.error('Niestety nie znaleźliśmy danych.')
         except Exception as ex:
             yield self.exc(ex)
 
@@ -55,7 +61,10 @@ class SearchFacultiesApi(AbstractSearch):
     def get(self, query):
         try:
             result_doc = yield self.api_search_faculties(query)
-            self.success(result_doc)
+            if result_doc['items']:
+                self.success(result_doc)
+            else:
+                self.error('Niestety nie znaleźliśmy danych.')
         except Exception as ex:
             yield self.exc(ex)
 
@@ -67,6 +76,9 @@ class SearchProgrammesApi(AbstractSearch):
     def get(self, query):
         try:
             result_doc = yield self.api_search_programmes(query)
-            self.success(result_doc)
+            if result_doc['items']:
+                self.success(result_doc)
+            else:
+                self.error('Niestety nie znaleźliśmy danych.')
         except Exception as ex:
             yield self.exc(ex)

@@ -90,15 +90,13 @@ class UsosMixin(OAuthMixin):
 
     def _on_usos_request(self, future, response):
         if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
+            raise self.build_exception(response)
 
         future.set_result(escape.json_decode(response.body))
 
     def _on_usos_photo_request(self, future, response):
         if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
+            raise self.build_exception(response)
 
         future.set_result({'photo': b64encode(response.body)})
 

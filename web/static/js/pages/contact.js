@@ -1,4 +1,5 @@
-define(['jquery', 'handlebars', 'text!templates/contact.html', 'text!templates/spinner.html', 'text!templates/modal_success.html', 'text!templates/modal_error.html'],
+define(['jquery', 'handlebars', 'text!templates/contact.html', 'text!templates/spinner.html',
+'text!templates/modal_success.html', 'text!templates/modal_error.html'],
     function($, Handlebars, tpl, spinnerTpl, modalSuccess, modalError) {
         'use strict';
         return {
