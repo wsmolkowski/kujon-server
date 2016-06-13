@@ -11,7 +11,6 @@ class ApiMixinSearch(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_search_users(self, query):
         start = self.get_argument('start', default=0, strip=True)
-        self._search_options = (query, 'users')
         search_doc = yield self.usos_search_users(query, start)
         raise gen.Return(search_doc)
 

@@ -9,10 +9,10 @@ from api.handlers.base import ApiHandler
 from commons import decorators
 
 
-class AbstractMixinSearch(ApiHandler):
+class AbstractSearch(ApiHandler):
     @tornado.gen.coroutine
     def prepare(self):
-        yield super(AbstractMixinSearch, self).prepare()
+        yield super(AbstractSearch, self).prepare()
 
         logging.info('AbstractMixinSearch prepare')
         query = self.request.path.split('/')[-1]  # could be better?
@@ -23,14 +23,12 @@ class AbstractMixinSearch(ApiHandler):
 
     @tornado.gen.coroutine
     def on_finish(self):
-        if not hasattr(self, '_search_options'):
-            return  # exception was thrown before
-
-        query, endpoint = self._search_options
+        path_split = self.request.path.split('/')
+        query, endpoint = path_split[-1], path_split[-2]
         yield self.insert_search_query(query, endpoint)
 
 
-class SearchUsersApi(AbstractMixinSearch):
+class SearchUsersApi(AbstractSearch):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -42,7 +40,7 @@ class SearchUsersApi(AbstractMixinSearch):
             yield self.exc(ex)
 
 
-class SearchCoursesApi(AbstractMixinSearch):
+class SearchCoursesApi(AbstractSearch):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -54,7 +52,7 @@ class SearchCoursesApi(AbstractMixinSearch):
             yield self.exc(ex)
 
 
-class SearchFacultiesApi(AbstractMixinSearch):
+class SearchFacultiesApi(AbstractSearch):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
@@ -66,7 +64,7 @@ class SearchFacultiesApi(AbstractMixinSearch):
             yield self.exc(ex)
 
 
-class SearchProgrammesApi(AbstractMixinSearch):
+class SearchProgrammesApi(AbstractSearch):
     @decorators.authenticated
     @tornado.web.asynchronous
     @tornado.gen.coroutine
