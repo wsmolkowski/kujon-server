@@ -1,7 +1,7 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
         'text!templates/search_error.html', 'text!templates/modal_lecturer.html',
         'text!templates/modal_user.html', 'text!templates/spinner.html',
-        'text!templates/results.html'
+        'text!templates/search_results.html'
     ],
     function($, Handlebars, main, tpl, tplError, tplModalLecturer, tplModalUser
         , spinnerTpl, resultsTpl) {

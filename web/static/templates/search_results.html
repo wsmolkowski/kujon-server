@@ -8,16 +8,29 @@
                 <thead>
                 <tr>
                     <th data-sortable="true">Dopasowano</th>
-                    <th data-sortable="true"></th>
-                    <th data-sortable="true"></th>
+                    <th data-sortable="true">Wartość</th>
                 </tr>
                 </thead>
                 <tbody>
                 {{#items}}
                 <tr class="lecturer-btn" data-lecturerId="{{user.id}}">
                     <td>{{match}}</td>
-                    <td>{{user.staff_status}} {{user.student_status}}</td>
-                    <td>{{user.titles.before}} {{user.titles.after}}</td>
+
+                    {{#if user}}
+                    <td>{{user.staff_status}} {{user.student_status}}
+                        {{user.titles.before}} {{user.titles.after}}
+                        </br>
+                    </td>
+                    {{/if}}
+
+                    {{#if id}}
+                    <td>{{ id }} {{ postal_address }}</td>
+                    {{/if}}
+
+                    {{#if course_id}}
+                    <td>{{ course_id }}</td>
+                    {{/if}}
+
                 </tr>
                 {{/items}}
                 </tbody>
