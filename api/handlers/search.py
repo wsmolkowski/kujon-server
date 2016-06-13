@@ -15,7 +15,7 @@ class AbstractSearch(ApiHandler):
 
         #  walidacja powinna być zrobiona w części klienckiej
         if len(query) <= 3 or len(query) >= 30:
-            self.fail('Niepoprawne zapytnie. Spróbuj wyszukać fragment dłuższy niż 3 znaki i krótszy niż 30.')
+            self.error('Niepoprawne zapytnie. Spróbuj wyszukać fragment dłuższy niż 3 znaki i krótszy niż 30.')
 
     @tornado.gen.coroutine
     def on_finish(self):
