@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-import logging
-
 import tornado.gen
 import tornado.web
 
@@ -13,8 +11,6 @@ class AbstractSearch(ApiHandler):
     @tornado.gen.coroutine
     def prepare(self):
         yield super(AbstractSearch, self).prepare()
-
-        logging.info('AbstractMixinSearch prepare')
         query = self.request.path.split('/')[-1]  # could be better?
 
         #  walidacja powinna być zrobiona w części klienckiej
