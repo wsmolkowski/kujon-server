@@ -327,11 +327,13 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_programme(self, programme_id):
         create_time = datetime.now()
-
-        result = yield self.call_async('services/progs/programme', arguments={
+        try:
+            result = yield self.call_async('services/progs/programme', arguments={
             'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
             'programme_id': programme_id,
-        })
+            })
+        except Exception as ex:
+            raise gen.Return(None)
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time

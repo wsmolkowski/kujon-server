@@ -427,7 +427,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not programme_doc:
             try:
                 programme_doc = yield self.usos_programme(programme_id)
-                yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+                if programme_doc:
+                    yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+                else:
+                    gen.Return(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
