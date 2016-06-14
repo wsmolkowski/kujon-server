@@ -5,8 +5,7 @@
                 <div class="col-sm-2 col-xs-6 edit">
                     <div class="profil">
                         {{#if photo_url}}
-                        <img src="{{photo_url}}" alt="{{first_name}}" class="img-responsive profil-img">
-                        {{/if}}
+                        <img src="{{photo_url}}" alt="{{first_name}}" class="img-responsive profil-img"> {{/if}}
                     </div>
                 </div>
                 <div class="col-sm-10 col-xs-12">
@@ -30,7 +29,9 @@
                                 <div class="col-sm-12">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="dane"><p>Informacje z USOS</p></div>
+                                            <div class="dane">
+                                                <p>Informacje z USOS</p>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-sm-6 col-xs-6 gg">
                                                     <p><span>Nr indeksu</span></p>
@@ -66,8 +67,10 @@
                                         </div>
                                         {{#if google}}
                                         <div class="col-md-6">
-                                            <div class="dane"><p><span class="fa fa-google-plus"></span>Dane z Google
-                                            </p></div>
+                                            <div class="dane">
+                                                <p><span class="fa fa-google-plus"></span>Dane z Google
+                                                </p>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-sm-6 col-xs-6">
                                                     <p><span>Konto</span></p>
@@ -79,12 +82,12 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {{/if}}
-
-                                        {{#if fb}}
+                                        {{/if}} {{#if fb}}
                                         <div class="col-md-6">
-                                            <div class="dane dane-fb"><p><span class="fa fa-facebook"></span>Dane z
-                                                Facebook</p></div>
+                                            <div class="dane dane-fb">
+                                                <p><span class="fa fa-facebook"></span>Dane z Facebook
+                                                </p>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-sm-6 col-xs-6">
                                                     <p><span>Konto</span></p>
@@ -106,6 +109,48 @@
                                 </div>
                             </div>
 
+                        </div>
+
+                        <div class="row">
+                            <table id="table-terms" class="table" cellspacing="0" width="100%">
+                                <caption>Prace dyplomowe</caption>
+                                <thead>
+                                <tr>
+                                    <th data-sortable="true">Numer</th>
+                                    <th data-sortable="true">Typ</th>
+                                    <th data-sortable="true">Tytuł</th>
+                                    <th data-sortable="true">Jednostka</th>
+                                    <th data-sortable="true">Koordynatorzy</th>
+                                    <th data-sortable="true">Autorzy</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {{#theses}}
+                                <tr>
+                                    <td>{{id}}</td>
+                                    <td>{{type}}</td>
+                                    <td>{{title}}</td>
+                                    <td>{{faculty.id}} {{faculty.name}}</td>
+                                    <td>
+                                        {{#supervisors}}
+                                        <button data-toggle="modal" data-target="#lecturers-1"
+                                                class="description-lecturer" data-lecturerId="{{id}}">
+                                            <span>{{first_name}} {{last_name}}</span>
+                                        </button>
+                                        <br> {{/supervisors}}
+                                    </td>
+                                    <td>
+                                        {{#authors}}
+                                        <button data-toggle="modal" data-target="#lecturers-1" class="description-user"
+                                                data-userId="{{id}}">
+                                            <span>{{first_name}} {{last_name}}</span>
+                                        </button>
+                                        <br> {{/authors}}
+                                    </td>
+                                </tr>
+                                {{/theses}}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
