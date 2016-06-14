@@ -10,9 +10,9 @@ from tornado import auth, gen, web, escape
 from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants, settings
 from commons.errors import AuthenticationError
-from commons.mixins.GoogleMixin import GoogleMixin
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
+from commons.mixins.SocialMixin import SocialMixin
 from crawler import email_factory
 from crawler import job_factory
 
@@ -243,13 +243,14 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
+class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
         email = self.get_argument('email', default=None, strip=True)
         token = self.get_argument('token', default=None, strip=True)
         usos_id = self.get_argument('usos_id', default=None, strip=True)
+        login_type = self.get_argument('type', default=None, strip=True)
         new_user = False
 
         try:
@@ -269,9 +270,14 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                     raise AuthenticationError(
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if email and token:
+            if email and token and not login_type:
                 google_token = yield self.google_token(token)
+                google_token['login_type'] = login_type
                 yield self.db_insert_token(google_token)
+            elif email and token and login_type.upper() == 'FB':
+                facebook_token = yield self.facebook_token(token)
+                facebook_token['login_type'] = login_type
+                yield self.db_insert_token(facebook_token)
 
             if not usos_doc:
                 self.fail('Nieznany USOS {0}'.format(usos_id))
@@ -287,6 +293,7 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                     user_doc[constants.MOBI_TOKEN] = token
 
                 if new_user:
+                    user_doc['login_type'] = login_type
                     user_doc[constants.CREATED_TIME] = datetime.now()
                     new_id = yield self.db_insert_user(user_doc)
                     logging.info('insert: ' + str(new_id))
@@ -294,8 +301,6 @@ class UsosRegisterHandler(AuthenticationHandler, GoogleMixin, OAuth2Mixin):
                 else:
                     yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
                     self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
-
-                logging.info(settings.DEPLOY_API + '/authentication/verify')
 
                 yield self.authorize_redirect(extra_params={
                     'scopes': 'studies|offline_access|student_exams|grades',
