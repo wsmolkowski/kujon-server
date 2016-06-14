@@ -1,5 +1,6 @@
 define(['jquery', 'handlebars', 'text!templates/contact.html', 'text!templates/spinner.html',
-'text!templates/modal_success.html', 'text!templates/modal_error.html'],
+        'text!templates/modal_success.html', 'text!templates/modal_error.html'
+    ],
     function($, Handlebars, tpl, spinnerTpl, modalSuccess, modalError) {
         'use strict';
         return {
@@ -8,6 +9,16 @@ define(['jquery', 'handlebars', 'text!templates/contact.html', 'text!templates/s
                 var templateSpinner = Handlebars.compile(spinnerTpl);
                 var templateSuccess = Handlebars.compile(modalSuccess);
                 var templateError = Handlebars.compile(modalError);
+
+                function showAlert(id) {
+                    $(id).focus();
+                    $('#formWarning').html(
+                        '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                        '<strong>Wypełnij proszę wszystkie pola :)</strong> Potrzebujemy wszystkich danych <strong>:)</strong>' +
+                        '</div>'
+                    );
+                }
 
                 $('#section-content').html(template());
 
@@ -22,6 +33,18 @@ define(['jquery', 'handlebars', 'text!templates/contact.html', 'text!templates/s
                         'subject': $('#inputSubject').val(),
                         'message': $('#inputMessage').val(),
                     };
+
+                    event.preventDefault();
+
+                    if ($('#inputSubject').val() == null || $('#inputSubject').val() == "") {
+                        showAlert('#inputSubject');
+                        return;
+                    }
+
+                    if ($('#inputMessage').val() == null || $('#inputMessage').val() == "") {
+                        showAlert('#inputMessage');
+                        return;
+                    }
 
                     $('#errorModal').modal();
                     $('#errorModal').on('hidden.bs.modal', function(e) {
