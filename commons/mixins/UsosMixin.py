@@ -90,15 +90,13 @@ class UsosMixin(OAuthMixin):
 
     def _on_usos_request(self, future, response):
         if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
+            raise self.build_exception(response)
 
         future.set_result(escape.json_decode(response.body))
 
     def _on_usos_photo_request(self, future, response):
         if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
+            raise self.build_exception(response)
 
         future.set_result({'photo': b64encode(response.body)})
 
@@ -155,7 +153,6 @@ class UsosMixin(OAuthMixin):
         result[constants.COURSE_ID] = course_id
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
@@ -168,7 +165,6 @@ class UsosMixin(OAuthMixin):
         result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
         result[constants.TERM_ID] = result.pop(constants.ID)
 
         raise gen.Return(result)
@@ -192,7 +188,6 @@ class UsosMixin(OAuthMixin):
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         # strip english values and if value is empty change to None
         if 'office_hours' in result and 'pl' in result['office_hours']:
@@ -263,7 +258,6 @@ class UsosMixin(OAuthMixin):
         result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
@@ -280,7 +274,6 @@ class UsosMixin(OAuthMixin):
         if result:
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             result[constants.CREATED_TIME] = create_time
-            result[constants.UPDATE_TIME] = create_time
         else:
             raise gen.Return(None)
         raise gen.Return(result)
@@ -297,7 +290,6 @@ class UsosMixin(OAuthMixin):
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
@@ -328,7 +320,6 @@ class UsosMixin(OAuthMixin):
         result[constants.TERM_ID] = term_id
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
         raise gen.Return(result)
@@ -344,7 +335,6 @@ class UsosMixin(OAuthMixin):
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         result[constants.PROGRAMME_ID] = result.pop(constants.ID)
 
@@ -372,7 +362,6 @@ class UsosMixin(OAuthMixin):
         result[constants.ID] = user_info_id
         result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
@@ -386,9 +375,8 @@ class UsosMixin(OAuthMixin):
         })
 
         result[constants.UNIT_ID] = result.pop(constants.ID)
-        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
@@ -406,7 +394,6 @@ class UsosMixin(OAuthMixin):
         tt[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         tt[constants.TT_STARTDATE] = str(given_date)
         tt[constants.CREATED_TIME] = create_time
-        tt[constants.UPDATE_TIME] = create_time
         tt['tts'] = result
         tt[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
@@ -426,7 +413,6 @@ class UsosMixin(OAuthMixin):
             result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
             result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             result[constants.CREATED_TIME] = create_time
-            result[constants.UPDATE_TIME] = create_time
             raise gen.Return(result)
 
         except Exception as ex:
@@ -449,7 +435,6 @@ class UsosMixin(OAuthMixin):
 
         result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
         result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
         raise gen.Return(result)
 
@@ -510,7 +495,8 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'id|match|postal_address',
-            'lang': 'pl'
+            'lang': 'pl',
+            'visibility': 'all'
         })
 
         raise gen.Return(result)
@@ -537,5 +523,11 @@ class UsosMixin(OAuthMixin):
         if 'authored_theses' in result:
             for these in result['authored_theses']:
                 these['faculty']['name'] = these['faculty']['name']['pl']
+
+        create_time = datetime.now()
+        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
         raise gen.Return(result)

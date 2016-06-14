@@ -1,103 +1,62 @@
-define(['handlebars', 'crossroads', 'hasher', 'text!templates/spinner.html'], function(
-    Handlebars, crossroads, hasher, spinnerTpl) {
-    'use strict';
+define(['jquery', 'handlebars', 'crossroads', 'hasher', 'text!templates/spinner.html'],
+    function($, Handlebars, crossroads, hasher, spinnerTpl) {
+        'use strict';
 
-    var template = Handlebars.compile(spinnerTpl);
+        var template = Handlebars.compile(spinnerTpl);
 
-    function setActiveLink(hash) {
+        function setActiveLink(hash) {
 
-        $('#section-content').html(template());
+            $('#section-content').html(template());
 
-        require(['lib/pages/' + hash], function(page) {
-            page.render();
+            require(['lib/pages/' + hash], function(page) {
+                page.render();
 
-            $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
-            $('.navbar a[href="#' + hash + '"]').parent().addClass('active');
+                $('.navbar li.active').removeClass('active'); //trochę gupio ale na szybko
+                $('.navbar a[href="#' + hash + '"]').parent().addClass('active');
 
-            //schowaj kręcacz (?)
+                //schowaj kręcacz (?)
+            });
+        }
+
+        crossroads.addRoute('', function() {
+            setActiveLink('index');
         });
-    }
 
-    crossroads.addRoute('', function() {
-        setActiveLink('index');
+        // "_=_" is added on callback from facebook - should be removed
+        crossroads.addRoute('_=_', function() {
+            setActiveLink('home');
+        });
+
+        crossroads.addRoute('user/{id}', function(id) {
+            setActiveLink('user', id.id);
+        });
+
+        crossroads.addRoute('courses/{id}', function(id) {
+            setActiveLink('courses', id.id);
+        });
+
+        crossroads.addRoute('lecturers/{id}', function(id) {
+            setActiveLink('lecturers', id.id);
+        });
+
+        var routes = ['index', 'user', 'grades', 'courses', 'terms', 'faculties',
+            'programmes', 'lecturers', 'friends', 'friendssuggestions', 'tt', 'contact',
+            'theses', 'search', '404'
+        ];
+
+        $.each(routes, function(index, value) {
+            // console.log(index + ": " + value);
+            crossroads.addRoute(value, function() {
+                setActiveLink(value);
+            });
+        });
+
+        function parseHash(newHash, oldHash) {
+            crossroads.parse(newHash);
+        }
+
+        crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;
+        hasher.initialized.add(parseHash);
+        hasher.changed.add(parseHash);
+        hasher.init();
     });
-
-    // "_=_" is added on callback from facebook - should be removed
-    crossroads.addRoute('_=_', function() {
-        setActiveLink('home');
-    });
-
-    crossroads.addRoute('index', function() {
-        setActiveLink('index');
-    });
-
-    crossroads.addRoute('user', function() {
-        setActiveLink('user');
-    });
-
-    crossroads.addRoute('user/{id}', function(id) {
-        setActiveLink('user', id.id);
-    });
-
-
-    crossroads.addRoute('grades', function() {
-        setActiveLink('grades');
-    });
-
-    crossroads.addRoute('courses', function() {
-        setActiveLink('courses');
-    });
-
-    crossroads.addRoute('courses/{id}', function(id) {
-        setActiveLink('courses', id.id);
-    });
-
-    crossroads.addRoute('terms', function() {
-        setActiveLink('terms');
-    });
-
-    crossroads.addRoute('faculties', function() {
-        setActiveLink('faculties');
-    });
-
-    crossroads.addRoute('programmes', function() {
-        setActiveLink('programmes');
-    });
-
-    crossroads.addRoute('lecturers', function() {
-        setActiveLink('lecturers');
-    });
-
-    crossroads.addRoute('lecturers/{id}', function(id) {
-        setActiveLink('lecturers', id.id);
-    });
-
-    crossroads.addRoute('friends', function() {
-        setActiveLink('friends');
-    });
-
-    crossroads.addRoute('friendssuggestions', function() {
-        setActiveLink('friendssuggestions');
-    });
-
-    crossroads.addRoute('tt', function() {
-        setActiveLink('tt');
-    });
-
-    crossroads.addRoute('contact', function() {
-        setActiveLink('contact');
-    });
-
-    crossroads.addRoute('404', function() {
-        setActiveLink('404');
-    });
-
-    function parseHash(newHash, oldHash) {
-        crossroads.parse(newHash);
-    }
-
-    crossroads.normalizeFn = crossroads.NORM_AS_OBJECT;
-    hasher.initialized.add(parseHash);
-    hasher.changed.add(parseHash);
-    hasher.init();
-});

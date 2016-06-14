@@ -1,17 +1,17 @@
-from handlers import authentication
-from handlers.base import UsosesApi, ApplicationConfigHandler
-from handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
-from handlers.faculties import FacultyByIdApi, FacultiesApi
-from handlers.fb_handler import FacebookApi
-from handlers.friends import FriendsSuggestionsApi, FriendsApi
-from handlers.grades import GradesForUserApi, GradesForUserByTermApi
-from handlers.lecturers import LecturersApi, LecturerByIdApi
-from handlers.programmes import ProgrammesApi, ProgrammesByIdApi
-from handlers.terms import TermsApi, TermApi
-from handlers.tt import TTApi
-from handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
-from handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
-from handlers.theses import ThesesApi
+from api.handlers import authentication
+from api.handlers.base import UsosesApi, ApplicationConfigHandler
+from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
+from api.handlers.faculties import FacultyByIdApi, FacultiesApi
+from api.handlers.fb_handler import FacebookApi
+from api.handlers.friends import FriendsSuggestionsApi, FriendsApi
+from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
+from api.handlers.lecturers import LecturersApi, LecturerByIdApi
+from api.handlers.programmes import ProgrammesApi, ProgrammesByIdApi
+from api.handlers.terms import TermsApi, TermApi
+from api.handlers.tt import TTApi
+from api.handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
+from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
+from api.handlers.theses import ThesesApi
 
 HANDLERS = [
     (r"/config", ApplicationConfigHandler),

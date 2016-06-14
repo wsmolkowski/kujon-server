@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -10,10 +11,9 @@ from tornado.web import RequestHandler
 
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
+from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
-from commons.mixins.ApiMixinFriends import ApiMixinFriends
-from commons.mixins.ApiMixinSearch import ApiMixinSearch
-from commons.mixins.ApiMixinTheses import ApiMixinTheses
+from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
@@ -149,8 +149,24 @@ class BaseHandler(RequestHandler, DaoMixin):
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
+    @gen.coroutine
+    def on_finish(self):
+        user_doc = self.get_current_user()
+        user_id = user_doc[constants.MONGO_ID] if user_doc else None
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, ApiMixinTheses, JSendMixin):
+        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
+            'type': 'archive',
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self.request.remote_ip,
+        })
+
+
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
 
     def data_received(self, chunk):
         super

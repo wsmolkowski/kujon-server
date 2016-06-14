@@ -13,8 +13,7 @@ class ThesesApi(ApiHandler):
     @tornado.gen.coroutine
     def get(self):
         try:
-            theses_doc = yield self.api_theses()
+            theses_doc = yield self.api_thesis()
             self.success(theses_doc)
-            return
         except Exception as ex:
             yield self.exc(ex)

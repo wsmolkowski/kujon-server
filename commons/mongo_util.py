@@ -64,9 +64,7 @@ def convert_bytes(bytes):
 def print_statistics():
     db = get_client()
 
-    print
-    print '#' * 25 + ' gathering statistics ' + '#' * 25
-    print
+    print ('#' * 25 + ' gathering statistics ' + '#' * 25)
 
     summary = {
         "count": 0,
@@ -80,9 +78,7 @@ def print_statistics():
             continue
         stats = db.command('collstats', collection)
 
-        print
-        print '#' * 25 + ' collection {0} '.format(collection) + '#' * 25
-        print
+        print ('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
         pprint(stats, width=1)
 
         summary["count"] += stats["count"]
@@ -90,17 +86,13 @@ def print_statistics():
         summary["indexSize"] += stats.get("totalIndexSize", 0)
         summary["storageSize"] += stats.get("storageSize", 0)
 
-    print
-    print '#' * 25 + ' statistics ' + '#' * 25
-    print
-    print "Total Documents:", summary["count"]
-    print "Total Data Size:", convert_bytes(summary["size"])
-    print "Total Index Size:", convert_bytes(summary["indexSize"])
-    print "Total Storage Size:", convert_bytes(summary["storageSize"])
+    print ('#' * 25 + ' statistics ' + '#' * 25)
+    print ("Total Documents:", summary["count"])
+    print ("Total Data Size:", convert_bytes(summary["size"]))
+    print ("Total Index Size:", convert_bytes(summary["indexSize"]))
+    print ("Total Storage Size:", convert_bytes(summary["storageSize"]))
 
-    print
-    print '#' * 25 + '#' * 25
-    print
+    print ('#' * 25 + '#' * 25)
 
 
 def save_statistics():
@@ -151,7 +143,6 @@ def _do_recreate(db, usos_doc):
             for class_type in class_types.values():
                 class_type[constants.USOS_ID] = usos_doc[constants.USOS_ID]
                 class_type[constants.CREATED_TIME] = datetime.now()
-                class_type[constants.UPDATE_TIME] = datetime.now()
                 class_type_list.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
             logging.info("dictionary course classtypes for usos {0} inserted.".format(usos_doc[constants.USOS_ID]))

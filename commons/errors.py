@@ -1,7 +1,5 @@
 import json
 
-from commons import constants
-
 
 class Error(Exception):
     """Base error for this module."""
@@ -12,7 +10,7 @@ class ApiError(Exception):
     """Api Errors"""
 
     def __init__(self, msg, parameters=[]):
-        self.msg = msg.encode(constants.ENCODING)
+        self.msg = msg  # .encode(constants.ENCODING)
         if not isinstance(parameters, list) or not isinstance(parameters, tuple):
             self.parameters = [parameters]
         else:

@@ -31,7 +31,7 @@ class DaoMixin(object):
             exc_doc = exception.data()
         else:
             exc_doc = {
-                'exception': str(exception.message)
+                'exception': str(exception)
             }
 
         if hasattr(self, 'user_doc'):
@@ -220,22 +220,22 @@ class DaoMixin(object):
         yield self.db_insert(constants.COLLECTION_USERS_ARCHIVE, user_doc)
 
         yield self.db_remove(constants.COLLECTION_USERS, {constants.MONGO_ID: user_id})
+        if user_doc[constants.USOS_PAIRED]:
+            yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                                 {constants.USER_ID: user_id,
+                                  constants.CREATED_TIME: datetime.now(),
+                                  constants.UPDATE_TIME: None,
+                                  constants.JOB_MESSAGE: None,
+                                  constants.JOB_STATUS: constants.JOB_PENDING,
+                                  constants.JOB_TYPE: 'unsubscribe_usos'})
 
-        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                             {constants.USER_ID: user_id,
-                              constants.CREATED_TIME: datetime.now(),
-                              constants.UPDATE_TIME: None,
-                              constants.JOB_MESSAGE: None,
-                              constants.JOB_STATUS: constants.JOB_PENDING,
-                              constants.JOB_TYPE: 'unsubscribe_usos'})
-
-        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                             {constants.USER_ID: user_id,
-                              constants.CREATED_TIME: datetime.now(),
-                              constants.UPDATE_TIME: None,
-                              constants.JOB_MESSAGE: None,
-                              constants.JOB_STATUS: constants.JOB_PENDING,
-                              constants.JOB_TYPE: 'archive_user'})
+            yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                                 {constants.USER_ID: user_id,
+                                  constants.CREATED_TIME: datetime.now(),
+                                  constants.UPDATE_TIME: None,
+                                  constants.JOB_MESSAGE: None,
+                                  constants.JOB_STATUS: constants.JOB_PENDING,
+                                  constants.JOB_TYPE: 'archive_user'})
 
     @gen.coroutine
     def db_find_user(self):
@@ -341,3 +341,14 @@ class DaoMixin(object):
             self._classtypes[self.user_doc[constants.USOS_ID]] = class_type
 
         raise gen.Return(self._classtypes[self.user_doc[constants.USOS_ID]])
+
+    @gen.coroutine
+    def insert_search_query(self, query, endpoint):
+        query_doc = dict()
+        query_doc[constants.CREATED_TIME] = datetime.now()
+        if hasattr(self, 'user_doc') and self.user_doc and constants.MONGO_ID in self.user_doc:
+            query_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        query_doc[constants.SEARCH_QUERY] = query
+        query_doc[constants.SEARCH_ENDPOINT] = endpoint
+        query_doc = yield self.db_insert(constants.COLLECTION_SEARCH, query_doc)
+        raise gen.Return(query_doc)
