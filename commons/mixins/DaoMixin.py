@@ -299,7 +299,7 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_insert_token(self, token):
-        yield self.db_remove(constants.COLLECTION_TOKENS, {'email': token['email']})
+        yield self.db_remove(constants.COLLECTION_TOKENS, token)
 
         user_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
 

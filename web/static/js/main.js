@@ -16,7 +16,7 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
     function hideSpinner() {
         if (spinner > 0) {
             $('#spinner').hide();
-            spinner = spinner - 1;
+            spinner--;
         }
     }
 
@@ -29,10 +29,10 @@ define("main", ["jquery", "handlebars", "text!templates/error.html"], function($
                 withCredentials: true
             },
             beforeSend: function() {
-                // showSpinner();
+                showSpinner();
             },
             complete: function() {
-                // hideSpinner();
+                hideSpinner();
             },
             crossDomain: true,
             error: function(jqXHR, exception) {

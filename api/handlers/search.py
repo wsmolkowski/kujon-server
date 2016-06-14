@@ -8,14 +8,18 @@ from commons import decorators
 
 
 class AbstractSearch(ApiHandler):
+    MIN_SEARCH = 3
+    MAX_SEARCH = 30
+
     @tornado.gen.coroutine
     def prepare(self):
         yield super(AbstractSearch, self).prepare()
         query = self.request.path.split('/')[-1]  # could be better?
 
         #  walidacja powinna być zrobiona w części klienckiej
-        if len(query) <= 3 or len(query) >= 30:
-            self.error('Niepoprawne zapytnie. Spróbuj wyszukać fragment dłuższy niż 3 znaki i krótszy niż 30.')
+        if len(query) <= self.MIN_SEARCH or len(query) >= self.MAX_SEARCH:
+            self.error('Wprowadź fragment dłuższy niż {0} znaki i krótszy niż {1}.'.format(self.MIN_SEARCH,
+                                                                                           self.MAX_SEARCH))
 
     @tornado.gen.coroutine
     def on_finish(self):

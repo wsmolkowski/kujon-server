@@ -72,6 +72,8 @@ class UserInfoApi(ApiHandler):
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
+            user_doc['theses'] = yield self.api_thesis()
+
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             yield self.exc(ex)

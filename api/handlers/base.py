@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -147,6 +148,22 @@ class BaseHandler(RequestHandler, DaoMixin):
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+
+    @gen.coroutine
+    def on_finish(self):
+        user_doc = self.get_current_user()
+        user_id = user_doc[constants.MONGO_ID] if user_doc else None
+
+        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
+            'type': 'api',
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self.request.remote_ip,
+        })
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
