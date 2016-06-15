@@ -1,10 +1,11 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
         'text!templates/search_error.html', 'text!templates/modal_lecturer.html',
         'text!templates/modal_user.html', 'text!templates/spinner.html',
-        'text!templates/search_results.html'
+        'text!templates/search_results.html', 'text!templates/modal_lecturer.html',
+        'text!templates/modal_course.html'
     ],
     function($, Handlebars, main, tpl, tplError, tplModalLecturer, tplModalUser
-        , spinnerTpl, resultsTpl) {
+        , spinnerTpl, resultsTpl, lecturerTpl, courseTpl) {
         'use strict';
         return {
             render: function() {
@@ -14,6 +15,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                 var templateModalUser = Handlebars.compile(tplModalUser);
                 var templateSpinner = Handlebars.compile(spinnerTpl);
                 var templateResults = Handlebars.compile(resultsTpl);
+                var templateLecturer = Handlebars.compile(lecturerTpl);
+                var templateCourse = Handlebars.compile(courseTpl);
+
+                main.init();
 
                 $('#section-content').html(template());
 
@@ -25,6 +30,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                     main.ajaxGet(searchUrl).then(function(data) {
                         if (data.status == 'success') {
                             processResponse(data.data);
+                            bindListeners();
                         } else {
                             $('#search_results').html(templateError({
                                 'message': data.message
@@ -56,12 +62,10 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                     $('#table-results').DataTable(main.getDataTableConfig());
                 }
 
-
-                /*
-                function bindListeners() {
+                function bindListeners(){
                     $('#errorModal').modal();
 
-                    $('.description-lecturer').click(function() {
+                    $('#table-results').on('click', '.lecturer-btn', function() {
                         var lecturerId = $(this).attr("data-lecturerId");
                         var modalId = '#lecturerModal' + lecturerId;
 
@@ -74,43 +78,39 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
 
                         main.ajaxGet('/lecturers/' + lecturerId).then(function(lecturerInfo) {
                             if (lecturerInfo.status == 'success') {
-                                lecturerInfo.data['lecturer_id'] = lecturerId;
+                                lecturerInfo.data.lecturer_id = lecturerId;
                                 $('#modalWrapper').html(templateModalLecturer(lecturerInfo.data));
                                 $(modalId).modal('show');
                             } else {
-                                $('#modalWrapper').html(templateModalError(lecturerInfo));
+                                $('#modalWrapper').html(templateError(lecturerInfo));
                                 $('#errorModal').modal('show');
                             }
                         });
-
                     });
 
-                    $('.description-user').click(function() {
-                        var userId = $(this).attr("data-userId");
-                        var modalId = '#userModal' + userId;
+                    $('#table-results').on('click', '.course-btn', function() {
+                        var courseId = $(this).attr("data-courseId");
+                        var modalId = '#courseModal' + courseId;
 
                         $(modalId).modal();
+                        $(modalId).on('hidden.bs.modal', function(e) {
+                            $(this).remove();
+                            $('#modalWrapper').html();
+                            $(modalId).hide();
+                        });
 
-                        main.ajaxGet('/users/' + userId).then(function(userInfo) {
-                            if (userInfo.status == 'success') {
-                                userInfo.data['user_id'] = userId;
-                                $('#modalWrapper').html(templateModalUser(userInfo.data));
-
-                                $(modalId).on('hidden.bs.modal', function(e) {
-                                    $(this).remove();
-                                    $('#modalWrapper').html();
-                                    $(modalId).hide();
-                                });
+                        main.ajaxGet('/courses/' + courseId).then(function(courseData) {
+                            if (courseData.status == 'success') {
+                                courseData.data.courseId = courseId;
+                                $('#modalWrapper').html(templateCourse(courseData.data));
                                 $(modalId).modal('show');
                             } else {
-                                $('#modalWrapper').html(templateModalError(userInfo));
+                                $('#modalWrapper').html(templateError(courseData));
                                 $('#errorModal').modal('show');
                             }
                         });
                     });
                 }
-                */
-
             }
         }
     });

@@ -13,22 +13,34 @@
                 </thead>
                 <tbody>
                 {{#items}}
-                <tr class="lecturer-btn" data-lecturerId="{{user.id}}">
+                <tr>
                     <td>{{match}}</td>
 
                     {{#if user}}
-                    <td>{{user.staff_status}} {{user.student_status}}
+                    <td>
+                        <a class="lecturer-btn" data-lecturerId="{{user.id}}" type="button">
+                            {{user.staff_status}} {{user.student_status}}
                         {{user.titles.before}} {{user.titles.after}}
+                        </a>
                         </br>
                     </td>
                     {{/if}}
 
                     {{#if id}}
-                    <td>{{ id }} {{ postal_address }}</td>
+                    <td>
+                        <a>
+                            {{ id }} {{ postal_address }}
+                        </a>
+                    </td>
                     {{/if}}
 
                     {{#if course_id}}
-                    <td>{{ course_id }}</td>
+                    <td>
+                        <a class="course-btn" data-courseId="{{ course_id }}" type="button">
+                            {{ course_id }}
+                        </a>
+                    </td>
+
                     {{/if}}
 
                 </tr>

@@ -155,7 +155,7 @@ class BaseHandler(RequestHandler, DaoMixin):
         user_id = user_doc[constants.MONGO_ID] if user_doc else None
 
         yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
-            'type': 'archive',
+            'type': 'api',
             constants.USER_ID: user_id,
             constants.CREATED_TIME: datetime.now(),
             'host': self.request.host,
