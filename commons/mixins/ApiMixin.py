@@ -440,15 +440,12 @@ class ApiMixin(DaoMixin, UsosMixin):
     def api_tt(self, given_date):
 
         monday = None
-        if isinstance(given_date, str):
-            try:
-                given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
-                monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-            except Exception as ex:
-                self.error("Niepoprawny format daty: RRRR-MM-DD.")
-                yield self.exc(ex)
-        else:
+        try:
+            given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
+        except Exception as ex:
+            self.error("Niepoprawny format daty: RRRR-MM-DD.")
+            yield self.exc(ex)
 
         user_id = ObjectId(self.user_doc[constants.MONGO_ID])
 
