@@ -150,9 +150,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
-            term_ids = list()
-            term_ids.append(term_id)
-            term_doc = yield self.api_term(term_ids)
+            term_doc = yield self.api_term([term_id])
             if term_doc:
                 course_doc['term'] = term_doc
 
