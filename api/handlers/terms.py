@@ -31,9 +31,7 @@ class TermApi(ApiHandler):
     def get(self, term_id):
 
         try:
-            term_ids = list()
-            term_ids.append(term_id)
-            term_doc = yield self.api_term(term_ids)
+            term_doc = yield self.api_term([term_id])
 
             if not term_doc:
                 self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
