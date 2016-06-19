@@ -49,10 +49,6 @@
                                                     <p><span>Status studenta</span></p>
                                                     <p class="active-status">{{student_status}}</p>
                                                 </div>
-                                                <div class="col-sm-6 col-xs-6">
-                                                    <p><span>Data utworzenia konta</span></p>
-                                                    <p>{{user_created}}</p>
-                                                </div>
                                                 <div class="col-sm-12 col-xs-12 kierunki">
                                                     <p><span>Kierunki</span></p>
                                                     <ol type="1">
@@ -61,8 +57,16 @@
                                                         {{/student_programmes}}
                                                     </ol>
                                                 </div>
-
-
+                                                {{#if theses}}
+                                                <div class="col-sm-12 col-xs-12 kierunki">
+                                                    <p><span>Prace dyplomowe</span></p>
+                                                    <ol type="1">
+                                                        {{#theses}}
+                                                        <li>{{type}} - {{title}}</li>
+                                                        {{/theses}}
+                                                    </ol>
+                                                </div>
+                                                {{/if}}
                                             </div>
                                         </div>
                                         {{#if google}}
@@ -93,11 +97,6 @@
                                                     <p><span>Konto</span></p>
                                                     <p>Facebook</p>
                                                 </div>
-
-                                                <div class="col-sm-6 col-xs-6">
-                                                    <p><span>Data utworzenia</span></p>
-                                                    <p>2016/03/25</p>
-                                                </div>
                                                 <div class="col-sm-6 col-xs-12">
                                                     <p><span>E-mail</span></p>
                                                     <p>{{user_email}}</p>
@@ -105,52 +104,18 @@
                                             </div>
                                         </div>
                                         {{/if}}
-                                    </div>
+                                        <div class="col-md-6">
+                                            <div class="dane dane-fb">
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-6 col-xs-6">
+                                                    <p><span>Data utworzenia konta</span></p>
+                                                    <p>{{user_created}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                 </div>
                             </div>
-
-                        </div>
-
-                        <div class="row">
-                            <table id="table-terms" class="table" cellspacing="0" width="100%">
-                                <caption>Prace dyplomowe</caption>
-                                <thead>
-                                <tr>
-                                    <th data-sortable="true">Numer</th>
-                                    <th data-sortable="true">Typ</th>
-                                    <th data-sortable="true">Tytuł</th>
-                                    <th data-sortable="true">Jednostka</th>
-                                    <th data-sortable="true">Koordynatorzy</th>
-                                    <th data-sortable="true">Autorzy</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {{#theses}}
-                                <tr>
-                                    <td>{{id}}</td>
-                                    <td>{{type}}</td>
-                                    <td>{{title}}</td>
-                                    <td>{{faculty.id}} {{faculty.name}}</td>
-                                    <td>
-                                        {{#supervisors}}
-                                        <button data-toggle="modal" data-target="#lecturers-1"
-                                                class="description-lecturer" data-lecturerId="{{id}}">
-                                            <span>{{first_name}} {{last_name}}</span>
-                                        </button>
-                                        <br> {{/supervisors}}
-                                    </td>
-                                    <td>
-                                        {{#authors}}
-                                        <button data-toggle="modal" data-target="#lecturers-1" class="description-user"
-                                                data-userId="{{id}}">
-                                            <span>{{first_name}} {{last_name}}</span>
-                                        </button>
-                                        <br> {{/authors}}
-                                    </td>
-                                </tr>
-                                {{/theses}}
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
