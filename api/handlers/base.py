@@ -106,14 +106,12 @@ class BaseHandler(RequestHandler, DaoMixin):
             self._usoses = yield self.get_usos_instances()
 
         result_usoses = copy.deepcopy(self._usoses)
+        usoses = list()
         if not showtokens:
             for usos in result_usoses:
-                usos.pop("consumer_secret")
-                usos.pop("consumer_key")
-                usos.pop("enabled")
-                usos.pop("contact")
-                usos.pop("url")
-        raise gen.Return(result_usoses)
+                wanted_keys = ['logo', constants.USOS_ID, 'name']
+                usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
+        raise gen.Return(usoses)
 
     @gen.coroutine
     def get_usos(self, key, value):
