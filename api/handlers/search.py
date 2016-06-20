@@ -37,8 +37,10 @@ class SearchUsersApi(AbstractSearch):
             result_doc = yield self.api_search_users(query)
             if result_doc['items']:
                 self.success(result_doc)
+                return
             else:
                 self.error('Niestety nie znaleźliśmy danych.')
+                return
         except Exception as ex:
             yield self.exc(ex)
 

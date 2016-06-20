@@ -452,8 +452,8 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_search_users(self, query, start=0):
-        result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc,  args={
-                'query': query,
+        result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc ,args={
+                'query': query.encode('utf-8'),
                 'start': int(start),
                 'num': 20,
                 'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
@@ -480,33 +480,31 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_search_courses(self, query, start=0):
-        result = yield self.usos_request(path='services/courses/search', user_doc=self.user_doc, args={
-            'name': query,
+        result = yield self.call_async(path='services/courses/search', arguments={
+            'name': query.encode('utf-8'),
             'start': int(start),
             'num': 20,
             'fields': 'items[course_name]|match|next_page]',
             'lang': 'pl'
         })
-
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_search_faculty(self, query, start=0):
-        result = yield self.usos_request(path='services/fac/search', user_doc=self.user_doc, args={
-            'query': query,
+        result = yield self.call_async(path='services/fac/search', arguments={
+            'query': query.encode('utf-8'),
             'start': int(start),
             'num': 20,
             'fields': 'id|match|postal_address',
             'lang': 'pl',
             'visibility': 'all'
         })
-
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_search_programmes(self, query, start=0):
-        result = yield self.usos_request(path='services/progs/search', user_doc=self.user_doc, args={
-            'query': query,
+        result = yield self.call_async(path='services/progs/search', arguments={
+            'query': query.encode('utf-8'),
             'start': int(start),
             'num': 20,
             'fields': 'id|type|title|supervisors|faculty[id|name]',

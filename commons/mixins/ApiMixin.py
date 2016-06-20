@@ -150,7 +150,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
-            term_doc = yield self.api_term(term_id)
+            term_doc = yield self.api_term([term_id])
             if term_doc:
                 course_doc['term'] = term_doc
 
@@ -357,9 +357,9 @@ class ApiMixin(DaoMixin, UsosMixin):
                         return term_grades
             return None
 
-        grades = yield self.api_grades()
+        grades_doc = yield self.api_grades()
 
-        for grade in grades:
+        for grade in grades_doc:
             term_grades = find_grades(grade[constants.TERM_ID])
             if term_grades:
                 term_grades['courses'].append(grade)
@@ -490,42 +490,57 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(tt_doc['tts'])
 
     @gen.coroutine
-    def api_term(self, term_id):
-        pipeline = {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+    def _api_term_task(self, term_id):
 
+        try:
+            term_doc = yield self.usos_term(term_id)
+            yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
+        except UsosClientError as ex:
+            yield self.exc(ex, finish=False)
+        raise gen.Return(None)
+
+    @gen.coroutine
+    def api_term(self, term_ids):
+
+        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TERMS, pipeline)
 
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(pipeline, TERM_LIMIT_FIELDS)
+        cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort("order_key", -1)
+        terms_doc = yield cursor.to_list(None)
 
-        if not term_doc:
+        if not terms_doc:
             try:
-                term_doc = yield self.usos_term(term_id)
-                yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
+                terms_task = list()
+                for term_id in term_ids:
+                    terms_task.append(self._api_term_task(term_id))
+                yield terms_task
+                terms_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return(None)
 
         today = date.today()
-        end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
-        if today <= end_date:
-            term_doc['active'] = True
-        else:
-            term_doc['active'] = False
+        for term in terms_doc:
+            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
+            if today <= end_date:
+                term['active'] = True
+            else:
+                term['active'] = False
 
-        raise gen.Return(term_doc)
+        raise gen.Return(terms_doc)
 
     @gen.coroutine
     def api_terms(self):
         courses_editions = yield self.api_courses_editions()
 
-        api_terms = list()
+        terms_ids = list()
         for term_id in courses_editions[constants.COURSE_EDITIONS]:
-            if term_id in api_terms:
+            if term_id in terms_ids:
                 continue
-            api_terms.append(self.api_term(term_id))
+            terms_ids.append(term_id)
 
-        result = yield api_terms
+        result = yield self.api_term(terms_ids)
 
         raise gen.Return(result)
 
