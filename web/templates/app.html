@@ -1,6 +1,4 @@
-{% extends "base.html" %}
-
-{% block header_js %}
+{% extends "base.html" %} {% block header_js %}
 
 <link href="/static/bower_components/fullcalendar/dist/fullcalendar.min.css" rel="stylesheet">
 
@@ -34,9 +32,8 @@
                 -->
                 <li class="dropdown">
                     <a href="/#user" class="dropdown-toggle" data-toggle="dropdown"><img
-                            src="{{current_user['picture']}}"
-                            class="img-circle profil-nav">{{current_user['name']}} <span
-                            class="glyphicon glyphicon-menu-down"></span></a>
+                            src="{{current_user['picture']}}" class="img-circle profil-nav">{{current_user['name']}}
+                        <span class="glyphicon glyphicon-menu-down"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
                     </ul>
@@ -55,15 +52,13 @@
                 <li><a href="#search">Katalog</a></li>
                 <li><a href="#contact">Kontakt</a></li>
             </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
 </nav>
 
-{% module xsrf_form_html() %}
-
-{% end %}
-
-{% block main %}
+{% module xsrf_form_html() %} {% end %} {% block main %}
 <div id="page-content">
     <div id="section-content">
         <section class="welcome">
@@ -75,7 +70,8 @@
                 </div>
             </div>
         </section>
-    </div> <!-- section-content -->
+    </div>
+    <!-- section-content -->
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
 
@@ -86,7 +82,8 @@
             <div class="row">
                 <div class="col-sm-6">
                     <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
-                        reserved.</p>
+                        reserved.
+                    </p>
                 </div>
                 <div class="col-sm-6">
                     <ul class="nav navbar-nav navbar-right navbar-bottom">
@@ -101,15 +98,13 @@
         </div>
     </footer>
 
-</div> <!-- page content -->
-{% end %}
-
-{% block footer_js %}
+</div>
+<!-- page content -->
+{% end %} {% block footer_js %}
 <script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
 
 <script>
-
-    $(document).ready(function () {
+    $(document).ready(function() {
         //stick in the fixed 100% height behind the navbar but don't wrap it
         $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
         $('#slide-nav.navbar .container').append($('<div id="navbar-height-col"></div>'));
@@ -121,7 +116,8 @@
         var slidewidth = '50%';
         var menuneg = '-100%';
         var slideneg = '-50%';
-        $("#slide-nav").on("click", toggler, function (e) {
+
+        $("#slide-nav").on("click", toggler, function(e) {
             var selected = $(this).hasClass('slide-active');
             $('#slidemenu').stop().animate({
                 right: selected ? menuneg : '0px'
@@ -138,16 +134,36 @@
             $(this).toggleClass('slide-active', !selected);
             $('#slidemenu').toggleClass('slide-active');
             $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
+
         });
+        $('#slidemenu .dropdown-menu>li>a, .navbar-left>li>a').click(function() {
+            var selected = $("#slide-nav").hasClass('slide-active');
+            $('#slidemenu').stop().animate({
+                right: selected ? menuneg : '0px'
+            });
+            $('#navbar-height-col').stop().animate({
+                right: selected ? slideneg : '0px'
+            });
+            $(pagewrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $(navigationwrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $("#slide-nav").removeClass('slide-active', !selected);
+            $('#slidemenu').removeClass('slide-active');
+            $('.navbar-toggle').removeClass('slide-active');
+            $('#page-content, .navbar, body, .navbar-header').removeClass('slide-active');
+        });
+        var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
+        $(window).on("resize", function() {
+            if ($(window).width() > 1000 && $('.navbar-toggle').is(':hidden')) {
+                $(selected).removeClass('slide-active');
+            }
+        });
+
+
     });
-
-    var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
-	$(window).on("resize", function () {
-        if ($(window).width() > 1000 && $('.navbar-toggle').is(':hidden')) {
-            $(selected).removeClass('slide-active');
-        }
-    });
-
-
 </script>
+
 {% end %}
