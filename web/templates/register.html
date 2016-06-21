@@ -32,19 +32,19 @@
 {% end %}
 
 {% block main %}
-<section class="welcome">
+<section id="wybor-uczelni" class="college-selection">
     <div class="container">
         <div class="row">
-            <div class="col-sm-12 text-center">
+            <div class="heading">
                 <h2>Aby móc pracować w <span>Kujonie</span> wybierz uczelnię w której masz założone konto USOS,
-                    przekierujemy Cię abyś się zalogował.</h2>
-
+                    przekierujemy Cię abyś się zalogował.
+                </h2>
             </div>
 
             <!--
 			<div class="col-sm-12">
-				<div class="form-group col-sm-4">
-					<input type="text" class="search" placeholder="Szukaj według nazwy uczelni">
+				<div class="form-group col-sm-4 search">
+					<input type="text" class="form-control" placeholder="Szukaj według nazwy uczelni">
 				</div>
 				<div class="col-sm-8 text-right brak-uczelni">
 					<a href="#" data-toggle="modal" data-target="#niemauczelni"><span>Nie ma Twojej uczelni?</span></a>
@@ -68,5 +68,29 @@
     </div>
 </section>
 
+{% end %}
+
+{% block footer_js %}
+
+<script>
+
+    $(window).load(function(){
+			if($('section').hasClass("college-selection")){
+			var kolumnaPrawa =  $("div.border-logo-cykle").height();
+			var kolumnaLewa = $("div.border-logo-cykle").height();
+
+			if (kolumnaLewa > kolumnaPrawa)
+			{
+				$("div.border-logo-cykle").css({'height' : kolumnaLewa});
+			}
+			else
+			{
+				$("div.border-logo-cykle").css({'height' : kolumnaPrawa});
+			};
+			};
+		});
+
+
+</script>
 
 {% end %}
