@@ -80,7 +80,7 @@ section>.container>.row>.content{margin-top: 110px;}
 #niemauczelni>.modal-dialog>.modal-content>.modal-body>.row>.col-sm-12{margin:40px 0;}
 #niemauczelni>.modal-dialog>.modal-content>.modal-body>.row>.col-sm-12>.zamknij{margin: 40px 0 0 0;color:black;cursor:pointer;font-weight:500;font-size:13px;}
 #wybor-uczelni>.container>.row>.col-sm-12>.form-group{margin-bottom:20px;}
-#wybor-uczelni>.container>.row>.heading{padding: 110px 15px 50px 15px;}
+#wybor-uczelni>.container>.row>.heading{padding: 110px 15px 0px 15px;}
 #wybor-uczelni>.container>.row>.col-sm-12>.col-sm-4{padding: 0;}
 #wybor-uczelni>.container>.row>.col-sm-12>.brak-uczelni{padding: 12px 0;}
 #wybor-uczelni>.container>.row>.col-sm-12>.brak-uczelni>a>span{color:#ff5b5b;}
