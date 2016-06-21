@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block header_js %}
+<script type="text/javascript" src="/static/bower_components/jquery/dist/jquery.min"></script>
+{% end %}
+
 {% block navigation %}
 <nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
     <div class="container">
@@ -67,6 +71,29 @@
         </div>
     </div>
 </section>
+
+<footer id="footer" class="navbar-static-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6">
+                <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
+                    reserved.</p>
+            </div>
+            <div class="col-sm-6">
+                <ul class="nav navbar-nav navbar-right navbar-bottom">
+                    <li><a href="regulamin">Regulamin</a></li>
+                    <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
+                    <li class="fb"><a href="https://www.facebook.com/kujonmobi-992906237450440/" target="_blank"><span
+                            class="fa fa-facebook"></span></a></li>
+                    <li class="andr"><a href="https://play.google.com/store/apps/details?id=mobi.kujon"><span
+                            class="fa fa-android"></span></a></li>
+                    <li class="apple"><a href="https://itunes.apple.com/pl/app/kujon"><span class="fa fa-apple"></span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
 
 {% end %}
 
