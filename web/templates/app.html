@@ -108,7 +108,8 @@
                 height: '100%',
                 display: 'table'
             });
-        } else {
+        }
+        if ($('section').not('[.welcome]')) {
             $('#section-content').css({
                 height: 'auto',
                 display: 'block'
