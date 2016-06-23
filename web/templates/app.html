@@ -103,6 +103,18 @@
 
 <script>
     $(document).ready(function() {
+        if ($('section').hasClass('welcome')) {
+            $('#section-content').css({
+                height: '100%',
+                display: 'table'
+            });
+        } else {
+            $('#section-content').css({
+                height: 'auto',
+                display: 'block'
+            });
+        }
+
         //stick in the fixed 100% height behind the navbar but don't wrap it
         $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
         $('#slide-nav.navbar .container').append($('<div id="navbar-height-col"></div>'));
