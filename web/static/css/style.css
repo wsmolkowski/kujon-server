@@ -447,7 +447,7 @@ header>.container>.row>.col-sm-10 {margin-top: 70px;max-height: 685px;}
 	
 /*media*/
 @media (min-width: 768px){
-header{background: url('../img/header.png') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
+header{background: url('../img/header.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
 /*.modal-header .close {margin-top: 18px;}*/
 .intro-header>h1>span {display: block;}
 .logowanie-modal>.modal-dialog {width: 350px;}
@@ -460,7 +460,7 @@ header{background: url('../img/header.png') no-repeat;width:100%;background-size
 }
 
 @media (max-width:767px) { 
-header{background: url('../img/header-mobile.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
+header{background: url('../img/header.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
 #wybor-uczelni>.container>.row>.col-sm-12>.form-group>input {padding: 2% 0 0 40px;    background: url(../img/search.png) no-repeat 3% 57%;}
 .navbar-landing.slide-active{position:fixed;}
 .slide-active{position:relative;}
