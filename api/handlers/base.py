@@ -109,7 +109,7 @@ class BaseHandler(RequestHandler, DaoMixin):
         if not showtokens:
             usoses = list()
             for usos in result_usoses:
-                wanted_keys = ['logo', constants.USOS_ID, 'name']
+                wanted_keys = ['logo', constants.USOS_ID, 'name', 'url']
                 usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
             result_usoses = usoses
         raise gen.Return(result_usoses)
