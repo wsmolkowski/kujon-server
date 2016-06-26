@@ -192,7 +192,7 @@ class UsosesApi(BaseHandler, JSendMixin):
     @gen.coroutine
     def get(self):
         data = yield self.get_usoses(showtokens=False)
-        self.success(data, cache_age=constants.SECONDS_1MONTH)
+        self.success(data, cache_age=constants.SECONDS_1WEEK)
 
 
 class DefaultErrorHandler(BaseHandler, JSendMixin):
