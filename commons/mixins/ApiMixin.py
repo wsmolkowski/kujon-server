@@ -348,29 +348,27 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_grades_byterm(self):
-        result = list()
 
-        def find_grades(term_id):
-            for term_grades in result:
-                for key, value in list(term_grades.items()):
-                    if key == constants.TERM_ID and value == term_id:
-                        return term_grades
-            return None
+        grades = yield self.api_grades()
 
-        grades_doc = yield self.api_grades()
+        terms = list()
+        grades_by_term = dict()
 
-        for grade in grades_doc:
-            term_grades = find_grades(grade[constants.TERM_ID])
-            if term_grades:
-                term_grades['courses'].append(grade)
-                result.append(term_grades)
-            else:
-                result.append({
-                    constants.TERM_ID: grade[constants.TERM_ID],
-                    'courses': [grade]
-                })
+        # grouping grades by term
+        for grade in grades:
+            if grade[constants.TERM_ID] not in grades_by_term:
+                grades_by_term[grade[constants.TERM_ID]] = list()
+                terms.append(grade[constants.TERM_ID])
+            grades_by_term[grade[constants.TERM_ID]].append(grade)
 
-        raise gen.Return(result)
+        # order grades by terms in order_keys as dictionary and reverse sort
+        terms_by_order = yield self.db_terms_with_order_keys(terms)
+        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        grades_sorted_by_term = list()
+        for order_key in terms_by_order:
+            grades_sorted_by_term.append({constants.TERM_ID: terms_by_order[order_key],
+                                          'courses': grades_by_term[terms_by_order[order_key]]})
+        raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
     def api_lecturers(self):
