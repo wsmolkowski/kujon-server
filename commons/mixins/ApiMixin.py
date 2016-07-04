@@ -41,7 +41,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_courses_editions(self):
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
         pipeline = {constants.USER_ID: user_id}
 
@@ -82,9 +82,8 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -164,7 +163,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_course(self, course_id):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -227,7 +226,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: course[constants.TERM_ID],
-                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
+                     constants.USOS_ID: self.get_current_user()[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
                 groups = list()
@@ -439,13 +438,13 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         monday = None
         try:
-            given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
+            if isinstance(given_date, unicode):
+                given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception as ex:
-            self.error("Niepoprawny format daty: RRRR-MM-DD.")
-            yield self.exc(ex)
+            yield self.exc(ex, finish=False)
 
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TT, {constants.USER_ID: user_id})
@@ -500,7 +499,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_term(self, term_ids):
 
-        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TERMS, pipeline)
 
@@ -545,13 +544,11 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_user_info(self, user_id=None):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-
         if not user_id:
-            pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
-                        constants.USOS_ID: usos_doc[constants.USOS_ID]}
+            pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+                        constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
         else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+            pipeline = {constants.ID: user_id, constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
@@ -567,7 +564,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             if not user_info_doc:
                 raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
             if not user_id:
-                user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
             # if user has photo
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
@@ -583,7 +580,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_faculty(self, faculty_id):
-        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_FACULTIES, pipeline)
@@ -634,7 +631,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
-        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
@@ -653,7 +650,8 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_units(self, units_id, finish=False):
-        pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))}, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))},
+                    constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline).sort("unit_id")
         units_doc = yield cursor.to_list(None)
 
@@ -671,7 +669,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_group(self, group_id, finish=False):
-        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_GROUPS, pipeline)
 
@@ -706,7 +704,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_thesis(self):
 
-        pipeline = {constants.USER_ID: self.user_doc[constants.MONGO_ID]}
+        pipeline = {constants.USER_ID: self.get_current_user()[constants.MONGO_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_THESES, pipeline)
 

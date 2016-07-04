@@ -5,7 +5,6 @@ from datetime import datetime
 from pprint import pprint
 
 import pymongo
-from commons.usosutils import usosinstances
 from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest

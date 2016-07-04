@@ -34,12 +34,11 @@ class DaoMixin(object):
                 'exception': str(exception)
             }
 
-        if hasattr(self, 'user_doc'):
-            exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-            exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-
         if hasattr(self, 'get_current_user') and self.get_current_user():
-            exc_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+            user_id = self.get_current_user()[constants.MONGO_ID]
+            if not isinstance(user_id, ObjectId):
+                user_id = ObjectId(user_id)
+            exc_doc[constants.USER_ID] = user_id
 
         exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
@@ -319,7 +318,7 @@ class DaoMixin(object):
         terms_by_order = dict()
         for term in terms_list:
             term_coursor = self.db[constants.COLLECTION_TERMS].find(
-                {constants.USOS_ID: self.user_doc[constants.USOS_ID],
+                {constants.USOS_ID: self.get_current_user()[constants.USOS_ID],
                  constants.TERM_ID: term},
                 (constants.TERM_ID, constants.TERMS_ORDER_KEY))
             while (yield term_coursor.fetch_next):
@@ -333,24 +332,24 @@ class DaoMixin(object):
     @gen.coroutine
     def db_classtypes(self):
 
-        if self.user_doc[constants.USOS_ID] not in self._classtypes:
+        if self.get_current_user()[constants.USOS_ID] not in self._classtypes:
             class_type = dict()
             cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-                {constants.USOS_ID: self.user_doc[constants.USOS_ID]})
+                {constants.USOS_ID: self.get_current_user()[constants.USOS_ID]})
             while (yield cursor.fetch_next):
                 ct = cursor.next_object()
                 class_type[ct['id']] = ct['name']['pl']
 
-            self._classtypes[self.user_doc[constants.USOS_ID]] = class_type
+            self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
 
-        raise gen.Return(self._classtypes[self.user_doc[constants.USOS_ID]])
+        raise gen.Return(self._classtypes[self.get_current_user()[constants.USOS_ID]])
 
     @gen.coroutine
     def insert_search_query(self, query, endpoint):
         query_doc = dict()
         query_doc[constants.CREATED_TIME] = datetime.now()
-        if hasattr(self, 'user_doc') and self.user_doc and constants.MONGO_ID in self.user_doc:
-            query_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        if hasattr(self, 'user_doc') and self.get_current_user() and constants.MONGO_ID in self.get_current_user():
+            query_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         query_doc[constants.SEARCH_QUERY] = query
         query_doc[constants.SEARCH_ENDPOINT] = endpoint
         query_doc = yield self.db_insert(constants.COLLECTION_SEARCH, query_doc)

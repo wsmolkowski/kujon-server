@@ -59,10 +59,10 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def prepare(self):
-        self.current_user = yield self.set_current_user()
+        self._current_user = yield self.set_current_user()
 
     def get_current_user(self):
-        return self.current_user
+        return self._current_user
 
 
 class MainHandler(BaseHandler):
@@ -89,6 +89,8 @@ class MainHandler(BaseHandler):
                 })
                 if error:
                     data['error'] = error['exception']
+                else:
+                    data['error'] = False
 
             usoses = yield self.get_usoses()
             data['usoses'] = usoses

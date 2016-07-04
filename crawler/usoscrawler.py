@@ -19,12 +19,6 @@ class UsosCrawler(ApiMixin):
     def __init__(self):
         self.aes = AESCipher()
 
-    _user_doc = None
-
-    @property
-    def user_doc(self):
-        return self._user_doc
-
     _usos_doc = None
 
     @property
@@ -33,22 +27,26 @@ class UsosCrawler(ApiMixin):
 
     @property
     def usos_id(self):
-        return self.user_doc[constants.USOS_ID]
+        return self.get_current_user()[constants.USOS_ID]
 
     @property
     def user_id(self):
-        return self.user_doc[constants.MONGO_ID]
+        return self.get_current_user()[constants.MONGO_ID]
 
-    @gen.coroutine
-    def get_usos(self, key, value):
-        raise gen.Return(self._usos_doc)
+    _user_doc = None
+
+    def get_current_user(self):
+        return self._user_doc
+
+    def get_current_usos(self):
+        return self.usos_doc
 
     @gen.coroutine
     def __subscribe(self):
 
         for event_type in self.EVENT_TYPES:
             try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.user_doc[constants.MONGO_ID])
+                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
                 if subscribe_doc:
                     yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
                 else:
@@ -112,10 +110,10 @@ class UsosCrawler(ApiMixin):
     def initial_user_crawl(self, user_id):
         try:
             self._user_doc = yield self.db_get_user(user_id)
-            if not self.user_doc:
+            if not self._user_doc:
                 raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
 
-            self._usos_doc = yield self.db_get_usos(self.user_doc[constants.USOS_ID])
+            self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
 
             yield self.api_user_info()
             yield self.api_courses_editions()
@@ -144,20 +142,17 @@ class UsosCrawler(ApiMixin):
             if isinstance(user_id, str):
                 user_id = ObjectId(user_id)
 
-            user_doc_archive = yield self.db_get_archive_user(user_id)
+            self._user_doc = yield self.db_get_archive_user(user_id)
+            self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
 
-            if not user_doc_archive:
+            if not self._user_doc:
                 raise CrawlerException(
                     "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
                     user_id)
 
-            usos_doc = yield self.db_get_usos(user_doc_archive[constants.USOS_ID])
+            if constants.USOS_ID in self._user_doc:
+                yield self.usos_unsubscribe()
 
-            if constants.USOS_ID in user_doc_archive:
-                try:
-                    yield self.usos_unsubscribe(usos_doc, user_doc_archive)
-                except Exception as ex:
-                    yield self.exc(ex, finish=False)
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
@@ -181,3 +176,21 @@ class UsosCrawler(ApiMixin):
         except Exception as ex:
             self.exc(ex, finish=False)
 
+
+            # @gen.coroutine
+            # def main():
+            #     crawler = UsosCrawler()
+            #     user_id = '577a7f93d54c4b70a8349982'
+            #     yield crawler.initial_user_crawl(user_id)
+            #     # yield crawler.unsubscribe(user_id)
+            #
+            #
+            # if __name__ == '__main__':
+            #     import logging
+            #     from tornado import ioloop
+            #     from tornado.options import parse_command_line
+            #
+            #     parse_command_line()
+            #     logging.getLogger().setLevel(logging.DEBUG)
+            #     io_loop = ioloop.IOLoop.current()
+            #     io_loop.run_sync(main)
