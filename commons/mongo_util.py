@@ -5,13 +5,13 @@ from datetime import datetime
 from pprint import pprint
 
 import pymongo
+from commons.usosutils import usosinstances
 from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, utils
+from commons import constants, settings, utils, usosinstances
 from commons.AESCipher import AESCipher
-from commons.usosutils import usosinstances
 from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,

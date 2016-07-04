@@ -10,7 +10,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
-from commons.usosutils.usoscrawler import UsosCrawler
+from usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 MAX_WORKERS = 4

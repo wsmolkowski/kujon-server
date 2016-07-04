@@ -9,8 +9,8 @@ from tornado.auth import OAuthMixin, _auth_return_future
 from tornado.httpclient import HTTPRequest, HTTPError
 
 from commons import constants, utils, settings
+from commons import usoshelper
 from commons.errors import UsosClientError
-from commons.usosutils import usoshelper
 
 try:
     import urlparse  # py2

@@ -8,8 +8,8 @@ from bson.objectid import ObjectId
 
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
+from commons import usosinstances
 from commons.errors import ApiError
-from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',

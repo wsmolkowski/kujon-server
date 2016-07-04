@@ -8,10 +8,10 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
+from commons import usoshelper
 from commons.errors import ApiError, UsosClientError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
-from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
