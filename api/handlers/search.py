@@ -17,7 +17,7 @@ class AbstractSearch(ApiHandler):
         query = self.request.path.split('/')[-1]  # could be better?
 
         #  walidacja powinna być zrobiona w części klienckiej
-        if len(query) >= self.MIN_SEARCH or len(query) <= self.MAX_SEARCH:
+        if len(query) >= self.MIN_SEARCH and len(query) <= self.MAX_SEARCH:
             self.error('Wprowadź fragment dłuższy niż {0} znaki i krótszy niż {1}.'.format(self.MIN_SEARCH,
                                                                                            self.MAX_SEARCH))
 
