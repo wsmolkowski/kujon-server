@@ -38,6 +38,9 @@ class DaoMixin(object):
             exc_doc[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
             exc_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
 
+        if self.get_current_user():
+            exc_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
         exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()

@@ -308,8 +308,11 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 })
 
         except Exception as ex:
-            yield self.exc(ex)
-
+            if login_type and login_type.upper() == 'WWW':
+                yield self.exc(ex, finish=False)
+                yield self.redirect(settings.DEPLOY_WEB)
+            else:
+                yield self.exc(ex)
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @web.asynchronous

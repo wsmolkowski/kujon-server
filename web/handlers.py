@@ -80,9 +80,19 @@ class MainHandler(BaseHandler):
             self.render("app.html", **CONFIG)
         elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
             data = CONFIG
+
+            user = self.get_current_user()
+            if user:
+                error = yield self.db[constants.COLLECTION_EXCEPTIONS].find_one({
+                    constants.USER_ID: user[constants.MONGO_ID],
+                    constants.EXCEPTION_TYPE: 'authentication'
+                })
+                if error:
+                    data['error'] = error['exception']
+
             usoses = yield self.get_usoses()
             data['usoses'] = usoses
-            self.render("register.html", **CONFIG)
+            self.render("register.html", **data)
         else:
             self.render("index.html", **CONFIG)
 
