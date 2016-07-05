@@ -39,7 +39,7 @@ class UsosCrawler(ApiMixin):
         return self._user_doc
 
     def get_current_usos(self):
-        return self.usos_doc
+        return self._usos_doc
 
     @gen.coroutine
     def __subscribe(self):
