@@ -303,7 +303,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
                 yield self.authorize_redirect(extra_params={
-                    'scopes': 'studies|offline_access|student_exams|grades',
+                    'scopes': 'studies|offline_access|student_exams|grades|crstests',
                     'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
                 })
 

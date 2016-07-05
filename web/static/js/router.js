@@ -39,7 +39,7 @@ define(['jquery', 'handlebars', 'crossroads', 'hasher', 'text!templates/spinner.
             setActiveLink('lecturers', id.id);
         });
 
-        var routes = ['index', 'user', 'grades', 'courses', 'terms', 'faculties',
+        var routes = ['index', 'user', 'grades', 'crstests', 'courses', 'terms', 'faculties',
             'programmes', 'lecturers', 'friends', 'friendssuggestions', 'tt', 'contact',
             'search', '404'
         ];

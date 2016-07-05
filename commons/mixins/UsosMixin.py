@@ -56,7 +56,10 @@ class UsosMixin(OAuthMixin):
         return UsosClientError('USOS HTTP response {0}'.format(result))
 
     @_auth_return_future
-    def usos_request(self, path, callback=None, args={}, photo=False):
+    def usos_request(self, path, callback=None, arguments={}, photo=False):
+
+        arguments['lang'] = 'pl'
+
         url = self._oauth_base_uri() + path
 
         access_token = dict(key=self.get_current_user()[constants.ACCESS_TOKEN_KEY],
@@ -64,10 +67,11 @@ class UsosMixin(OAuthMixin):
 
         # Add the OAuth resource request signature if we have credentials
         method = "GET"
-        oauth = self._oauth_request_parameters(url, access_token, args, method=method)
-        args.update(oauth)
+        oauth = self._oauth_request_parameters(url, access_token, arguments, method=method)
+        arguments.update(oauth)
 
-        url += "?" + urllib_parse.urlencode(args)
+        if arguments:
+            url += "?" + urllib_parse.urlencode(arguments)
         http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
         if photo:
             http_callback = functools.partial(self._on_usos_photo_request, callback)
@@ -93,12 +97,15 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
 
+        arguments['lang'] = 'pl'
+
         if not base_url:
             url = self._oauth_base_uri() + path
         else:
             url = base_url + path
 
-        url += "?" + urllib_parse.urlencode(arguments)
+        if arguments:
+            url += "?" + urllib_parse.urlencode(arguments)
 
         if constants.VALIDATE_SSL_CERT in self.get_current_usos():
             http_client = utils.http_client(validate_cert=True)
@@ -125,11 +132,10 @@ class UsosMixin(OAuthMixin):
         create_time = datetime.now()
 
         url = 'services/courses/course'
-        args = {
+        result = yield self.usos_request(path=url, arguments={
             'course_id': course_id,
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
-        }
-        result = yield self.usos_request(path=url, args=args)
+        })
 
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
@@ -165,12 +171,12 @@ class UsosMixin(OAuthMixin):
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 
         if user_id:
-            result = yield self.usos_request(path='services/users/user', args={
+            result = yield self.usos_request(path='services/users/user', arguments={
                 'fields': fields,
                 'user_id': user_id
             })
         else:
-            result = yield self.usos_request(path='services/users/user', args={
+            result = yield self.usos_request(path='services/users/user', arguments={
                 'fields': fields
             })
 
@@ -270,7 +276,7 @@ class UsosMixin(OAuthMixin):
     def usos_courses_editions(self):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/courses/user', args={
+        result = yield self.usos_request(path='services/courses/user', arguments={
             'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
             'active_terms_only': 'false',
         })
@@ -298,7 +304,7 @@ class UsosMixin(OAuthMixin):
                     'course_id': course_id,
                     'term_id': term_id
                 }
-            result = yield self.usos_request(path='services/courses/course_edition', args=args)
+            result = yield self.usos_request(path='services/courses/course_edition', arguments=args)
         except Exception as ex:
             logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
             raise gen.Return(None)
@@ -346,7 +352,7 @@ class UsosMixin(OAuthMixin):
     def usos_photo(self, user_info_id):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/photos/photo', args={
+        result = yield self.usos_request(path='services/photos/photo', arguments={
             'user_id': user_info_id,
         }, photo=True)
 
@@ -375,7 +381,7 @@ class UsosMixin(OAuthMixin):
     def time_table(self, given_date):
         create_time = datetime.now()
 
-        result = yield self.usos_request(path='services/tt/user', args={
+        result = yield self.usos_request(path='services/tt/user', arguments={
             'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
             'start': given_date,
             'days': '7'
@@ -394,7 +400,7 @@ class UsosMixin(OAuthMixin):
     def usos_subscribe(self, event_type, verify_token):
         create_time = datetime.now()
         result = yield self.usos_request(path='services/events/subscribe_event',
-                                         args={
+                                         arguments={
                                              'event_type': event_type,
                                              'callback_url': settings.DEPLOY_EVENT,
                                              'verify_token': verify_token
@@ -436,7 +442,7 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_search_users(self, query, start=0):
-        result = yield self.usos_request(path='services/users/search2', args={
+        result = yield self.usos_request(path='services/users/search2', arguments={
             'query': query.encode('utf-8'),
             'start': int(start),
             'num': 20,
@@ -499,7 +505,7 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_theses(self, user_info_id):
-        result = yield self.usos_request(path='services/theses/user', args={
+        result = yield self.usos_request(path='services/theses/user', arguments={
             'user_id': user_info_id,
             'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
         })
@@ -514,4 +520,32 @@ class UsosMixin(OAuthMixin):
         result[constants.UPDATE_TIME] = create_time
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_crstests_participant(self):
+        result = yield self.usos_request(path='services/crstests/participant')
+        create_time = datetime.now()
+        result[constants.USOS_ID] = self.get_usos_id()
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_crstests_user_grade(self, node_id):
+        result = yield self.usos_request(path='services/crstests/user_point', arguments={
+            'node_id': node_id,
+        })
+
+        result = yield self.usos_request(path='services/crstests/user_grade', arguments={
+            'node_id': node_id,
+        })
+
+        create_time = datetime.now()
+        result[constants.NODE_ID] = node_id
+        result[constants.USOS_ID] = self.get_usos_id()
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+        result[constants.CREATED_TIME] = create_time
+        result[constants.UPDATE_TIME] = create_time
         raise gen.Return(result)

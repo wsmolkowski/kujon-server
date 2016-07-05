@@ -716,3 +716,4 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_THESES, theses_doc)
 
         raise gen.Return(theses_doc['authored_theses'])
+
