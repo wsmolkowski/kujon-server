@@ -351,7 +351,7 @@ class UsosMixin(OAuthMixin):
         }, photo=True)
 
         result[constants.ID] = user_info_id
-        result[constants.USOS_ID] = self.get_usos_id[constants.USOS_ID]
+        result[constants.USOS_ID] = self.get_usos_id()
         result[constants.CREATED_TIME] = create_time
 
         raise gen.Return(result)

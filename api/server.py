@@ -37,8 +37,7 @@ class Application(tornado.web.Application):
 
 def main():
     parse_command_line()
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     application = Application()
     if settings.SSL_CERT and settings.SSL_KEY:

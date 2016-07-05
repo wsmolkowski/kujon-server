@@ -138,8 +138,7 @@ class MongoDbQueue(object):
 if __name__ == '__main__':
     parse_command_line()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     mongoQueue = MongoDbQueue()
 
