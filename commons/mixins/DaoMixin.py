@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
-from commons.errors import ApiError, AuthenticationError
+from commons.errors import ApiError, AuthenticationError, UsosClientError
 
 TOKEN_EXPIRATION_TIMEOUT = 3600
 
@@ -53,8 +53,10 @@ class DaoMixin(object):
                 self.error(message=exception.message())
             elif isinstance(exception, AuthenticationError):
                 self.error(message=exception.message)
+            elif isinstance(exception, UsosClientError):
+                self.error(message='Wystąpił USOS, pracujemy nad rozwiązaniem.')
             else:
-                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem.')
+                self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
 
