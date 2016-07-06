@@ -500,9 +500,15 @@ class UsosMixin(OAuthMixin):
             'query': query.encode('utf-8'),
             'start': int(start),
             'num': 20,
-            'fields': 'id|type|title|supervisors|faculty[id|name]',
+            'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
             'lang': 'pl'
         })
+
+        for programme in result['items']:
+            programme['programme']['name'] = programme['programme']['name']['pl']
+            programme['programme']['mode_of_studies'] = programme['programme']['mode_of_studies']['pl']
+            programme['programme']['level_of_studies'] = programme['programme']['level_of_studies']['pl']
+            programme['programme']['duration'] = programme['programme']['duration']['pl']
 
         raise gen.Return(result)
 
