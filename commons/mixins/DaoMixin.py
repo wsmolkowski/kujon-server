@@ -65,7 +65,7 @@ class DaoMixin(object):
 
         while (yield cursor.fetch_next):
             usos = cursor.next_object()
-            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+            usos[constants.USOS_LOGO] = settings.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
             if settings.ENCRYPT_USOSES_KEYS:
                 usos = dict(self.aes.decrypt_usos(usos))
@@ -348,7 +348,7 @@ class DaoMixin(object):
     def insert_search_query(self, query, endpoint):
         query_doc = dict()
         query_doc[constants.CREATED_TIME] = datetime.now()
-        if hasattr(self, 'user_doc') and self.get_current_user() and constants.MONGO_ID in self.get_current_user():
+        if self.get_current_user() and constants.MONGO_ID in self.get_current_user():
             query_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         query_doc[constants.SEARCH_QUERY] = query
         query_doc[constants.SEARCH_ENDPOINT] = endpoint

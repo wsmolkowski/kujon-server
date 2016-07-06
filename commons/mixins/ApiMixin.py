@@ -424,10 +424,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not programme_doc:
             try:
                 programme_doc = yield self.usos_programme(programme_id)
-                if programme_doc:
-                    yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-                else:
-                    gen.Return(None)
+                yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
@@ -677,15 +674,11 @@ class ApiMixin(DaoMixin, UsosMixin):
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                result = yield self.usos_group(group_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
-                else:
-                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
-                    logging.info(msg)
+                group_doc = yield self.usos_group(group_id)
+                yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
-        raise gen.Return(None)
+        raise gen.Return(group_doc)
 
     @gen.coroutine
     def api_photo(self, user_info_id):
