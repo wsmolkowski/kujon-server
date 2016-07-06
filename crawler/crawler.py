@@ -10,7 +10,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line
 
 from commons import settings, constants
-from commons.usosutils.usoscrawler import UsosCrawler
+from usoscrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 MAX_WORKERS = 4
@@ -116,7 +116,7 @@ class MongoDbQueue(object):
                     job, self.queue.qsize(), len(self.processing)))
                 yield self.process_job(job)
             except Exception as ex:
-                msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
+                msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex)
                 logging.exception(msg)
                 yield self.update_job(job, constants.JOB_FAIL, msg)
             finally:
@@ -138,8 +138,7 @@ class MongoDbQueue(object):
 if __name__ == '__main__':
     parse_command_line()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     mongoQueue = MongoDbQueue()
 

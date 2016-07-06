@@ -12,7 +12,7 @@ class AESCipher(object):
         self.usos_keys = [constants.CONSUMER_KEY, constants.CONSUMER_SECRET]
         self.encoding = constants.ENCODING
         self.bs = 32
-        self.key = hashlib.sha256(settings.AES_SECRET).digest()
+        self.key = hashlib.sha256(settings.AES_SECRET.encode(constants.ENCODING)).digest()
 
     def encrypt(self, raw):
         raw = self._pad(raw)
@@ -21,7 +21,7 @@ class AESCipher(object):
         return b64encode(iv + cipher.encrypt(raw))
 
     def encrypt_usos(self, dictionary):
-        for key, value in dictionary.items():
+        for key, value in list(dictionary.items()):
             if key not in self.usos_keys:
                 continue
             else:
@@ -41,7 +41,7 @@ class AESCipher(object):
         return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode(self.encoding)
 
     def decrypt_usos(self, dictionary):
-        for key, value in dictionary.items():
+        for key, value in list(dictionary.items()):
             if key not in self.usos_keys:
                 continue
             else:

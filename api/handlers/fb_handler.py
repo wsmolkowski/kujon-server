@@ -19,7 +19,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     def get(self):
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])})
+            {constants.MONGO_ID: ObjectId(self.get_current_user()[constants.MONGO_ID])})
 
         if constants.FACEBOOK not in user_doc:
             raise ApiError('Użytkownik nie ma konta połączonego z Facebook.')

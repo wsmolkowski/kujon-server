@@ -1,6 +1,4 @@
-{% extends "base.html" %}
-
-{% block navigation %}
+{% extends "base.html" %} {% block navigation %}
 <nav class="navbar navbar-fixed-top navigacja navbar-landing" role="navigation" id="slide-nav">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
@@ -31,19 +29,16 @@
         </div>
     </div>
 </nav>
-{% end %}
-
-{% block main %}
+{% end %} {% block main %}
 <div id="page-content" class="landing-page">
     <header>
         <div class="container">
             <div class="row">
                 <div class="col-sm-10 text-center col-sm-offset-1">
                     <div class="intro-header">
-                        <h1>Komunikacja studentów z profesorami <span>staje się przyjemnością</span></h1>
+                        <h1>Komunikacja studencka i dane z uczelni <span>w końcu na Twoim telefonie</span></h1>
                         <button class="btn btn-group white logowanie" data-toggle="modal" data-target="#myModal">
-                            Zaloguj
-                            się
+                            Zaloguj się
                         </button>
                     </div>
                     <div class="img-header">
@@ -63,17 +58,18 @@
                     <div class="col-xs-12 text-center download">
                         <div class="col-xs-12 col-md-6 col-md-offset-3 text-right">
                             <div class="col-xs-6">
-                                <a href="#"><img src="/static/img/google_play.png" class=""/></a>
+                                <a href="https://play.google.com/store/apps"><img src="/static/img/google_play.png"
+                                                                                  class=""/></a>
                             </div>
                             <div class="col-xs-6 text-left">
-                                <a href="#"><img src="/static/img/app_store.png" class=""/></a>
+                                <a href="https://itunes.apple.com/pl/app/"><img src="/static/img/app_store.png"
+                                                                                class=""/></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-xs-12 text-center log-overview">
-                        <p>lub <a href="#" class="blue " data-toggle="modal" data-target="#myModal">Zaloguj się</a>
-                            do
-                            wersji desktopowej</p>
+                        <p>lub <a href="#" class="blue " data-toggle="modal" data-target="#myModal">Zaloguj się</a> do
+                            wersji webowej</p>
                     </div>
                 </div>
             </div>
@@ -87,30 +83,39 @@
                 </div>
                 <div class="col-sm-12 demo-col">
                     <div class="col-sm-4">
-                        <h3><i class="fa fa-users"></i>Wymiana wiedzy</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <h3><i class="fa fa-users"></i>Integracja z uczelnią</h3>
+                        <p>Kujon jest połączony z największymi uczelniami w kraju, które korzytają z
+                            <a href="http://https://www.usos.edu.pl/" target="_blank">USOS-a</a>. Jeśli korzystasz z
+                            USOS-a na swojej uczelni, to możesz korzystać z Kujon-a, gdyż integrujemy się z ponad 25
+                            uczelniami wyższymi.</p>
                     </div>
                     <div class="col-sm-4">
-                        <h3><i class="fa fa-share-alt"></i>Komunikacja</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <h3><i class="fa fa-share-alt"></i>Moje dane na uczelni</h3>
+                        <p>Dzięki połączeniu Kujona z Twoją uczelnią możesz przeglądać Swój plan zajęć, oceny,
+                            informacje związane z przedmiotem, warunkami zaliczenia przedmiotu czy niezbędną
+                            bibliografią.</p>
                     </div>
                     <div class="col-sm-4">
-                        <h3><i class="fa fa-briefcase"></i>Organizacja nauki</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <h3><i class="fa fa-briefcase"></i>Powiadomienia o ocenach</h3>
+                        <p>Jak twój wykładoca wystawi Ci ocenę i wpisze ją do uczelnianego systemu - od razu zostaniesz
+                            o tym powiadomiony. Damy Ci znać o ocenie ze sprawdzianu czy egzaminu.</p>
                     </div>
                 </div>
                 <div class="col-sm-12 demo-col">
                     <div class="col-sm-4">
-                        <h3><i class="fa fa-university"></i>Największe uczelnie w Polsce</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <h3><i class="fa fa-university"></i>Katalog i wyszukiwarka</h3>
+                        <p>Dzięki dostępnym w Kujon wyszukiwarkom możesz znaleźć wszystkie osoby studiujące na uczelni,
+                            pracowników a także dane dotrzeć do danych każdego wydziału.</p>
                     </div>
                     <div class="col-sm-4">
-                        <h3><i class="glyphicon glyphicon-hand-right"></i>Aplikacja mobilna</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <h3><i class="glyphicon glyphicon-hand-right"></i>Aplikacje na Android i iOS</h3>
+                        <p>Kujon jest dostępnu poprzez WWW, ale przede wszystkim jest to aplikacje mobilna działająca na
+                            platformie Android i iOS, którą można ściągnąć ze sklepu Google Play i Apple Appstore.</p>
                     </div>
                     <div class="col-sm-4">
                         <h3><i class="fa fa-globe"></i>Portale społecznościowe</h3>
-                        <p>Duis viverra lacus at congue tempor. Nunc ac convallis enim, et commodo sem.</p>
+                        <p>Dla Ciebie integrujemy się z Facebookiem, dzięki czemu możesz wymieniać informację poprzez
+                            grupy Facebooka lub Messengera.</p>
                     </div>
                 </div>
             </div>
@@ -121,16 +126,15 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-6">
-                    <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
-                        reserved.</p>
+                    <p class="footer-block">Copyright <a href="http://kujon.mobi">Kujon.mobi</a> 2016.</p>
                 </div>
                 <div class="col-sm-6">
                     <ul class="nav navbar-nav navbar-right navbar-bottom">
-                        <li><a href="regulamin">Regulamin</a></li>
                         <li><a href="regulamin">Polityka prywatności</a></li>
                         <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
-                        <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
-                        <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
+                        <li class="fb"><a href="https://www.facebook.com/kujonmobi-992906237450440/" target="_blank"><span class="fa fa-facebook"></span></a></li>
+                        <li class="andr"><a href="https://play.google.com/store/apps/details?id=mobi.kujon"><span class="fa fa-android"></span></a></li>
+                        <li class="apple"><a href="https://itunes.apple.com/pl/app/kujon"><span class="fa fa-apple"></span></a></li>
                     </ul>
                 </div>
             </div>
@@ -149,37 +153,35 @@
                 </div>
                 <div class="modal-body">
                     <div class="col-sm-12 col-xs-12">
-                        <p>Zaloguj się za pośrednictwem jednego z poniższych portali społecznościowych.</p>
-                </div>
+                        <p>Logowanie tylko przy użyciu konta:</p>
+                    </div>
                     <div class="col-sm-12 col-xs-12">
                         <a href="{{API_URL}}/authentication/facebook" type="button"
                            class="btn btn-primary btn-lg btn-block">Zaloguj się przez <span>Facebook</span></a>
-                </div>
+                    </div>
                     <div class="col-sm-12 col-xs-12">
                         <div class="col-sm-5 col-xs-5 hr-left">
                             <hr/>
-                    </div>
+                        </div>
                         <div class="col-sm-2 col-xs-2 text-center">
                             <span>lub</span>
-                    </div>
+                        </div>
                         <div class="col-sm-5 col-xs-5 hr-right">
                             <hr/>
+                        </div>
                     </div>
-                </div>
                     <div class="col-sm-12 col-xs-12">
                         <a href="{{API_URL}}/authentication/google" type="button"
                            class="btn btn-danger btn-lg btn-block">Zaloguj się przez <span>Google+</span></a>
                     </div>
-            </div>
+                </div>
             </div>
         </div>
     </div>
 
 </div>
 
-{% end %}
-
-{% block footer_js %}
+{% end %} {% block footer_js %}
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 <script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
@@ -190,7 +192,6 @@
 <script src="/static/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
 <script type="text/javascript">
-
     $.cookieBar({
         fixed: true,
         message: '<span>Ta strona używa ciasteczek (cookies), dzięki którym nasz serwis może działać lepiej.</span> ',
@@ -201,7 +202,7 @@
         declineFunction: null,
         policyButton: true,
         policyText: 'Więcej informacji',
-        policyURL: '/privacy-policy/',
+        policyURL: '/regulamin',
         autoEnable: true,
         acceptText: '×',
         acceptOnContinue: false,
@@ -215,8 +216,8 @@
         append: false,
         bottom: true,
         zindex: '100',
-        domain: 'www.example.com',
-        referrer: 'www.example.com'
+        domain: 'www.kujon.mobi',
+        referrer: 'www.kujon.mobi'
     });
 
     $(window).scroll(function() {
@@ -226,7 +227,68 @@
             $(".navbar-fixed-top").removeClass("top-nav-collapse");
         }
     });
+</script>
 
+<script>
+    $(document).ready(function() {
+        //stick in the fixed 100% height behind the navbar but don't wrap it
+        $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
+        $('#slide-nav.navbar .container').append($('<div id="navbar-height-col"></div>'));
+        // Enter your ids or classes
+        var toggler = '.navbar-toggle';
+        var pagewrapper = '#page-content';
+        var navigationwrapper = '.navbar-header';
+        var menuwidth = '100%'; // the menu inside the slide menu itself
+        var slidewidth = '50%';
+        var menuneg = '-100%';
+        var slideneg = '-50%';
+
+        $("#slide-nav").on("click", toggler, function(e) {
+            var selected = $(this).hasClass('slide-active');
+            $('#slidemenu').stop().animate({
+                right: selected ? menuneg : '0px'
+            });
+            $('#navbar-height-col').stop().animate({
+                right: selected ? slideneg : '0px'
+            });
+            $(pagewrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $(navigationwrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $(this).toggleClass('slide-active', !selected);
+            $('#slidemenu').toggleClass('slide-active');
+            $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
+        });
+        $('.navbar-nav.navbar-left a').on('click', function() {
+            if ($(window).width() < 999) {
+                var selected = $("#slide-nav").hasClass('slide-active');
+                $('#slidemenu').stop().animate({
+                    right: selected ? menuneg : '0px'
+                });
+                $('#navbar-height-col').stop().animate({
+                    right: selected ? slideneg : '0px'
+                });
+                $(pagewrapper).stop().animate({
+                    right: selected ? '0px' : slidewidth
+                });
+                $(navigationwrapper).stop().animate({
+                    right: selected ? '0px' : slidewidth
+                });
+                $('#slide-nav').removeClass('slide-active', !selected);
+                $('#slidemenu').removeClass('slide-active');
+                $('#page-content, .navbar, body, .navbar-header, .navbar-toggle').removeClass('slide-active');
+            }
+        });
+
+        var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
+        $(window).on("resize", function() {
+            if ($(window).width() > 1000 && $('.navbar-toggle').is(':hidden')) {
+                $(selected).removeClass('slide-active');
+            }
+        });
+    });
 
 </script>
 

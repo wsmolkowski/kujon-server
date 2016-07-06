@@ -15,7 +15,7 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
     def api_friends(self):
         friends = list()
         friends_returned = list()
-        pipeline = [{'$match': {'user_id': ObjectId(self.user_doc[constants.MONGO_ID])}},
+        pipeline = [{'$match': {'user_id': ObjectId(self.get_current_user()[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
         cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
@@ -38,12 +38,13 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_friends_add(self, user_info_id):
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one(
-            {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.FRIEND_ID: user_info_id})
+            {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+             constants.FRIEND_ID: user_info_id})
         if not friend_doc:
             user_info_doc = yield self.api_user_info(user_info_id)
             if user_info_doc:
                 result = dict()
-                result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
                 result[constants.FRIEND_ID] = str(user_info_id)
                 friend_doc = yield self.db_insert(constants.COLLECTION_FRIENDS, result)
 
@@ -56,7 +57,8 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_friends_remove(self, user_info_id):
 
-        pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]), constants.FRIEND_ID: user_info_id}
+        pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+                    constants.FRIEND_ID: user_info_id}
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one(pipeline)
         if friend_doc:
@@ -67,7 +69,7 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
             raise ApiError('Użytkownik nie jest przyjacielem.')
 
     @gen.coroutine
-    def api_friendssuggestions(self):
+    def api_friends_suggestions(self):
         user_info = yield self.api_user_info()
 
         courses = dict()
@@ -99,10 +101,11 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
                             continue
 
                         # checking if participant is already added
-                        poz = helpers.in_dictlist((constants.FRIEND_ID, participant_id), friends_added)
+                        poz = helpers.in_dictlist(constants.FRIEND_ID, participant_id, friends_added)
                         if poz:
                             continue
                         del participant[constants.ID]
+
                         # count how many courses have together
                         if participant_id in suggested_participants:
                             suggested_participants[participant_id]['count'] += 1
@@ -120,4 +123,8 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
         else:
             # sort by count descending and limit to 20 records
             suggested_participants = sorted(suggested_participants, key=lambda k: k['count'], reverse=True)
-            raise gen.Return(suggested_participants[:20])
+
+            raise gen.Return({
+                'total': len(suggested_participants),
+                'friends': suggested_participants
+            })

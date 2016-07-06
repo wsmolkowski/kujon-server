@@ -36,9 +36,6 @@ class JSendMixin(object):
         :return:
         """
 
-        if message:
-            message = unicode(message, settings.UNICODE)
-
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'fail', 'message': message, 'code': code})
 
@@ -54,7 +51,7 @@ class JSendMixin(object):
 
         result = {'status': 'error', 'message': message}
         if data:
-            result['data'] = unicode(data, settings.UNICODE)
+            result['data'] = data
 
         if code:
             result['code'] = code

@@ -6,7 +6,7 @@ $, Handlebars, main, tpl, tplError) {
             var template = Handlebars.compile(tpl);
             var templateError = Handlebars.compile(tplError);
 
-            main.callUsers(function(data){
+            main.ajaxGet('/users').then(function(data){
                 if (data.status == 'success'){
                     data.data['API_URL'] = main.getApiUrl();
                     $('#section-content').html(template(data.data));

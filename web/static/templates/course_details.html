@@ -26,8 +26,7 @@
                         data-lecturerId="{{user_id}}">
                     <span>{{first_name}} {{last_name}}</span>
                 </button>
-                <br>
-                {{/coordinators}}
+                <br> {{/coordinators}}
             </td>
             {{#if coordinators}}
             <td class="col-sm-3">
@@ -37,16 +36,14 @@
                         data-lecturerId="{{user_id}}">
                     <span>{{first_name}} {{last_name}}</span>
                 </button>
-                <br>
-                {{/lecturers}}
+                <br> {{/lecturers}}
             </td>
-            {{/if}}
-            {{#if assessment_criteria}}
+            {{/if}} {{#if assessment_criteria}}
             <td class="col-sm-2">
                 <p class="title-courses" data-toggle="collapse" data-target="#collapseCritieria" aria-expanded="false"
                    aria-controls="collapseCritieria">Kryteria oceny:</p>
                 <div class="collapse" id="collapseCritieria">
-                    <div class="well">
+                    <div class="row">
                         <p class="description-courses">
                             <span>{{nl2br assessment_criteria}}</span></p>
                     </div>
@@ -75,10 +72,9 @@
                     </div>
                 </div>
             </td>
-            {{/if}}
-            {{#if description}}
+            {{/if}} {{#if description}}
             <td class="col-sm-3">
-                <p class="title-courses" data-toggle="collapse" data-target="#collapseDescription">Opis:</p>
+                <button class="title-courses" data-toggle="collapse" data-target="#collapseDescription"><span> Opis: rozwiń..</span></button>
                 <div class="collapse" id="collapseDescription">
                     <div class="well">
                         <p class="description-courses">
@@ -86,12 +82,11 @@
                     </div>
                 </div>
             </td>
-            {{/if}}
-            {{#if bibliography}}
+            {{/if}} {{#if bibliography}}
             <td class="col-sm-2">
                 <p class="title-courses" data-toggle="collapse" data-target="#collapseBiblio">Bibliografia:</p>
                 <div class="collapse" id="collapseBiblio">
-                    <div class="well">
+                    <div class="row">
                         <p class="description-courses"><span>{{nl2br bibliography}}</span></p>
                     </div>
                 </div>
@@ -100,15 +95,13 @@
             <td class="col-sm-2">
                 <p class="title-courses" data-toggle="collapse" data-target="#collapseStudents">Studenci:</p>
                 <div class="collapse" id="collapseStudents">
-                    <div class="well">
-                        {{#participants}}
-                        <button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
-                                data-lecturerId="{{user_id}}">
-                            <span>{{first_name}} {{last_name}}</span>
-                        </button>
-                        <br>
-                        {{/participants}}
+                    {{#participants}}
+                    <div class="row" data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                         data-lecturerId="{{user_id}}">
+                        <div class="col-xs-6">{{first_name}}</div>
+                        <div class="col-xs-6">{{last_name}}</div>
                     </div>
+                    {{/participants}}
                 </div>
             </td>
         </tr>

@@ -9,14 +9,13 @@ from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, utils
+from commons import constants, settings, utils, usosinstances
 from commons.AESCipher import AESCipher
-from commons.usosutils import usosinstances
 from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
-                  constants.USOS_PAIRED, constants.USER_EMAIL)
+                  constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
 
 
 def get_client():
@@ -64,9 +63,7 @@ def convert_bytes(bytes):
 def print_statistics():
     db = get_client()
 
-    print
-    print '#' * 25 + ' gathering statistics ' + '#' * 25
-    print
+    print ('#' * 25 + ' gathering statistics ' + '#' * 25)
 
     summary = {
         "count": 0,
@@ -80,9 +77,7 @@ def print_statistics():
             continue
         stats = db.command('collstats', collection)
 
-        print
-        print '#' * 25 + ' collection {0} '.format(collection) + '#' * 25
-        print
+        print ('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
         pprint(stats, width=1)
 
         summary["count"] += stats["count"]
@@ -90,17 +85,13 @@ def print_statistics():
         summary["indexSize"] += stats.get("totalIndexSize", 0)
         summary["storageSize"] += stats.get("storageSize", 0)
 
-    print
-    print '#' * 25 + ' statistics ' + '#' * 25
-    print
-    print "Total Documents:", summary["count"]
-    print "Total Data Size:", convert_bytes(summary["size"])
-    print "Total Index Size:", convert_bytes(summary["indexSize"])
-    print "Total Storage Size:", convert_bytes(summary["storageSize"])
+    print ('#' * 25 + ' statistics ' + '#' * 25)
+    print ("Total Documents:", summary["count"])
+    print ("Total Data Size:", convert_bytes(summary["size"]))
+    print ("Total Index Size:", convert_bytes(summary["indexSize"]))
+    print ("Total Storage Size:", convert_bytes(summary["storageSize"]))
 
-    print
-    print '#' * 25 + '#' * 25
-    print
+    print ('#' * 25 + '#' * 25)
 
 
 def save_statistics():
@@ -151,7 +142,6 @@ def _do_recreate(db, usos_doc):
             for class_type in class_types.values():
                 class_type[constants.USOS_ID] = usos_doc[constants.USOS_ID]
                 class_type[constants.CREATED_TIME] = datetime.now()
-                class_type[constants.UPDATE_TIME] = datetime.now()
                 class_type_list.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
             logging.info("dictionary course classtypes for usos {0} inserted.".format(usos_doc[constants.USOS_ID]))

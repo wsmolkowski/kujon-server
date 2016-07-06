@@ -1,71 +1,62 @@
 define(['jquery', 'handlebars', 'main', 'text!templates/friends.html',
-    'text!templates/error.html', 'text!templates/modal_course.html','text!templates/modal_user.html'],
+        'text!templates/error.html', 'text!templates/modal_course.html', 'text!templates/modal_user.html'
+    ],
     function($, Handlebars, main, tplFriends, tplError, tplCourseModal, tplModalUser) {
-    'use strict';
-    return {
-        render: function() {
-            var template = Handlebars.compile(tplFriends);
-            var templateModalCourse = Handlebars.compile(tplCourseModal);
-            var templateError = Handlebars.compile(tplError);
-            var templateModalUser = Handlebars.compile(tplModalUser);
+        'use strict';
+        return {
+            render: function() {
+                var template = Handlebars.compile(tplFriends);
+                var templateModalCourse = Handlebars.compile(tplCourseModal);
+                var templateError = Handlebars.compile(tplError);
+                var templateModalUser = Handlebars.compile(tplModalUser);
 
-            main.callFriendsSuggestion(function(suggestiondata){
-                if (suggestiondata.status == 'success'){
-                    $('#section-content').html(template(suggestiondata));
-                    $('#suggested-table').DataTable();
+                main.ajaxGet('/friends/suggestions').then(function(data) {
+                    if (data.status == 'success') {
+                        $('#section-content').html(template(data.data));
+                        $('#table-friends').DataTable(main.getDataTableConfig());
+                        $('#table-find-friends').DataTable(main.getDataTableConfig());
+                        bindModals();
 
-//                    bindModals();
-                } else {
-                    $('#section-content').html(templateError({'message': suggestiondata.message}));
-                }
-            });
-
-            main.callFriends(function(friendsdata){
-                if (friendsdata.status == 'success'){
-                    $('#section-content').html(template(friendsdata));
-                    $('#friends-table').DataTable();
-
-//                    bindModals();
-                } else {
-                    $('#section-content').html(templateError({'message': friendsdata.message}));
-                }
-            });
-
-
-
-            function bindModals(){
-
-                $('.friends-btn').click(function(){
-                    var friendId = $(this).attr("data-friendId");
-                    var modalId = '#friendModal' + friendId;
-
-                    $(modalId).modal();
-
-                    main.callUserDetails(friendId, function(friendInfo){
-                        if (friendInfo.status == 'success'){
-
-                            friendInfo.data['friend_id'] = friendId;
-                            var htmlModal = templateModalUser(friendInfo.data);
-
-                            $('#modalWrapper').html(htmlModal);
-
-                            $(modalId).modal('show');
-
-                            $(modalId).on('hidden.bs.modal', function (e) {
-                                $(this).remove();
-                                $('#modalWrapper').html();
-                                $(modalId).hide();
-                            });
-
-                        } else {
-                            $(modalId).modal('show');
-                            $(modalBodyId).html(templateError({'message': userInfo.message}));
-                        }
-                    });
-
+                    } else {
+                        $('#section-content').html(templateError({
+                            'message': data.message
+                        }));
+                    }
                 });
 
-            };
+                function bindModals() {
+                    $('#table-friends').on('click', '.btn-friends', function() {
+                        var friendId = $(this).attr("data-friendId");
+                        var modalId = '#userModal' + friendId;
+
+                        $(modalId).modal();
+
+                        main.ajaxGet('/users/' + friendId).then(function(friendInfo) {
+                            if (friendInfo.status == 'success') {
+                                friendInfo.data['user_id'] = friendId;
+                                $('#modalWrapper').html(templateModalUser(friendInfo.data));
+                                $(modalId).on('hidden.bs.modal', function(e) {
+                                    $(this).remove();
+                                    $(modalId).hide();
+                                    $('#modalWrapper').html();
+                                });
+
+                                $(modalId).modal('show');
+                            } else {
+                                $('#modalWrapper').html(templateModalError(userInfo));
+                                $(modalId).on('hidden.bs.modal', function(e) {
+                                    $(this).remove();
+                                    $('#modalWrapper').html();
+                                    $('#modalWrapper').on('hidden.bs.modal', function(e) {
+                                        $(this).remove();
+                                        $('#modalWrapper').html();
+                                        $(modalId).hide();
+                                    });
+                                });
+                            }
+                        })
+                    });
+                }
+            }
         }
-    }    
-});
+    });

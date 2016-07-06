@@ -6,7 +6,7 @@ from tornado.testing import AsyncTestCase, gen_test
 from commons import constants
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
-from commons.usosutils.usoscrawler import UsosCrawler
+from crawler.usoscrawler import UsosCrawler
 
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'

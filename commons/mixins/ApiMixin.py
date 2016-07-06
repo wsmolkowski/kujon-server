@@ -8,10 +8,10 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
+from commons import usoshelper
 from commons.errors import ApiError, UsosClientError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
-from commons.usosutils import usoshelper
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
@@ -41,7 +41,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_courses_editions(self):
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
         pipeline = {constants.USER_ID: user_id}
 
@@ -62,7 +62,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         courses_editions = yield self.api_courses_editions()
         result = None
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             if term != term_id:
                 continue
 
@@ -82,9 +82,8 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True):
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -150,7 +149,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
-            term_doc = yield self.api_term(term_id)
+            term_doc = yield self.api_term([term_id])
             if term_doc:
                 course_doc['term'] = term_doc
 
@@ -164,7 +163,7 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_course(self, course_id):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -206,7 +205,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         classtypes = yield self.db_classtypes()
 
         def classtype_name(key_id):
-            for key, name in classtypes.items():
+            for key, name in list(classtypes.items()):
                 if str(key_id) == str(key):
                     return name
             return key_id
@@ -227,7 +226,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: course[constants.TERM_ID],
-                     constants.USOS_ID: self.user_doc[constants.USOS_ID]},
+                     constants.USOS_ID: self.get_current_user()[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
                 groups = list()
@@ -268,7 +267,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         # get course in order in order_keys as dictionary and reverse sort
         terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(terms_by_order.items(), reverse=True))
+        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
         courses_sorted_by_term = list()
         for order_key in terms_by_order:
             courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
@@ -277,15 +276,16 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_grades(self):
+
         classtypes = yield self.db_classtypes()
 
         courses_editions = yield self.api_courses_editions()
 
         result = list()
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
                 if len(course['grades']['course_grades']) > 0:
-                    for grade_key, grade_value in course['grades']['course_grades'].items():
+                    for grade_key, grade_value in list(course['grades']['course_grades'].items()):
                         grade = {
                             'exam_session_number': grade_value['exam_session_number'],
                             'exam_id': grade_value['exam_id'],
@@ -328,14 +328,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 if 'unit' in grade:
                     if grade['unit'] not in units:
                         units.append(grade['unit'])
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-        pipeline = {'unit_id': {"$in": map(int, units)}, constants.USOS_ID: usos_doc[constants.USOS_ID]}
-        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline,
-                                                                  (constants.UNIT_ID, constants.CLASS_TYPE_ID))
-        units_doc = yield cursor.to_list(None)
+
+        units_doc = yield self.api_units(units)
+
         for unit in units_doc:
             unit[constants.CLASS_TYPE_ID] = classtypes[(unit[constants.CLASS_TYPE_ID])]
-
         for course in result:
             if 'grades' in course:
                 for grade in course['grades']:
@@ -350,41 +347,39 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_grades_byterm(self):
-        result = list()
-
-        def find_grades(term_id):
-            for term_grades in result:
-                for key, value in term_grades.items():
-                    if key == constants.TERM_ID and value == term_id:
-                        return term_grades
-            return None
 
         grades = yield self.api_grades()
 
-        for grade in grades:
-            term_grades = find_grades(grade[constants.TERM_ID])
-            if term_grades:
-                term_grades['courses'].append(grade)
-                result.append(term_grades)
-            else:
-                result.append({
-                    constants.TERM_ID: grade[constants.TERM_ID],
-                    'courses': [grade]
-                })
+        terms = list()
+        grades_by_term = dict()
 
-        raise gen.Return(result)
+        # grouping grades by term
+        for grade in grades:
+            if grade[constants.TERM_ID] not in grades_by_term:
+                grades_by_term[grade[constants.TERM_ID]] = list()
+                terms.append(grade[constants.TERM_ID])
+            grades_by_term[grade[constants.TERM_ID]].append(grade)
+
+        # order grades by terms in order_keys as dictionary and reverse sort
+        terms_by_order = yield self.db_terms_with_order_keys(terms)
+        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        grades_sorted_by_term = list()
+        for order_key in terms_by_order:
+            grades_sorted_by_term.append({constants.TERM_ID: terms_by_order[order_key],
+                                          'courses': grades_by_term[terms_by_order[order_key]]})
+        raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
     def api_lecturers(self):
         courses_editions = yield self.api_courses_editions()
 
         result = list()
-        for term, courses in courses_editions[constants.COURSE_EDITIONS].items():
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
                 for lecturer in course[constants.LECTURERS]:
                     if lecturer not in result:
                         result.append(lecturer)
-
+        result = sorted(result, key=lambda k: k['last_name'])
         raise gen.Return(result)
 
     @gen.coroutine
@@ -429,7 +424,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not programme_doc:
             try:
                 programme_doc = yield self.usos_programme(programme_id)
-                yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+                if programme_doc:
+                    yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+                else:
+                    gen.Return(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
@@ -439,17 +437,14 @@ class ApiMixin(DaoMixin, UsosMixin):
     def api_tt(self, given_date):
 
         monday = None
-        if isinstance(given_date, str) or isinstance(given_date, unicode):
-            try:
+        try:
+            if isinstance(given_date, unicode):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
-                monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-            except Exception as ex:
-                self.error("Niepoprawny format daty: RRRR-MM-DD.")
-                yield self.exc(ex)
-        else:
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
 
-        user_id = ObjectId(self.user_doc[constants.MONGO_ID])
+        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TT, {constants.USER_ID: user_id})
@@ -492,55 +487,68 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(tt_doc['tts'])
 
     @gen.coroutine
-    def api_term(self, term_id):
-        pipeline = {constants.TERM_ID: term_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+    def _api_term_task(self, term_id):
 
+        try:
+            term_doc = yield self.usos_term(term_id)
+            yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
+        except UsosClientError as ex:
+            yield self.exc(ex, finish=False)
+        raise gen.Return(None)
+
+    @gen.coroutine
+    def api_term(self, term_ids):
+
+        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TERMS, pipeline)
 
-        term_doc = yield self.db[constants.COLLECTION_TERMS].find_one(pipeline, TERM_LIMIT_FIELDS)
+        cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort("order_key", -1)
+        terms_doc = yield cursor.to_list(None)
 
-        if not term_doc:
+        if not terms_doc:
             try:
-                term_doc = yield self.usos_term(term_id)
-                yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
+                terms_task = list()
+                for term_id in term_ids:
+                    terms_task.append(self._api_term_task(term_id))
+                yield terms_task
+                terms_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return(None)
 
         today = date.today()
-        end_date = datetime.strptime(term_doc['finish_date'], "%Y-%m-%d").date()
-        if today <= end_date:
-            term_doc['active'] = True
-        else:
-            term_doc['active'] = False
+        for term in terms_doc:
+            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
+            if today <= end_date:
+                term['active'] = True
+            else:
+                term['active'] = False
 
-        raise gen.Return(term_doc)
+        raise gen.Return(terms_doc)
 
     @gen.coroutine
     def api_terms(self):
         courses_editions = yield self.api_courses_editions()
 
-        api_terms = list()
+        terms_ids = list()
         for term_id in courses_editions[constants.COURSE_EDITIONS]:
-            if term_id in api_terms:
+            if term_id in terms_ids:
                 continue
-            api_terms.append(self.api_term(term_id))
+            terms_ids.append(term_id)
 
-        result = yield api_terms
+        result = yield self.api_term(terms_ids)
 
         raise gen.Return(result)
 
     @gen.coroutine
     def api_user_info(self, user_id=None):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, self.user_doc[constants.USOS_ID])
-
         if not user_id:
-            pipeline = {constants.USER_ID: ObjectId(self.user_doc[constants.MONGO_ID]),
-                        constants.USOS_ID: usos_doc[constants.USOS_ID]}
+            pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+                        constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
         else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: usos_doc[constants.USOS_ID]}
+            pipeline = {constants.ID: user_id, constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
@@ -556,7 +564,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             if not user_info_doc:
                 raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
             if not user_id:
-                user_info_doc[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+                user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
             # if user has photo
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
@@ -572,7 +580,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_faculty(self, faculty_id):
-        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_FACULTIES, pipeline)
@@ -582,6 +590,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not faculty_doc:
             faculty_doc = yield self.usos_faculty(faculty_id)
             yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+            faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         raise gen.Return(faculty_doc)
 
@@ -623,7 +632,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
-        pipeline = {constants.UNIT_ID: unit_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
@@ -633,16 +642,35 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 result = yield self.usos_unit(unit_id)
                 if result:
-                    yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
+                    unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
-        raise gen.Return(None)
+        raise gen.Return(unit_doc)
+
+    @gen.coroutine
+    def api_units(self, units_id, finish=False):
+        pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))},
+                    constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline).sort("unit_id")
+        units_doc = yield cursor.to_list(None)
+
+        if not units_doc:
+            try:
+                tasks_units = list()
+                for unit in units_id:
+                    tasks_units.append(self.api_unit(unit))
+                yield tasks_units
+                cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline)
+                units_doc = yield cursor.to_list(None)
+            except UsosClientError as ex:
+                yield self.exc(ex, finish=finish)
+        raise gen.Return(units_doc)
 
     @gen.coroutine
     def api_group(self, group_id, finish=False):
-        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.user_doc[constants.USOS_ID]}
+        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_GROUPS, pipeline)
 
@@ -673,3 +701,20 @@ class ApiMixin(DaoMixin, UsosMixin):
             photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
         raise gen.Return(photo_doc)
+
+    @gen.coroutine
+    def api_thesis(self):
+
+        pipeline = {constants.USER_ID: self.get_current_user()[constants.MONGO_ID]}
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_THESES, pipeline)
+
+        theses_doc = yield self.db[constants.COLLECTION_THESES].find_one(pipeline)
+
+        if not theses_doc:
+            users_info_doc = yield self.api_user_info()
+            theses_doc = yield self.usos_theses(users_info_doc[constants.ID])
+            yield self.db_insert(constants.COLLECTION_THESES, theses_doc)
+
+        raise gen.Return(theses_doc['authored_theses'])
+

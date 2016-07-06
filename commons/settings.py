@@ -51,6 +51,7 @@ LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
 EVENT_PORT = config.getint('deployment', 'EVENT_PORT')
 DEPLOY_EVENT = config.get('deployment', 'DEPLOY_EVENT')
+LOG_LEVEL = config.get('deployment', 'LOG_LEVEL')
 
 SMTP_HOST = config.get('email', 'SMTP_HOST')
 SMTP_PORT = config.getint('email', 'SMTP_PORT')

@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -10,10 +11,9 @@ from tornado.web import RequestHandler
 
 from commons import constants, settings, utils
 from commons.AESCipher import AESCipher
+from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
-from commons.mixins.ApiMixinFriends import ApiMixinFriends
-from commons.mixins.ApiMixinSearch import ApiMixinSearch
-from commons.mixins.ApiMixinTheses import ApiMixinTheses
+from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
@@ -28,8 +28,8 @@ class BaseHandler(RequestHandler, DaoMixin):
             yield self.get_usoses(showtokens=True)
 
         user = None
-        if hasattr(self, 'user_doc') and self.user_doc:
-            user = self.user_doc
+        if hasattr(self, '_user_doc') and self._user_doc:
+            user = self._user_doc
 
         if not user:
             cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
@@ -49,7 +49,10 @@ class BaseHandler(RequestHandler, DaoMixin):
 
                 user = yield self.db_current_user(header_email)
 
-        self.current_user = user
+        self._user_doc = user
+
+        if (not hasattr(self, '_usos_doc') or not self._usos_doc) and user and constants.USOS_ID in user:
+            self._usos_doc = yield self.get_usos(constants.USOS_ID, user[constants.USOS_ID])
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -66,7 +69,10 @@ class BaseHandler(RequestHandler, DaoMixin):
         return utils.http_client()
 
     def get_current_user(self):
-        return self.current_user
+        return self._user_doc
+
+    def get_current_usos(self):
+        return self._usos_doc
 
     def config_data(self):
         user = self.get_current_user()
@@ -107,12 +113,11 @@ class BaseHandler(RequestHandler, DaoMixin):
 
         result_usoses = copy.deepcopy(self._usoses)
         if not showtokens:
+            usoses = list()
             for usos in result_usoses:
-                usos.pop("consumer_secret")
-                usos.pop("consumer_key")
-                usos.pop("enabled")
-                usos.pop("contact")
-                usos.pop("url")
+                wanted_keys = ['logo', constants.USOS_ID, 'name', 'url']
+                usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
+            result_usoses = usoses
         raise gen.Return(result_usoses)
 
     @gen.coroutine
@@ -149,8 +154,24 @@ class BaseHandler(RequestHandler, DaoMixin):
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
+    @gen.coroutine
+    def on_finish(self):
+        user_doc = self.get_current_user()
+        user_id = user_doc[constants.MONGO_ID] if user_doc else None
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, ApiMixinTheses, JSendMixin):
+        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
+            'type': 'api',
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self.request.remote_ip,
+        })
+
+
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
 
     def data_received(self, chunk):
         super
@@ -177,7 +198,7 @@ class UsosesApi(BaseHandler, JSendMixin):
     @gen.coroutine
     def get(self):
         data = yield self.get_usoses(showtokens=False)
-        self.success(data, cache_age=constants.SECONDS_1MONTH)
+        self.success(data, cache_age=constants.SECONDS_1WEEK)
 
 
 class DefaultErrorHandler(BaseHandler, JSendMixin):

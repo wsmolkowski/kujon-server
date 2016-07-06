@@ -2,14 +2,13 @@ import unittest
 
 from aescipher_tests import AESCipher
 from serialize_tests import SerializationTest
-from usoscrawler_tests import CrawlerTest
 
 
 def build_suite():
 
     test_suite = unittest.TestSuite()
 
-    test_suite.addTest(unittest.makeSuite(CrawlerTest))
+    # test_suite.addTest(unittest.makeSuite(CrawlerTest))
     # test_suite.addTest(unittest.makeSuite(ClientTest))
     # test_suite.addTest(unittest.makeSuite(UsosAsyncTest))
     test_suite.addTest(unittest.makeSuite(SerializationTest))
