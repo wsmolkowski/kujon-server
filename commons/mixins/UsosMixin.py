@@ -45,16 +45,8 @@ class UsosMixin(OAuthMixin):
 
     @staticmethod
     def _build_exception(response):
-        try:
-            result = escape.json_decode(response.body)
-        except Exception as ex:
-            result = dict()
-
-        if response.error:
-            result['error'] = response.error.message
-        result['code'] = response.code
-        result['url'] = response.request.url
-        return UsosClientError('USOS HTTP response {0}'.format(result))
+        return UsosClientError('Response code: {0} message: {1} request url: {2} body: {3}'.format(
+            response.code, response.error.message, response.request.url, response.body))
 
     @_auth_return_future
     def usos_request(self, path, callback=None, arguments={}, photo=False):
@@ -98,9 +90,7 @@ class UsosMixin(OAuthMixin):
     def _build_response(self, response):
         result = escape.json_decode(response.body)
         if not result:
-            raise UsosClientError(
-                'USOS response empty: {0} for url: {1} and code:{2}'.format(result, response.request.url,
-                                                                            response.code))
+            raise self._build_exception(response)
 
         create_time = datetime.now()
         result[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
@@ -136,8 +126,7 @@ class UsosMixin(OAuthMixin):
 
             result = self._build_response(response)
         except HTTPError as ex:
-            msg = "USOS HTTPError response: {0} fetching: {1}".format(ex.message, url)
-            raise UsosClientError(msg)
+            raise UsosClientError("USOS HTTPError response: {0} fetching: {1}".format(ex.message, url))
 
         raise gen.Return(result)
 

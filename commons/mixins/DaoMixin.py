@@ -54,7 +54,7 @@ class DaoMixin(object):
             elif isinstance(exception, AuthenticationError):
                 self.error(message=exception.message)
             elif isinstance(exception, UsosClientError):
-                self.error(message='Wystąpił USOS, pracujemy nad rozwiązaniem.')
+                self.error(message='Wystąpił błąd USOS.')
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
