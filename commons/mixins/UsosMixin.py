@@ -126,7 +126,7 @@ class UsosMixin(OAuthMixin):
 
             result = self._build_response(response)
         except HTTPError as ex:
-            raise UsosClientError("USOS HTTPError response: {0} fetching: {1}".format(ex.message, url))
+            raise UsosClientError("HTTPError message: {0} url: {1}".format(ex.message, url))
 
         raise gen.Return(result)
 
