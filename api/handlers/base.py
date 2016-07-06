@@ -1,12 +1,12 @@
 # coding=UTF-8
 
-import copy
 import logging
 from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
 from tornado.escape import json_decode
+from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
 from commons import constants, settings, utils
@@ -23,13 +23,8 @@ class BaseHandler(RequestHandler, DaoMixin):
     EXCEPTION_TYPE = 'base'
 
     @gen.coroutine
-    def prepare(self):
-        if not hasattr(self, '_usoses') or not self._usoses:
-            yield self.get_usoses(showtokens=True)
-
+    def _prepare_user(self):
         user = None
-        if hasattr(self, '_user_doc') and self._user_doc:
-            user = self._user_doc
 
         if not user:
             cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
@@ -49,10 +44,24 @@ class BaseHandler(RequestHandler, DaoMixin):
 
                 user = yield self.db_current_user(header_email)
 
-        self._user_doc = user
+        raise gen.Return(user)
 
-        if (not hasattr(self, '_usos_doc') or not self._usos_doc) and user and constants.USOS_ID in user:
-            self._usos_doc = yield self.get_usos(constants.USOS_ID, user[constants.USOS_ID])
+    @gen.coroutine
+    def prepare(self):
+        self._context = ObjectDict()
+        self._context.usoses = yield self.get_usos_instances()
+        self._context.user_doc = yield self._prepare_user()
+
+        if self._context.user_doc:
+            for usos in self._context.usoses:
+                if usos[constants.USOS_ID] == self._context.user_doc[constants.USOS_ID]:
+                    self._context.usos_doc = usos
+
+    def get_current_user(self):
+        return self._context.user_doc
+
+    def get_current_usos(self):
+        return self._context.usos_doc
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -68,27 +77,6 @@ class BaseHandler(RequestHandler, DaoMixin):
     def get_auth_http_client():
         return utils.http_client()
 
-    def get_current_user(self):
-        return self._user_doc
-
-    def get_current_usos(self):
-        return self._usos_doc
-
-    def config_data(self):
-        user = self.get_current_user()
-        if user and constants.USOS_PAIRED in user.keys():
-            usos_paired = user[constants.USOS_PAIRED]
-        else:
-            usos_paired = False
-
-        config = {
-            'API_URL': settings.DEPLOY_API,
-            'USOS_PAIRED': usos_paired,
-            'USER_LOGGED': True if user else False
-        }
-
-        return config
-
     @property
     def oauth_parameters(self):
         return {
@@ -102,32 +90,6 @@ class BaseHandler(RequestHandler, DaoMixin):
         if not self._aes:
             self._aes = AESCipher()
         return self._aes
-
-    _usoses = list()
-
-    @gen.coroutine
-    def get_usoses(self, showtokens):
-
-        if not self._usoses:
-            self._usoses = yield self.get_usos_instances()
-
-        result_usoses = copy.deepcopy(self._usoses)
-        if not showtokens:
-            usoses = list()
-            for usos in result_usoses:
-                wanted_keys = ['logo', constants.USOS_ID, 'name', 'url']
-                usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
-            result_usoses = usoses
-        raise gen.Return(result_usoses)
-
-    @gen.coroutine
-    def get_usos(self, key, value):
-        usoses = yield self.get_usoses(showtokens=True)
-
-        for u in usoses:
-            if u[key] == value:
-                raise gen.Return(u)
-        raise gen.Return(None)
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
@@ -172,13 +134,6 @@ class BaseHandler(RequestHandler, DaoMixin):
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
-
-    def data_received(self, chunk):
-        super
-
-    def _oauth_get_user(self, access_token, callback):
-        super
-
     EXCEPTION_TYPE = 'api'
 
     def do_refresh(self):  # overwrite from ApiMixin
@@ -197,8 +152,12 @@ class UsosesApi(BaseHandler, JSendMixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        data = yield self.get_usoses(showtokens=False)
-        self.success(data, cache_age=constants.SECONDS_1WEEK)
+        usoses = list()
+        for usos in self._context.usoses:
+            wanted_keys = [constants.USOS_LOGO, constants.USOS_ID, constants.USOS_NAME, constants.USOS_URL]
+            usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
+
+        self.success(usoses, cache_age=constants.SECONDS_1WEEK)
 
 
 class DefaultErrorHandler(BaseHandler, JSendMixin):
