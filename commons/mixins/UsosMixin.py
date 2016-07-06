@@ -324,19 +324,16 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_programme(self, programme_id):
         create_time = datetime.now()
-        try:
-            result = yield self.call_async('services/progs/programme', arguments={
-                'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
-                'programme_id': programme_id,
-            })
-        except Exception as ex:
-            logging.exception(ex)
-            raise gen.Return(None)
+
+        result = yield self.call_async('services/progs/programme', arguments={
+            'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
+            'programme_id': programme_id,
+        })
 
         result[constants.USOS_ID] = self.get_usos_id()
         result[constants.CREATED_TIME] = create_time
-
-        result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+        result[constants.UPDATE_TIME] = create_time
+        result[constants.PROGRAMME_ID] = programme_id
 
         # strip english names
         result['name'] = result['name']['pl']
