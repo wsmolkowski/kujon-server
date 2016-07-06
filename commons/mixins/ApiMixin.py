@@ -379,7 +379,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for lecturer in course[constants.LECTURERS]:
                     if lecturer not in result:
                         result.append(lecturer)
-
+        result = sorted(result, key=lambda k: k['last_name'])
         raise gen.Return(result)
 
     @gen.coroutine
