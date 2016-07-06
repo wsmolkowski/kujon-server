@@ -45,7 +45,11 @@ class UsosMixin(OAuthMixin):
 
     @staticmethod
     def _build_exception(response):
-        result = escape.json_decode(response.body)
+        try:
+            result = escape.json_decode(response.body)
+        except Exception as ex:
+            result = dict()
+
         if response.error:
             result['error'] = response.error.message
         result['code'] = response.code
