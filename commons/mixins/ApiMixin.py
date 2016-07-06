@@ -590,6 +590,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not faculty_doc:
             faculty_doc = yield self.usos_faculty(faculty_id)
             yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+            faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         raise gen.Return(faculty_doc)
 

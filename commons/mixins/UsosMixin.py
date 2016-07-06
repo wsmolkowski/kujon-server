@@ -252,6 +252,9 @@ class UsosMixin(OAuthMixin):
         result['name'] = result['name']['pl']
         result[constants.USOS_ID] = self.get_usos_id()
         result[constants.CREATED_TIME] = create_time
+        if 'path' in result:
+            for elem in result['path']:
+                elem['name'] = elem['name']['pl']
 
         raise gen.Return(result)
 
