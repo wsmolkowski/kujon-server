@@ -398,7 +398,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
-            'lang': 'pl'
         })
 
         if 'items' in result:
@@ -437,7 +436,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'id|match|postal_address',
-            'lang': 'pl',
             'visibility': 'all'
         })
         raise gen.Return(result)
