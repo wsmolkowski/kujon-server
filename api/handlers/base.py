@@ -16,7 +16,6 @@ from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
-from crawler import email_factory
 
 
 class BaseHandler(RequestHandler, DaoMixin):
@@ -95,26 +94,6 @@ class BaseHandler(RequestHandler, DaoMixin):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
-
-    @gen.coroutine
-    def db_email_registration(self, user_doc):
-
-        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
-        recipient = user_doc[constants.USER_EMAIL]
-
-        email_job = email_factory.email_job(
-            'Rejestracja w Kujon.mobi',
-            settings.SMTP_EMAIL,
-            recipient if type(recipient) is list else [recipient],
-            '\nCześć,\n'
-            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
-            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
-            '\nPozdrawiamy,'
-            '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
-        )
-
-        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def on_finish(self):
