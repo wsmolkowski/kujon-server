@@ -55,6 +55,8 @@ ACCESS_TOKEN_SECRET = "access_token_secret"
 OAUTH_VERIFIER = "oauth_verifier"
 
 USOS_URL = "url"
+USOS_NAME = "name"
+USOS_LOGO = "logo"
 CONSUMER_KEY = "consumer_key"
 CONSUMER_SECRET = "consumer_secret"
 

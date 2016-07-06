@@ -20,7 +20,6 @@ from crawler import job_factory
 class ArchiveHandler(ApiHandler):
     @gen.coroutine
     def db_email_archive_user(self, recipient):
-
         email_job = email_factory.email_job(
             'Usunęliśmy Twoje konto w Kujon.mobi',
             settings.SMTP_EMAIL,
@@ -314,7 +313,28 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
             else:
                 yield self.exc(ex)
 
+
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
+    @gen.coroutine
+    def db_email_registration(self, user_doc):
+
+        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+        recipient = user_doc[constants.USER_EMAIL]
+
+        email_job = email_factory.email_job(
+            'Rejestracja w Kujon.mobi',
+            settings.SMTP_EMAIL,
+            recipient if type(recipient) is list else [recipient],
+            '\nCześć,\n'
+            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
+            '\nPozdrawiamy,'
+            '\nzespół Kujon.mobi'
+            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
+        )
+
+        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+
     @web.asynchronous
     @gen.coroutine
     def get(self):
