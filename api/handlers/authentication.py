@@ -303,13 +303,16 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
                 yield self.authorize_redirect(extra_params={
-                    'scopes': 'studies|offline_access|student_exams|grades',
+                    'scopes': 'studies|offline_access|student_exams|grades|crstests',
                     'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
                 })
 
         except Exception as ex:
-            yield self.exc(ex)
-
+            if login_type and login_type.upper() == 'WWW':
+                yield self.exc(ex, finish=False)
+                yield self.redirect(settings.DEPLOY_WEB)
+            else:
+                yield self.exc(ex)
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @web.asynchronous

@@ -8,8 +8,8 @@ from bson.objectid import ObjectId
 
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
+from commons import usosinstances
 from commons.errors import ApiError
-from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
@@ -50,7 +50,7 @@ class UserInfoApi(ApiHandler):
 
         try:
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
+                {constants.MONGO_ID: ObjectId(self.get_current_user()[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
 
             user_info = yield self.api_user_info()

@@ -28,8 +28,8 @@ class BaseHandler(RequestHandler, DaoMixin):
             yield self.get_usoses(showtokens=True)
 
         user = None
-        if hasattr(self, 'user_doc') and self.user_doc:
-            user = self.user_doc
+        if hasattr(self, '_user_doc') and self._user_doc:
+            user = self._user_doc
 
         if not user:
             cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
@@ -49,7 +49,10 @@ class BaseHandler(RequestHandler, DaoMixin):
 
                 user = yield self.db_current_user(header_email)
 
-        self.current_user = user
+        self._user_doc = user
+
+        if (not hasattr(self, '_usos_doc') or not self._usos_doc) and user and constants.USOS_ID in user:
+            self._usos_doc = yield self.get_usos(constants.USOS_ID, user[constants.USOS_ID])
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -66,7 +69,10 @@ class BaseHandler(RequestHandler, DaoMixin):
         return utils.http_client()
 
     def get_current_user(self):
-        return self.current_user
+        return self._user_doc
+
+    def get_current_usos(self):
+        return self._usos_doc
 
     def config_data(self):
         user = self.get_current_user()

@@ -9,14 +9,13 @@ from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, utils
+from commons import constants, settings, utils, usosinstances
 from commons.AESCipher import AESCipher
-from commons.usosutils import usosinstances
 from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
-                  constants.USOS_PAIRED, constants.USER_EMAIL)
+                  constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
 
 
 def get_client():

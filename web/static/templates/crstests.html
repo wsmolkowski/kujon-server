@@ -1,0 +1,42 @@
+<section id="lecturers">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive">
+                <div class="heading">
+                    <h2>Sprawdziany</h2>
+                </div>
+                <table id="table-crstests" class="table" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Semestr</th>
+                        <th data-sortable="true">Sprawdzian</th>
+                        <th data-sortable="true">Nazwa</th>
+                        <th data-sortable="true">Kurs</th>
+                        <th data-sortable="true">Opis</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#tests}}
+                    <tr>
+                        <td>{{ term_id }}</td>
+                        <td class="crstest-modal" data-toggle="modal"
+                            data-nodeId="{{ node_id }}">
+                            <a class="btn btn-default" role="button">{{ node_id }}</a>
+                        </td><!--{{ root_id }} {{ type }}-->
+                        <td>{{ name.pl }}</td>
+                        <td class="courses-modal" data-toggle="modal" data-target="#list-student"
+                            data-courseId="{{course_edition.course_id}}" data-termId="{{term_id}}">
+                            <a class="btn btn-default" role="button">{{ course_edition.course_id }}</a>
+                        </td>
+                        <td>{{ course_edition.course_name.pl }}</td>
+                    </tr>
+                    {{/tests}}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="modalWrapper"></div>

@@ -38,11 +38,17 @@
 <section id="wybor-uczelni" class="college-selection">
     <div class="container">
         <div class="row">
+
             <div class="heading">
                 <h2>Aby móc pracować w <span>Kujonie</span> wybierz uczelnię w której masz założone konto USOS,
                     przekierujemy Cię abyś się zalogował.
                 </h2>
             </div>
+
+            {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+
+            {% end %}
 
             <!--
 			<div class="col-sm-12">
@@ -59,7 +65,7 @@
             <div class="col-md-2 col-sm-4 col-xs-6">
                 <div class="border-logo-cykle col-sm-12 text-center">
                     <img src="{{ usos['logo'] }}" class="img-responsive logo-uczelni">
-                    <p><a href="{{API_URL}}/authentication/register?usos_id={{ usos['usos_id'] }}">
+                    <p><a href="{{API_URL}}/authentication/register?usos_id={{ usos['usos_id'] }}&type=WWW">
                         {{ usos['name'] }}
                     </a></p>
                 </div>
