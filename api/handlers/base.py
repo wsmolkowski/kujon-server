@@ -38,7 +38,7 @@ class BaseHandler(RequestHandler, DaoMixin):
                 token_exists = yield self.db_find_token(header_email)
 
                 if not token_exists:
-                    logging.warning('google token does not exists for email: {0}'.format(header_email))
+                    logging.warning('Authentication token does not exists for email: {0}'.format(header_email))
 
                 user = yield self.db_current_user(header_email)
 
