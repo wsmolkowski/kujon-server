@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import copy
 import logging
 from datetime import datetime, timedelta
 
@@ -58,53 +57,6 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
 
-        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
-            'type': 'login',
-            constants.USER_ID: user_doc[constants.MONGO_ID],
-            constants.CREATED_TIME: datetime.now(),
-            'host': self.request.host,
-            'method': self.request.method,
-            'path': self.request.path,
-            'query': self.request.query,
-            'remote_ip': self.request.remote_ip,
-        })
-
-        raise gen.Return(None)
-
-    _usoses = list()
-
-    @gen.coroutine
-    def get_usoses(self, showtokens):
-
-        if not self._usoses:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-
-            while (yield cursor.fetch_next):
-                usos = cursor.next_object()
-                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-
-                if settings.ENCRYPT_USOSES_KEYS:
-                    usos = dict(self.aes.decrypt_usos(usos))
-
-                self._usoses.append(usos)
-
-        result_usoses = copy.deepcopy(self._usoses)
-        if not showtokens:
-            for usos in result_usoses:
-                usos.pop("consumer_secret")
-                usos.pop("consumer_key")
-                usos.pop("enabled")
-                usos.pop("contact")
-                usos.pop("url")
-        raise gen.Return(result_usoses)
-
-    @gen.coroutine
-    def get_usos(self, key, value):
-        usoses = yield self.get_usoses(showtokens=True)
-
-        for u in usoses:
-            if u[key] == value:
-                raise gen.Return(u)
         raise gen.Return(None)
 
 
@@ -253,7 +205,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         new_user = False
 
         try:
-            usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
+            usos_doc = yield self.db_get_usos(usos_id)
 
             if email:
                 user_doc = yield self.db_find_user_email(email)
@@ -318,7 +270,6 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @gen.coroutine
     def db_email_registration(self, user_doc):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
         recipient = user_doc[constants.USER_EMAIL]
 
         email_job = email_factory.email_job(
@@ -330,7 +281,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(self.get_current_usos()[constants.USOS_NAME], settings.SMTP_EMAIL)
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -353,7 +304,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
-            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+            usos_doc = yield self.db_get_usos(
+                user_doc[constants.USOS_ID])  # self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
 
             self.set_up(usos_doc)
 

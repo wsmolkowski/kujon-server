@@ -94,13 +94,16 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_get_usos(self, usos_id):
-        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
+        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({
+            'enabled': True, constants.USOS_ID: usos_id
+        })
         raise gen.Return(usos_doc)
 
     @gen.coroutine
     def db_insert(self, collection, document):
         create_time = datetime.now()
-        document[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
+        if self.get_current_user() and constants.USOS_ID in self.get_current_user():
+            document[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
         document[constants.CREATED_TIME] = create_time
         document[constants.UPDATE_TIME] = create_time
 
