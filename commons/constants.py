@@ -39,6 +39,9 @@ FACEBOOK_ACCESS_TOKEN = "access_token"
 FACEBOOK_SESSION_EXPIRES = "session_expires"
 FACEBOOK_PICTURE = "picture"
 
+FIELD_TOKEN_EXPIRATION = 'exp'
+TOKEN_EXPIRATION_TIMEOUT = 3600
+
 GOOGLE = 'google'
 GOOGLE_NAME = 'name'
 GOOGLE_EMAIL = 'email'
@@ -84,6 +87,7 @@ COOKIE_EXPIRES_DAYS = 10
 OAUTH_TOKEN = "oauth_token"
 OAUTH_TOKEN_SECRET = "oauth_token_secret"
 MOBI_TOKEN = "mobi_token"
+
 LECTURER_STATUS = "staff_status"
 LECTURER_STATUS_ACTIVE = 2
 

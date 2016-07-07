@@ -17,8 +17,6 @@ INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, con
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
                   constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
 
-TOKEN_EXPIRATION_TIMEOUT = 3600
-
 
 def get_client():
     return pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
@@ -26,7 +24,8 @@ def get_client():
 
 def create_ttl_index(collection, field):
     db = get_client()
-    ttl_index = db[constants.COLLECTION_TOKENS].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
+    ttl_index = db[constants.COLLECTION_TOKENS].create_index(field,
+                                                             expireAfterSeconds=constants.TOKEN_EXPIRATION_TIMEOUT)
     logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
 
 
@@ -38,7 +37,7 @@ def create_indexes():
                 index = db[collection].create_index(field)
                 logging.info('created index {0} on collection {1} and field {2}'.format(index, collection, field))
 
-    create_ttl_index(constants.COLLECTION_TOKENS, 'exp')  # google expiration date
+    create_ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
 
 
 def reindex():
