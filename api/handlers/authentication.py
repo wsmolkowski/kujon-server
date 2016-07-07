@@ -207,6 +207,11 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         try:
             usos_doc = yield self.db_get_usos(usos_id)
 
+            if not usos_doc:
+                raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
+
+            self.set_up(usos_doc)
+
             if email:
                 user_doc = yield self.db_find_user_email(email)
                 if not user_doc:
@@ -230,33 +235,28 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 facebook_token['login_type'] = login_type
                 yield self.db_insert_token(facebook_token)
 
-            if not usos_doc:
-                self.fail('Nieznany USOS {0}'.format(usos_id))
+            user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+            user_doc[constants.UPDATE_TIME] = datetime.now()
+
+            if email:
+                user_doc[constants.USER_EMAIL] = email
+            if token:
+                user_doc[constants.MOBI_TOKEN] = token
+
+            if new_user:
+                user_doc['login_type'] = login_type
+                user_doc[constants.CREATED_TIME] = datetime.now()
+                new_id = yield self.db_insert_user(user_doc)
+
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
             else:
-                self.set_up(usos_doc)
+                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
-                user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-                user_doc[constants.UPDATE_TIME] = datetime.now()
-
-                if email:
-                    user_doc[constants.USER_EMAIL] = email
-                if token:
-                    user_doc[constants.MOBI_TOKEN] = token
-
-                if new_user:
-                    user_doc['login_type'] = login_type
-                    user_doc[constants.CREATED_TIME] = datetime.now()
-                    new_id = yield self.db_insert_user(user_doc)
-
-                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
-                else:
-                    yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
-
-                yield self.authorize_redirect(extra_params={
-                    'scopes': 'studies|offline_access|student_exams|grades|crstests',
-                    'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
-                })
+            yield self.authorize_redirect(extra_params={
+                'scopes': 'studies|offline_access|student_exams|grades|crstests',
+                'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
+            })
 
         except Exception as ex:
             if login_type and login_type.upper() == 'WWW':
