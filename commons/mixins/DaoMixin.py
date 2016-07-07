@@ -350,14 +350,3 @@ class DaoMixin(object):
             self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
 
         raise gen.Return(self._classtypes[self.get_current_user()[constants.USOS_ID]])
-
-    @gen.coroutine
-    def insert_search_query(self, query, endpoint):
-        query_doc = dict()
-        query_doc[constants.CREATED_TIME] = datetime.now()
-        if self.get_current_user() and constants.MONGO_ID in self.get_current_user():
-            query_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        query_doc[constants.SEARCH_QUERY] = query
-        query_doc[constants.SEARCH_ENDPOINT] = endpoint
-        query_doc = yield self.db_insert(constants.COLLECTION_SEARCH, query_doc)
-        raise gen.Return(query_doc)

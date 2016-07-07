@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import logging
-from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -94,22 +93,6 @@ class BaseHandler(RequestHandler, DaoMixin):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
-
-    @gen.coroutine
-    def on_finish(self):
-        user_doc = self.get_current_user()
-        user_id = user_doc[constants.MONGO_ID] if user_doc else None
-
-        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
-            'type': self.EXCEPTION_TYPE,
-            constants.USER_ID: user_id,
-            constants.CREATED_TIME: datetime.now(),
-            'host': self.request.host,
-            'method': self.request.method,
-            'path': self.request.path,
-            'query': self.request.query,
-            'remote_ip': self.request.remote_ip,
-        })
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
