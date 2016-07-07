@@ -247,7 +247,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     user_doc['login_type'] = login_type
                     user_doc[constants.CREATED_TIME] = datetime.now()
                     new_id = yield self.db_insert_user(user_doc)
-                    logging.info('insert: ' + str(new_id))
+
                     self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
                 else:
                     yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
@@ -261,7 +261,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         except Exception as ex:
             if login_type and login_type.upper() == 'WWW':
                 yield self.exc(ex, finish=False)
-                yield self.redirect(settings.DEPLOY_WEB)
+                self.redirect(settings.DEPLOY_WEB)
             else:
                 yield self.exc(ex)
 
@@ -304,8 +304,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
-            usos_doc = yield self.db_get_usos(
-                user_doc[constants.USOS_ID])  # self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
 
             self.set_up(usos_doc)
 
