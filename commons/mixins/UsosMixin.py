@@ -1,11 +1,10 @@
 # coding=UTF-8
 
-import functools
 import logging
 from base64 import b64encode
 
 from tornado import gen, escape
-from tornado.auth import OAuthMixin, _auth_return_future
+from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest, HTTPError
 
 from commons import constants, utils, settings, usoshelper
@@ -47,7 +46,8 @@ class UsosMixin(OAuthMixin):
         return UsosClientError('Response code: {0} message: {1} request url: {2} body: {3}'.format(
             response.code, response.error.message, response.request.url, response.body))
 
-    @_auth_return_future
+    # @_auth_return_future
+    @gen.coroutine
     def usos_request(self, path, callback=None, arguments={}, photo=False):
 
         arguments['lang'] = 'pl'
@@ -65,26 +65,33 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
         http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
+        # if photo:
+        #     http_callback = functools.partial(self._on_usos_photo_request, callback)
+        # else:
+        #     http_callback = functools.partial(self._on_usos_request, callback)
+
+        response = yield http_client.fetch(HTTPRequest(url=url, method=method, connect_timeout=HTTP_CONNECT_TIMEOUT,
+                                                       request_timeout=HTTP_REQUEST_TIMEOUT))
+
+        if not self._response_ok(response):
+            raise self._build_exception(response)
+
         if photo:
-            http_callback = functools.partial(self._on_usos_photo_request, callback)
-        else:
-            http_callback = functools.partial(self._on_usos_request, callback)
+            raise gen.Return({'photo': b64encode(response.body)})
 
-        http_client.fetch(HTTPRequest(url=url, method=method, connect_timeout=HTTP_CONNECT_TIMEOUT,
-                                      request_timeout=HTTP_REQUEST_TIMEOUT),
-                          callback=http_callback)
+        raise gen.Return(escape.json_decode(response.body))
 
-    def _on_usos_request(self, future, response):
-        if not self._response_ok(response):
-            raise self._build_exception(response)
-
-        future.set_result(escape.json_decode(response.body))
-
-    def _on_usos_photo_request(self, future, response):
-        if not self._response_ok(response):
-            raise self._build_exception(response)
-
-        future.set_result({'photo': b64encode(response.body)})
+    # def _on_usos_request(self, future, response):
+    #     if not self._response_ok(response):
+    #         raise self._build_exception(response)
+    #
+    #     future.set_result(escape.json_decode(response.body))
+    #
+    # def _on_usos_photo_request(self, future, response):
+    #     if not self._response_ok(response):
+    #         raise self._build_exception(response)
+    #
+    #     future.set_result({'photo': b64encode(response.body)})
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
@@ -356,8 +363,10 @@ class UsosMixin(OAuthMixin):
         raise gen.Return()
 
     @gen.coroutine
-    def subscriptions(self):
+    def usos_subscriptions(self):
         result = yield self.usos_request(path='services/events/subscriptions')
+        if not result:
+            result = dict()
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         raise gen.Return(result)
 

@@ -17,7 +17,7 @@ class SubscriptionsHandler(ApiHandler):
     @gen.coroutine
     def get(self):
         try:
-            subscriptions = yield self.subscriptions()
+            subscriptions = yield self.usos_subscriptions()
             self.success(subscriptions)
         except Exception as ex:
             yield self.exc(ex)
