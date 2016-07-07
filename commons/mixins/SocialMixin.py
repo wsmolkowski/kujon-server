@@ -37,6 +37,6 @@ class SocialMixin(object):
             result = json.loads(tokeninfo.body)
         except Exception as ex:
             logging.exception(ex)
-            raise AuthenticationError('Błąd werifikacji tokenu Facebookn {0}'.format(ex.message))
+            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex.message))
         else:
             raise gen.Return(result)
