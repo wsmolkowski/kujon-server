@@ -99,6 +99,11 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_insert(self, collection, document):
+        create_time = datetime.now()
+        document[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
+        document[constants.CREATED_TIME] = create_time
+        document[constants.UPDATE_TIME] = create_time
+
         doc = yield self.db[collection].insert(document)
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
         raise gen.Return(doc)

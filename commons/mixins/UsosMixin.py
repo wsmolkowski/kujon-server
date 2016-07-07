@@ -3,7 +3,6 @@
 import functools
 import logging
 from base64 import b64encode
-from datetime import datetime
 
 from tornado import gen, escape
 from tornado.auth import OAuthMixin, _auth_return_future
@@ -79,24 +78,13 @@ class UsosMixin(OAuthMixin):
         if not self._response_ok(response):
             raise self._build_exception(response)
 
-        future.set_result(self._build_response(response))
+        future.set_result(escape.json_decode(response.body))
 
     def _on_usos_photo_request(self, future, response):
         if not self._response_ok(response):
             raise self._build_exception(response)
 
         future.set_result({'photo': b64encode(response.body)})
-
-    def _build_response(self, response):
-        result = escape.json_decode(response.body)
-        if not result:
-            raise self._build_exception(response)
-
-        create_time = datetime.now()
-        result[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-        return result
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
@@ -116,15 +104,15 @@ class UsosMixin(OAuthMixin):
         else:
             http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE
-                              , connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
+        request = HTTPRequest(url=url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE,
+                              connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
 
         try:
             response = yield http_client.fetch(request)
             if not self._response_ok(response):
                 raise self._build_exception(response)
 
-            result = self._build_response(response)
+            result = escape.json_decode(response.body)
         except HTTPError as ex:
             raise UsosClientError("HTTPError message: {0} url: {1}".format(ex.message, url))
 
