@@ -405,7 +405,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[course_name]|match|next_page]',
-            'lang': 'pl'
         })
         raise gen.Return(result)
 
@@ -427,7 +426,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
-            'lang': 'pl'
         })
 
         for programme in result['items']:
