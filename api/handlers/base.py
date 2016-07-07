@@ -127,10 +127,3 @@ class DefaultErrorHandler(BaseHandler, JSendMixin):
     @gen.coroutine
     def get(self):
         self.fail(message='Strona o podanym adresie nie istnieje.', code=404)
-
-
-class ApplicationConfigHandler(BaseHandler, JSendMixin):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
-        self.success(data=self.config_data())

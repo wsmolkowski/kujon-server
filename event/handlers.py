@@ -56,7 +56,6 @@ class MainHandler(RequestHandler, JSendMixin):
 
         self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
-        return
 
     @gen.coroutine
     def process_event(self, event_data):
@@ -66,7 +65,7 @@ class MainHandler(RequestHandler, JSendMixin):
         logging.debug('entry: {0}'.format(self.event_data['entry']))
         logging.debug('event_type: {0}'.format(self.event_data['event_type']))
 
-        raise gen.Return(None)
+        raise gen.Return()
 
 
 class EventHandler(MainHandler):
@@ -77,9 +76,9 @@ class EventHandler(MainHandler):
         #    self.fail('Required headers not passed.')
         #    return
 
-        mode = self.get_argument('hub.mode', default=None, strip=True)
-        challenge = self.get_argument('hub.challenge', default=None, strip=True)
-        verify_token = self.get_argument('hub.verify_token', default=None, strip=True)
+        mode = self.get_argument('hub.mode', default=None)
+        challenge = self.get_argument('hub.challenge', default=None)
+        verify_token = self.get_argument('hub.verify_token', default=None)
 
         logging.info(self.db)
 

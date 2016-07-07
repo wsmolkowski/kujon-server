@@ -48,7 +48,7 @@ class EmailQueue(object):
             job = cursor.next_object()
             yield self.queue.put(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -82,7 +82,7 @@ class EmailQueue(object):
 
             yield self.update_job(job, constants.JOB_START)
 
-            msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), 'plain', constants.ENCODING)
+            msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
             msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
             msg['From'] = job[constants.SMTP_FROM]
             msg['To'] = ','.join(job[constants.SMTP_TO])

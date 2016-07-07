@@ -1,5 +1,5 @@
 from api.handlers import authentication
-from api.handlers.base import UsosesApi, ApplicationConfigHandler
+from api.handlers.base import UsosesApi
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi
@@ -15,7 +15,6 @@ from api.handlers.tt import TTApi
 from api.handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 
 HANDLERS = [
-    (r"/config", ApplicationConfigHandler),
     (r"/authentication/archive", authentication.ArchiveHandler),
     (r"/authentication/logout", authentication.LogoutHandler),
     (r"/authentication/register", authentication.UsosRegisterHandler),

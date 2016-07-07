@@ -104,7 +104,7 @@ class UsosCrawler(ApiMixin):
 
         yield units_groups
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def initial_user_crawl(self, user_id):

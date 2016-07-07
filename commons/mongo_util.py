@@ -136,13 +136,13 @@ def _do_recreate(db, usos_doc):
         validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
         http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET', validate_cert=validate_cert)
+        request = HTTPRequest(url=url, validate_cert=validate_cert)
         response = yield http_client.fetch(request)
 
         if response.code is not 200 and response.reason != 'OK':
             logging.error('Błedna odpowiedź USOS dla {0}'.format(url))
             logging.error(response)
-            raise gen.Return(None)
+            raise gen.Return()
 
         class_types = escape.json_decode(response.body)
 
@@ -162,7 +162,8 @@ def _do_recreate(db, usos_doc):
         logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
             usos_doc[constants.USOS_ID], url, ex.message))
         logging.exception(ex)
-    gen.Return(None)
+
+    raise gen.Return()
 
 
 @gen.coroutine

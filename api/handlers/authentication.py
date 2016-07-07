@@ -57,7 +57,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
 
 class LogoutHandler(AuthenticationHandler):
@@ -198,10 +198,10 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        email = self.get_argument('email', default=None, strip=True)
-        token = self.get_argument('token', default=None, strip=True)
-        usos_id = self.get_argument('usos_id', default=None, strip=True)
-        login_type = self.get_argument('type', default=None, strip=True)
+        email = self.get_argument('email', default=None)
+        token = self.get_argument('token', default=None)
+        usos_id = self.get_argument('usos_id', default=None)
+        login_type = self.get_argument('type', default=None)
         new_user = False
 
         try:
@@ -289,8 +289,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument('oauth_token', default=None, strip=True)
-        oauth_verifier = self.get_argument('oauth_verifier', default=None, strip=True)
+        oauth_token_key = self.get_argument('oauth_token', default=None)
+        oauth_verifier = self.get_argument('oauth_verifier', default=None)
 
         try:
             if not oauth_token_key or not oauth_verifier:

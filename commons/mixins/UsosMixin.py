@@ -104,7 +104,7 @@ class UsosMixin(OAuthMixin):
         else:
             http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE,
+        request = HTTPRequest(url=url, use_gzip=True, user_agent=settings.PROJECT_TITLE,
                               connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
 
         try:
@@ -353,7 +353,7 @@ class UsosMixin(OAuthMixin):
             yield self.usos_request(path='services/events/unsubscribe')
         except UsosClientError as ex:
             logging.warning(ex)
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def subscriptions(self):

@@ -45,7 +45,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     @web.asynchronous
     def _save_user_profile(self, user):
         if not user:
-            raise web.HTTPError(500, "Facebook authentication failed.")
+            raise web.HTTPError(log_message="Facebook authentication failed.")
         else:
             # while user['cursor']
             logging.info(user)

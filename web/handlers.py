@@ -44,7 +44,7 @@ class BaseHandler(RequestHandler, JSendMixin):
 
             raise gen.Return(response)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @tornado.gen.coroutine
     def get_usoses(self):
@@ -70,7 +70,7 @@ class MainHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        token = self.get_argument('token', default=None, strip=True)
+        token = self.get_argument('token', default=None)
         if token:
             user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
         else:
@@ -121,8 +121,8 @@ class ContactHandler(BaseHandler):
     @tornado.gen.coroutine
     def post(self):
         try:
-            subject = self.get_argument('subject', default=None, strip=True)
-            message = self.get_argument('message', default=None, strip=True)
+            subject = self.get_argument('subject', default=None)
+            message = self.get_argument('message', default=None)
 
             logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
                 self.get_current_user()[constants.MONGO_ID], subject, message))
