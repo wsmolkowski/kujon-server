@@ -278,7 +278,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             recipient if type(recipient) is list else [recipient],
             '\nCześć,\n'
             '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
-            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
             '\nemail: {1}\n'.format(self.get_current_usos()[constants.USOS_NAME], settings.SMTP_EMAIL)
