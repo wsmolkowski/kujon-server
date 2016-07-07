@@ -272,7 +272,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @gen.coroutine
-    def db_email_registration(self, user_doc):
+    def db_email_registration(self, user_doc, usos_name):
 
         recipient = user_doc[constants.USER_EMAIL]
 
@@ -285,7 +285,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(self.get_current_usos()[constants.USOS_NAME], settings.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(usos_name, settings.SMTP_EMAIL)
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -352,7 +352,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.info('zakonczona rejestracja WWW')
-                    yield self.db_email_registration(user_doc)
+                    yield self.db_email_registration(user_doc, usos_doc[constants.USOS_NAME])
                     self.redirect(settings.DEPLOY_WEB)
             else:
                 self.redirect(settings.DEPLOY_WEB)
