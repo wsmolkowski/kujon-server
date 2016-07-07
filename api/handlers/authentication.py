@@ -205,6 +205,10 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         new_user = False
 
         try:
+
+            if login_type not in ['FB', 'WWW', 'GOOGLE']:
+                raise AuthenticationError('Nieznany typ logowania.')
+
             usos_doc = yield self.db_get_usos(usos_id)
 
             if not usos_doc:
@@ -226,7 +230,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     raise AuthenticationError(
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if email and token and not login_type:
+            if email and token and login_type == 'GOOGLE':
                 google_token = yield self.google_token(token)
                 google_token['login_type'] = login_type
                 yield self.db_insert_token(google_token)
