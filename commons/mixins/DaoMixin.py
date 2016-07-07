@@ -11,8 +11,6 @@ from tornado import gen
 from commons import constants, settings
 from commons.errors import ApiError, AuthenticationError, UsosClientError
 
-TOKEN_EXPIRATION_TIMEOUT = 3600
-
 
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
@@ -302,21 +300,10 @@ class DaoMixin(object):
         raise gen.Return(user_doc)
 
     @gen.coroutine
-    def db_ttl_index(self, collection, field):
-        indexes = yield self.db[collection].index_information()
-        if field not in indexes:
-            index = yield self.db[collection].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
-            logging.debug('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
-        raise gen.Return()
-
-    @gen.coroutine
     def db_insert_token(self, token):
         yield self.db_remove(constants.COLLECTION_TOKENS, token)
-
-        user_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
-
-        yield self.db_ttl_index(constants.COLLECTION_TOKENS, 'exp')
-        raise gen.Return(user_doc)
+        token_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
+        raise gen.Return(token_doc)
 
     @gen.coroutine
     def db_find_token(self, email):
