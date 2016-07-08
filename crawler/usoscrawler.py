@@ -104,7 +104,7 @@ class UsosCrawler(ApiMixin):
 
         yield units_groups
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def initial_user_crawl(self, user_id):
@@ -176,21 +176,20 @@ class UsosCrawler(ApiMixin):
         except Exception as ex:
             self.exc(ex, finish=False)
 
-
-            # @gen.coroutine
-            # def main():
-            #     crawler = UsosCrawler()
-            #     user_id = '577a7f93d54c4b70a8349982'
-            #     yield crawler.initial_user_crawl(user_id)
-            #     # yield crawler.unsubscribe(user_id)
-            #
-            #
-            # if __name__ == '__main__':
-            #     import logging
-            #     from tornado import ioloop
-            #     from tornado.options import parse_command_line
-            #
-            #     parse_command_line()
-            #     logging.getLogger().setLevel(logging.DEBUG)
-            #     io_loop = ioloop.IOLoop.current()
-            #     io_loop.run_sync(main)
+# @gen.coroutine
+# def main():
+#     crawler = UsosCrawler()
+#     user_id = '577cdff7d54c4b87b0494ef3'
+#     yield crawler.initial_user_crawl(user_id)
+#     # yield crawler.unsubscribe(user_id)
+#
+#
+# if __name__ == '__main__':
+#     import logging
+#     from tornado import ioloop
+#     from tornado.options import parse_command_line
+#
+#     parse_command_line()
+#     logging.getLogger().setLevel(logging.DEBUG)
+#     io_loop = ioloop.IOLoop.current()
+#     io_loop.run_sync(main)

@@ -143,7 +143,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             tasks_groups = list()
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    tasks_groups.append(self.api_group(int(unit), finish=False))
+                    tasks_groups.append(self.api_group(int(unit)))
 
             groups = yield tasks_groups
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
@@ -174,8 +174,8 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 course_doc = yield self.usos_course(course_id)
             except UsosClientError as ex:
-                yield self.exc(ex, finish=True)
-                raise gen.Return(None)
+                yield self.exc(ex)
+                raise gen.Return()
 
             yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
@@ -424,10 +424,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not programme_doc:
             try:
                 programme_doc = yield self.usos_programme(programme_id)
-                if programme_doc:
-                    yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-                else:
-                    gen.Return(None)
+                yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
 
@@ -457,7 +454,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.db_insert(constants.COLLECTION_TT, tt_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
-                raise gen.Return(None)
+                raise gen.Return()
 
         # remove english names
         for t in tt_doc['tts']:
@@ -494,7 +491,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
         except UsosClientError as ex:
             yield self.exc(ex, finish=False)
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def api_term(self, term_ids):
@@ -515,7 +512,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 terms_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=False)
-                raise gen.Return(None)
+                raise gen.Return()
 
         today = date.today()
         for term in terms_doc:
@@ -677,15 +674,11 @@ class ApiMixin(DaoMixin, UsosMixin):
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                result = yield self.usos_group(group_id)
-                if result:
-                    yield self.db_insert(constants.COLLECTION_GROUPS, result)
-                else:
-                    msg = "no group for group_id: {} and usos_id: {}.".format(group_id, self.usos_id)
-                    logging.info(msg)
+                group_doc = yield self.usos_group(group_id)
+                yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
-        raise gen.Return(None)
+        raise gen.Return(group_doc)
 
     @gen.coroutine
     def api_photo(self, user_info_id):

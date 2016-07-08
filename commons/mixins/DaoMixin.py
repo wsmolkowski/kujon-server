@@ -2,16 +2,14 @@
 
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import motor
 from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
-from commons.errors import ApiError, AuthenticationError
-
-TOKEN_EXPIRATION_TIMEOUT = 3600
+from commons.errors import ApiError, AuthenticationError, UsosClientError
 
 
 class DaoMixin(object):
@@ -53,8 +51,10 @@ class DaoMixin(object):
                 self.error(message=exception.message())
             elif isinstance(exception, AuthenticationError):
                 self.error(message=exception.message)
+            elif isinstance(exception, UsosClientError):
+                self.error(message='Wystąpił błąd USOS.')
             else:
-                self.fail(message='Wystąpił błąd, pracujemy nad rozwiązaniem.')
+                self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
         raise gen.Return()
 
@@ -65,7 +65,7 @@ class DaoMixin(object):
 
         while (yield cursor.fetch_next):
             usos = cursor.next_object()
-            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+            usos[constants.USOS_LOGO] = settings.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
             if settings.ENCRYPT_USOSES_KEYS:
                 usos = dict(self.aes.decrypt_usos(usos))
@@ -92,11 +92,19 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_get_usos(self, usos_id):
-        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({constants.USOS_ID: usos_id})
+        usos_doc = yield self.db[constants.COLLECTION_USOSINSTANCES].find_one({
+            'enabled': True, constants.USOS_ID: usos_id
+        })
         raise gen.Return(usos_doc)
 
     @gen.coroutine
     def db_insert(self, collection, document):
+        create_time = datetime.now()
+        if self.get_current_user() and constants.USOS_ID in self.get_current_user():
+            document[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
+        document[constants.CREATED_TIME] = create_time
+        document[constants.UPDATE_TIME] = create_time
+
         doc = yield self.db[collection].insert(document)
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
         raise gen.Return(doc)
@@ -292,21 +300,14 @@ class DaoMixin(object):
         raise gen.Return(user_doc)
 
     @gen.coroutine
-    def db_ttl_index(self, collection, field):
-        indexes = yield self.db[collection].index_information()
-        if field not in indexes:
-            index = yield self.db[collection].create_index(field, expireAfterSeconds=TOKEN_EXPIRATION_TIMEOUT)
-            logging.debug('created TTL index {0} on collection {1}, field {2}'.format(index, collection, field))
-        raise gen.Return()
-
-    @gen.coroutine
     def db_insert_token(self, token):
         yield self.db_remove(constants.COLLECTION_TOKENS, token)
+        if constants.FIELD_TOKEN_EXPIRATION not in token:
+            token[constants.FIELD_TOKEN_EXPIRATION] = datetime.now() + timedelta(
+                seconds=constants.TOKEN_EXPIRATION_TIMEOUT)
 
-        user_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
-
-        yield self.db_ttl_index(constants.COLLECTION_TOKENS, 'exp')
-        raise gen.Return(user_doc)
+        token_doc = yield self.db_insert(constants.COLLECTION_TOKENS, token)
+        raise gen.Return(token_doc)
 
     @gen.coroutine
     def db_find_token(self, email):
@@ -343,14 +344,3 @@ class DaoMixin(object):
             self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
 
         raise gen.Return(self._classtypes[self.get_current_user()[constants.USOS_ID]])
-
-    @gen.coroutine
-    def insert_search_query(self, query, endpoint):
-        query_doc = dict()
-        query_doc[constants.CREATED_TIME] = datetime.now()
-        if hasattr(self, 'user_doc') and self.get_current_user() and constants.MONGO_ID in self.get_current_user():
-            query_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        query_doc[constants.SEARCH_QUERY] = query
-        query_doc[constants.SEARCH_ENDPOINT] = endpoint
-        query_doc = yield self.db_insert(constants.COLLECTION_SEARCH, query_doc)
-        raise gen.Return(query_doc)

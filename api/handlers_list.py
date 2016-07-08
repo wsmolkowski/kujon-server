@@ -1,5 +1,5 @@
 from api.handlers import authentication
-from api.handlers.base import UsosesApi, ApplicationConfigHandler
+from api.handlers.base import UsosesApi
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi
@@ -9,13 +9,13 @@ from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from api.handlers.lecturers import LecturersApi, LecturerByIdApi
 from api.handlers.programmes import ProgrammesApi, ProgrammesByIdApi
 from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
+from api.handlers.subscriptions import SubscriptionsHandler
 from api.handlers.terms import TermsApi, TermApi
 from api.handlers.theses import ThesesApi
 from api.handlers.tt import TTApi
 from api.handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
 
 HANDLERS = [
-    (r"/config", ApplicationConfigHandler),
     (r"/authentication/archive", authentication.ArchiveHandler),
     (r"/authentication/logout", authentication.LogoutHandler),
     (r"/authentication/register", authentication.UsosRegisterHandler),
@@ -64,4 +64,5 @@ HANDLERS = [
     (r"/theses", ThesesApi),
     (r"/crstests", CrsTestsApi),
     (r"/crstests/([^/]+)", CrsTestsNodeApi),
+    (r"/subscriptions", SubscriptionsHandler),
 ]

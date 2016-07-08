@@ -41,7 +41,7 @@ class MongoDbQueue(object):
                                                                                                 self.queue.qsize()))
             yield self.queue.put(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -61,7 +61,7 @@ class MongoDbQueue(object):
         logging.info(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def remove_user_data(self, user_id):
@@ -82,7 +82,7 @@ class MongoDbQueue(object):
 
         logging.info('removed user data for user_id {0}'.format(user_id))
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def process_job(self, job):
