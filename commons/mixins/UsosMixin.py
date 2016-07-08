@@ -43,12 +43,14 @@ class UsosMixin(OAuthMixin):
 
     @staticmethod
     def _build_exception(response):
-        return UsosClientError('Response code: {0} message: {1} request url: {2} body: {3}'.format(
-            response.code, response.error.message, response.request.url, response.body))
 
-    # @_auth_return_future
+        msg = 'Response code: {0} message: {1} request url: {2} body: {3}'.format(
+            response.code, response.error.message, response.request.url, response.body)
+        logging.debug(msg)
+        return UsosClientError(msg)
+
     @gen.coroutine
-    def usos_request(self, path, callback=None, arguments={}, photo=False):
+    def usos_request(self, path, arguments={}, photo=False):
 
         arguments['lang'] = 'pl'
 
@@ -65,10 +67,6 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
         http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
-        # if photo:
-        #     http_callback = functools.partial(self._on_usos_photo_request, callback)
-        # else:
-        #     http_callback = functools.partial(self._on_usos_request, callback)
 
         response = yield http_client.fetch(HTTPRequest(url=url, method=method, connect_timeout=HTTP_CONNECT_TIMEOUT,
                                                        request_timeout=HTTP_REQUEST_TIMEOUT))
@@ -80,18 +78,6 @@ class UsosMixin(OAuthMixin):
             raise gen.Return({'photo': b64encode(response.body)})
 
         raise gen.Return(escape.json_decode(response.body))
-
-    # def _on_usos_request(self, future, response):
-    #     if not self._response_ok(response):
-    #         raise self._build_exception(response)
-    #
-    #     future.set_result(escape.json_decode(response.body))
-    #
-    # def _on_usos_photo_request(self, future, response):
-    #     if not self._response_ok(response):
-    #         raise self._build_exception(response)
-    #
-    #     future.set_result({'photo': b64encode(response.body)})
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
@@ -357,9 +343,10 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_unsubscribe(self):
         try:
-            yield self.usos_request(path='services/events/unsubscribe')
-        except UsosClientError as ex:
-            logging.warning(ex)
+            result = yield self.usos_request(path='services/events/unsubscribe')
+            logging.debug('unsubscribe_result: {0}'.format(result))
+        except Exception as ex:
+            logging.exception(ex)
         raise gen.Return()
 
     @gen.coroutine
@@ -367,7 +354,6 @@ class UsosMixin(OAuthMixin):
         result = yield self.usos_request(path='services/events/subscriptions')
         if not result:
             result = dict()
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         raise gen.Return(result)
 
     @gen.coroutine

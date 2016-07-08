@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import logging
 from datetime import datetime
 from datetime import timedelta, date
 
@@ -140,8 +141,9 @@ class UsosCrawler(ApiMixin):
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
-                yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+                yield self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
+                logging.exception(ex)
                 yield self.exc(ex, finish=False)
 
     @gen.coroutine
@@ -149,14 +151,8 @@ class UsosCrawler(ApiMixin):
         try:
             yield self._setUp(user_id)
 
-            subscriptions_doc = yield self.db[constants.COLLECTION_SUBSCRIPTION].find({
-                constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                constants.USOS_ID: self.get_current_user()[constants.USOS_ID]
-            })
-            if subscriptions_doc:
-                yield self.usos_unsubscribe(subscriptions_doc)
-            else:
-                raise CrawlerException('No subscription data.')
+            yield self.usos_unsubscribe()
+
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
