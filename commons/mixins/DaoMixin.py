@@ -42,9 +42,9 @@ class DaoMixin(object):
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
-        ex_id = yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
 
-        logging.exception('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+        logging.exception(exception)
 
         if finish:
             if isinstance(exception, ApiError):
