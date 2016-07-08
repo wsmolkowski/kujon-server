@@ -449,7 +449,6 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_crstests_participant(self):
         result = yield self.usos_request(path='services/crstests/participant')
-
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         raise gen.Return(result)
 
