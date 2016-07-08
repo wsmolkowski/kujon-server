@@ -14,7 +14,6 @@ from commons.mixins.ApiMixin import ApiMixin
 
 class UsosCrawler(ApiMixin):
     EXCEPTION_TYPE = 'usoscrawler'
-    EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
 
     def __init__(self):
         self.aes = AESCipher()
@@ -124,8 +123,7 @@ class UsosCrawler(ApiMixin):
 
     @gen.coroutine
     def subscribe(self):
-
-        for event_type in self.EVENT_TYPES:
+        for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
                 if subscribe_doc:
