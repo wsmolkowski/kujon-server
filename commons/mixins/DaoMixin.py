@@ -344,3 +344,9 @@ class DaoMixin(object):
             self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
 
         raise gen.Return(self._classtypes[self.get_current_user()[constants.USOS_ID]])
+
+    @gen.coroutine
+    def db_subscriptions(self, pipeline):
+        cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)
+        subscriptions = yield cursor.to_list(None)
+        raise gen.Return(subscriptions)
