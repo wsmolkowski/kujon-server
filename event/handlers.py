@@ -73,9 +73,8 @@ class EventHandler(MainHandler):
             verify_token = self.get_argument('hub.verify_token', default=None)
 
             if not mode or not challenge or not verify_token:
-                logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
-                    mode, challenge, verify_token))
-                self.fail(message='Required parameters not passed.')
+                logging.error('Required parameters not passed.')
+                self.error(code=400, message='Required parameters not passed.')
             else:
                 # enable for production :)
                 # user_exists = yield self.user_exists(verify_token)
@@ -84,9 +83,9 @@ class EventHandler(MainHandler):
                 #    self.fail(message='Token verification failure.')
 
                 logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
-                    self.argument_mode, self.argument_challenge, self.argument_verify_token))
+                    mode, challenge, verify_token))
 
-                self.write(self.argument_challenge)
+                self.write(challenge)
                 self.finish()
 
         except Exception as ex:
