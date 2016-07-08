@@ -42,19 +42,6 @@ class UsosCrawler(ApiMixin):
         return self._usos_doc
 
     @gen.coroutine
-    def __subscribe(self):
-
-        for event_type in self.EVENT_TYPES:
-            try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
-                if subscribe_doc:
-                    yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
-                else:
-                    raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
-            except Exception as ex:
-                yield self.exc(ex, finish=False)
-
-    @gen.coroutine
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
 
@@ -122,7 +109,6 @@ class UsosCrawler(ApiMixin):
             yield self.api_programmes()
             yield self.api_faculties()
             yield self.api_tt(self.__get_monday())
-            yield self.__subscribe()
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
@@ -135,6 +121,19 @@ class UsosCrawler(ApiMixin):
         today = date.today()
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
+
+    @gen.coroutine
+    def subscribe(self):
+
+        for event_type in self.EVENT_TYPES:
+            try:
+                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
+                if subscribe_doc:
+                    yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
+                else:
+                    raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def unsubscribe(self, user_id):
