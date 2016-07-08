@@ -35,27 +35,16 @@ class MainHandler(RequestHandler, JSendMixin):
         exc_doc = {
             'exception': str(exception)
         }
-
-        if hasattr(self, 'argument_mode'):
-            exc_doc['argument_mode'] = self.argument_mode
-        if hasattr(self, 'argument_challenge'):
-            exc_doc['argument_challenge'] = self.argument_challenge
-        if hasattr(self, 'argument_mode'):
-            exc_doc['argument_verify_token'] = self.argument_verify_token
-        if hasattr(self, 'self.event_data'):
-            exc_doc['event_data'] = self.event_data
-
         exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
 
-        logging.debug(exc_doc)
+        logging.exception(exception)
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
-
 
     @gen.coroutine
     def process_event(self, event_data):
@@ -72,37 +61,28 @@ class EventHandler(MainHandler):
     @gen.coroutine
     @web.asynchronous
     def prepare(self):
-        # if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
-        #    self.fail('Required headers not passed.')
-        #    return
-
-        mode = self.get_argument('hub.mode', default=None)
-        challenge = self.get_argument('hub.challenge', default=None)
-        verify_token = self.get_argument('hub.verify_token', default=None)
-
-        logging.info(self.db)
-
-        if not mode or not challenge or not verify_token:
-            logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
-                mode, challenge, verify_token))
-            self.fail(message='Required parameters not passed.')
-        else:
-            self.argument_mode = mode
-            self.argument_challenge = challenge
-            self.argument_verify_token = verify_token
-
-            logging.debug('mode:{0} challenge:{1} verify_token:{2}'.format(
-                self.argument_mode, self.argument_challenge, self.argument_verify_token))
+        header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
+        logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
 
     @web.asynchronous
     @gen.coroutine
     def get(self):
         try:
-            user_exists = yield self.user_exists(self.argument_verify_token)
-            if not user_exists:
-                logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
-                self.fail(message='Token verification failure.')
+            mode = self.get_argument('hub.mode', default=None)
+            challenge = self.get_argument('hub.challenge', default=None)
+            verify_token = self.get_argument('hub.verify_token', default=None)
+
+            if not mode or not challenge or not verify_token:
+                logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
+                    mode, challenge, verify_token))
+                self.fail(message='Required parameters not passed.')
             else:
+                # enable for production :)
+                # user_exists = yield self.user_exists(verify_token)
+                # if not user_exists:
+                #    logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
+                #    self.fail(message='Token verification failure.')
+
                 logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
                     self.argument_mode, self.argument_challenge, self.argument_verify_token))
 
