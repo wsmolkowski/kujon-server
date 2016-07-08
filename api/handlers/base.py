@@ -127,3 +127,27 @@ class DefaultErrorHandler(BaseHandler, JSendMixin):
     @gen.coroutine
     def get(self):
         self.fail(message='Strona o podanym adresie nie istnieje.', code=404)
+
+
+class ApplicationConfigHandler(BaseHandler, JSendMixin):
+    """
+        for mobile use only
+    """
+
+    @web.asynchronous
+    @gen.coroutine
+    def get(self):
+
+        user = self.get_current_user()
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
+        else:
+            usos_paired = False
+
+        config = {
+            'API_URL': settings.DEPLOY_API,
+            'USOS_PAIRED': usos_paired,
+            'USER_LOGGED': True if user else False
+        }
+
+        self.success(data=config)
