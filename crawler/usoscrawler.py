@@ -92,25 +92,6 @@ class UsosCrawler(ApiMixin):
 
         raise gen.Return()
 
-    @gen.coroutine
-    def initial_user_crawl(self, user_id):
-        try:
-            self._user_doc = yield self.db_get_user(user_id)
-            if not self._user_doc:
-                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
-
-            self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
-
-            yield self.api_user_info()
-            yield self.api_courses_editions()
-            yield self.__process_courses_editions()
-            yield self.api_terms()
-            yield self.api_programmes()
-            yield self.api_faculties()
-            yield self.api_tt(self.__get_monday())
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
-
     @staticmethod
     def __get_next_monday(monday):
         return monday + timedelta(days=7)
@@ -126,12 +107,30 @@ class UsosCrawler(ApiMixin):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
-        self._user_doc = yield self.db_get_archive_user(user_id)
-        self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
+        self._user_doc = yield self.db_get_user(user_id)
+        if not self._user_doc:
+            self._user_doc = yield self.db_get_archive_user(user_id)
 
         if not self._user_doc:
             raise CrawlerException(
                 "Process not started. Unknown user with id: %r or user not paired with any USOS", user_id)
+
+        self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
+
+    @gen.coroutine
+    def initial_user_crawl(self, user_id):
+        try:
+            yield self._setUp(user_id)
+
+            yield self.api_user_info()
+            yield self.api_courses_editions()
+            yield self.__process_courses_editions()
+            yield self.api_terms()
+            yield self.api_programmes()
+            yield self.api_faculties()
+            yield self.api_tt(self.__get_monday())
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def subscribe(self, user_id):
@@ -141,10 +140,7 @@ class UsosCrawler(ApiMixin):
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
-                if subscribe_doc:
-                    yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
-                else:
-                    raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
+                yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
 
@@ -152,7 +148,15 @@ class UsosCrawler(ApiMixin):
     def unsubscribe(self, user_id):
         try:
             yield self._setUp(user_id)
-            yield self.usos_unsubscribe()
+
+            subscriptions_doc = yield self.db[constants.COLLECTION_SUBSCRIPTION].find({
+                constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+                constants.USOS_ID: self.get_current_user()[constants.USOS_ID]
+            })
+            if subscriptions_doc:
+                yield self.usos_unsubscribe(subscriptions_doc)
+            else:
+                raise CrawlerException('No subscription data.')
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
