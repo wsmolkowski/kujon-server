@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import logging
 from datetime import datetime
 from datetime import timedelta, date
 
@@ -14,7 +15,6 @@ from commons.mixins.ApiMixin import ApiMixin
 
 class UsosCrawler(ApiMixin):
     EXCEPTION_TYPE = 'usoscrawler'
-    EVENT_TYPES = ['crstests/user_grade', 'grades/grade', 'crstests/user_point']
 
     def __init__(self):
         self.aes = AESCipher()
@@ -40,19 +40,6 @@ class UsosCrawler(ApiMixin):
 
     def get_current_usos(self):
         return self._usos_doc
-
-    @gen.coroutine
-    def __subscribe(self):
-
-        for event_type in self.EVENT_TYPES:
-            try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
-                if subscribe_doc:
-                    yield self.db_insert(constants.COLLECTION_SUBSCRIPTION, subscribe_doc)
-                else:
-                    raise CrawlerException('Subscribe for {0} resulted in None.'.format(event_type))
-            except Exception as ex:
-                yield self.exc(ex, finish=False)
 
     @gen.coroutine
     def __process_courses_editions(self):
@@ -106,26 +93,6 @@ class UsosCrawler(ApiMixin):
 
         raise gen.Return()
 
-    @gen.coroutine
-    def initial_user_crawl(self, user_id):
-        try:
-            self._user_doc = yield self.db_get_user(user_id)
-            if not self._user_doc:
-                raise CrawlerException("Initial crawler not started. Unknown user with id: %r.", user_id)
-
-            self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
-
-            yield self.api_user_info()
-            yield self.api_courses_editions()
-            yield self.__process_courses_editions()
-            yield self.api_terms()
-            yield self.api_programmes()
-            yield self.api_faculties()
-            yield self.api_tt(self.__get_monday())
-            yield self.__subscribe()
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
-
     @staticmethod
     def __get_next_monday(monday):
         return monday + timedelta(days=7)
@@ -137,21 +104,54 @@ class UsosCrawler(ApiMixin):
         return monday
 
     @gen.coroutine
+    def _setUp(self, user_id):
+        if isinstance(user_id, str):
+            user_id = ObjectId(user_id)
+
+        self._user_doc = yield self.db_get_user(user_id)
+        if not self._user_doc:
+            self._user_doc = yield self.db_get_archive_user(user_id)
+
+        if not self._user_doc:
+            raise CrawlerException(
+                "Process not started. Unknown user with id: %r or user not paired with any USOS", user_id)
+
+        self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
+
+    @gen.coroutine
+    def initial_user_crawl(self, user_id):
+        try:
+            yield self._setUp(user_id)
+
+            yield self.api_user_info()
+            yield self.api_courses_editions()
+            yield self.__process_courses_editions()
+            yield self.api_terms()
+            yield self.api_programmes()
+            yield self.api_faculties()
+            yield self.api_tt(self.__get_monday())
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
+
+    @gen.coroutine
+    def subscribe(self, user_id):
+
+        yield self._setUp(user_id)
+
+        for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
+            try:
+                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
+                yield self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
+            except Exception as ex:
+                logging.exception(ex)
+                yield self.exc(ex, finish=False)
+
+    @gen.coroutine
     def unsubscribe(self, user_id):
         try:
-            if isinstance(user_id, str):
-                user_id = ObjectId(user_id)
+            yield self._setUp(user_id)
 
-            self._user_doc = yield self.db_get_archive_user(user_id)
-            self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
-
-            if not self._user_doc:
-                raise CrawlerException(
-                    "Unsubscribe process not started. Unknown user with id: %r or user not paired with any USOS",
-                    user_id)
-
-            if constants.USOS_ID in self._user_doc:
-                yield self.usos_unsubscribe()
+            yield self.usos_unsubscribe()
 
         except Exception as ex:
             yield self.exc(ex, finish=False)

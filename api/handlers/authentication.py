@@ -290,6 +290,13 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
+    @gen.coroutine
+    def _create_jobs(self, user_doc):
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             job_factory.subscribe_user_job(user_doc[constants.MONGO_ID]))
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+
     @web.asynchronous
     @gen.coroutine
     def get(self):
@@ -339,8 +346,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 yield self.reset_user_cookie(user_doc)
 
-                self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                               job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+                yield self._create_jobs(user_doc)
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 

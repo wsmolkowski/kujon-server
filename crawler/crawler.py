@@ -98,6 +98,8 @@ class MongoDbQueue(object):
                 yield self.remove_user_data(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'unsubscribe_usos':
                 yield self.crawler.unsubscribe(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'subscribe_usos':
+                yield self.crawler.subscribe(job[constants.USER_ID])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)
