@@ -675,6 +675,18 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not group_doc:
             try:
                 group_doc = yield self.usos_group(group_id)
+
+                classtypes = yield self.db_classtypes()
+
+                def classtype_name(key_id):
+                    for key, name in list(classtypes.items()):
+                        if str(key_id) == str(key):
+                            return name
+                    return key_id
+
+                group_doc['class_type'] = classtype_name(group_doc['class_type_id'])  # changing class_type_id to name
+                group_doc.pop('class_type_id')
+
                 yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
