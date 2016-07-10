@@ -314,19 +314,6 @@ class DaoMixin(object):
         token_doc = yield self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
         raise gen.Return(token_doc)
 
-    @gen.coroutine
-    def db_terms_with_order_keys(self, terms_list):
-        terms_by_order = dict()
-        for term in terms_list:
-            term_coursor = self.db[constants.COLLECTION_TERMS].find(
-                {constants.USOS_ID: self.get_current_user()[constants.USOS_ID],
-                 constants.TERM_ID: term},
-                (constants.TERM_ID, constants.TERMS_ORDER_KEY))
-            while (yield term_coursor.fetch_next):
-                term_doc = term_coursor.next_object()
-            terms_by_order[term_doc[constants.TERMS_ORDER_KEY]] = term_doc[constants.TERM_ID]
-
-        raise gen.Return(terms_by_order)
 
     _classtypes = dict()
 

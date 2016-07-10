@@ -26,7 +26,7 @@ LIMIT_FIELDS_USER = (
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id', constants.TERMS_ORDER_KEY)
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
     'student_programmes',
@@ -265,12 +265,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 terms.append(course[constants.TERM_ID])
             courses[course[constants.TERM_ID]].append(course)
 
-        # get course in order in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        # get course in order by terms order_keys
+        terms_by_order = yield self.api_term(terms)
         courses_sorted_by_term = list()
-        for order_key in terms_by_order:
-            courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
+        for term in terms_by_order:
+            courses_sorted_by_term.append({term[constants.TERM_ID]: courses[term[constants.TERM_ID]]})
 
         raise gen.Return(courses_sorted_by_term)
 
@@ -361,12 +360,11 @@ class ApiMixin(DaoMixin, UsosMixin):
             grades_by_term[grade[constants.TERM_ID]].append(grade)
 
         # order grades by terms in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        terms_by_order = yield self.api_term(terms)
         grades_sorted_by_term = list()
-        for order_key in terms_by_order:
-            grades_sorted_by_term.append({constants.TERM_ID: terms_by_order[order_key],
-                                          'courses': grades_by_term[terms_by_order[order_key]]})
+        for term in terms_by_order:
+            grades_sorted_by_term.append({constants.TERM_ID: term[constants.TERM_ID],
+                                          'courses': grades_by_term[term[constants.TERM_ID]]})
         raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
