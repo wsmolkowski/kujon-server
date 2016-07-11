@@ -149,14 +149,17 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if extra_fetch:
             term_doc = yield self.api_term([term_id])
-            if term_doc:
-                course_doc['term'] = term_doc
+            course_doc['term'] = list()
+            for term in term_doc:
+                term.pop(constants.MONGO_ID)
+                course_doc['term'].append(term)
 
         if extra_fetch:
             faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
+        course_doc.pop(constants.MONGO_ID)
         raise gen.Return(course_doc)
 
     @gen.coroutine
