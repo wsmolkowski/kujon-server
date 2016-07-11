@@ -85,10 +85,8 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
                     if not course_participants:
                         continue
 
-                    friends_added = list()
                     cursor = self.db[constants.COLLECTION_FRIENDS].find()
-                    while (yield cursor.fetch_next):
-                        friends_added.append(cursor.next_object())
+                    friends_added = yield cursor.to_list(None)
 
                     for participant in course_participants[constants.PARTICIPANTS]:
                         participant_id = participant[constants.USER_ID]

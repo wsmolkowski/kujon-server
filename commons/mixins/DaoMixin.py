@@ -62,9 +62,8 @@ class DaoMixin(object):
     def get_usos_instances(self):
         result = []
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-
-        while (yield cursor.fetch_next):
-            usos = cursor.next_object()
+        usoses_doc = yield cursor.to_list(None)
+        for usos in usoses_doc:
             usos[constants.USOS_LOGO] = settings.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
             if settings.ENCRYPT_USOSES_KEYS:
@@ -324,8 +323,8 @@ class DaoMixin(object):
             class_type = dict()
             cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
                 {constants.USOS_ID: self.get_current_user()[constants.USOS_ID]})
-            while (yield cursor.fetch_next):
-                ct = cursor.next_object()
+            ct_doc = yield cursor.to_list(None)
+            for ct in ct_doc:
                 class_type[ct['id']] = ct['name']['pl']
 
             self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
