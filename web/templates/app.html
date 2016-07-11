@@ -104,13 +104,14 @@
 
 <script>
     $(document).ready(function() {
+
         if ($('section').hasClass('welcome')) {
             $('#section-content').css({
                 height: '100%',
                 display: 'table'
             });
         }
-        if ($('section').not('[.welcome]')) {
+        if (! $('section').hasClass('welcome')) {
             $('#section-content').css({
                 height: 'auto',
                 display: 'block'
