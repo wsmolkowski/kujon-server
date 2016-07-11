@@ -228,13 +228,13 @@ class ApiMixin(DaoMixin, UsosMixin):
                      constants.USOS_ID: self.get_current_user()[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
-                groups = list()
-                while (yield cursor.fetch_next):
-                    group = cursor.next_object()
+                groups_doc = yield cursor.to_list(None)
+                groups_added = list()
+                for group in groups_doc:
                     group['class_type'] = classtype_name(group['class_type_id'])  # changing class_type_id to name
                     group.pop('class_type_id')
-                    groups.append(group)
-                course['groups'] = groups
+                    groups_added.append(group)
+                course['groups'] = groups_added
                 course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
@@ -657,7 +657,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for unit in units_id:
                     tasks_units.append(self.api_unit(unit))
                 yield tasks_units
-                cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline)
+                cursor.rewind()
                 units_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
