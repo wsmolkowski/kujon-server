@@ -86,7 +86,7 @@
                 </div>
                 <div class="col-sm-6">
                     <ul class="nav navbar-nav navbar-right navbar-bottom">
-                        <li><a href="regulamin">Regulamin i polityka prywatności</a></li>
+                        <li><a href="regulamin" id="btnDisclaimer">Regulamin i polityka prywatności</a></li>
                         <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
                         <li class="fb"><a href="https://www.facebook.com/kujonmobi-992906237450440/" target="_blank"><span class="fa fa-facebook"></span></a></li>
                         <li class="andr"><a href="https://play.google.com/store/apps/details?id=mobi.kujon"><span class="fa fa-android"></span></a></li>
@@ -104,13 +104,14 @@
 
 <script>
     $(document).ready(function() {
+
         if ($('section').hasClass('welcome')) {
             $('#section-content').css({
                 height: '100%',
                 display: 'table'
             });
         }
-        if ($('section').not('[.welcome]')) {
+        if (! $('section').hasClass('welcome')) {
             $('#section-content').css({
                 height: 'auto',
                 display: 'block'
@@ -148,7 +149,7 @@
             $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
         });
         $('.navbar-nav.navbar-left a').on('click', function() {
-            if ($(window).width() < 999) {
+            if ($(window).width() < 1110) {
                 var selected = $("#slide-nav").hasClass('slide-active');
                 $('#slidemenu').stop().animate({
                     right: selected ? menuneg : '0px'
@@ -170,11 +171,19 @@
 
         var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
         $(window).on("resize", function() {
-            if ($(window).width() > 1000 && $('.navbar-toggle').is(':hidden')) {
+            if ($(window).width() > 1111 && $('.navbar-toggle').is(':hidden')) {
                 $(selected).removeClass('slide-active');
             }
         });
     });
+
+</script>
+
+<script type="text/javascript">
+$('#btnDisclaimer').on('click', function(e){
+    e.preventDefault();
+    $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+});
 </script>
 
 {% end %}

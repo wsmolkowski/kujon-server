@@ -20,8 +20,8 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", MainHandler),
-            (r"/contact", ContactHandler),
-            (r"/regulamin", DisclaimerHandler),
+            (r"/contact", ContactHandler),  # post only
+            (r"/regulamin", DisclaimerHandler),  # mobi and www modals content
         ]
 
         __settings = dict(
