@@ -13,20 +13,17 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def api_friends(self):
-        friends = list()
         friends_returned = list()
         pipeline = [{'$match': {'user_id': ObjectId(self.get_current_user()[constants.MONGO_ID])}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
         cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
-        if cursor:
-            while (yield cursor.fetch_next):
-                friends.append(cursor.next_object())
-
-            for elem in friends:
+        friend_doc = yield cursor.to_list(None)
+        if friend_doc:
+            for friend in friend_doc:
                 new_elem = dict()
-                new_elem['user_id'] = elem['friend_id']
-                user_info = elem['users_info'].pop()
+                new_elem['user_id'] = friend['friend_id']
+                user_info = friend['users_info'].pop()
                 new_elem['first_name'] = user_info['first_name']
                 new_elem['last_name'] = user_info['last_name']
                 new_elem['sex'] = user_info['sex']

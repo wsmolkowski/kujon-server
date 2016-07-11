@@ -657,7 +657,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for unit in units_id:
                     tasks_units.append(self.api_unit(unit))
                 yield tasks_units
-                cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline)
+                cursor.rewind()
                 units_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=finish)
