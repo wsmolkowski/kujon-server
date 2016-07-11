@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import logging
-from collections import OrderedDict
 from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
@@ -489,7 +488,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
         except UsosClientError as ex:
             yield self.exc(ex, finish=False)
-        raise gen.Return()
+        raise gen.Return(term_doc)
 
     @gen.coroutine
     def api_term(self, term_ids):
@@ -507,6 +506,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for term_id in term_ids:
                     terms_task.append(self._api_term_task(term_id))
                 yield terms_task
+                cursor.rewind()
                 terms_doc = yield cursor.to_list(None)
             except UsosClientError as ex:
                 yield self.exc(ex, finish=False)
