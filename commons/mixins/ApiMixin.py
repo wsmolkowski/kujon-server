@@ -16,7 +16,7 @@ LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
-LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
+LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
                         'path', 'stats')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
@@ -232,12 +232,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     LIMIT_FIELDS_GROUPS
                 )
                 groups_doc = yield cursor.to_list(None)
-                groups_added = list()
-                for group in groups_doc:
-                    group['class_type'] = classtype_name(group['class_type_id'])  # changing class_type_id to name
-                    group.pop('class_type_id')
-                    groups_added.append(group)
-                course['groups'] = groups_added
+                course['groups'] = groups_doc
                 course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
