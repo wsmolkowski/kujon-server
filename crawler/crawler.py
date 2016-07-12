@@ -36,9 +36,8 @@ class MongoDbQueue(object):
             if len(self.processing) >= MAX_WORKERS:
                 break
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
-                                                                                                job[constants.JOB_TYPE],
-                                                                                                self.queue.qsize()))
+            logging.debug('putting job to queue for type: {0} queue size: {1}'.format(job[constants.JOB_TYPE],
+                                                                                      self.queue.qsize()))
             yield self.queue.put(job)
 
         raise gen.Return()
@@ -100,6 +99,8 @@ class MongoDbQueue(object):
                 yield self.crawler.unsubscribe(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscribe_usos':
                 yield self.crawler.subscribe(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'subscription_event':
+                yield self.crawler.process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)

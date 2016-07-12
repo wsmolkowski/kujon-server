@@ -254,6 +254,18 @@ class DaoMixin(object):
         raise gen.Return(user_doc)
 
     @gen.coroutine
+    def db_find_user_id(self, user_id):
+        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one({
+            constants.ID: str(user_id)
+        })
+
+        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({
+            constants.MONGO_ID: ObjectId(user_info_doc[constants.USER_ID])
+        })
+
+        raise gen.Return(user_doc)
+
+    @gen.coroutine
     def db_cookie_user_id(self, user_id):
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
                                                                       constants.COOKIE_FIELDS)

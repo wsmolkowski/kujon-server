@@ -24,3 +24,4 @@ def update_user_job(user_id):
 
 def subscribe_user_job(user_id):
     return user_job(user_id, 'subscribe_usos')
+

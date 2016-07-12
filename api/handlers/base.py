@@ -51,8 +51,13 @@ class BaseHandler(RequestHandler, DaoMixin):
         self._context.user_doc = yield self._prepare_user()
 
         if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
+            usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated
+        else:
+            usos_id = self.get_argument('usos_id', default=None)  # request authentication/register
+
+        if usos_id:
             for usos in self._context.usoses:
-                if usos[constants.USOS_ID] == self._context.user_doc[constants.USOS_ID]:
+                if usos[constants.USOS_ID] == usos_id:
                     self._context.usos_doc = usos
 
     def get_current_user(self):
