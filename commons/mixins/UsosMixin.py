@@ -57,20 +57,16 @@ class UsosMixin(OAuthMixin):
                             secret=self.get_current_user()[constants.ACCESS_TOKEN_SECRET])
 
         # Add the OAuth resource request signature if we have credentials
-        method = "GET"
-        oauth = self._oauth_request_parameters(url, access_token, arguments, method=method)
+        oauth = self._oauth_request_parameters(url, access_token, arguments)
         arguments.update(oauth)
 
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
-        http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
+        client = utils.http_client()
 
-        logging.debug(url)
-
-        response = yield http_client.fetch(HTTPRequest(url=url,
-                                                       method=method,
-                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if not self._response_ok(response):
             raise self._build_exception(response)
@@ -93,17 +89,15 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        if constants.VALIDATE_SSL_CERT in self.get_current_usos():
-            http_client = utils.http_client(validate_cert=True)
-        else:
-            http_client = utils.http_client()
-
-        request = HTTPRequest(url=url, use_gzip=True, user_agent=settings.PROJECT_TITLE,
-                              connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                              request_timeout=constants.HTTP_REQUEST_TIMEOUT)
+        # if constants.VALIDATE_SSL_CERT in self.get_current_usos():
+        #     http_client = utils.http_client(validate_cert=True)
+        # else:
+        client = utils.http_client()
 
         try:
-            response = yield http_client.fetch(request)
+            response = yield client.fetch(HTTPRequest(url=url,
+                                                      connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                      request_timeout=constants.HTTP_REQUEST_TIMEOUT))
             if not self._response_ok(response):
                 raise self._build_exception(response)
 
