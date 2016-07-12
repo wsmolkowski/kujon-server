@@ -8,6 +8,8 @@ from commons import constants
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 
+LIMIT_FIELDS_CRSTESTS = ('tests',)
+
 
 class CrsTestsMixin(DaoMixin, UsosMixin):
     def do_refresh(self):
@@ -19,7 +21,7 @@ class CrsTestsMixin(DaoMixin, UsosMixin):
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_CRSTESTS, pipeline)
 
-        crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS].find_one(pipeline)
+        crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS].find_one(pipeline, LIMIT_FIELDS_CRSTESTS)
 
         if not crstests_doc:
             crstests_doc = yield self.usos_crstests_participant()
