@@ -20,9 +20,6 @@ try:
 except ImportError:
     import urllib as urllib_parse  # py2
 
-HTTP_CONNECT_TIMEOUT = 300
-HTTP_REQUEST_TIMEOUT = 300
-
 
 class UsosMixin(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
@@ -68,8 +65,12 @@ class UsosMixin(OAuthMixin):
             url += "?" + urllib_parse.urlencode(arguments)
         http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
 
-        response = yield http_client.fetch(HTTPRequest(url=url, method=method, connect_timeout=HTTP_CONNECT_TIMEOUT,
-                                                       request_timeout=HTTP_REQUEST_TIMEOUT))
+        logging.debug(url)
+
+        response = yield http_client.fetch(HTTPRequest(url=url,
+                                                       method=method,
+                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if not self._response_ok(response):
             raise self._build_exception(response)
@@ -98,7 +99,8 @@ class UsosMixin(OAuthMixin):
             http_client = utils.http_client()
 
         request = HTTPRequest(url=url, use_gzip=True, user_agent=settings.PROJECT_TITLE,
-                              connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
+                              connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                              request_timeout=constants.HTTP_REQUEST_TIMEOUT)
 
         try:
             response = yield http_client.fetch(request)
@@ -329,10 +331,11 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_subscribe(self, event_type, verify_token):
+        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
         result = yield self.usos_request(path='services/events/subscribe_event',
                                          arguments={
                                              'event_type': event_type,
-                                             'callback_url': settings.DEPLOY_EVENT,
+                                             'callback_url': callback_url,
                                              'verify_token': verify_token
                                          })
 
@@ -453,11 +456,18 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_crstests_user_grade(self, node_id):
+    def usos_crstests_user_point(self, node_id):
         result = yield self.usos_request(path='services/crstests/user_point', arguments={
             'node_id': node_id,
         })
 
+        result[constants.NODE_ID] = node_id
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_crstests_user_grade(self, node_id):
         result = yield self.usos_request(path='services/crstests/user_grade', arguments={
             'node_id': node_id,
         })

@@ -9,6 +9,7 @@ from tornado import gen
 
 from commons import constants
 from commons.AESCipher import AESCipher
+from commons.errors import ApiError
 from commons.errors import CrawlerException
 from commons.mixins.ApiMixin import ApiMixin
 
@@ -52,9 +53,13 @@ class UsosCrawler(ApiMixin):
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
 
-                courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
-                                                          course[constants.TERM_ID],
-                                                          extra_fetch=False))
+                try:
+                    courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
+                                                              course[constants.TERM_ID],
+                                                              extra_fetch=False))
+                except ApiError as ex:
+                    logging.exception(ex)
+                    continue
 
                 for lecturer in course[constants.LECTURERS]:
                     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
@@ -157,6 +162,24 @@ class UsosCrawler(ApiMixin):
             yield self.exc(ex, finish=False)
 
     @gen.coroutine
+    def process_event(self, event):
+        try:
+            logging.info(event)
+            for entry in event['entry']:
+                for user_id in entry['related_user_ids']:
+                    user_doc = yield self.db_find_user_id(user_id)
+                    logging.debug(user_doc)
+                    yield self._setUp(user_doc[constants.MONGO_ID])
+
+                    user_point = yield self.usos_crstests_user_point(entry['node_id'])
+                    logging.debug('user_point: {0}'.format(user_point))
+                    user_grade = yield self.usos_crstests_user_grade(entry['node_id'])
+                    logging.debug('user_grade: {0}'.format(user_grade))
+
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
+
+    @gen.coroutine
     def notifier_status(self):
         # unused
         try:
@@ -179,10 +202,17 @@ class UsosCrawler(ApiMixin):
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     user_id = '577cdff7d54c4b87b0494ef3'
-#     yield crawler.initial_user_crawl(user_id)
+#     # user_id = '577cdff7d54c4b87b0494ef3'
+#     # yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.unsubscribe(user_id)
 #
+#     event = {u'entry': [
+#                 {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#                 {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#                 {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
+#             ],
+#              u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
+#     yield crawler.process_event(event)
 #
 # if __name__ == '__main__':
 #     import logging

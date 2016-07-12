@@ -11,10 +11,12 @@ from tornado import web
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.errors import AuthenticationError
+from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class MainHandler(RequestHandler, JSendMixin):
+class MainHandler(RequestHandler, JSendMixin, DaoMixin):
     SUPPORTED_METHODS = ('GET', 'POST')
     EXCEPTION_TYPE = 'event'
 
@@ -46,16 +48,6 @@ class MainHandler(RequestHandler, JSendMixin):
 
         self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
-    @gen.coroutine
-    def process_event(self, event_data):
-        self.event_data = event_data
-
-        logging.debug(self.event_data)
-        logging.debug('entry: {0}'.format(self.event_data['entry']))
-        logging.debug('event_type: {0}'.format(self.event_data['event_type']))
-
-        raise gen.Return()
-
 
 class EventHandler(MainHandler):
     @gen.coroutine
@@ -63,10 +55,11 @@ class EventHandler(MainHandler):
     def prepare(self):
         header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
+        # X-Hub-Signature validation
 
     @web.asynchronous
     @gen.coroutine
-    def get(self):
+    def get(self, usos_id):
         try:
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
@@ -93,12 +86,26 @@ class EventHandler(MainHandler):
 
     @web.asynchronous
     @gen.coroutine
-    def post(self):
+    def post(self, usos_id):
         try:
-            event_data = json.loads(self.request.body)
-            yield self.process_event(event_data)
+            usos_doc = yield self.db_get_usos(usos_id)
 
-            self.success(data='ok')
+            if not usos_doc:
+                raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
+
+            event_data = json.loads(self.request.body)
+            event_data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+
+            yield self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
+                constants.CREATED_TIME: datetime.now(),
+                constants.UPDATE_TIME: None,
+                constants.JOB_MESSAGE: None,
+                constants.JOB_DATA: event_data,
+                constants.JOB_STATUS: constants.JOB_PENDING,
+                constants.JOB_TYPE: 'subscription_event'
+            })
+
+            self.success(data='event consumed')
         except Exception as ex:
             yield self.exc(ex)
 
