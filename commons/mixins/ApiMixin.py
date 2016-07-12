@@ -480,13 +480,14 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def _api_term_task(self, term_id):
-
+        term_doc = None
         try:
             term_doc = yield self.usos_term(term_id)
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
         except UsosClientError as ex:
             yield self.exc(ex, finish=False)
-        raise gen.Return(term_doc)
+        finally:
+            raise gen.Return(term_doc)
 
     @gen.coroutine
     def api_term(self, term_ids):
