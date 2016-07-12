@@ -31,7 +31,7 @@ COMPRESS_RESPONSE = config.getboolean('application', 'COMPRESS_RESPONSE')
 UNICODE = config.get('application', 'UNICODE')
 
 PROXY_URL = config.get('proxy', 'PROXY_URL') if config.get('proxy', 'PROXY_URL') else None
-PROXY_PORT = config.getint('proxy', 'PROXY_PORT') if config.get('proxy', 'PROXY_PORT') else None
+PROXY_PORT = config.getint('proxy', 'PROXY_PORT') if config.getint('proxy', 'PROXY_PORT') else None
 
 GOOGLE_CLIENT_ID = config.get('social', 'GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config.get('social', 'GOOGLE_CLIENT_SECRET')
