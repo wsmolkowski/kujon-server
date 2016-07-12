@@ -267,7 +267,7 @@ USOSINSTANCES = [
      'consumer_key': 'kNBmFG6vvEN6kN265qwB',
      'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
      'contact': 'mateusz.lorenc@pwsz.krosno.pl',
-     'enabled': True,
+     'enabled': False,  # [Errno 11002] getaddrinfo failed
      'validate_ssl_certificate': False
      },
     {'usos_id': 'UTH',
