@@ -14,11 +14,11 @@ USOSINSTANCES = [
      'name': 'Uniwersytet Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
      'logo': '/static/img/logo/logo-uw-64x64.jpg',
-     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',  # jeszcze stary nie zmieniony na Kujon.mobi
-     'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',  # jeszcze stary nie zmieniony na Kujon.mobi
+     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
+     'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'phone': '225520527',
-     'enabled': True,
+     'enabled': False,  # MS wylaczam - klucze nie dzialaja
      'validate_ssl_certificate': True,
      },
     {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
@@ -267,7 +267,7 @@ USOSINSTANCES = [
      'consumer_key': 'kNBmFG6vvEN6kN265qwB',
      'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
      'contact': 'mateusz.lorenc@pwsz.krosno.pl',
-     'enabled': False,  # [Errno 11002] getaddrinfo failed
+     'enabled': False,  # [Errno 11002] getaddrinfo failed INTERNAL SERVER ERROR
      'validate_ssl_certificate': False
      },
     {'usos_id': 'UTH',
