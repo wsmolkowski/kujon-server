@@ -172,7 +172,7 @@ def recreate_dictionaries():
 
     tasks = list()
     db.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
-    for usos in db[constants.COLLECTION_USOSINSTANCES].find():
+    for usos in db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True}):
         tasks.append(_do_recreate(db, usos))
 
     yield tasks
