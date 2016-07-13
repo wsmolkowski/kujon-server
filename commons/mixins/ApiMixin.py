@@ -557,6 +557,33 @@ class ApiMixin(DaoMixin, UsosMixin):
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
+            # process faculties
+            tasks_get_faculties = list()
+            for position in user_info_doc['employment_positions']:
+                tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
+            yield tasks_get_faculties
+
+            # process course_editions_conducted
+            courses_conducted = []
+            tasks_courses = list()
+            courses = list()
+            for course_conducted in user_info_doc['course_editions_conducted']:
+                course_id, term_id = course_conducted['id'].split('|')
+                if course_id not in courses:
+                    courses.append(course_id)
+                    tasks_courses.append(self.api_course(course_id))
+
+            try:
+                tasks_results = yield tasks_courses
+                for course_doc in tasks_results:
+                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                              constants.COURSE_ID: course_id,
+                                              constants.TERM_ID: term_id})
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
+
+            user_info_doc['course_editions_conducted'] = courses_conducted
+
             # if user has photo
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
