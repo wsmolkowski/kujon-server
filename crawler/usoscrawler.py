@@ -11,9 +11,10 @@ from commons import constants
 from commons.AESCipher import AESCipher
 from commons.errors import CrawlerException
 from commons.mixins.ApiMixin import ApiMixin
+from commons.mixins.CrsTestsMixin import CrsTestsMixin
 
 
-class UsosCrawler(ApiMixin):
+class UsosCrawler(ApiMixin, CrsTestsMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
     def __init__(self):
@@ -97,6 +98,17 @@ class UsosCrawler(ApiMixin):
 
         raise gen.Return()
 
+    @gen.coroutine
+    def __process_crstests(self):
+        crstests_doc = yield self.api_crstests()
+        logging.debug(crstests_doc)
+        grade_points = []
+        for crstest in crstests_doc['tests']:
+            grade_points.append(self.api_crstests_grades(crstest['node_id']))
+            grade_points.append(self.api_crstests_points(crstest['node_id']))
+
+        yield grade_points
+
     @staticmethod
     def __get_next_monday(monday):
         return monday + timedelta(days=7)
@@ -134,6 +146,8 @@ class UsosCrawler(ApiMixin):
             yield self.api_programmes()
             yield self.api_faculties()
             yield self.api_tt(self.__get_monday())
+            yield self.__process_crstests()
+
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
@@ -202,17 +216,17 @@ class UsosCrawler(ApiMixin):
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     # user_id = '577cdff7d54c4b87b0494ef3'
-#     # yield crawler.initial_user_crawl(user_id)
+#     user_id = '5785f531d54c4b4e9c9f5a75'
+#     yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.unsubscribe(user_id)
 #
-#     event = {u'entry': [
-#                 {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#                 {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#                 {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
-#             ],
-#              u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-#     yield crawler.process_event(event)
+#     # event = {u'entry': [
+#     #             {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#     #             {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#     #             {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
+#     #         ],
+#     #          u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
+#     # yield crawler.process_event(event)
 #
 # if __name__ == '__main__':
 #     import logging

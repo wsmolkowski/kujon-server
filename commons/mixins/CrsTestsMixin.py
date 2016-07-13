@@ -61,3 +61,19 @@ class CrsTestsMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_CRSTESTS_GRADES, crstests_doc)
 
         raise gen.Return(crstests_doc)
+
+    @gen.coroutine
+    def api_crstests_points(self, node_id):
+        pipeline = {constants.NODE_ID: node_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_CRSTESTS_POINTS, pipeline)
+
+        crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS_POINTS].find_one(pipeline)
+
+        if not crstests_doc:
+            crstests_doc = yield self.usos_crstests_user_point(node_id)
+
+            yield self.db_insert(constants.COLLECTION_CRSTESTS_POINTS, crstests_doc)
+
+        raise gen.Return(crstests_doc)

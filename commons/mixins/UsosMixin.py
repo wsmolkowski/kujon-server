@@ -435,7 +435,6 @@ class UsosMixin(OAuthMixin):
 
         result[constants.NODE_ID] = node_id
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
         raise gen.Return(result)
 
     @gen.coroutine
@@ -446,5 +445,4 @@ class UsosMixin(OAuthMixin):
 
         result[constants.NODE_ID] = node_id
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
         raise gen.Return(result)
