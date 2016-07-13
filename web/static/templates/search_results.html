@@ -14,7 +14,7 @@
                 <tbody>
                 {{#items}}
                 <tr>
-                    <td>{{match}}</td>
+                    <td>{{{match}}}</td>
 
                     {{#if user}}
                     <td>
@@ -36,11 +36,17 @@
 
                     {{#if course_id}}
                     <td>
-                        <a class="course-btn" data-courseId="{{ course_id }}" type="button">
+                        <a class="course-btn" data-courseId="{{course_id}}" type="button">
                             {{ course_id }}
                         </a>
                     </td>
 
+                    {{/if}}
+
+                    {{#if programme}}
+                    <td>{{programme.mode_of_studies}}</td>
+                    <td>{{programme.duration}}</td>
+                    <td>{{programme.level_of_studies}}</td>
                     {{/if}}
 
                 </tr>

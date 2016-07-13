@@ -1,10 +1,12 @@
 # coding=UTF-8
 
+from datetime import datetime
+
 import tornado.gen
 import tornado.web
 
 from api.handlers.base import ApiHandler
-from commons import decorators
+from commons import decorators, constants
 
 
 class AbstractSearch(ApiHandler):
@@ -23,9 +25,16 @@ class AbstractSearch(ApiHandler):
 
     @tornado.gen.coroutine
     def on_finish(self):
-        path_split = self.request.path.split('/')
-        query, endpoint = path_split[-1], path_split[-2]
-        yield self.insert_search_query(query, endpoint)
+        yield self.db_insert(constants.COLLECTION_SEARCH, {
+            'type': self.EXCEPTION_TYPE,
+            constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self.request.remote_ip,
+        })
 
 
 class SearchUsersApi(AbstractSearch):
@@ -37,10 +46,8 @@ class SearchUsersApi(AbstractSearch):
             result_doc = yield self.api_search_users(query)
             if result_doc['items']:
                 self.success(result_doc)
-                return
             else:
                 self.error('Niestety nie znaleźliśmy danych.')
-                return
         except Exception as ex:
             yield self.exc(ex)
 

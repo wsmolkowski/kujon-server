@@ -65,4 +65,4 @@ SSL_KEY = config.get('ssl', 'SSL_KEY') if config.get('ssl', 'SSL_KEY') else None
 LOG_DIR = config.get('administration', 'LOG_DIR')
 
 APPLICATION_ID = config.get('notification', 'APPLICATION_ID')
-NOTIFICATION_URL = config.get('notification', 'URL')
+AUTHORIZATION = config.get('notification', 'AUTHORIZATION')

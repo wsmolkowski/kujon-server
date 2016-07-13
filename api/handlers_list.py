@@ -9,6 +9,7 @@ from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from api.handlers.lecturers import LecturersApi, LecturerByIdApi
 from api.handlers.programmes import ProgrammesApi, ProgrammesByIdApi
 from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
+from api.handlers.subscriptions import SubscriptionsHandler
 from api.handlers.terms import TermsApi, TermApi
 from api.handlers.theses import ThesesApi
 from api.handlers.tt import TTApi
@@ -64,4 +65,5 @@ HANDLERS = [
     (r"/theses", ThesesApi),
     (r"/crstests", CrsTestsApi),
     (r"/crstests/([^/]+)", CrsTestsNodeApi),
+    (r"/subscriptions", SubscriptionsHandler),
 ]

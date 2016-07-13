@@ -36,12 +36,11 @@ class MongoDbQueue(object):
             if len(self.processing) >= MAX_WORKERS:
                 break
             job = cursor.next_object()
-            logging.debug('putting job to queue for user: {0} type: {1} queue size: {2}'.format(job[constants.USER_ID],
-                                                                                                job[constants.JOB_TYPE],
-                                                                                                self.queue.qsize()))
+            logging.debug('putting job to queue for type: {0} queue size: {1}'.format(job[constants.JOB_TYPE],
+                                                                                      self.queue.qsize()))
             yield self.queue.put(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -61,7 +60,7 @@ class MongoDbQueue(object):
         logging.info(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def remove_user_data(self, user_id):
@@ -82,7 +81,7 @@ class MongoDbQueue(object):
 
         logging.info('removed user data for user_id {0}'.format(user_id))
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def process_job(self, job):
@@ -98,6 +97,10 @@ class MongoDbQueue(object):
                 yield self.remove_user_data(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'unsubscribe_usos':
                 yield self.crawler.unsubscribe(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'subscribe_usos':
+                yield self.crawler.subscribe(job[constants.USER_ID])
+            elif job[constants.JOB_TYPE] == 'subscription_event':
+                yield self.crawler.process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)

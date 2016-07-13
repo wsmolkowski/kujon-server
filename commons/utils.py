@@ -1,4 +1,5 @@
-import datetime
+# coding=UTF-8
+
 import logging
 import os
 import sys
@@ -6,7 +7,6 @@ import tempfile
 import traceback
 
 import httplib2
-from bson.objectid import ObjectId
 from tornado import httpclient
 
 try:
@@ -20,8 +20,6 @@ from commons import constants
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
 
-DEFAULT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
-
 log = logging.getLogger(__name__)
 
 
@@ -30,50 +28,6 @@ def get_proxy():
         return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL,
                                   proxy_port=settings.PROXY_PORT, proxy_rdns=False)
     return None
-
-
-def serialize_dictionary(data):
-    for key, value in list(data.items()):
-        if isinstance(value, list):
-            data[key] = serialize_list(value)
-        elif isinstance(value, dict):
-            data[key] = serialize_dictionary(value)
-        elif isinstance(value, datetime.datetime):
-            data[key] = value.strftime(constants.DATETIME_DISPLAY_FORMAT)
-        elif isinstance(value, datetime.date):
-            value = datetime.datetime.combine(value, datetime.time.min)
-            data[key] = value.strftime(constants.DATETIME_DISPLAY_FORMAT)
-        elif isinstance(value, ObjectId):
-            data.pop(key)
-    return data
-
-
-def serialize_list(data):
-    result = []
-    for element in data:
-        if isinstance(element, list):
-            result.append(serialize_list(element))
-        elif isinstance(element, dict):
-            result.append(serialize_dictionary(element))
-        elif isinstance(element, datetime.datetime):
-            result.append(element.strftime(constants.DATETIME_DISPLAY_FORMAT))
-        elif isinstance(element, datetime.date):
-            element = datetime.datetime.combine(element, datetime.time.min)
-            result.append(element.strftime(constants.DATETIME_DISPLAY_FORMAT))
-        elif isinstance(element, ObjectId):
-            continue
-        else:
-            result.append(element)
-    return result
-
-
-def serialize(data):
-    if isinstance(data, list):
-        return serialize_list(data)
-    elif isinstance(data, dict):
-        return serialize_dictionary(data)
-
-    return data
 
 
 def mkdir(newdir):
@@ -110,7 +64,7 @@ def initialize_logging(logger_name):
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
         file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
-        formatter = logging.Formatter(log_format, DEFAULT_DATE_FORMAT)
+        formatter = logging.Formatter(log_format, constants.DEFAULT_DATE_FORMAT)
         file_handler.setFormatter(formatter)
 
         root_log = logging.getLogger()
@@ -128,12 +82,12 @@ def initialize_logging(logger_name):
     log = logging.getLogger(__name__)
 
 
-def http_client(validate_cert=False):
+def http_client():
     if settings.PROXY_URL and settings.PROXY_PORT:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT,
-                                                           validate_cert=validate_cert,
+                                                           validate_cert=False,
                                                            max_clients=constants.MAX_HTTP_CLIENTS))
 
     else:

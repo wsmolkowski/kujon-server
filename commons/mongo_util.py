@@ -22,6 +22,13 @@ def get_client():
     return pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
 
 
+def create_ttl_index(collection, field):
+    db = get_client()
+    ttl_index = db[constants.COLLECTION_TOKENS].create_index(field,
+                                                             expireAfterSeconds=constants.TOKEN_EXPIRATION_TIMEOUT)
+    logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
+
+
 def create_indexes():
     db = get_client()
     for collection in db.collection_names(include_system_collections=False):
@@ -29,6 +36,8 @@ def create_indexes():
             if db[collection].find_one({field: {'$exists': True, '$ne': False}}):
                 index = db[collection].create_index(field)
                 logging.info('created index {0} on collection {1} and field {2}'.format(index, collection, field))
+
+    create_ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
 
 
 def reindex():
@@ -124,16 +133,16 @@ def _do_recreate(db, usos_doc):
     url = None
     try:
         url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
-        validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
         http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET', validate_cert=validate_cert)
-        response = yield http_client.fetch(request)
+        response = yield http_client.fetch(HTTPRequest(url=url,
+                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code is not 200 and response.reason != 'OK':
             logging.error('Błedna odpowiedź USOS dla {0}'.format(url))
             logging.error(response)
-            raise gen.Return(None)
+            raise gen.Return()
 
         class_types = escape.json_decode(response.body)
 
@@ -153,7 +162,8 @@ def _do_recreate(db, usos_doc):
         logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
             usos_doc[constants.USOS_ID], url, ex.message))
         logging.exception(ex)
-    gen.Return(None)
+
+    raise gen.Return()
 
 
 @gen.coroutine

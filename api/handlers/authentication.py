@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import copy
 import logging
 from datetime import datetime, timedelta
 
@@ -58,54 +57,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
 
-        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
-            'type': 'login',
-            constants.USER_ID: user_doc[constants.MONGO_ID],
-            constants.CREATED_TIME: datetime.now(),
-            'host': self.request.host,
-            'method': self.request.method,
-            'path': self.request.path,
-            'query': self.request.query,
-            'remote_ip': self.request.remote_ip,
-        })
-
-        raise gen.Return(None)
-
-    _usoses = list()
-
-    @gen.coroutine
-    def get_usoses(self, showtokens):
-
-        if not self._usoses:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-
-            while (yield cursor.fetch_next):
-                usos = cursor.next_object()
-                usos['logo'] = settings.DEPLOY_WEB + usos['logo']
-
-                if settings.ENCRYPT_USOSES_KEYS:
-                    usos = dict(self.aes.decrypt_usos(usos))
-
-                self._usoses.append(usos)
-
-        result_usoses = copy.deepcopy(self._usoses)
-        if not showtokens:
-            for usos in result_usoses:
-                usos.pop("consumer_secret")
-                usos.pop("consumer_key")
-                usos.pop("enabled")
-                usos.pop("contact")
-                usos.pop("url")
-        raise gen.Return(result_usoses)
-
-    @gen.coroutine
-    def get_usos(self, key, value):
-        usoses = yield self.get_usoses(showtokens=True)
-
-        for u in usoses:
-            if u[key] == value:
-                raise gen.Return(u)
-        raise gen.Return(None)
+        raise gen.Return()
 
 
 class LogoutHandler(AuthenticationHandler):
@@ -246,14 +198,23 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        email = self.get_argument('email', default=None, strip=True)
-        token = self.get_argument('token', default=None, strip=True)
-        usos_id = self.get_argument('usos_id', default=None, strip=True)
-        login_type = self.get_argument('type', default=None, strip=True)
+        email = self.get_argument('email', default=None)
+        token = self.get_argument('token', default=None)
+        usos_id = self.get_argument('usos_id', default=None)
+        login_type = self.get_argument('type', default=None)
         new_user = False
 
         try:
-            usos_doc = yield self.get_usos(constants.USOS_ID, usos_id)
+
+            if login_type not in ['FB', 'WWW', 'GOOGLE']:
+                raise AuthenticationError('Nieznany typ logowania.')
+
+            usos_doc = yield self.db_get_usos(usos_id)
+
+            if not usos_doc:
+                raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
+
+            self.set_up(usos_doc)
 
             if email:
                 user_doc = yield self.db_find_user_email(email)
@@ -269,7 +230,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     raise AuthenticationError(
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if email and token and not login_type:
+            if email and token and login_type == 'GOOGLE':
                 google_token = yield self.google_token(token)
                 google_token['login_type'] = login_type
                 yield self.db_insert_token(google_token)
@@ -278,47 +239,41 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 facebook_token['login_type'] = login_type
                 yield self.db_insert_token(facebook_token)
 
-            if not usos_doc:
-                self.fail('Nieznany USOS {0}'.format(usos_id))
+            user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+            user_doc[constants.UPDATE_TIME] = datetime.now()
+
+            if email:
+                user_doc[constants.USER_EMAIL] = email
+            if token:
+                user_doc[constants.MOBI_TOKEN] = token
+
+            if new_user:
+                user_doc['login_type'] = login_type
+                user_doc[constants.CREATED_TIME] = datetime.now()
+                new_id = yield self.db_insert_user(user_doc)
+
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
             else:
-                self.set_up(usos_doc)
+                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
-                user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-                user_doc[constants.UPDATE_TIME] = datetime.now()
-
-                if email:
-                    user_doc[constants.USER_EMAIL] = email
-                if token:
-                    user_doc[constants.MOBI_TOKEN] = token
-
-                if new_user:
-                    user_doc['login_type'] = login_type
-                    user_doc[constants.CREATED_TIME] = datetime.now()
-                    new_id = yield self.db_insert_user(user_doc)
-                    logging.info('insert: ' + str(new_id))
-                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
-                else:
-                    yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                    self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
-
-                yield self.authorize_redirect(extra_params={
-                    'scopes': 'studies|offline_access|student_exams|grades|crstests',
-                    'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
-                })
+            yield self.authorize_redirect(extra_params={
+                'scopes': 'studies|offline_access|student_exams|grades|crstests',
+                'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
+            })
 
         except Exception as ex:
             if login_type and login_type.upper() == 'WWW':
                 yield self.exc(ex, finish=False)
-                yield self.redirect(settings.DEPLOY_WEB)
+                self.redirect(settings.DEPLOY_WEB)
             else:
                 yield self.exc(ex)
 
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @gen.coroutine
-    def db_email_registration(self, user_doc):
+    def db_email_registration(self, user_doc, usos_name):
 
-        usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
         recipient = user_doc[constants.USER_EMAIL]
 
         email_job = email_factory.email_job(
@@ -327,19 +282,26 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             recipient if type(recipient) is list else [recipient],
             '\nCześć,\n'
             '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
-            '\nW razie pytań lub pomysłów na zmianę - napisz do nas.. dzięki Tobie Kujon będzie lepszy..\n'
+            '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_doc['name'], settings.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(usos_name, settings.SMTP_EMAIL)
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
+    @gen.coroutine
+    def _create_jobs(self, user_doc):
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             job_factory.subscribe_user_job(user_doc[constants.MONGO_ID]))
+        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
+                             job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        oauth_token_key = self.get_argument('oauth_token', default=None, strip=True)
-        oauth_verifier = self.get_argument('oauth_verifier', default=None, strip=True)
+        oauth_token_key = self.get_argument('oauth_token', default=None)
+        oauth_verifier = self.get_argument('oauth_verifier', default=None)
 
         try:
             if not oauth_token_key or not oauth_verifier:
@@ -353,7 +315,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
-            usos_doc = yield self.get_usos(constants.USOS_ID, user_doc[constants.USOS_ID])
+            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
 
             self.set_up(usos_doc)
 
@@ -384,8 +346,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 yield self.reset_user_cookie(user_doc)
 
-                self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                               job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+                yield self._create_jobs(user_doc)
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
 
@@ -397,7 +358,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.info('zakonczona rejestracja WWW')
-                    yield self.db_email_registration(user_doc)
+                    yield self.db_email_registration(user_doc, usos_doc[constants.USOS_NAME])
                     self.redirect(settings.DEPLOY_WEB)
             else:
                 self.redirect(settings.DEPLOY_WEB)

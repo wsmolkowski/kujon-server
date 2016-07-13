@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import logging
-from collections import OrderedDict
 from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
@@ -9,7 +8,7 @@ from tornado import gen
 
 from commons import constants, settings
 from commons import usoshelper
-from commons.errors import ApiError, UsosClientError
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 
@@ -17,7 +16,7 @@ LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
-LIMIT_FIELDS_GROUPS = ('class_type_id', 'group_number', 'course_unit_id')
+LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
                         'path', 'stats')
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
@@ -26,7 +25,7 @@ LIMIT_FIELDS_USER = (
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id')
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id', constants.TERMS_ORDER_KEY)
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
     'student_programmes',
@@ -75,7 +74,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
                 logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 raise self.exc(ex, finish=False)
 
         raise gen.Return(result)
@@ -91,12 +90,9 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            try:
-                course_doc = yield self.usos_course(course_id)
-                yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception as ex:
-                logging.exception(ex)
-                raise ApiError("Nie znaleźliśmy kursu", course_id)
+            course_doc = yield self.usos_course(course_id)
+            yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
+
 
         course_doc[constants.TERM_ID] = term_id
 
@@ -143,21 +139,24 @@ class ApiMixin(DaoMixin, UsosMixin):
             tasks_groups = list()
             if course_doc['course_units_ids']:
                 for unit in course_doc['course_units_ids']:
-                    tasks_groups.append(self.api_group(int(unit), finish=False))
+                    tasks_groups.append(self.api_group(int(unit)))
 
             groups = yield tasks_groups
             course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
 
         if extra_fetch:
             term_doc = yield self.api_term([term_id])
-            if term_doc:
-                course_doc['term'] = term_doc
+            course_doc['term'] = list()
+            for term in term_doc:
+                term.pop(constants.MONGO_ID)
+                course_doc['term'].append(term)
 
         if extra_fetch:
             faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
+        course_doc.pop(constants.MONGO_ID)
         raise gen.Return(course_doc)
 
     @gen.coroutine
@@ -173,9 +172,9 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except UsosClientError as ex:
-                yield self.exc(ex, finish=True)
-                raise gen.Return(None)
+            except Exception as ex:
+                yield self.exc(ex)
+                raise gen.Return()
 
             yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
@@ -229,13 +228,8 @@ class ApiMixin(DaoMixin, UsosMixin):
                      constants.USOS_ID: self.get_current_user()[constants.USOS_ID]},
                     LIMIT_FIELDS_GROUPS
                 )
-                groups = list()
-                while (yield cursor.fetch_next):
-                    group = cursor.next_object()
-                    group['class_type'] = classtype_name(group['class_type_id'])  # changing class_type_id to name
-                    group.pop('class_type_id')
-                    groups.append(group)
-                course['groups'] = groups
+                groups_doc = yield cursor.to_list(None)
+                course['groups'] = groups_doc
                 course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
@@ -265,12 +259,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 terms.append(course[constants.TERM_ID])
             courses[course[constants.TERM_ID]].append(course)
 
-        # get course in order in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        # get course in order by terms order_keys
+        terms_by_order = yield self.api_term(terms)
         courses_sorted_by_term = list()
-        for order_key in terms_by_order:
-            courses_sorted_by_term.append({terms_by_order[order_key]: courses[terms_by_order[order_key]]})
+        for term in terms_by_order:
+            courses_sorted_by_term.append({term[constants.TERM_ID]: courses[term[constants.TERM_ID]]})
 
         raise gen.Return(courses_sorted_by_term)
 
@@ -361,12 +354,11 @@ class ApiMixin(DaoMixin, UsosMixin):
             grades_by_term[grade[constants.TERM_ID]].append(grade)
 
         # order grades by terms in order_keys as dictionary and reverse sort
-        terms_by_order = yield self.db_terms_with_order_keys(terms)
-        terms_by_order = OrderedDict(sorted(list(terms_by_order.items()), reverse=True))
+        terms_by_order = yield self.api_term(terms)
         grades_sorted_by_term = list()
-        for order_key in terms_by_order:
-            grades_sorted_by_term.append({constants.TERM_ID: terms_by_order[order_key],
-                                          'courses': grades_by_term[terms_by_order[order_key]]})
+        for term in terms_by_order:
+            grades_sorted_by_term.append({constants.TERM_ID: term[constants.TERM_ID],
+                                          'courses': grades_by_term[term[constants.TERM_ID]]})
         raise gen.Return(grades_sorted_by_term)
 
     @gen.coroutine
@@ -425,7 +417,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 programme_doc = yield self.usos_programme(programme_id)
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
@@ -454,7 +446,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.db_insert(constants.COLLECTION_TT, tt_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
-                raise gen.Return(None)
+                raise gen.Return()
 
         # remove english names
         for t in tt_doc['tts']:
@@ -485,13 +477,14 @@ class ApiMixin(DaoMixin, UsosMixin):
 
     @gen.coroutine
     def _api_term_task(self, term_id):
-
+        term_doc = None
         try:
             term_doc = yield self.usos_term(term_id)
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
-        except UsosClientError as ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
-        raise gen.Return(None)
+        finally:
+            raise gen.Return(term_doc)
 
     @gen.coroutine
     def api_term(self, term_ids):
@@ -509,10 +502,11 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for term_id in term_ids:
                     terms_task.append(self._api_term_task(term_id))
                 yield terms_task
+                cursor.rewind()
                 terms_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
-                raise gen.Return(None)
+                raise gen.Return()
 
         today = date.today()
         for term in terms_doc:
@@ -555,7 +549,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             try:
                 user_info_doc = yield self.usos_user_info(user_id)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
 
             if not user_info_doc:
@@ -642,7 +636,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(unit_doc)
 
@@ -659,9 +653,9 @@ class ApiMixin(DaoMixin, UsosMixin):
                 for unit in units_id:
                     tasks_units.append(self.api_unit(unit))
                 yield tasks_units
-                cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline)
+                cursor.rewind()
                 units_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(units_doc)
 
@@ -675,8 +669,20 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not group_doc:
             try:
                 group_doc = yield self.usos_group(group_id)
+
+                classtypes = yield self.db_classtypes()
+
+                def classtype_name(key_id):
+                    for key, name in list(classtypes.items()):
+                        if str(key_id) == str(key):
+                            return name
+                    return key_id
+
+                group_doc['class_type'] = classtype_name(group_doc['class_type_id'])  # changing class_type_id to name
+                group_doc.pop('class_type_id')
+
                 yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(group_doc)
 

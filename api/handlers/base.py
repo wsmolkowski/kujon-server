@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import logging
-from datetime import datetime
 
 from bson import json_util
 from tornado import gen, web, escape
@@ -39,7 +38,7 @@ class BaseHandler(RequestHandler, DaoMixin):
                 token_exists = yield self.db_find_token(header_email)
 
                 if not token_exists:
-                    logging.warning('google token does not exists for email: {0}'.format(header_email))
+                    logging.warning('Authentication token does not exists for email: {0}'.format(header_email))
 
                 user = yield self.db_current_user(header_email)
 
@@ -52,8 +51,13 @@ class BaseHandler(RequestHandler, DaoMixin):
         self._context.user_doc = yield self._prepare_user()
 
         if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
+            usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated
+        else:
+            usos_id = self.get_argument('usos_id', default=None)  # request authentication/register
+
+        if usos_id:
             for usos in self._context.usoses:
-                if usos[constants.USOS_ID] == self._context.user_doc[constants.USOS_ID]:
+                if usos[constants.USOS_ID] == usos_id:
                     self._context.usos_doc = usos
 
     def get_current_user(self):
@@ -95,22 +99,6 @@ class BaseHandler(RequestHandler, DaoMixin):
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=settings.SITE_DOMAIN)
 
-    @gen.coroutine
-    def on_finish(self):
-        user_doc = self.get_current_user()
-        user_id = user_doc[constants.MONGO_ID] if user_doc else None
-
-        yield self.db_insert(constants.COLLECTION_REQUEST_LOG, {
-            'type': self.EXCEPTION_TYPE,
-            constants.USER_ID: user_id,
-            constants.CREATED_TIME: datetime.now(),
-            'host': self.request.host,
-            'method': self.request.method,
-            'path': self.request.path,
-            'query': self.request.query,
-            'remote_ip': self.request.remote_ip,
-        })
-
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin):
     EXCEPTION_TYPE = 'api'
@@ -147,7 +135,24 @@ class DefaultErrorHandler(BaseHandler, JSendMixin):
 
 
 class ApplicationConfigHandler(BaseHandler, JSendMixin):
+    """
+        for mobile use only
+    """
+
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        self.success(data=self.config_data())
+
+        user = self.get_current_user()
+        if user and constants.USOS_PAIRED in user.keys():
+            usos_paired = user[constants.USOS_PAIRED]
+        else:
+            usos_paired = False
+
+        config = {
+            'API_URL': settings.DEPLOY_API,
+            'USOS_PAIRED': usos_paired,
+            'USER_LOGGED': True if user else False
+        }
+
+        self.success(data=config)

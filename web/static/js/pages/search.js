@@ -23,6 +23,11 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                 $('#section-content').html(template());
 
                 $('#searchSubmit').click(function() {
+
+                    if ($('#searchText').val()=='') {
+                        return;
+                    }
+
                     var searchUrl = "/search/" + $('#searchType').val() + '/' + $('#searchText').val();
 
                     $('#search_results').html(templateSpinner);
@@ -42,7 +47,6 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                 });
 
                 function processResponse(response) {
-                    $('#searchText').val("");
 
                     switch ($('#searchType').val()) {
                         case 'users':

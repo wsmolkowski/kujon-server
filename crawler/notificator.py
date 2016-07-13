@@ -46,7 +46,7 @@ class NotificatorQueue(object):
                                                                                                self.queue.qsize()))
             yield self.queue.put(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -99,7 +99,7 @@ class NotificatorQueue(object):
         finally:
             self.processing.remove(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def worker(self):

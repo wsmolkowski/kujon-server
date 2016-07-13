@@ -1,13 +1,11 @@
 # coding=UTF-8
 
-import functools
 import logging
 from base64 import b64encode
-from datetime import datetime
 
 from tornado import gen, escape
-from tornado.auth import OAuthMixin, _auth_return_future
-from tornado.httpclient import HTTPRequest, HTTPError
+from tornado.auth import OAuthMixin
+from tornado.httpclient import HTTPRequest
 
 from commons import constants, utils, settings, usoshelper
 from commons.errors import UsosClientError
@@ -22,9 +20,6 @@ try:
 except ImportError:
     import urllib as urllib_parse  # py2
 
-HTTP_CONNECT_TIMEOUT = 300
-HTTP_REQUEST_TIMEOUT = 300
-
 
 class UsosMixin(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
@@ -37,23 +32,8 @@ class UsosMixin(OAuthMixin):
         return dict(key=self.get_current_usos()[constants.CONSUMER_KEY],
                     secret=self.get_current_usos()[constants.CONSUMER_SECRET])
 
-    @staticmethod
-    def _response_ok(response):
-        if response.error or response.code != 200 or response.reason != 'OK':
-            return False
-        return True
-
-    @staticmethod
-    def _build_exception(response):
-        result = escape.json_decode(response.body)
-        if response.error:
-            result['error'] = response.error.message
-        result['code'] = response.code
-        result['url'] = response.request.url
-        return UsosClientError('USOS HTTP response {0}'.format(result))
-
-    @_auth_return_future
-    def usos_request(self, path, callback=None, arguments={}, photo=False):
+    @gen.coroutine
+    def usos_request(self, path, arguments={}):
 
         arguments['lang'] = 'pl'
 
@@ -63,46 +43,25 @@ class UsosMixin(OAuthMixin):
                             secret=self.get_current_user()[constants.ACCESS_TOKEN_SECRET])
 
         # Add the OAuth resource request signature if we have credentials
-        method = "GET"
-        oauth = self._oauth_request_parameters(url, access_token, arguments, method=method)
+        oauth = self._oauth_request_parameters(url, access_token, arguments)
         arguments.update(oauth)
 
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
-        http_client = utils.http_client(validate_cert=self.get_current_usos()[constants.VALIDATE_SSL_CERT])
-        if photo:
-            http_callback = functools.partial(self._on_usos_photo_request, callback)
+        client = utils.http_client()
+
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
+            raise gen.Return({'photo': b64encode(response.body)})
         else:
-            http_callback = functools.partial(self._on_usos_request, callback)
-
-        http_client.fetch(HTTPRequest(url=url, method=method, connect_timeout=HTTP_CONNECT_TIMEOUT,
-                                      request_timeout=HTTP_REQUEST_TIMEOUT),
-                          callback=http_callback)
-
-    def _on_usos_request(self, future, response):
-        if not self._response_ok(response):
-            raise self._build_exception(response)
-
-        future.set_result(self._build_response(response))
-
-    def _on_usos_photo_request(self, future, response):
-        if not self._response_ok(response):
-            raise self._build_exception(response)
-
-        future.set_result({'photo': b64encode(response.body)})
-
-    def _build_response(self, response):
-        result = escape.json_decode(response.body)
-        if not result:
-            raise UsosClientError(
-                'USOS response empty: {0} for url: {1} and code:{2}'.format(result, response.request.url,
-                                                                            response.code))
-
-        create_time = datetime.now()
-        result[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-        return result
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
@@ -117,25 +76,18 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        if constants.VALIDATE_SSL_CERT in self.get_current_usos():
-            http_client = utils.http_client(validate_cert=True)
+        client = utils.http_client()
+
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
         else:
-            http_client = utils.http_client()
-
-        request = HTTPRequest(url=url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE
-                              , connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
-
-        try:
-            response = yield http_client.fetch(request)
-            if not self._response_ok(response):
-                raise self._build_exception(response)
-
-            result = self._build_response(response)
-        except HTTPError as ex:
-            msg = "USOS HTTPError response: {0} fetching: {1}".format(ex.message, url)
-            raise UsosClientError(msg)
-
-        raise gen.Return(result)
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def usos_course(self, course_id):
@@ -321,7 +273,7 @@ class UsosMixin(OAuthMixin):
     def usos_photo(self, user_info_id):
         result = yield self.usos_request(path='services/photos/photo', arguments={
             'user_id': user_info_id,
-        }, photo=True)
+        })
 
         result[constants.ID] = user_info_id
 
@@ -355,10 +307,11 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_subscribe(self, event_type, verify_token):
+        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
         result = yield self.usos_request(path='services/events/subscribe_event',
                                          arguments={
                                              'event_type': event_type,
-                                             'callback_url': settings.DEPLOY_EVENT,
+                                             'callback_url': callback_url,
                                              'verify_token': verify_token
                                          })
 
@@ -368,17 +321,14 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_unsubscribe(self):
-        try:
-            yield self.usos_request(path='services/events/unsubscribe')
-        except UsosClientError as ex:
-            logging.warning(ex)
-        raise gen.Return(None)
+        result = yield self.usos_request(path='services/events/unsubscribe')
+        logging.debug('unsubscribe_result: {0}'.format(result))
 
     @gen.coroutine
-    def subscriptions(self):
+    def usos_subscriptions(self):
         result = yield self.usos_request(path='services/events/subscriptions')
-
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+        if not result:
+            result = dict()
         raise gen.Return(result)
 
     @gen.coroutine
@@ -398,7 +348,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
-            'lang': 'pl'
         })
 
         if 'items' in result:
@@ -426,7 +375,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[course_name]|match|next_page]',
-            'lang': 'pl'
         })
         raise gen.Return(result)
 
@@ -437,7 +385,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'id|match|postal_address',
-            'lang': 'pl',
             'visibility': 'all'
         })
         raise gen.Return(result)
@@ -449,7 +396,6 @@ class UsosMixin(OAuthMixin):
             'start': int(start),
             'num': 20,
             'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
-            'lang': 'pl'
         })
 
         for programme in result['items']:
@@ -478,16 +424,22 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def usos_crstests_participant(self):
         result = yield self.usos_request(path='services/crstests/participant')
-
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         raise gen.Return(result)
 
     @gen.coroutine
-    def usos_crstests_user_grade(self, node_id):
+    def usos_crstests_user_point(self, node_id):
         result = yield self.usos_request(path='services/crstests/user_point', arguments={
             'node_id': node_id,
         })
 
+        result[constants.NODE_ID] = node_id
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def usos_crstests_user_grade(self, node_id):
         result = yield self.usos_request(path='services/crstests/user_grade', arguments={
             'node_id': node_id,
         })
