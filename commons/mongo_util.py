@@ -133,11 +133,11 @@ def _do_recreate(db, usos_doc):
     url = None
     try:
         url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
-        validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
         http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, validate_cert=validate_cert)
-        response = yield http_client.fetch(request)
+        response = yield http_client.fetch(HTTPRequest(url=url,
+                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code is not 200 and response.reason != 'OK':
             logging.error('Błedna odpowiedź USOS dla {0}'.format(url))

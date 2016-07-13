@@ -5,7 +5,7 @@ from base64 import b64encode
 
 from tornado import gen, escape
 from tornado.auth import OAuthMixin
-from tornado.httpclient import HTTPRequest, HTTPError
+from tornado.httpclient import HTTPRequest
 
 from commons import constants, utils, settings, usoshelper
 from commons.errors import UsosClientError
@@ -32,22 +32,8 @@ class UsosMixin(OAuthMixin):
         return dict(key=self.get_current_usos()[constants.CONSUMER_KEY],
                     secret=self.get_current_usos()[constants.CONSUMER_SECRET])
 
-    @staticmethod
-    def _response_ok(response):
-        if response.error or response.code != 200 or response.reason != 'OK':
-            return False
-        return True
-
-    @staticmethod
-    def _build_exception(response):
-
-        msg = 'Response code: {0} message: {1} request url: {2} body: {3}'.format(
-            response.code, response.error.message, response.request.url, response.body)
-        logging.debug(msg)
-        return UsosClientError(msg)
-
     @gen.coroutine
-    def usos_request(self, path, arguments={}, photo=False):
+    def usos_request(self, path, arguments={}):
 
         arguments['lang'] = 'pl'
 
@@ -68,13 +54,14 @@ class UsosMixin(OAuthMixin):
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                   request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
-        if not self._response_ok(response):
-            raise self._build_exception(response)
-
-        if photo:
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
             raise gen.Return({'photo': b64encode(response.body)})
-
-        raise gen.Return(escape.json_decode(response.body))
+        else:
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
@@ -89,23 +76,18 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        # if constants.VALIDATE_SSL_CERT in self.get_current_usos():
-        #     http_client = utils.http_client(validate_cert=True)
-        # else:
         client = utils.http_client()
 
-        try:
-            response = yield client.fetch(HTTPRequest(url=url,
-                                                      connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                      request_timeout=constants.HTTP_REQUEST_TIMEOUT))
-            if not self._response_ok(response):
-                raise self._build_exception(response)
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
-            result = escape.json_decode(response.body)
-        except HTTPError as ex:
-            raise UsosClientError("HTTPError message: {0} url: {1}".format(ex.message, url))
-
-        raise gen.Return(result)
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        else:
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def usos_course(self, course_id):
@@ -291,7 +273,7 @@ class UsosMixin(OAuthMixin):
     def usos_photo(self, user_info_id):
         result = yield self.usos_request(path='services/photos/photo', arguments={
             'user_id': user_info_id,
-        }, photo=True)
+        })
 
         result[constants.ID] = user_info_id
 
@@ -339,12 +321,8 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_unsubscribe(self):
-        try:
-            result = yield self.usos_request(path='services/events/unsubscribe')
-            logging.debug('unsubscribe_result: {0}'.format(result))
-        except Exception as ex:
-            logging.exception(ex)
-        raise gen.Return()
+        result = yield self.usos_request(path='services/events/unsubscribe')
+        logging.debug('unsubscribe_result: {0}'.format(result))
 
     @gen.coroutine
     def usos_subscriptions(self):

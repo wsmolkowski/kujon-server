@@ -8,7 +8,7 @@ from tornado import gen
 
 from commons import constants, settings
 from commons import usoshelper
-from commons.errors import ApiError, UsosClientError
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 
@@ -74,7 +74,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
                 logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 raise self.exc(ex, finish=False)
 
         raise gen.Return(result)
@@ -90,12 +90,9 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            try:
-                course_doc = yield self.usos_course(course_id)
-                yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception as ex:
-                logging.exception(ex)
-                raise ApiError("Nie znaleźliśmy kursu", course_id)
+            course_doc = yield self.usos_course(course_id)
+            yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
+
 
         course_doc[constants.TERM_ID] = term_id
 
@@ -175,7 +172,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex)
                 raise gen.Return()
 
@@ -420,7 +417,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 programme_doc = yield self.usos_programme(programme_id)
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
@@ -484,7 +481,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         try:
             term_doc = yield self.usos_term(term_id)
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
-        except UsosClientError as ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
         finally:
             raise gen.Return(term_doc)
@@ -507,7 +504,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield terms_task
                 cursor.rewind()
                 terms_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return()
 
@@ -552,7 +549,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             try:
                 user_info_doc = yield self.usos_user_info(user_id)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
 
             if not user_info_doc:
@@ -639,7 +636,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(unit_doc)
 
@@ -658,7 +655,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield tasks_units
                 cursor.rewind()
                 units_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(units_doc)
 
@@ -685,7 +682,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 group_doc.pop('class_type_id')
 
                 yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(group_doc)
 

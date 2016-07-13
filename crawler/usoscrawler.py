@@ -9,7 +9,6 @@ from tornado import gen
 
 from commons import constants
 from commons.AESCipher import AESCipher
-from commons.errors import ApiError
 from commons.errors import CrawlerException
 from commons.mixins.ApiMixin import ApiMixin
 
@@ -57,7 +56,7 @@ class UsosCrawler(ApiMixin):
                     courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
                                                               course[constants.TERM_ID],
                                                               extra_fetch=False))
-                except ApiError as ex:
+                except Exception as ex:
                     logging.exception(ex)
                     continue
 
@@ -159,6 +158,7 @@ class UsosCrawler(ApiMixin):
             yield self.usos_unsubscribe()
 
         except Exception as ex:
+            logging.exception(ex)
             yield self.exc(ex, finish=False)
 
     @gen.coroutine

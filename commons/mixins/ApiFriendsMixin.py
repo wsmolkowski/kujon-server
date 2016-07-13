@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, helpers
-from commons.errors import ApiError, UsosClientError
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 
@@ -110,7 +110,7 @@ class ApiMixinFriends(DaoMixin, UsosMixin):
 
                 suggested_participants = suggested_participants.values()
 
-        except UsosClientError as ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
 
         if not suggested_participants:
