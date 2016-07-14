@@ -7,7 +7,7 @@ from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, utils, settings, usoshelper
+from commons import constants, settings, usoshelper
 from commons.errors import UsosClientError
 
 try:
@@ -48,7 +48,8 @@ class UsosMixin(OAuthMixin):
 
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
-        client = utils.http_client()
+
+        client = self.get_auth_http_client()
 
         response = yield client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
@@ -76,7 +77,7 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = utils.http_client()
+        client = self.get_auth_http_client()
 
         response = yield client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
