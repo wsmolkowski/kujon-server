@@ -10,11 +10,13 @@ from tornado.util import ObjectDict
 
 from commons import constants, utils
 from commons.AESCipher import AESCipher
+from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
+from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
-class UsosCrawler(ApiMixin, CrsTestsMixin):
+class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
     def __init__(self):
@@ -81,20 +83,29 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
                     if course_unit not in course_units_ids:
                         course_units_ids.append(course_unit)
 
-        yield courses_terms
+        try:
+            yield courses_terms
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
 
         api_user_infos = list()
         for user_id in users_ids:
             api_user_infos.append(self.api_user_info(user_id))
 
-        yield api_user_infos
+        try:
+            yield api_user_infos
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
 
         units_groups = list()
         for unit in course_units_ids:
             units_groups.append(self.api_unit(unit))
             units_groups.append(self.api_group(unit))
 
-        yield units_groups
+        try:
+            yield units_groups
+        except Exception as ex:
+            yield self.exc(ex, finish=False)
 
         raise gen.Return()
 
@@ -161,7 +172,7 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
         try:
             yield self.usos_unsubscribe()
         except Exception as ex:
-            logging.exception(ex)
+            logging.warning(ex)
 
         logging.info('removing user data for user_id {0}'.format(user_id))
 
@@ -184,26 +195,56 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
         raise gen.Return()
 
     @gen.coroutine
-    def process_event(self, event):
+    def __user_event(self, user_id, node_id):
         try:
-            logging.info(event)
-            for entry in event['entry']:
-                for user_id in entry['related_user_ids']:
-                    user_doc = yield self.db_find_user_id(user_id)
-                    logging.warning('process_event: {0}'.format(user_doc))
-                    # if user_doc:
-                    #     logging.debug(user_doc)
-                    #     yield self._setUp(user_doc[constants.MONGO_ID])
-                    #
-                    #     user_point = yield self.usos_crstests_user_point(entry['node_id'])
-                    #     logging.debug('user_point: {0}'.format(user_point))
-                    #     user_grade = yield self.usos_crstests_user_grade(entry['node_id'])
-                    #     logging.debug('user_grade: {0}'.format(user_grade))
-                    # else:
-                    #     logging.warning('not processing event for unknown user with id: {0}'.format(user_id))
+            user_doc = yield self.db_find_user_id(user_id)
+            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
+
+            context = ObjectDict()
+            context.base_uri = usos_doc[constants.USOS_URL]
+            context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
+                                          secret=usos_doc[constants.CONSUMER_SECRET])
+            context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
+                                        secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+
+            caller = UsosCaller(context)
+
+            user_point = yield caller.call(path='services/crstests/user_point',
+                                           arguments={'node_id': node_id})
+
+            logging.debug('user_point: {0}'.format(user_point))
+
+            if user_point:
+                signal_point = yield self.signal_message('wiadomosc {0}'.format(user_point),
+                                                         user_doc[constants.USER_EMAIL])
+                logging.debug('user_point signal_response: {1}'.format(signal_point))
+
+            user_grade = yield caller.call(path='services/crstests/user_grade',
+                                           arguments={'node_id': node_id})
+            logging.debug('user_grade: {0}'.format(user_grade))
+
+            if user_grade:
+                signal_grade = yield self.signal_message('wiadomosc {0}'.format(user_grade),
+                                                         user_doc[constants.USER_EMAIL])
+                logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:
+            logging.error(
+                'Exception while user event processing for user_id: {0} and node_id: {1}'.format(user_id, node_id))
             yield self.exc(ex, finish=False)
+
+        raise gen.Return()
+
+    @gen.coroutine
+    def process_event(self, event):
+        logging.info(event)
+        user_events = list()
+        for entry in event['entry']:
+            for user_id in entry['related_user_ids']:
+                user_events.append(self.__user_event(user_id, entry['node_id']))
+
+        result = yield user_events
+        logging.debug('process_event results: {0}'.format(result))
 
     @gen.coroutine
     def notifier_status(self):
@@ -229,21 +270,23 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     user_id = '57860d20d54c4b59e8a556bf'
-#     yield crawler.initial_user_crawl(user_id)
+#     # user_id = '57860d20d54c4b59e8a556bf'
+#     # yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.unsubscribe(user_id)
 #
-#     # event = {u'entry': [
-#     #             {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #             {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #             {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
-#     #         ],
-#     #          u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-#     # yield crawler.process_event(event)
+#     event = {u'entry': [
+#         # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#         # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#         # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#         {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
+#         {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
+#         {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
+#     ],
+#         u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
+#     yield crawler.process_event(event)
 #
 #
 # if __name__ == '__main__':
-#
 #     from tornado import ioloop
 #     from tornado.options import parse_command_line
 #
