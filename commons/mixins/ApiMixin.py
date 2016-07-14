@@ -38,6 +38,10 @@ class ApiMixin(DaoMixin, UsosMixin):
     def do_refresh(self):
         return False
 
+    @staticmethod
+    def __clean(array):
+        return [i for i in array if i is not None]
+
     @gen.coroutine
     def api_courses_editions(self):
         user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
@@ -142,7 +146,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     tasks_groups.append(self.api_group(int(unit)))
 
             groups = yield tasks_groups
-            course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
+            course_doc['groups'] = self.__clean(groups)
 
         if extra_fetch:
             term_doc = yield self.api_term([term_id])
@@ -630,7 +634,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         task_progammes_result = yield tasks_progammes
         for programme_doc in task_progammes_result:
             programmes.append(programme_doc)
-        programmes = filter(None, programmes)
+        programmes = self.__clean(programmes)
 
         # get faculties
         faculties_ids = list()
@@ -646,8 +650,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         for faculty_doc in tasks_faculties_result:
             faculties.append(faculty_doc)
 
-        faculties = filter(None, faculties)
-        raise gen.Return(faculties)
+        raise gen.Return(self.__clean(faculties))
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
