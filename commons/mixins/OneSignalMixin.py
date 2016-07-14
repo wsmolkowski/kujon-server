@@ -3,18 +3,19 @@
 import json
 import logging
 
-from tornado import gen
+from tornado import gen, escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
 from commons import utils, settings, constants
+from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 
 class OneSignalMixin(object):
     @gen.coroutine
-    def signal_fetch(fetch_url):
+    def signal_fetch(self, fetch_url):
         client = utils.http_client()
 
         headers = HTTPHeaders({
@@ -28,13 +29,17 @@ class OneSignalMixin(object):
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                   request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
-        logging.info('response code: {0} reason: {1}'.format(response.code, response.reason))
-        response_body = json.loads(response.body.decode(constants.ENCODING))
-
-        raise gen.Return(response_body)
+        logging.info('signal_fetch response code: {0} reason: {1}'.format(response.code, response.reason))
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        else:
+            raise OneSignalError(
+                'OneSignal response Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                               response.body,
+                                                                                               fetch_url))
 
     @gen.coroutine
-    def signal_message(message, email_reciepient, language='en'):
+    def signal_message(self, message, email_reciepient, language='en'):
         client = utils.http_client()
 
         headers = HTTPHeaders({
@@ -44,10 +49,7 @@ class OneSignalMixin(object):
 
         body = json.dumps({
             'app_id': settings.APPLICATION_ID,
-            # 'included_segments': ['All'],
-            'include_player_ids': ['8bf236a8-83c9-4bfc-96e0-035cbc657b6d'],
-            # 'tags': [{'user_email': email_reciepient}],
-            # 'id': '5842429a-248d-4e73-8727-bdb8468ddaac',
+            'tags': [{"key": "user_email", "relation": "=", email_reciepient: "true"}],
             'contents': {language: message}
         })
 
@@ -55,11 +57,12 @@ class OneSignalMixin(object):
                                                   method='POST',
                                                   headers=headers,
                                                   body=body,
-                                                  use_gzip=True,
+                                                  user_agent=settings.PROJECT_TITLE,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                   request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
-        logging.info('response code: {0} reason: {1}'.format(response.code, response.reason))
-        response_body = json.loads(response.body.decode(constants.ENCODING))
-
-        raise gen.Return(response_body)
+        logging.debug('signal_message response code: {0} reason: {1}'.format(response.code, response.reason))
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        else:
+            raise OneSignalError('OneSignal response Error code: {0} with body: {1} '.format(response.code, body))
