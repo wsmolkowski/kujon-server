@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-import logging
-
 from tornado import gen
 
 from commons import constants
@@ -26,7 +24,6 @@ class CrsTestsMixin(DaoMixin, UsosMixin):
 
         if not crstests_doc:
             crstests_doc = yield self.usos_crstests_participant()
-            logging.debug(crstests_doc)
 
             crstests_doc.pop('terms')  # no need at this point
 
@@ -42,7 +39,7 @@ class CrsTestsMixin(DaoMixin, UsosMixin):
 
             yield self.db_insert(constants.COLLECTION_CRSTESTS, crstests_doc)
 
-        crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS].find_one(pipeline, EXCLUDE_FIELDS)
+            crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS].find_one(pipeline, EXCLUDE_FIELDS)
 
         raise gen.Return(crstests_doc)
 
