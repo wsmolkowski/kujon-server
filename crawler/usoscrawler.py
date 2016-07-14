@@ -6,10 +6,10 @@ from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
+from tornado.util import ObjectDict
 
-from commons import constants
+from commons import constants, utils
 from commons.AESCipher import AESCipher
-from commons.errors import CrawlerException
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 
@@ -20,27 +20,27 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
     def __init__(self):
         self.aes = AESCipher()
 
-    _usos_doc = None
+    @gen.coroutine
+    def _setUp(self, user_id):
+        if isinstance(user_id, str):
+            user_id = ObjectId(user_id)
 
-    @property
-    def usos_doc(self):
-        return self._usos_doc
+        self._context = ObjectDict()
+        self._context.http_client = utils.http_client()
+        self._context.user_doc = yield self.db_get_user(user_id)
+        if not self._context.user_doc:
+            self._context.user_doc = yield self.db_get_archive_user(user_id)
 
-    @property
-    def usos_id(self):
-        return self.get_current_user()[constants.USOS_ID]
-
-    @property
-    def user_id(self):
-        return self.get_current_user()[constants.MONGO_ID]
-
-    _user_doc = None
+        self._context.usos_doc = yield self.db_get_usos(self._context.user_doc[constants.USOS_ID])
 
     def get_current_user(self):
-        return self._user_doc
+        return self._context.user_doc
 
     def get_current_usos(self):
-        return self._usos_doc
+        return self._context.usos_doc
+
+    def get_auth_http_client(self):
+        return self._context.http_client
 
     @gen.coroutine
     def __process_courses_editions(self):
@@ -101,7 +101,7 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
     @gen.coroutine
     def __process_crstests(self):
         crstests_doc = yield self.api_crstests()
-        logging.debug(crstests_doc)
+
         grade_points = []
         for crstest in crstests_doc['tests']:
             grade_points.append(self.api_crstests_grades(crstest['node_id']))
@@ -118,21 +118,6 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
         today = date.today()
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
-
-    @gen.coroutine
-    def _setUp(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-
-        self._user_doc = yield self.db_get_user(user_id)
-        if not self._user_doc:
-            self._user_doc = yield self.db_get_archive_user(user_id)
-
-        if not self._user_doc:
-            raise CrawlerException(
-                "Process not started. Unknown user with id: %r or user not paired with any USOS", user_id)
-
-        self._usos_doc = yield self.db_get_usos(self._user_doc[constants.USOS_ID])
 
     @gen.coroutine
     def initial_user_crawl(self, user_id):
@@ -156,6 +141,11 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
 
         yield self._setUp(user_id)
 
+        try:
+            yield self.usos_unsubscribe()
+        except Exception as ex:
+            logging.warning(ex)
+
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
@@ -165,15 +155,33 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
                 yield self.exc(ex, finish=False)
 
     @gen.coroutine
-    def unsubscribe(self, user_id):
+    def archive_user(self, user_id):
+        yield self._setUp(user_id)
+
         try:
-            yield self._setUp(user_id)
-
             yield self.usos_unsubscribe()
-
         except Exception as ex:
             logging.exception(ex)
-            yield self.exc(ex, finish=False)
+
+        logging.info('removing user data for user_id {0}'.format(user_id))
+
+        collections = yield self.db.collection_names()
+
+        remove_collections = []
+        for collection in collections:
+
+            if collection == constants.COLLECTION_USERS_ARCHIVE:
+                continue
+
+            exists = yield self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            if exists:
+                remove_collections.append(self.db[collection].remove({constants.USER_ID: user_id}))
+
+        result = yield remove_collections
+
+        logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
+
+        raise gen.Return()
 
     @gen.coroutine
     def process_event(self, event):
@@ -182,13 +190,17 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
             for entry in event['entry']:
                 for user_id in entry['related_user_ids']:
                     user_doc = yield self.db_find_user_id(user_id)
-                    logging.debug(user_doc)
-                    yield self._setUp(user_doc[constants.MONGO_ID])
-
-                    user_point = yield self.usos_crstests_user_point(entry['node_id'])
-                    logging.debug('user_point: {0}'.format(user_point))
-                    user_grade = yield self.usos_crstests_user_grade(entry['node_id'])
-                    logging.debug('user_grade: {0}'.format(user_grade))
+                    logging.warning('process_event: {0}'.format(user_doc))
+                    # if user_doc:
+                    #     logging.debug(user_doc)
+                    #     yield self._setUp(user_doc[constants.MONGO_ID])
+                    #
+                    #     user_point = yield self.usos_crstests_user_point(entry['node_id'])
+                    #     logging.debug('user_point: {0}'.format(user_point))
+                    #     user_grade = yield self.usos_crstests_user_grade(entry['node_id'])
+                    #     logging.debug('user_grade: {0}'.format(user_grade))
+                    # else:
+                    #     logging.warning('not processing event for unknown user with id: {0}'.format(user_id))
 
         except Exception as ex:
             yield self.exc(ex, finish=False)
@@ -213,10 +225,11 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
         except Exception as ex:
             self.exc(ex, finish=False)
 
+
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     user_id = '5785f531d54c4b4e9c9f5a75'
+#     user_id = '57860d20d54c4b59e8a556bf'
 #     yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.unsubscribe(user_id)
 #
@@ -228,8 +241,9 @@ class UsosCrawler(ApiMixin, CrsTestsMixin):
 #     #          u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
 #     # yield crawler.process_event(event)
 #
+#
 # if __name__ == '__main__':
-#     import logging
+#
 #     from tornado import ioloop
 #     from tornado.options import parse_command_line
 #

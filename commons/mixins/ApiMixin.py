@@ -553,7 +553,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.exc(ex, finish=False)
 
             if not user_info_doc:
-                logging.exception("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
+                logging.error("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
                 raise gen.Return()
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]

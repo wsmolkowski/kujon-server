@@ -6,7 +6,6 @@ import sys
 import tempfile
 import traceback
 
-import httplib2
 from tornado import httpclient
 
 try:
@@ -23,11 +22,11 @@ DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(mess
 log = logging.getLogger(__name__)
 
 
-def get_proxy():
-    if settings.PROXY_PORT and settings.PROXY_URL:
-        return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL,
-                                  proxy_port=settings.PROXY_PORT, proxy_rdns=False)
-    return None
+# def get_proxy():
+#     if settings.PROXY_PORT and settings.PROXY_URL:
+#         return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL,
+#                                   proxy_port=settings.PROXY_PORT, proxy_rdns=False)
+#     return None
 
 
 def mkdir(newdir):
@@ -85,10 +84,10 @@ def initialize_logging(logger_name):
 def http_client():
     if settings.PROXY_URL and settings.PROXY_PORT:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=settings.PROXY_URL,
-                                                           proxy_port=settings.PROXY_PORT,
-                                                           validate_cert=False,
-                                                           max_clients=constants.MAX_HTTP_CLIENTS))
+                                             proxy_host=settings.PROXY_URL,
+                                             proxy_port=settings.PROXY_PORT,
+                                             validate_cert=False,
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
 
     else:
         httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
