@@ -10,6 +10,7 @@ from tornado import gen
 
 from commons import constants, settings
 from commons.errors import ApiError, AuthenticationError, UsosClientError
+from commons.errors import DaoError
 
 
 class DaoMixin(object):
@@ -25,6 +26,8 @@ class DaoMixin(object):
 
     @gen.coroutine
     def exc(self, exception, finish=True):
+        logging.exception(exception)
+
         if isinstance(exception, ApiError):
             exc_doc = exception.data()
         else:
@@ -43,8 +46,6 @@ class DaoMixin(object):
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
-
-        logging.exception(exception)
 
         if finish:
             if isinstance(exception, ApiError):
@@ -255,15 +256,21 @@ class DaoMixin(object):
 
     @gen.coroutine
     def db_find_user_id(self, user_id):
+        if not isinstance(user_id, str):
+            user_id = str(user_id)
+
         user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one({
-            constants.ID: str(user_id)
+            constants.ID: user_id
         })
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({
-            constants.MONGO_ID: ObjectId(user_info_doc[constants.USER_ID])
-        })
+        if constants.USER_ID in user_info_doc:
+            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({
+                constants.MONGO_ID: ObjectId(user_info_doc[constants.USER_ID])
+            })
 
-        raise gen.Return(user_doc)
+            raise gen.Return(user_doc)
+
+        raise DaoError('Nie znaleziono użytkownika aplikacyjnego na podstawie użytkownika usos: {0}'.format(user_id))
 
     @gen.coroutine
     def db_cookie_user_id(self, user_id):
@@ -324,7 +331,6 @@ class DaoMixin(object):
     def db_find_token(self, email):
         token_doc = yield self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
         raise gen.Return(token_doc)
-
 
     _classtypes = dict()
 
