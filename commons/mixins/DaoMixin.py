@@ -25,6 +25,8 @@ class DaoMixin(object):
 
     @gen.coroutine
     def exc(self, exception, finish=True):
+        logging.exception(exception)
+
         if isinstance(exception, ApiError):
             exc_doc = exception.data()
         else:
@@ -43,8 +45,6 @@ class DaoMixin(object):
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
-
-        logging.exception(exception)
 
         if finish:
             if isinstance(exception, ApiError):
