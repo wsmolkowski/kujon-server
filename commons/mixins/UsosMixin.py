@@ -7,7 +7,7 @@ from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, utils, settings, usoshelper
+from commons import constants, settings, usoshelper
 from commons.errors import UsosClientError
 
 try:
@@ -48,7 +48,8 @@ class UsosMixin(OAuthMixin):
 
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
-        client = utils.http_client()
+
+        client = self.get_auth_http_client()
 
         response = yield client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
@@ -76,7 +77,7 @@ class UsosMixin(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = utils.http_client()
+        client = self.get_auth_http_client()
 
         response = yield client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
@@ -153,38 +154,13 @@ class UsosMixin(OAuthMixin):
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
 
         # strip employment_positions from english names
-        tasks_get_faculties = list()
         for position in result['employment_positions']:
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
-            tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
-        yield tasks_get_faculties
 
         # strip english from building name
         if 'room' in result and result['room'] and 'building_name' in result['room']:
             result['room']['building_name'] = result['room']['building_name']['pl']
-
-        # change course_editions_conducted to list of courses
-        courses_conducted = []
-        if result['course_editions_conducted']:
-            tasks_courses = list()
-            courses = list()
-            for course_conducted in result['course_editions_conducted']:
-                course_id, term_id = course_conducted['id'].split('|')
-                if course_id not in courses:
-                    courses.append(course_id)
-                    tasks_courses.append(self.api_course(course_id))
-
-            try:
-                tasks_results = yield (tasks_courses)
-                for course_doc in tasks_results:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_id,
-                                              constants.TERM_ID: term_id})
-            except Exception as ex:
-                yield self.exc(ex, finish=False)
-
-            result['course_editions_conducted'] = courses_conducted
 
         raise gen.Return(result)
 
@@ -435,7 +411,6 @@ class UsosMixin(OAuthMixin):
 
         result[constants.NODE_ID] = node_id
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
         raise gen.Return(result)
 
     @gen.coroutine
@@ -446,5 +421,4 @@ class UsosMixin(OAuthMixin):
 
         result[constants.NODE_ID] = node_id
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
         raise gen.Return(result)
