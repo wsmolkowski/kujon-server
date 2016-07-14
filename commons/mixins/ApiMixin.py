@@ -553,7 +553,8 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.exc(ex, finish=False)
 
             if not user_info_doc:
-                raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
+                logging.exception("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
+                raise gen.Return()
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
@@ -722,10 +723,13 @@ class ApiMixin(DaoMixin, UsosMixin):
         photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
 
         if not photo_doc:
-            photo_doc = yield self.usos_photo(user_info_id)
-            photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
-            photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
-
+            try:
+                photo_doc = yield self.usos_photo(user_info_id)
+                photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
+                photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(
+                    {constants.MONGO_ID: ObjectId(photo_id)})
+            except Exception as ex:
+                logging.exception(ex)
         raise gen.Return(photo_doc)
 
     @gen.coroutine
