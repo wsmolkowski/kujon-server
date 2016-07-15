@@ -34,6 +34,12 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
             self._context.user_doc = yield self.db_get_archive_user(user_id)
 
         self._context.usos_doc = yield self.db_get_usos(self._context.user_doc[constants.USOS_ID])
+        self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
+        self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
+                                            secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+
+        self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
+                                          secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     def get_current_user(self):
         return self._context.user_doc
@@ -265,7 +271,6 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
 
         except Exception as ex:
             self.exc(ex, finish=False)
-
 
 # @gen.coroutine
 # def main():
