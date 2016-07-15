@@ -84,10 +84,10 @@ def initialize_logging(logger_name):
 def http_client():
     if settings.PROXY_URL and settings.PROXY_PORT:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             proxy_host=settings.PROXY_URL,
-                                             proxy_port=settings.PROXY_PORT,
-                                             validate_cert=False,
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
+                                             defaults=dict(proxy_host=settings.PROXY_URL,
+                                                           proxy_port=settings.PROXY_PORT,
+                                                           validate_cert=False),
+                                             max_clients=100)
 
     else:
         httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
