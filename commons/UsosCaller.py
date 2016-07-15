@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+from base64 import b64encode
 
 from tornado import gen, escape
 from tornado.auth import OAuthMixin
@@ -34,7 +35,8 @@ class UsosCaller(OAuthMixin):
     @gen.coroutine
     def call(self, path, arguments={}):
 
-        arguments['lang'] = 'pl'
+        if arguments:
+            arguments['lang'] = 'pl'
 
         url = self._oauth_base_uri() + path
 
@@ -53,6 +55,8 @@ class UsosCaller(OAuthMixin):
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             raise gen.Return(escape.json_decode(response.body))
+        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
+            raise gen.Return({'photo': b64encode(response.body)})
         else:
             raise CallerError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
                                                                                           response.body,
