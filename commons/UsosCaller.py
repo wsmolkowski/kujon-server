@@ -5,7 +5,7 @@ from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import utils
+from commons import utils, constants
 from commons.errors import CallerError
 
 try:
@@ -47,8 +47,9 @@ class UsosCaller(OAuthMixin):
 
         client = self.get_auth_http_client()
 
-        response = yield client.fetch(
-            HTTPRequest(url=url, user_agent='OAuthCaller', connect_timeout=30, request_timeout=30))
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             raise gen.Return(escape.json_decode(response.body))
