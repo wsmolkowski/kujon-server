@@ -431,7 +431,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         monday = None
         try:
-            if isinstance(given_date, unicode):
+            if isinstance(given_date, str):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception as ex:
