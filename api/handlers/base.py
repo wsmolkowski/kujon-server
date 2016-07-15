@@ -60,12 +60,17 @@ class BaseHandler(RequestHandler, DaoMixin):
                 if usos[constants.USOS_ID] == usos_id:
                     self._context.usos_doc = usos
 
-        if self._context.usos_doc:
+        if 'usos_doc' in self._context:
+            # before login
             self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
             self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
                                                 secret=self._context.usos_doc[constants.CONSUMER_SECRET])
-            self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
-                                              secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
+
+            if constants.ACCESS_TOKEN_KEY in self._context.user_doc and \
+                    constants.ACCESS_TOKEN_SECRET in self._context.user_doc:
+                # before usos registration
+                self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
+                                                  secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     def get_current_user(self):
         return self._context.user_doc
