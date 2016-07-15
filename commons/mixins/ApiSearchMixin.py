@@ -5,7 +5,7 @@ from tornado import gen
 from commons.UsosCaller import UsosCaller
 from commons.usoshelper import dict_value_student_status, dict_value_staff_status
 
-NUMBER_SEARCH_RESULTS = 20      # USOS api max
+NUMBER_SEARCH_RESULTS = 20  # USOS api max
 
 
 class ApiMixinSearch(object):
@@ -42,12 +42,13 @@ class ApiMixinSearch(object):
     def api_search_courses(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/courses/search', arguments={
-            'name': query,
-            'start': int(start),
-            'num': NUMBER_SEARCH_RESULTS,
-            'fields': 'items[course_name]|match|next_page]',
-        })
+        search_doc = yield UsosCaller(self._context).call(path='services/courses/search',
+                                                          arguments={
+                                                              'name': query,
+                                                              'start': int(start),
+                                                              'num': NUMBER_SEARCH_RESULTS,
+                                                              'fields': 'items[course_name]|match|next_page]',
+                                                          })
 
         raise gen.Return(search_doc)
 
@@ -55,13 +56,14 @@ class ApiMixinSearch(object):
     def api_search_faculties(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/fac/search', arguments={
-            'query': query,
-            'start': int(start),
-            'num': NUMBER_SEARCH_RESULTS,
-            'fields': 'id|match|postal_address',
-            'visibility': 'all'
-        })
+        search_doc = yield UsosCaller(self._context).call(path='services/fac/search',
+                                                          arguments={
+                                                              'query': query,
+                                                              'start': int(start),
+                                                              'num': NUMBER_SEARCH_RESULTS,
+                                                              'fields': 'id|match|postal_address',
+                                                              'visibility': 'all'
+                                                          })
 
         raise gen.Return(search_doc)
 
@@ -69,12 +71,13 @@ class ApiMixinSearch(object):
     def api_search_programmes(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/progs/search', arguments={
-            'query': query,
-            'start': int(start),
-            'num': NUMBER_SEARCH_RESULTS,
-            'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
-        })
+        search_doc = yield UsosCaller(self._context).call(path='services/progs/search',
+                                                          arguments={
+                                                              'query': query,
+                                                              'start': int(start),
+                                                              'num': NUMBER_SEARCH_RESULTS,
+                                                              'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
+                                                          })
 
         for programme in search_doc['items']:
             programme['programme']['name'] = programme['programme']['name']['pl']
