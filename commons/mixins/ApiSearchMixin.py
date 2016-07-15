@@ -5,6 +5,8 @@ from tornado import gen
 from commons.UsosCaller import UsosCaller
 from commons.usoshelper import dict_value_student_status, dict_value_staff_status
 
+NUMBER_SEARCH_RESULTS = 20      # USOS api max
+
 
 class ApiMixinSearch(object):
     @gen.coroutine
@@ -14,7 +16,7 @@ class ApiMixinSearch(object):
         search_doc = yield UsosCaller(self._context).call(path='services/users/search2', arguments={
             'query': query,
             'start': int(start),
-            'num': 20,
+            'num': NUMBER_SEARCH_RESULTS,
             'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
         })
 
@@ -43,7 +45,7 @@ class ApiMixinSearch(object):
         search_doc = yield UsosCaller(self._context).call(path='services/courses/search', arguments={
             'name': query,
             'start': int(start),
-            'num': 20,
+            'num': NUMBER_SEARCH_RESULTS,
             'fields': 'items[course_name]|match|next_page]',
         })
 
@@ -56,7 +58,7 @@ class ApiMixinSearch(object):
         search_doc = yield UsosCaller(self._context).call(path='services/fac/search', arguments={
             'query': query,
             'start': int(start),
-            'num': 20,
+            'num': NUMBER_SEARCH_RESULTS,
             'fields': 'id|match|postal_address',
             'visibility': 'all'
         })
@@ -70,7 +72,7 @@ class ApiMixinSearch(object):
         search_doc = yield UsosCaller(self._context).call(path='services/progs/search', arguments={
             'query': query,
             'start': int(start),
-            'num': 20,
+            'num': NUMBER_SEARCH_RESULTS,
             'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
         })
 
