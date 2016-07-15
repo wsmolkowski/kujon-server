@@ -13,12 +13,13 @@ class ApiMixinSearch(object):
     def api_search_users(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/users/search2', arguments={
-            'query': query,
-            'start': int(start),
-            'num': NUMBER_SEARCH_RESULTS,
-            'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
-        })
+        search_doc = yield UsosCaller(self._context).call(path='services/users/search2',
+                                                          arguments={
+                                                              'query': query,
+                                                              'start': int(start),
+                                                              'num': NUMBER_SEARCH_RESULTS,
+                                                              'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
+                                                          })
 
         if 'items' in search_doc:
             for elem in search_doc['items']:
