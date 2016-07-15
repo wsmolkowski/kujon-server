@@ -80,12 +80,6 @@ class BaseHandler(RequestHandler, DaoMixin):
     def get_auth_http_client():
         return utils.http_client()
 
-    # @property
-    # def oauth_parameters(self):
-    #     return {
-    #         'proxy_info': utils.get_proxy(),
-    #     }
-
     _aes = None
 
     @property
