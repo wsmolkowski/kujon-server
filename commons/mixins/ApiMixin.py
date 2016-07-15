@@ -8,6 +8,7 @@ from tornado import gen
 
 from commons import constants, settings
 from commons import usoshelper
+from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
@@ -96,7 +97,6 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             course_doc = yield self.usos_course(course_id)
             yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-
 
         course_doc[constants.TERM_ID] = term_id
 
@@ -746,8 +746,17 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if not theses_doc:
             users_info_doc = yield self.api_user_info()
-            theses_doc = yield self.usos_theses(users_info_doc[constants.ID])
+            theses_doc = yield UsosCaller(self._context).call(path='services/theses/user',
+                                                              arguments={
+                                                                  'user_id': users_info_doc[constants.ID],
+                                                                  'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+                                                              })
+            if 'authored_theses' in theses_doc:
+                for these in theses_doc['authored_theses']:
+                    these['faculty']['name'] = these['faculty']['name']['pl']
+
+            theses_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
             yield self.db_insert(constants.COLLECTION_THESES, theses_doc)
 
         raise gen.Return(theses_doc['authored_theses'])
-

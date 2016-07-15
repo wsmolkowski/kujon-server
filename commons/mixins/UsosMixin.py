@@ -316,18 +316,3 @@ class UsosMixin(OAuthMixin):
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
         raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_theses(self, user_info_id):
-        result = yield self.usos_request(path='services/theses/user', arguments={
-            'user_id': user_info_id,
-            'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-        })
-
-        if 'authored_theses' in result:
-            for these in result['authored_theses']:
-                these['faculty']['name'] = these['faculty']['name']['pl']
-
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
-        raise gen.Return(result)
