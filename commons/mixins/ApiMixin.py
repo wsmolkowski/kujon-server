@@ -39,7 +39,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         return False
 
     @staticmethod
-    def __clean(array):
+    def filterNone(array):
         return [i for i in array if i is not None]
 
     @gen.coroutine
@@ -146,7 +146,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     tasks_groups.append(self.api_group(int(unit)))
 
             groups = yield tasks_groups
-            course_doc['groups'] = self.__clean(groups)
+            course_doc['groups'] = self.filterNone(groups)
 
         if extra_fetch:
             term_doc = yield self.api_term([term_id])
@@ -634,7 +634,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         task_progammes_result = yield tasks_progammes
         for programme_doc in task_progammes_result:
             programmes.append(programme_doc)
-        programmes = self.__clean(programmes)
+        programmes = self.filterNone(programmes)
 
         # get faculties
         faculties_ids = list()
@@ -650,7 +650,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         for faculty_doc in tasks_faculties_result:
             faculties.append(faculty_doc)
 
-        raise gen.Return(self.__clean(faculties))
+        raise gen.Return(self.filterNone(faculties))
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
