@@ -6,10 +6,9 @@ from tornado import gen
 from commons import constants, helpers
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
-from commons.mixins.UsosMixin import UsosMixin
 
 
-class ApiMixinFriends(DaoMixin, UsosMixin):
+class ApiMixinFriends(DaoMixin):
 
     @gen.coroutine
     def api_friends(self):
