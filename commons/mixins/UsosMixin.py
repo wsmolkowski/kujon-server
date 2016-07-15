@@ -1,13 +1,12 @@
 # coding=UTF-8
 
-import logging
 from base64 import b64encode
 
 from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, usoshelper
+from commons import constants, usoshelper
 from commons.errors import UsosClientError
 
 try:
@@ -280,32 +279,6 @@ class UsosMixin(OAuthMixin):
         tt[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
         raise gen.Return(tt)
-
-    @gen.coroutine
-    def usos_subscribe(self, event_type, verify_token):
-        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
-        result = yield self.usos_request(path='services/events/subscribe_event',
-                                         arguments={
-                                             'event_type': event_type,
-                                             'callback_url': callback_url,
-                                             'verify_token': verify_token
-                                         })
-
-        result['event_type'] = event_type
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_unsubscribe(self):
-        result = yield self.usos_request(path='services/events/unsubscribe')
-        logging.debug('unsubscribe_result: {0}'.format(result))
-
-    @gen.coroutine
-    def usos_subscriptions(self):
-        result = yield self.usos_request(path='services/events/subscriptions')
-        if not result:
-            result = dict()
-        raise gen.Return(result)
 
     @gen.coroutine
     def notifier_status(self, usos_doc):

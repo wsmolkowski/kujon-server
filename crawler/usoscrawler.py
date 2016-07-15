@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import constants, utils, settings
 from commons.AESCipher import AESCipher
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
@@ -160,13 +160,23 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
         yield self._setUp(user_id)
 
         try:
-            yield self.usos_unsubscribe()
+            yield UsosCaller(self._context).call(path='services/events/unsubscribe')
         except Exception as ex:
             logging.warning(ex)
 
+        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
+
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
+                subscribe_doc = yield UsosCaller(self._context).call(path='services/events/subscribe_event',
+                                                                     arguments={
+                                                                         'event_type': event_type,
+                                                                         'callback_url': callback_url,
+                                                                         'verify_token': self.get_current_user()[constants.MONGO_ID]
+                                                                     })
+                subscribe_doc['event_type'] = event_type
+                subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
                 logging.exception(ex)
@@ -177,11 +187,9 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
         yield self._setUp(user_id)
 
         try:
-            yield self.usos_unsubscribe()
+            yield UsosCaller(self._context).call(path='services/events/unsubscribe')
         except Exception as ex:
             logging.warning(ex)
-
-        logging.info('removing user data for user_id {0}'.format(user_id))
 
         collections = yield self.db.collection_names()
 
