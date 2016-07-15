@@ -331,29 +331,3 @@ class UsosMixin(OAuthMixin):
         result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
         raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_participant(self):
-        result = yield self.usos_request(path='services/crstests/participant')
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_user_point(self, node_id):
-        result = yield self.usos_request(path='services/crstests/user_point', arguments={
-            'node_id': node_id,
-        })
-
-        result[constants.NODE_ID] = node_id
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_user_grade(self, node_id):
-        result = yield self.usos_request(path='services/crstests/user_grade', arguments={
-            'node_id': node_id,
-        })
-
-        result[constants.NODE_ID] = node_id
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
