@@ -54,9 +54,9 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
 
-        users_ids = list()
+        # users_ids = list()
         courses_terms = list()
-        course_units_ids = list()
+        # course_units_ids = list()
 
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
@@ -69,49 +69,49 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
                     logging.exception(ex)
                     continue
 
-                for lecturer in course[constants.LECTURERS]:
-                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                        users_ids.append(lecturer[constants.USER_ID])
-                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                        users_ids.append(lecturer[constants.ID])
-                for participant in course[constants.PARTICIPANTS]:
-                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                        users_ids.append(participant[constants.USER_ID])
-                    if constants.ID in participant and participant[constants.ID] not in users_ids:
-                        users_ids.append(participant[constants.ID])
-                for coordinator in course[constants.COORDINATORS]:
-                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                        users_ids.append(coordinator[constants.USER_ID])
-                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                        users_ids.append(coordinator[constants.ID])
-
-                for course_unit in course['course_units_ids']:
-                    if course_unit not in course_units_ids:
-                        course_units_ids.append(course_unit)
+                # for lecturer in course[constants.LECTURERS]:
+                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.USER_ID])
+                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.ID])
+                # for participant in course[constants.PARTICIPANTS]:
+                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                #         users_ids.append(participant[constants.USER_ID])
+                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
+                #         users_ids.append(participant[constants.ID])
+                # for coordinator in course[constants.COORDINATORS]:
+                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.USER_ID])
+                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.ID])
+                #
+                # for course_unit in course['course_units_ids']:
+                #     if course_unit not in course_units_ids:
+                #         course_units_ids.append(course_unit)
 
         try:
             yield courses_terms
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
-        api_user_infos = list()
-        for user_id in users_ids:
-            api_user_infos.append(self.api_user_info(user_id))
-
-        try:
-            yield api_user_infos
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
-
-        units_groups = list()
-        for unit in course_units_ids:
-            units_groups.append(self.api_unit(unit))
-            units_groups.append(self.api_group(unit))
-
-        try:
-            yield units_groups
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
+        # api_user_infos = list()
+        # for user_id in users_ids:
+        #     api_user_infos.append(self.api_user_info(user_id))
+        #
+        # try:
+        #     yield api_user_infos
+        # except Exception as ex:
+        #     yield self.exc(ex, finish=False)
+        #
+        # units_groups = list()
+        # for unit in course_units_ids:
+        #     units_groups.append(self.api_unit(unit))
+        #     units_groups.append(self.api_group(unit))
+        #
+        # try:
+        #     yield units_groups
+        # except Exception as ex:
+        #     yield self.exc(ex, finish=False)
 
         raise gen.Return()
 
