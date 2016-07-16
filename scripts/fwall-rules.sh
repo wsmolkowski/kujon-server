@@ -68,19 +68,3 @@ ${IPTABLES} -A INPUT -p ICMP --icmp-type 8 -j ACCEPT
 ${IPTABLES} -A INPUT -j LOG
 ${IPTABLES} -A INPUT -j DROP
 
-#
-# Save settings
-#
-echo " * SAVING RULES"
-
-if [[ -d /etc/network/if-pre-up.d ]]; then
-    if [[ ! -f /etc/network/if-pre-up.d/iptables ]]; then
-        echo -e "#!/bin/bash" > /etc/network/if-pre-up.d/iptables
-        echo -e "test -e /etc/iptables.rules && iptables-restore -c /etc/iptable
-s.rules" >> /etc/network/if-pre-up.d/iptables
-        chmod +x /etc/network/if-pre-up.d/iptables
-    fi
-fi
-
-iptables-save > /etc/fwall.rules
-iptables-restore -c /etc/fwall.rules
