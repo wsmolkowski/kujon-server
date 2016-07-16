@@ -4,11 +4,12 @@ from bson import ObjectId
 from tornado import gen
 from tornado import web
 
-from api.handlers.base import ApiHandler
+from api.handlers.base import DaoMixin
 from commons import decorators, constants
+from commons.UsosCaller import UsosCaller
 
 
-class SubscriptionsHandler(ApiHandler):
+class SubscriptionsHandler(DaoMixin):
     """
         displays user subscriptions, not casched in db, request go directly to usos api
     """
@@ -27,7 +28,10 @@ class SubscriptionsHandler(ApiHandler):
             if subscriptions:
                 subscriptions_doc['subscriptions'] = subscriptions
 
-            usos_subscriptions = yield self.usos_subscriptions()
+            usos_subscriptions = yield UsosCaller(self._context).call(path='services/events/subscriptions')
+            if not usos_subscriptions:
+                usos_subscriptions = dict()
+
             if usos_subscriptions:
                 subscriptions_doc['usos_subscriptions'] = usos_subscriptions
 

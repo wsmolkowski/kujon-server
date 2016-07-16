@@ -87,7 +87,7 @@ def http_client():
                                              defaults=dict(proxy_host=settings.PROXY_URL,
                                                            proxy_port=settings.PROXY_PORT,
                                                            validate_cert=False),
-                                             max_clients=100)
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
 
     else:
         httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)

@@ -1,13 +1,12 @@
 # coding=UTF-8
 
-import logging
 from base64 import b64encode
 
 from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, usoshelper
+from commons import constants, usoshelper
 from commons.errors import UsosClientError
 
 try:
@@ -282,32 +281,6 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(tt)
 
     @gen.coroutine
-    def usos_subscribe(self, event_type, verify_token):
-        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
-        result = yield self.usos_request(path='services/events/subscribe_event',
-                                         arguments={
-                                             'event_type': event_type,
-                                             'callback_url': callback_url,
-                                             'verify_token': verify_token
-                                         })
-
-        result['event_type'] = event_type
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_unsubscribe(self):
-        result = yield self.usos_request(path='services/events/unsubscribe')
-        logging.debug('unsubscribe_result: {0}'.format(result))
-
-    @gen.coroutine
-    def usos_subscriptions(self):
-        result = yield self.usos_request(path='services/events/subscriptions')
-        if not result:
-            result = dict()
-        raise gen.Return(result)
-
-    @gen.coroutine
     def notifier_status(self, usos_doc):
         result = yield self.call_async(path='services/events/notifier_status', base_url=usos_doc[constants.USOS_URL])
         raise gen.Return(result)
@@ -315,110 +288,4 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_users(self, query, start=0):
-        result = yield self.usos_request(path='services/users/search2', arguments={
-            'query': query.encode('utf-8'),
-            'start': int(start),
-            'num': 20,
-            'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
-        })
-
-        if 'items' in result:
-            for elem in result['items']:
-                user = elem['user']
-
-                # change student status to name
-                if 'student_status' in user:
-                    user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
-
-                # change staff_status to dictionary
-                user['staff_status'] = usoshelper.dict_value_staff_status(user['staff_status'])
-
-                # remove english names
-                for position in user['employment_positions']:
-                    position['position']['name'] = position['position']['name']['pl']
-                    position['faculty']['name'] = position['faculty']['name']['pl']
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_courses(self, query, start=0):
-        result = yield self.call_async(path='services/courses/search', arguments={
-            'name': query.encode('utf-8'),
-            'start': int(start),
-            'num': 20,
-            'fields': 'items[course_name]|match|next_page]',
-        })
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_faculty(self, query, start=0):
-        result = yield self.call_async(path='services/fac/search', arguments={
-            'query': query.encode('utf-8'),
-            'start': int(start),
-            'num': 20,
-            'fields': 'id|match|postal_address',
-            'visibility': 'all'
-        })
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_programmes(self, query, start=0):
-        result = yield self.call_async(path='services/progs/search', arguments={
-            'query': query.encode('utf-8'),
-            'start': int(start),
-            'num': 20,
-            'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
-        })
-
-        for programme in result['items']:
-            programme['programme']['name'] = programme['programme']['name']['pl']
-            programme['programme']['mode_of_studies'] = programme['programme']['mode_of_studies']['pl']
-            programme['programme']['level_of_studies'] = programme['programme']['level_of_studies']['pl']
-            programme['programme']['duration'] = programme['programme']['duration']['pl']
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_theses(self, user_info_id):
-        result = yield self.usos_request(path='services/theses/user', arguments={
-            'user_id': user_info_id,
-            'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-        })
-
-        if 'authored_theses' in result:
-            for these in result['authored_theses']:
-                these['faculty']['name'] = these['faculty']['name']['pl']
-
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_participant(self):
-        result = yield self.usos_request(path='services/crstests/participant')
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_user_point(self, node_id):
-        result = yield self.usos_request(path='services/crstests/user_point', arguments={
-            'node_id': node_id,
-        })
-
-        result[constants.NODE_ID] = node_id
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_crstests_user_grade(self, node_id):
-        result = yield self.usos_request(path='services/crstests/user_grade', arguments={
-            'node_id': node_id,
-        })
-
-        result[constants.NODE_ID] = node_id
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
         raise gen.Return(result)

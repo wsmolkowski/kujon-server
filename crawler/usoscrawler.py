@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import constants, utils, settings
 from commons.AESCipher import AESCipher
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
@@ -34,6 +34,12 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
             self._context.user_doc = yield self.db_get_archive_user(user_id)
 
         self._context.usos_doc = yield self.db_get_usos(self._context.user_doc[constants.USOS_ID])
+        self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
+        self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
+                                            secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+
+        self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
+                                          secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     def get_current_user(self):
         return self._context.user_doc
@@ -48,9 +54,9 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
     def __process_courses_editions(self):
         courses_editions = yield self.api_courses_editions()
 
-        users_ids = list()
+        # users_ids = list()
         courses_terms = list()
-        course_units_ids = list()
+        # course_units_ids = list()
 
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             for course in courses:
@@ -63,49 +69,49 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
                     logging.exception(ex)
                     continue
 
-                for lecturer in course[constants.LECTURERS]:
-                    if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                        users_ids.append(lecturer[constants.USER_ID])
-                    if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                        users_ids.append(lecturer[constants.ID])
-                for participant in course[constants.PARTICIPANTS]:
-                    if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                        users_ids.append(participant[constants.USER_ID])
-                    if constants.ID in participant and participant[constants.ID] not in users_ids:
-                        users_ids.append(participant[constants.ID])
-                for coordinator in course[constants.COORDINATORS]:
-                    if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                        users_ids.append(coordinator[constants.USER_ID])
-                    if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                        users_ids.append(coordinator[constants.ID])
-
-                for course_unit in course['course_units_ids']:
-                    if course_unit not in course_units_ids:
-                        course_units_ids.append(course_unit)
+                # for lecturer in course[constants.LECTURERS]:
+                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.USER_ID])
+                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                #         users_ids.append(lecturer[constants.ID])
+                # for participant in course[constants.PARTICIPANTS]:
+                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                #         users_ids.append(participant[constants.USER_ID])
+                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
+                #         users_ids.append(participant[constants.ID])
+                # for coordinator in course[constants.COORDINATORS]:
+                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.USER_ID])
+                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                #         users_ids.append(coordinator[constants.ID])
+                #
+                # for course_unit in course['course_units_ids']:
+                #     if course_unit not in course_units_ids:
+                #         course_units_ids.append(course_unit)
 
         try:
             yield courses_terms
         except Exception as ex:
             yield self.exc(ex, finish=False)
 
-        api_user_infos = list()
-        for user_id in users_ids:
-            api_user_infos.append(self.api_user_info(user_id))
-
-        try:
-            yield api_user_infos
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
-
-        units_groups = list()
-        for unit in course_units_ids:
-            units_groups.append(self.api_unit(unit))
-            units_groups.append(self.api_group(unit))
-
-        try:
-            yield units_groups
-        except Exception as ex:
-            yield self.exc(ex, finish=False)
+        # api_user_infos = list()
+        # for user_id in users_ids:
+        #     api_user_infos.append(self.api_user_info(user_id))
+        #
+        # try:
+        #     yield api_user_infos
+        # except Exception as ex:
+        #     yield self.exc(ex, finish=False)
+        #
+        # units_groups = list()
+        # for unit in course_units_ids:
+        #     units_groups.append(self.api_unit(unit))
+        #     units_groups.append(self.api_group(unit))
+        #
+        # try:
+        #     yield units_groups
+        # except Exception as ex:
+        #     yield self.exc(ex, finish=False)
 
         raise gen.Return()
 
@@ -136,6 +142,7 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
             yield self._setUp(user_id)
 
             yield self.api_user_info()
+            yield self.api_thesis()
             yield self.api_courses_editions()
             yield self.__process_courses_editions()
             yield self.api_terms()
@@ -153,13 +160,23 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
         yield self._setUp(user_id)
 
         try:
-            yield self.usos_unsubscribe()
+            yield UsosCaller(self._context).call(path='services/events/unsubscribe')
         except Exception as ex:
             logging.warning(ex)
 
+        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
+
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
-                subscribe_doc = yield self.usos_subscribe(event_type, self.get_current_user()[constants.MONGO_ID])
+                subscribe_doc = yield UsosCaller(self._context).call(path='services/events/subscribe_event',
+                                                                     arguments={
+                                                                         'event_type': event_type,
+                                                                         'callback_url': callback_url,
+                                                                         'verify_token': self.get_current_user()[constants.MONGO_ID]
+                                                                     })
+                subscribe_doc['event_type'] = event_type
+                subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
                 yield self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
                 logging.exception(ex)
@@ -170,11 +187,9 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
         yield self._setUp(user_id)
 
         try:
-            yield self.usos_unsubscribe()
+            yield UsosCaller(self._context).call(path='services/events/unsubscribe')
         except Exception as ex:
             logging.warning(ex)
-
-        logging.info('removing user data for user_id {0}'.format(user_id))
 
         collections = yield self.db.collection_names()
 
@@ -266,24 +281,23 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
         except Exception as ex:
             self.exc(ex, finish=False)
 
-
 # @gen.coroutine
 # def main():
 #     crawler = UsosCrawler()
-#     # user_id = '57860d20d54c4b59e8a556bf'
-#     # yield crawler.initial_user_crawl(user_id)
+#     user_id = '578896c9d54c4b1e083f2fe9'
+#     yield crawler.initial_user_crawl(user_id)
 #     # yield crawler.unsubscribe(user_id)
 #
-#     event = {u'entry': [
-#         # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#         # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#         # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#         {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#         {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#         {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
-#     ],
-#         u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-#     yield crawler.process_event(event)
+#     # event = {u'entry': [
+#     #     # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#     #     # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#     #     # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+#     #     {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
+#     #     {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
+#     #     {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
+#     # ],
+#     #     u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
+#     # yield crawler.process_event(event)
 #
 #
 # if __name__ == '__main__':

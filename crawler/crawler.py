@@ -65,20 +65,19 @@ class MongoDbQueue(object):
     @gen.coroutine
     def process_job(self, job):
         try:
-            crawler = UsosCrawler()
             self.processing.append(job)
             logging.info("processing job: {0} with job type: {1} queue size: {2}".format(
                 job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize()))
             yield self.update_job(job, constants.JOB_START)
 
             if job[constants.JOB_TYPE] == 'initial_user_crawl':
-                yield crawler.initial_user_crawl(job[constants.USER_ID])
+                yield UsosCrawler().initial_user_crawl(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'archive_user':
-                yield crawler.archive_user(job[constants.USER_ID])
+                yield UsosCrawler().archive_user(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscribe_usos':
-                yield crawler.subscribe(job[constants.USER_ID])
+                yield UsosCrawler().subscribe(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscription_event':
-                yield crawler.process_event(job[constants.JOB_DATA])
+                yield UsosCrawler().process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)
