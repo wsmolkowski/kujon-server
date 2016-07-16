@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+### BEGIN INIT INFO
+# Provides: firewall
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start and stop firewall
+# Description: firewall
+### END INIT INFO
+
 IPTABLES=/sbin/iptables
 
 echo " * flushing old rules"
