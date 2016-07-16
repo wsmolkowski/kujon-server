@@ -8,7 +8,8 @@ from tornado import gen
 
 from commons import constants, settings
 from commons import usoshelper
-from commons.errors import ApiError, UsosClientError
+from commons.UsosCaller import UsosCaller
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
 
@@ -37,6 +38,10 @@ USER_INFO_LIMIT_FIELDS = (
 class ApiMixin(DaoMixin, UsosMixin):
     def do_refresh(self):
         return False
+
+    @staticmethod
+    def filterNone(array):
+        return [i for i in array if i is not None]
 
     @gen.coroutine
     def api_courses_editions(self):
@@ -74,7 +79,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
                 logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 raise self.exc(ex, finish=False)
 
         raise gen.Return(result)
@@ -90,12 +95,8 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            try:
-                course_doc = yield self.usos_course(course_id)
-                yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except Exception as ex:
-                logging.exception(ex)
-                raise ApiError("Nie znaleźliśmy kursu", course_id)
+            course_doc = yield self.usos_course(course_id)
+            yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
         course_doc[constants.TERM_ID] = term_id
 
@@ -145,7 +146,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     tasks_groups.append(self.api_group(int(unit)))
 
             groups = yield tasks_groups
-            course_doc['groups'] = filter(None, groups)  # remove None -> when USOS exception
+            course_doc['groups'] = self.filterNone(groups)
 
         if extra_fetch:
             term_doc = yield self.api_term([term_id])
@@ -175,7 +176,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex)
                 raise gen.Return()
 
@@ -420,7 +421,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 programme_doc = yield self.usos_programme(programme_id)
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
 
         raise gen.Return(programme_doc)
@@ -430,7 +431,7 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         monday = None
         try:
-            if isinstance(given_date, unicode):
+            if isinstance(given_date, str):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception as ex:
@@ -484,7 +485,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         try:
             term_doc = yield self.usos_term(term_id)
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
-        except UsosClientError as ex:
+        except Exception as ex:
             yield self.exc(ex, finish=False)
         finally:
             raise gen.Return(term_doc)
@@ -507,7 +508,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield terms_task
                 cursor.rewind()
                 terms_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return()
 
@@ -552,13 +553,41 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not user_info_doc:
             try:
                 user_info_doc = yield self.usos_user_info(user_id)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=False)
 
             if not user_info_doc:
-                raise ApiError("Nie znaleziono użytkownika: {0}".format(user_id))
+                logging.error("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
+                raise gen.Return()
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
+            # process faculties
+            tasks_get_faculties = list()
+            for position in user_info_doc['employment_positions']:
+                tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
+            yield tasks_get_faculties
+
+            # process course_editions_conducted
+            courses_conducted = []
+            tasks_courses = list()
+            courses = list()
+            for course_conducted in user_info_doc['course_editions_conducted']:
+                course_id, term_id = course_conducted['id'].split('|')
+                if course_id not in courses:
+                    courses.append(course_id)
+                    tasks_courses.append(self.api_course(course_id))
+
+            try:
+                tasks_results = yield tasks_courses
+                for course_doc in tasks_results:
+                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                              constants.COURSE_ID: course_id,
+                                              constants.TERM_ID: term_id})
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
+
+            user_info_doc['course_editions_conducted'] = courses_conducted
 
             # if user has photo
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
@@ -605,7 +634,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         task_progammes_result = yield tasks_progammes
         for programme_doc in task_progammes_result:
             programmes.append(programme_doc)
-        programmes = filter(None, programmes)
+        programmes = self.filterNone(programmes)
 
         # get faculties
         faculties_ids = list()
@@ -621,8 +650,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         for faculty_doc in tasks_faculties_result:
             faculties.append(faculty_doc)
 
-        faculties = filter(None, faculties)
-        raise gen.Return(faculties)
+        raise gen.Return(self.filterNone(faculties))
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
@@ -639,7 +667,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
                 else:
                     logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(unit_doc)
 
@@ -658,7 +686,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield tasks_units
                 cursor.rewind()
                 units_doc = yield cursor.to_list(None)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(units_doc)
 
@@ -685,7 +713,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 group_doc.pop('class_type_id')
 
                 yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
-            except UsosClientError as ex:
+            except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(group_doc)
 
@@ -698,10 +726,13 @@ class ApiMixin(DaoMixin, UsosMixin):
         photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
 
         if not photo_doc:
-            photo_doc = yield self.usos_photo(user_info_id)
-            photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
-            photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
-
+            try:
+                photo_doc = yield self.usos_photo(user_info_id)
+                photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
+                photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(
+                    {constants.MONGO_ID: ObjectId(photo_id)})
+            except Exception as ex:
+                logging.exception(ex)
         raise gen.Return(photo_doc)
 
     @gen.coroutine
@@ -715,8 +746,17 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if not theses_doc:
             users_info_doc = yield self.api_user_info()
-            theses_doc = yield self.usos_theses(users_info_doc[constants.ID])
+            theses_doc = yield UsosCaller(self._context).call(path='services/theses/user',
+                                                              arguments={
+                                                                  'user_id': users_info_doc[constants.ID],
+                                                                  'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+                                                              })
+            if 'authored_theses' in theses_doc:
+                for these in theses_doc['authored_theses']:
+                    these['faculty']['name'] = these['faculty']['name']['pl']
+
+            theses_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
             yield self.db_insert(constants.COLLECTION_THESES, theses_doc)
 
         raise gen.Return(theses_doc['authored_theses'])
-

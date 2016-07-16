@@ -89,6 +89,21 @@ class CrawlerException(Exception):
     pass
 
 
+class OneSignalError(Exception):
+    """OneSignal exceptions"""
+    pass
+
+
+class DaoError(Exception):
+    """Dao Mongo exceptions"""
+    pass
+
+
+class CallerError(Exception):
+    """Base error for this module."""
+    pass
+
+
 class UsosOAuthError(HttpError):
     """USOS exceptions"""
     pass

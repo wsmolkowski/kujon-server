@@ -54,6 +54,9 @@ class JSendMixin(object):
         :return:
         """
 
+        if message:
+            message = message
+
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'fail', 'message': message, 'code': code})
 
@@ -77,10 +80,9 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
-        # data = utils.serialize(data)
         if settings.DEVELOPMENT:
             self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
         self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
-        self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder, encoding=constants.ENCODING))
+        self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder))
         self.finish()

@@ -19,7 +19,7 @@ SLEEP = 2
 
 class MongoDbQueue(object):
     def __init__(self):
-        self.crawler = UsosCrawler()
+
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
         self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
         self.processing = []
@@ -63,27 +63,6 @@ class MongoDbQueue(object):
         raise gen.Return()
 
     @gen.coroutine
-    def remove_user_data(self, user_id):
-        logging.info('removing user data for user_id {0}'.format(user_id))
-
-        collections = yield self.db.collection_names()
-
-        for collection in collections:
-
-            if collection == constants.COLLECTION_USERS_ARCHIVE:
-                continue
-
-            exists = yield self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
-            if exists:
-                result = yield self.db[collection].remove({constants.USER_ID: user_id})
-                logging.debug('removed data from collection {0} for user {1} with result {2}'.format(
-                    collection, user_id, result))
-
-        logging.info('removed user data for user_id {0}'.format(user_id))
-
-        raise gen.Return()
-
-    @gen.coroutine
     def process_job(self, job):
         try:
             self.processing.append(job)
@@ -92,15 +71,13 @@ class MongoDbQueue(object):
             yield self.update_job(job, constants.JOB_START)
 
             if job[constants.JOB_TYPE] == 'initial_user_crawl':
-                yield self.crawler.initial_user_crawl(job[constants.USER_ID])
+                yield UsosCrawler().initial_user_crawl(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'archive_user':
-                yield self.remove_user_data(job[constants.USER_ID])
-            elif job[constants.JOB_TYPE] == 'unsubscribe_usos':
-                yield self.crawler.unsubscribe(job[constants.USER_ID])
+                yield UsosCrawler().archive_user(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscribe_usos':
-                yield self.crawler.subscribe(job[constants.USER_ID])
+                yield UsosCrawler().subscribe(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscription_event':
-                yield self.crawler.process_event(job[constants.JOB_DATA])
+                yield UsosCrawler().process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)
