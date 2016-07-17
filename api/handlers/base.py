@@ -44,6 +44,22 @@ class BaseHandler(RequestHandler, DaoMixin):
 
         raise gen.Return(user)
 
+    def isRegistered(self):
+        if not self._context:
+            return False
+
+        if 'user_doc' not in self._context:
+            return False
+
+        if not self._context.user_doc:
+            return False
+
+        if constants.ACCESS_TOKEN_KEY not in self._context.user_doc and \
+                        constants.ACCESS_TOKEN_SECRET not in self._context.user_doc:
+            return False
+
+        return True
+
     @gen.coroutine
     def prepare(self):
         self._context = ObjectDict()
@@ -66,8 +82,7 @@ class BaseHandler(RequestHandler, DaoMixin):
             self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
                                                 secret=self._context.usos_doc[constants.CONSUMER_SECRET])
 
-            if constants.ACCESS_TOKEN_KEY in self._context.user_doc and \
-                    constants.ACCESS_TOKEN_SECRET in self._context.user_doc:
+            if self.isRegistered():
                 # before usos registration
                 self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
                                                   secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
