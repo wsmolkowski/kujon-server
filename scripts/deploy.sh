@@ -11,7 +11,7 @@ sudo killall -9 python
 echo 'services stopped'
 
 echo 'cloning code'
-rm -rf $APPDIR
+sudo rm -rf $APPDIR
 mkdir $APPDIR
 cd $APPDIR
 git clone git@github.com:kujonmobi/kujon-server.git .
