@@ -579,14 +579,14 @@ class ApiMixin(DaoMixin, UsosMixin):
                 course_id, term_id = course_conducted['id'].split('|')
                 if course_id not in courses:
                     courses.append(course_id)
-                    tasks_courses.append(self.api_course(course_id))
+                    tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False))
 
             try:
                 tasks_results = yield tasks_courses
                 for course_doc in tasks_results:
                     courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_id,
-                                              constants.TERM_ID: term_id})
+                                              constants.COURSE_ID: course_doc[constants.COURSE_ID],
+                                              constants.TERM_ID: course_doc[constants.TERM_ID]})
             except Exception as ex:
                 yield self.exc(ex, finish=False)
 
@@ -602,6 +602,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
+        del(user_info_doc[constants.MONGO_ID])
         raise gen.Return(user_info_doc)
 
     @gen.coroutine
