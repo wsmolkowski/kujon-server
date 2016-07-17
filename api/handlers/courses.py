@@ -5,6 +5,7 @@ import tornado.web
 
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
+from commons.errors import ApiError
 
 
 class CourseEditionApi(ApiHandler):
@@ -28,6 +29,8 @@ class CoursesApi(ApiHandler):
 
         try:
             course_doc = yield self.api_course(course_id)
+            if not course_doc:
+                raise ApiError('Nie znaleziono informacji o danym kursie.')
             self.success(course_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
             yield self.exc(ex)

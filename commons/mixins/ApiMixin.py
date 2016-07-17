@@ -177,7 +177,9 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 course_doc = yield self.usos_course(course_id)
             except Exception as ex:
-                yield self.exc(ex)
+                yield self.exc(ex, finish=True)
+                raise gen.Return()
+            if not course_doc:
                 raise gen.Return()
 
             yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
@@ -435,7 +437,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception as ex:
-            yield self.exc(ex, finish=False)
+            raise gen.Return()
 
         user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
