@@ -74,6 +74,9 @@ class UserInfoApi(ApiHandler):
 
             user_doc['theses'] = yield self.api_thesis()
 
+            del(user_doc[constants.UPDATE_TIME])
+            del(user_doc[constants.MONGO_ID])
+
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             yield self.exc(ex)

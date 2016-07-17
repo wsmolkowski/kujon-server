@@ -47,7 +47,7 @@ class SearchUsersApi(AbstractSearch):
             if result_doc['items']:
                 self.success(result_doc)
             else:
-                self.error('Niestety nie znaleźliśmy danych.')
+                self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             yield self.exc(ex)
 
@@ -62,7 +62,7 @@ class SearchCoursesApi(AbstractSearch):
             if result_doc['items']:
                 self.success(result_doc)
             else:
-                self.error('Niestety nie znaleźliśmy danych.')
+                self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             yield self.exc(ex)
 
@@ -77,7 +77,7 @@ class SearchFacultiesApi(AbstractSearch):
             if result_doc['items']:
                 self.success(result_doc)
             else:
-                self.error('Niestety nie znaleźliśmy danych.')
+                self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             yield self.exc(ex)
 
@@ -92,6 +92,6 @@ class SearchProgrammesApi(AbstractSearch):
             if result_doc['items']:
                 self.success(result_doc)
             else:
-                self.error('Niestety nie znaleźliśmy danych.')
+                self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             yield self.exc(ex)

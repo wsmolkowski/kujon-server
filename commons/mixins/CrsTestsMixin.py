@@ -54,8 +54,11 @@ class CrsTestsMixin(DaoMixin):
         crstests_doc = yield self.db[constants.COLLECTION_CRSTESTS_GRADES].find_one(pipeline)
 
         if not crstests_doc:
-            crstests_doc = yield UsosCaller(self._context).call(path='services/crstests/user_grade',
-                                                                arguments={'node_id': node_id})
+            try:
+                crstests_doc = yield UsosCaller(self._context).call(path='services/crstests/user_grade', arguments={'node_id': node_id})
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
+                raise gen.Return()
             crstests_doc[constants.NODE_ID] = node_id
             crstests_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 

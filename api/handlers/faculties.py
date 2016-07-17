@@ -19,11 +19,10 @@ class FacultyByIdApi(ApiHandler):
 
         try:
             faculty_doc = yield self.api_faculty(faculty_id)
-
             if not faculty_doc:
-                raise faculty_doc('Nie możemy znaleźć danych dla jednostki.', faculty_id)
-
-            self.success(faculty_doc, cache_age=constants.SECONDS_2MONTHS)
+                self.error('Nie możemy znaleźć danych dla jednostki.', code=404)
+            else:
+                self.success(faculty_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
             yield self.exc(ex)
 

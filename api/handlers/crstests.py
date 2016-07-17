@@ -17,7 +17,7 @@ class CrsTestsApi(ApiHandler, CrsTestsMixin):
         try:
             crstests_doc = yield self.api_crstests()
             if not crstests_doc:
-                self.error("Poczekaj, szukamy informacji o Twoich sprawdzianach.")
+                self.error("Brak inforamcji o Twoich sprawdzianach.", code=404)
             else:
                 self.success(crstests_doc, cache_age=constants.SECONDS_1WEEK)
         except Exception as ex:
@@ -34,7 +34,7 @@ class CrsTestsNodeApi(ApiHandler, CrsTestsMixin):
             crstest_node_doc = yield self.api_crstests_grades(node_id)
 
             if not crstest_node_doc:
-                self.error("Brak sprawdzianiu: {0}".format(node_id))
+                self.error("Brak informacji o danym sprawdzianie.", code=404)
             else:
                 self.success(crstest_node_doc, cache_age=constants.SECONDS_1WEEK)
         except Exception as ex:

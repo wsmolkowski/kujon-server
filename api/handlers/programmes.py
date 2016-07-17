@@ -16,10 +16,9 @@ class ProgrammesByIdApi(ApiHandler):
     def get(self, programme_id):
 
         try:
-            programme = yield self.api_programme(programme_id)
-
+            programme = yield self.api_programme(programme_id, finish=False)
             if not programme:
-                self.error("Brak kierunku: {0}".format(programme_id))
+                self.error("Brak podanego kierunku.", code=404)
             else:
                 self.success(programme, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
@@ -35,7 +34,7 @@ class ProgrammesApi(ApiHandler):
         try:
             programmes = yield self.api_programmes()
             if not programmes:
-                self.error("Brak kierunków.")
+                self.error("Brak inforamcji o Twoich kierunkach.", code=404)
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:

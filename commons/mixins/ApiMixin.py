@@ -95,7 +95,11 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            course_doc = yield self.usos_course(course_id)
+            try:
+                course_doc = yield self.usos_course(course_id)
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
+                raise gen.Return()
             yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
         course_doc[constants.TERM_ID] = term_id
@@ -103,7 +107,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         course_edition = yield self.api_course_edition(course_id, term_id)
 
         if not course_edition:
-            raise ApiError("Nie znaleźliśmy edycji kursu", (course_id, term_id))
+            raise self.Return()
 
         if not user_id:
             user_info_doc = yield self.api_user_info()
@@ -152,7 +156,6 @@ class ApiMixin(DaoMixin, UsosMixin):
             term_doc = yield self.api_term([term_id])
             course_doc['term'] = list()
             for term in term_doc:
-                term.pop(constants.MONGO_ID)
                 course_doc['term'].append(term)
 
         if extra_fetch:
@@ -177,8 +180,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             try:
                 course_doc = yield self.usos_course(course_id)
             except Exception as ex:
-                yield self.exc(ex, finish=True)
-                raise gen.Return()
+                yield self.exc(ex, finish=False)
             if not course_doc:
                 raise gen.Return()
 
@@ -385,9 +387,6 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         user_info = yield self.api_user_info(user_info_id)
 
-        if not user_info:
-            raise ApiError("Poczekaj szukamy informacji o nauczycielu.", user_info_id)
-
         raise gen.Return(user_info)
 
     @gen.coroutine
@@ -425,6 +424,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=finish)
+                raise gen.Return(None)
 
         raise gen.Return(programme_doc)
 
@@ -437,7 +437,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception as ex:
-            raise gen.Return()
+            raise ApiError("Data w niepoprawnym formacie.")
 
         user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
 
@@ -522,7 +522,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 term['active'] = True
             else:
                 term['active'] = False
-
+            del(term[constants.MONGO_ID])
         raise gen.Return(terms_doc)
 
     @gen.coroutine
@@ -614,7 +614,11 @@ class ApiMixin(DaoMixin, UsosMixin):
         faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         if not faculty_doc:
-            faculty_doc = yield self.usos_faculty(faculty_id)
+            try:
+                faculty_doc = yield self.usos_faculty(faculty_id)
+            except Exception as ex:
+                yield self.exc(ex, finish=False)
+                raise gen.Return()
             yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
             faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
