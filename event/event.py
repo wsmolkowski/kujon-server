@@ -18,7 +18,7 @@ define("port", default=settings.EVENT_PORT, help="run on the given port", type=i
 class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
-            (r"/", EventHandler),
+            (r"/([^/]+)", EventHandler),
         ]
 
         __settings = dict(
@@ -35,8 +35,7 @@ class Application(tornado.web.Application):
 def main():
     parse_command_line()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     application = Application()
 

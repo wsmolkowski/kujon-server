@@ -6,7 +6,7 @@ from tornado.testing import AsyncTestCase, gen_test
 from commons import constants
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.UsosMixin import UsosMixin
-from commons.usosutils.usoscrawler import UsosCrawler
+from crawler.usoscrawler import UsosCrawler
 
 MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
 MONGODB_NAME = 'db-for-tests'
@@ -42,8 +42,8 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
     def testInitCrawlerDEMO(self):
         # when
         self.user = {"mobile_id": "demo1",
-                "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "DEMO",
-                "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
+                     "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "DEMO",
+                     "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
 
         user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
         yield self.crawler.initial_user_crawl(ObjectId(str(user)))
@@ -56,13 +56,12 @@ class CrawlerTest(AsyncTestCase, UsosMixin, DaoMixin):
         self.assertTrue(self.dao.count(constants.COLLECTION_TERMS) > 0)
         self.assertTrue(self.dao.count(constants.COLLECTION_FACULTIES) > 0)
 
-
     @gen_test(timeout=1000)
     def testInitCrawlerUW(self):
         # when
         self.user = {"mobile_id": "uw1",
-                "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "UW",
-                "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
+                     "access_token_key": "sTHHzeBvwcDn4srZRkRU", "usos_id": "UW",
+                     "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
         user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
 
         yield self.crawler.initial_user_crawl(ObjectId(str(user)))

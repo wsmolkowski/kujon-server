@@ -26,6 +26,10 @@ PARTICIPANTS = "participants"
 LECTURERS = "lecturers"
 COORDINATORS = "coordinators"
 PICTURE = 'picture'
+GRADES = 'grades'
+SEARCH_QUERY = 'query'
+SEARCH_ENDPOINT = 'endpoint'
+NODE_ID = 'node_id'
 
 FACEBOOK = "facebook"
 FACEBOOK_ID = "id"
@@ -34,6 +38,9 @@ FACEBOOK_EMAIL = "email"
 FACEBOOK_ACCESS_TOKEN = "access_token"
 FACEBOOK_SESSION_EXPIRES = "session_expires"
 FACEBOOK_PICTURE = "picture"
+
+FIELD_TOKEN_EXPIRATION = 'exp'
+TOKEN_EXPIRATION_TIMEOUT = 3600
 
 GOOGLE = 'google'
 GOOGLE_NAME = 'name'
@@ -51,6 +58,8 @@ ACCESS_TOKEN_SECRET = "access_token_secret"
 OAUTH_VERIFIER = "oauth_verifier"
 
 USOS_URL = "url"
+USOS_NAME = "name"
+USOS_LOGO = "logo"
 CONSUMER_KEY = "consumer_key"
 CONSUMER_SECRET = "consumer_secret"
 
@@ -61,6 +70,7 @@ JOB_START = "start"
 JOB_FINISH = "finish"
 JOB_FAIL = "fail"
 JOB_MESSAGE = "message"
+JOB_DATA = "job_data"
 
 USER_TYPE = "user_type"
 USER_CREATED = "user_created"
@@ -74,10 +84,8 @@ KUJON_SECURE_COOKIE = "KUJON_SECURE_COOKIE"
 KUJON_CONFIG_COOKIE = "KUJON_CONFIG_COOKIE"
 KUJON_MOBI_REGISTER = 'KUJON_MOBI_REGISTER'
 
-COOKIE_EXPIRES_DAYS = 10
-OAUTH_TOKEN = "oauth_token"
-OAUTH_TOKEN_SECRET = "oauth_token_secret"
 MOBI_TOKEN = "mobi_token"
+
 LECTURER_STATUS = "staff_status"
 LECTURER_STATUS_ACTIVE = 2
 
@@ -106,18 +114,25 @@ COLLECTION_EMAIL_QUEUE = 'email_queue'
 COLLECTION_EMAIL_QUEUE_LOG = 'email_queue_log'
 COLLECTION_EXCEPTIONS = 'exceptions'
 COLLECTION_TOKENS = 'tokens'
-COLLECTION_SUBSCRIPTION = 'subscriptions'
+COLLECTION_SUBSCRIPTIONS = 'subscriptions'
 COLLECTION_NOTIFIER_STATUS = 'notifier_status'
 COLLECTION_NOTIFICATION_QUEUE = 'notification_queue'
 COLLECTION_NOTIFICATION_QUEUE_LOG = 'notification_queue_log'
+COLLECTION_SEARCH = 'search'
+COLLECTION_THESES = 'theses'
+COLLECTION_CRSTESTS = 'crstests'
+COLLECTION_CRSTESTS_GRADES = 'crstests_grades'
+COLLECTION_CRSTESTS_POINTS = 'crstests_points'
 
 COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME, USER_PICTURE,
                  GOOGLE, FACEBOOK)
 
+DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DEFAULT_DATE_FORMAT = '%Y-%m-%d'
+
 EXCEPTION_TYPE = 'exception_type'
 TRACEBACK = 'traceback'
 
-DATETIME_DISPLAY_FORMAT = "%Y-%m-%d %H:%M:%S"
 CRAWL_TYPE = "crawl_type"
 
 SMTP_SUBJECT = 'subject'
@@ -132,8 +147,6 @@ MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
 MOBILE_X_HEADER_REFRESH = 'X-Kujonrefresh'
 EVENT_X_HUB_SIGNATURE = 'X-Hub-Signature'
 
-VALIDATE_SSL_CERT = 'validate_ssl_certificate'
-
 SECONDS_1MONTH = 2592000
 SECONDS_2MONTHS = 5184000
 SECONDS_DAY = 86400
@@ -141,3 +154,6 @@ SECONDS_1WEEK = 604800
 SECONDS_2WEEKS = 1209600
 
 MAX_HTTP_CLIENTS = 1000
+
+HTTP_CONNECT_TIMEOUT = 30
+HTTP_REQUEST_TIMEOUT = 30

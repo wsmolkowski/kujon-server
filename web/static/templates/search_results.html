@@ -1,0 +1,62 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 content table-responsive prof">
+            <div class="heading">
+                <h2>Wyniki</h2>
+            </div>
+            <table id="table-results" class="table" cellspacing="0" width="100%">
+                <thead>
+                <tr>
+                    <th data-sortable="true">Dopasowano</th>
+                    <th data-sortable="true">Wartość</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#items}}
+                <tr>
+                    <td>{{{match}}}</td>
+
+                    {{#if user}}
+                    <td>
+                        <a class="lecturer-btn" data-lecturerId="{{user.id}}" type="button">
+                            {{user.staff_status}} {{user.student_status}}
+                        {{user.titles.before}} {{user.titles.after}}
+                        </a>
+                        </br>
+                    </td>
+                    {{/if}}
+
+                    {{#if id}}
+                    <td>
+                        <a>
+                            {{ id }} {{ postal_address }}
+                        </a>
+                    </td>
+                    {{/if}}
+
+                    {{#if course_id}}
+                    <td>
+                        <a class="course-btn" data-courseId="{{course_id}}" type="button">
+                            {{ course_id }}
+                        </a>
+                    </td>
+
+                    {{/if}}
+
+                    {{#if programme}}
+                    <td>{{programme.mode_of_studies}}</td>
+                    <td>{{programme.duration}}</td>
+                    <td>{{programme.level_of_studies}}</td>
+                    {{/if}}
+
+                </tr>
+                {{/items}}
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+</div>
+
+<div id="modalWrapper"></div>

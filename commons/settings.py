@@ -1,5 +1,9 @@
 import os
-from ConfigParser import RawConfigParser
+
+try:
+    from ConfigParser import RawConfigParser  # 2.7
+except ImportError:
+    from configparser import RawConfigParser  # 3.5
 
 config = RawConfigParser(allow_no_value=True)
 DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
@@ -7,6 +11,7 @@ DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')
 
 def parent_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 if DEVELOPMENT:
     config.read(os.path.join(parent_dir(), 'config', 'settings-dev.conf'))
@@ -46,6 +51,7 @@ LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
 EVENT_PORT = config.getint('deployment', 'EVENT_PORT')
 DEPLOY_EVENT = config.get('deployment', 'DEPLOY_EVENT')
+LOG_LEVEL = config.get('deployment', 'LOG_LEVEL')
 
 SMTP_HOST = config.get('email', 'SMTP_HOST')
 SMTP_PORT = config.getint('email', 'SMTP_PORT')
@@ -59,4 +65,4 @@ SSL_KEY = config.get('ssl', 'SSL_KEY') if config.get('ssl', 'SSL_KEY') else None
 LOG_DIR = config.get('administration', 'LOG_DIR')
 
 APPLICATION_ID = config.get('notification', 'APPLICATION_ID')
-NOTIFICATION_URL = config.get('notification', 'URL')
+AUTHORIZATION = config.get('notification', 'AUTHORIZATION')

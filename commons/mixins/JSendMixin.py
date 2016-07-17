@@ -1,8 +1,26 @@
 # coding=UTF-8
 
-from bson import json_util
+import json
+from datetime import date, time, datetime
 
-from commons import utils, settings, constants
+from bson import ObjectId
+
+from commons import settings, constants
+
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime(constants.DEFAULT_DATETIME_FORMAT)
+        elif isinstance(obj, date):
+            return obj.strftime(constants.DEFAULT_DATE_FORMAT)
+        elif isinstance(obj, time):
+            return obj.strftime(constants.DEFAULT_DATE_FORMAT)
+        elif isinstance(obj, ObjectId):
+            return str(obj)
+        elif hasattr(obj, 'to_json'):
+            return obj.to_json()
+        return super(CustomEncoder, self).default(obj)
 
 
 class JSendMixin(object):
@@ -37,7 +55,7 @@ class JSendMixin(object):
         """
 
         if message:
-            message = unicode(message, settings.UNICODE)
+            message = message
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'fail', 'message': message, 'code': code})
@@ -51,10 +69,9 @@ class JSendMixin(object):
         :return:
         """
 
-
         result = {'status': 'error', 'message': message}
         if data:
-            result['data'] = unicode(data, settings.UNICODE)
+            result['data'] = data
 
         if code:
             result['code'] = code
@@ -63,10 +80,9 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
-        data = utils.serialize(data)
         if settings.DEVELOPMENT:
             self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
         self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
-        self.write(json_util.dumps(data))
+        self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder))
         self.finish()

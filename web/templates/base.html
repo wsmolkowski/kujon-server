@@ -13,11 +13,10 @@
 
     <!-- Bootstrap -->
     <link href="/static/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/bower_components/bootstrap-table/dist/bootstrap-table.min.css" rel="stylesheet">
-    <link href="/static/bower_components/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="/static/bower_components/datatables/media/css/jquery.dataTables.min.css" rel="stylesheet">
 
+    <!--    -->
     <link href="/static/css/style.css" rel="stylesheet">
-    <link href="/static/bower_components/jquery.cookiebar/dist/jquery.cookiebar.min.css" rel="stylesheet">
 
     <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,100italic,300italic,400italic,500,500italic,700,700italic,900,900italic'
           rel='stylesheet' type='text/css'>
@@ -33,13 +32,26 @@
     {% block header_js %}
     {% end %}
 
-</head>
-<body class="body-index">
-<!-- <div class="ui-widget">
-        <div class="cookie-message ui-widget-header blue">
-          <p>Ta strona używa ciasteczek (cookies), dzięki którym nasz serwis może działać lepiej. <a href="#">Więcej informacji</a><span><span></p>
+    <div class="modal fade" id="modalDisclaimer" tabindex="-1" role="dialog" aria-labelledby="disclaimerModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="col-sm-12">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h3>Regulamin i polityka prywatności</h3>
+                    </div>
+                </div>
+                <div class="modal-body">
+
+                </div>
+            </div>
         </div>
-  </div>-->
+    </div>
+
+</head>
+<body>
+
 
 {% block navigation %}
 {% end %}

@@ -1,18 +1,12 @@
-{% extends "base.html" %}
-
-{% block header_js %}
+{% extends "base.html" %} {% block header_js %}
 
 <link href="/static/bower_components/fullcalendar/dist/fullcalendar.min.css" rel="stylesheet">
-<link href="/static/bower_components/datatables/media/css/jquery.dataTables.min.css" rel="stylesheet">
-
 
 <script type="text/javascript" src="/static/require.config.js"></script>
 <script type="text/javascript" data-main="/static/js/startup.js"
         src="/static/bower_components/requirejs/require.js"></script>
 
-{% end %}
-
-{% block navigation %}
+{% end %} {% block navigation %}
 <nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
     <div class="container-fluid">
         <!-- Brand and toggle get grouped for better mobile display -->
@@ -30,47 +24,40 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div id="slidemenu">
             <ul class="nav navbar-nav navbar-right login">
-                <li class="app-notify"><a href="#"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></a>
-                </li>
+                <li id="spinner"><a><span class="fa fa-spinner fa-spin" aria-hidden="true"></span></a></li>
+                <!--
+                <li class="app-notify"><a href="#"><span class="glyphicon glyphicon-bell" aria-hidden="true"></span></a></li>
+                -->
                 <li class="dropdown">
                     <a href="/#user" class="dropdown-toggle" data-toggle="dropdown"><img
-                            src="{{current_user['picture']}}"
-                            class="img-circle profil-nav">{{current_user['name']}} <span
-                            class="glyphicon glyphicon-menu-down"></span></a>
+                            src="{{current_user['picture']}}" class="img-circle profil-nav">{{current_user['name']}}
+                        <span class="glyphicon glyphicon-menu-down"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#user">Użytkownik</a></li>
-                        <li><a href="#grades">Oceny</a></li>
-                        <li><a href="#tt">Plan</a></li>
-                        <li><a href="#courses">Przedmioty</a></li>
-                        <li><a href="#lecturers">Nauczyciele</a></li>
-                        <li><a href="#terms">Cykle</a></li>
-                        <li><a href="#programmes">Kierunki</a></li>
-                        <li><a href="#faculties">Jednostki</a></li>
-                        <li><a href="#contact">Kontakt</a></li>
                         <li><a href="{{API_URL}}/authentication/logout">Wyloguj</a></li>
                     </ul>
                 </li>
             </ul>
             <ul class="nav navbar-nav navbar-left">
                 <li><a href="#user">Użytkownik</a></li>
-                <li><a href="#grades">Oceny</a></li>
                 <li><a href="#tt">Plan</a></li>
+                <li><a href="#grades">Oceny</a></li>
+                <li><a href="#crstests">Sprawdziany</a></li>
                 <li><a href="#courses">Przedmioty</a></li>
-                <li><a href="#lecturers">Nauczyciele</a></li>
+                <li><a href="#lecturers">Wykładowcy</a></li>
                 <li><a href="#terms">Cykle</a></li>
                 <li><a href="#programmes">Kierunki</a></li>
                 <li><a href="#faculties">Jednostki</a></li>
+                <!--<li><a href="#friends">Znajomi</a></li>-->
+                <li><a href="#search">Szukaj</a></li>
                 <li><a href="#contact">Kontakt</a></li>
             </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
 </nav>
 
-{% module xsrf_form_html() %}
-
-{% end %}
-
-{% block main %}
+{% module xsrf_form_html() %} {% end %} {% block main %}
 <div id="page-content">
     <div id="section-content">
         <section class="welcome">
@@ -82,7 +69,8 @@
                 </div>
             </div>
         </section>
-    </div> <!-- section-content -->
+    </div>
+    <!-- section-content -->
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
 
@@ -93,20 +81,109 @@
             <div class="row">
                 <div class="col-sm-6">
                     <p class="footer-block">Copyright 2016 by <a href="http://kujon.mobi">Kujon.mobi</a>. All rights
-                        reserved.</p>
+                        reserved.
+                    </p>
                 </div>
                 <div class="col-sm-6">
                     <ul class="nav navbar-nav navbar-right navbar-bottom">
-                        <li><a href="regulamin">Regulamin</a></li>
-                        <li><a href="regulamin">Polityka prywatności</a></li>
+                        <li><a href="regulamin" id="btnDisclaimer">Regulamin i polityka prywatności</a></li>
                         <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
-                        <li class="fb"><a href="#"><span class="fa fa-facebook"></span></a></li>
-                        <li class="andr"><a href="#"><span class="fa fa-android"></span></a></li>
+                        <li class="fb"><a href="https://www.facebook.com/kujonmobi-992906237450440/" target="_blank"><span class="fa fa-facebook"></span></a></li>
+                        <li class="andr"><a href="https://play.google.com/store/apps/details?id=mobi.kujon"><span class="fa fa-android"></span></a></li>
+                        <li class="apple"><a href="https://itunes.apple.com/pl/app/kujon"><span class="fa fa-apple"></span></a></li>
                     </ul>
                 </div>
             </div>
         </div>
     </footer>
 
-</div> <!-- page content -->
+</div>
+<!-- page content -->
+{% end %} {% block footer_js %}
+<script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+
+        if ($('section').hasClass('welcome')) {
+            $('#section-content').css({
+                height: '100%',
+                display: 'table'
+            });
+        }
+        if (! $('section').hasClass('welcome')) {
+            $('#section-content').css({
+                height: 'auto',
+                display: 'block'
+            });
+        }
+
+        //stick in the fixed 100% height behind the navbar but don't wrap it
+        $('#slide-nav.navbar .container-fluid').append($('<div id="navbar-height-col"></div>'));
+        $('#slide-nav.navbar .container').append($('<div id="navbar-height-col"></div>'));
+        // Enter your ids or classes
+        var toggler = '.navbar-toggle';
+        var pagewrapper = '#page-content';
+        var navigationwrapper = '.navbar-header';
+        var menuwidth = '100%'; // the menu inside the slide menu itself
+        var slidewidth = '50%';
+        var menuneg = '-100%';
+        var slideneg = '-50%';
+
+        $("#slide-nav").on("click", toggler, function(e) {
+            var selected = $(this).hasClass('slide-active');
+            $('#slidemenu').stop().animate({
+                right: selected ? menuneg : '0px'
+            });
+            $('#navbar-height-col').stop().animate({
+                right: selected ? slideneg : '0px'
+            });
+            $(pagewrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $(navigationwrapper).stop().animate({
+                right: selected ? '0px' : slidewidth
+            });
+            $(this).toggleClass('slide-active', !selected);
+            $('#slidemenu').toggleClass('slide-active');
+            $('#page-content, .navbar, body, .navbar-header').toggleClass('slide-active');
+        });
+        $('.navbar-nav.navbar-left a').on('click', function() {
+            if ($(window).width() < 1110) {
+                var selected = $("#slide-nav").hasClass('slide-active');
+                $('#slidemenu').stop().animate({
+                    right: selected ? menuneg : '0px'
+                });
+                $('#navbar-height-col').stop().animate({
+                    right: selected ? slideneg : '0px'
+                });
+                $(pagewrapper).stop().animate({
+                    right: selected ? '0px' : slidewidth
+                });
+                $(navigationwrapper).stop().animate({
+                    right: selected ? '0px' : slidewidth
+                });
+                $('#slide-nav').removeClass('slide-active', !selected);
+                $('#slidemenu').removeClass('slide-active');
+                $('#page-content, .navbar, body, .navbar-header, .navbar-toggle').removeClass('slide-active');
+            }
+        });
+
+        var selected = '#slidemenu, #page-content, body, .navbar, .navbar-header';
+        $(window).on("resize", function() {
+            if ($(window).width() > 1111 && $('.navbar-toggle').is(':hidden')) {
+                $(selected).removeClass('slide-active');
+            }
+        });
+    });
+
+</script>
+
+<script type="text/javascript">
+$('#btnDisclaimer').on('click', function(e){
+    e.preventDefault();
+    $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+});
+</script>
+
 {% end %}

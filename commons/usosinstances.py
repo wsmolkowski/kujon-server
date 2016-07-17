@@ -14,18 +14,19 @@ USOSINSTANCES = [
      'name': 'Uniwersytet Warszawski',
      'url': 'https://usosapps.uw.edu.pl/',
      'logo': '/static/img/logo/logo-uw-64x64.jpg',
-     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',  # jeszcze stary nie zmieniony na Kujon.mobi
-     'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',  # jeszcze stary nie zmieniony na Kujon.mobi
+     'consumer_key': 'KBt6uWPWUekUzFtNTyY9',
+     'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',
      'contact': 'dsksysadm@adm.uw.edu.pl',
-     'enabled': True,
+     'phone': '225520527',
+     'enabled': False,  # MS wylaczam - klucze nie dzialaja
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji
+    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
-     'consumer_key': 'QbYhMjzfXUmZr77nQ2KM',
-     'consumer_secret': 'rhJnuea4gPbqHJSw5Qy2JFwjeP3ZmyhtwhwTeWtm',
+     'consumer_key': 'vRqbE7mY3xLyTp9Aft8N',
+     'consumer_secret': '9pEQCu4YhaKku555kPWCqN2AYgg4rcf3d2Ba9Ye3',
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
@@ -36,7 +37,6 @@ USOSINSTANCES = [
      'logo': '/static/img/logo/logo-uam-64x64.jpg',
      'consumer_key': 'aUvvxdTH9kLj7VqNxqcy',
      'consumer_secret': 'RSE9tqZpEdzqQxjQBVvqxJPCjy44e6JDY6LtZ3HH',
-     'contact': 'd.walczyk@tu.kielce.pl',
      'enabled': True,
      'validate_ssl_certificate': True,
      },
@@ -267,7 +267,7 @@ USOSINSTANCES = [
      'consumer_key': 'kNBmFG6vvEN6kN265qwB',
      'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
      'contact': 'mateusz.lorenc@pwsz.krosno.pl',
-     'enabled': True,
+     'enabled': False,  # [Errno 11002] getaddrinfo failed INTERNAL SERVER ERROR
      'validate_ssl_certificate': False
      },
     {'usos_id': 'UTH',

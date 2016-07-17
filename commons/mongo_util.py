@@ -9,20 +9,24 @@ from tornado import escape
 from tornado import gen
 from tornado.httpclient import HTTPRequest
 
-import constants
-import settings
-import utils
+from commons import constants, settings, utils, usosinstances
 from commons.AESCipher import AESCipher
-from commons.usosutils import usosinstances
 from crawler import job_factory
 
 INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
                   constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
-                  constants.USOS_PAIRED, constants.USER_EMAIL)
+                  constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
 
 
 def get_client():
     return pymongo.Connection(settings.MONGODB_URI)[settings.MONGODB_NAME]
+
+
+def create_ttl_index(collection, field):
+    db = get_client()
+    ttl_index = db[constants.COLLECTION_TOKENS].create_index(field,
+                                                             expireAfterSeconds=constants.TOKEN_EXPIRATION_TIMEOUT)
+    logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
 
 
 def create_indexes():
@@ -32,6 +36,8 @@ def create_indexes():
             if db[collection].find_one({field: {'$exists': True, '$ne': False}}):
                 index = db[collection].create_index(field)
                 logging.info('created index {0} on collection {1} and field {2}'.format(index, collection, field))
+
+    create_ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
 
 
 def reindex():
@@ -66,9 +72,7 @@ def convert_bytes(bytes):
 def print_statistics():
     db = get_client()
 
-    print
-    print '#' * 25 + ' gathering statistics ' + '#' * 25
-    print
+    print ('#' * 25 + ' gathering statistics ' + '#' * 25)
 
     summary = {
         "count": 0,
@@ -82,9 +86,7 @@ def print_statistics():
             continue
         stats = db.command('collstats', collection)
 
-        print
-        print '#' * 25 + ' collection {0} '.format(collection) + '#' * 25
-        print
+        print ('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
         pprint(stats, width=1)
 
         summary["count"] += stats["count"]
@@ -92,17 +94,13 @@ def print_statistics():
         summary["indexSize"] += stats.get("totalIndexSize", 0)
         summary["storageSize"] += stats.get("storageSize", 0)
 
-    print
-    print '#' * 25 + ' statistics ' + '#' * 25
-    print
-    print "Total Documents:", summary["count"]
-    print "Total Data Size:", convert_bytes(summary["size"])
-    print "Total Index Size:", convert_bytes(summary["indexSize"])
-    print "Total Storage Size:", convert_bytes(summary["storageSize"])
+    print ('#' * 25 + ' statistics ' + '#' * 25)
+    print ("Total Documents:", summary["count"])
+    print ("Total Data Size:", convert_bytes(summary["size"]))
+    print ("Total Index Size:", convert_bytes(summary["indexSize"]))
+    print ("Total Storage Size:", convert_bytes(summary["storageSize"]))
 
-    print
-    print '#' * 25 + '#' * 25
-    print
+    print ('#' * 25 + '#' * 25)
 
 
 def save_statistics():
@@ -135,16 +133,16 @@ def _do_recreate(db, usos_doc):
     url = None
     try:
         url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
-        validate_cert = usos_doc[constants.VALIDATE_SSL_CERT]
         http_client = utils.http_client()
 
-        request = HTTPRequest(url=url, method='GET', validate_cert=validate_cert)
-        response = yield http_client.fetch(request)
+        response = yield http_client.fetch(HTTPRequest(url=url,
+                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code is not 200 and response.reason != 'OK':
             logging.error('Błedna odpowiedź USOS dla {0}'.format(url))
             logging.error(response)
-            raise gen.Return(None)
+            raise gen.Return()
 
         class_types = escape.json_decode(response.body)
 
@@ -153,7 +151,6 @@ def _do_recreate(db, usos_doc):
             for class_type in class_types.values():
                 class_type[constants.USOS_ID] = usos_doc[constants.USOS_ID]
                 class_type[constants.CREATED_TIME] = datetime.now()
-                class_type[constants.UPDATE_TIME] = datetime.now()
                 class_type_list.append(class_type)
             db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
             logging.info("dictionary course classtypes for usos {0} inserted.".format(usos_doc[constants.USOS_ID]))
@@ -161,11 +158,12 @@ def _do_recreate(db, usos_doc):
             logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
                                                                   usos_doc[constants.USOS_ID]))
 
-    except Exception, ex:
+    except Exception as ex:
         logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
             usos_doc[constants.USOS_ID], url, ex.message))
         logging.exception(ex)
-    gen.Return(None)
+
+    raise gen.Return()
 
 
 @gen.coroutine
@@ -174,7 +172,7 @@ def recreate_dictionaries():
 
     tasks = list()
     db.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
-    for usos in db[constants.COLLECTION_USOSINSTANCES].find():
+    for usos in db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True}):
         tasks.append(_do_recreate(db, usos))
 
     yield tasks
@@ -201,7 +199,7 @@ def recreate_database():
     try:
         recreate_usos()
         yield recreate_dictionaries()
-    except Exception, ex:
+    except Exception as ex:
         msg = "Problem during database recreate: {0}".format(ex.message)
         logging.exception(msg, ex)
         raise gen.Return(False)

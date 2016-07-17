@@ -1,16 +1,13 @@
 # coding=UTF-8
-import functools
-import logging
+
 from base64 import b64encode
-from datetime import datetime
 
 from tornado import gen, escape
-from tornado.auth import OAuthMixin, _auth_return_future
-from tornado.httpclient import HTTPRequest, HTTPError
+from tornado.auth import OAuthMixin
+from tornado.httpclient import HTTPRequest
 
-from commons import constants, utils, settings
+from commons import constants, usoshelper
 from commons.errors import UsosClientError
-from commons.usosutils import usoshelper
 
 try:
     import urlparse  # py2
@@ -22,128 +19,84 @@ try:
 except ImportError:
     import urllib as urllib_parse  # py2
 
-HTTP_CONNECT_TIMEOUT = 300
-HTTP_REQUEST_TIMEOUT = 300
-
 
 class UsosMixin(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
     _OAUTH_NO_CALLBACKS = False
 
     def _oauth_base_uri(self):
-        usos_doc = self._find_usos()
-        return usos_doc[constants.USOS_URL]
-
-    def _find_usos(self):
-        if hasattr(self, 'usos_doc'):
-            return self.usos_doc
-
-        for usos_doc in self._usoses:
-            if usos_doc[constants.USOS_ID] == self.user_doc[constants.USOS_ID]:
-                return usos_doc
-        raise UsosClientError('Brak instancji USOS dla: {0}'.format(self.user_doc[constants.USOS_ID]))
+        return self.get_current_usos()[constants.USOS_URL]
 
     def _oauth_consumer_token(self):
-        if not hasattr(self, 'usos_doc'):
-            self.usos_doc = self._find_usos()
-        return dict(key=self.usos_doc[constants.CONSUMER_KEY], secret=self.usos_doc[constants.CONSUMER_SECRET])
+        return dict(key=self.get_current_usos()[constants.CONSUMER_KEY],
+                    secret=self.get_current_usos()[constants.CONSUMER_SECRET])
 
-    @staticmethod
-    def response_ok(response):
-        if response.error or response.code != 200 or response.reason != 'OK':
-            return False
-        return True
+    @gen.coroutine
+    def usos_request(self, path, arguments={}):
 
-    @staticmethod
-    def build_exception(response):
-        result = escape.json_decode(response.body)
-        if response.error:
-            result['error'] = response.error.message
-        result['code'] = response.code
-        result['url'] = response.request.url
-        return UsosClientError('USOS HTTP response {0}'.format(result))
+        arguments['lang'] = 'pl'
 
-    @_auth_return_future
-    def usos_request(self, path, user_doc, callback=None, args={}, photo=False, base_url=None):
-        if not base_url:
-            url = self._oauth_base_uri() + path
-        else:
-            url = base_url + path
+        url = self._oauth_base_uri() + path
 
-        access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY], secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+        access_token = dict(key=self.get_current_user()[constants.ACCESS_TOKEN_KEY],
+                            secret=self.get_current_user()[constants.ACCESS_TOKEN_SECRET])
 
         # Add the OAuth resource request signature if we have credentials
-        method = "GET"
-        oauth = self._oauth_request_parameters(url, access_token, args, method=method)
-        args.update(oauth)
+        oauth = self._oauth_request_parameters(url, access_token, arguments)
+        arguments.update(oauth)
 
-        url += "?" + urllib_parse.urlencode(args)
-        http_client = utils.http_client(validate_cert=self.usos_doc[constants.VALIDATE_SSL_CERT])
-        if photo:
-            http_callback = functools.partial(self._on_usos_photo_request, callback)
+        if arguments:
+            url += "?" + urllib_parse.urlencode(arguments)
+
+        client = self.get_auth_http_client()
+
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
+        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
+            raise gen.Return({'photo': b64encode(response.body)})
         else:
-            http_callback = functools.partial(self._on_usos_request, callback)
-
-        request = HTTPRequest(url=url, method='GET', connect_timeout=HTTP_CONNECT_TIMEOUT,
-                              request_timeout=HTTP_REQUEST_TIMEOUT)
-        http_client.fetch(request, callback=http_callback)
-
-    def _on_usos_request(self, future, response):
-        if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
-
-        future.set_result(escape.json_decode(response.body))
-
-    def _on_usos_photo_request(self, future, response):
-        if not self.response_ok(response):
-            future.set_result(self.build_exception(response))
-            return
-
-        future.set_result({'photo': b64encode(response.body)})
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def call_async(self, path, arguments={}, base_url=None):
 
+        arguments['lang'] = 'pl'
+
         if not base_url:
             url = self._oauth_base_uri() + path
         else:
             url = base_url + path
 
-        url += "?" + urllib_parse.urlencode(arguments)
+        if arguments:
+            url += "?" + urllib_parse.urlencode(arguments)
 
-        usos_doc = self._find_usos()
+        client = self.get_auth_http_client()
 
-        if constants.VALIDATE_SSL_CERT in usos_doc:
-            http_client = utils.http_client(validate_cert=True)
+        response = yield client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            raise gen.Return(escape.json_decode(response.body))
         else:
-            http_client = utils.http_client()
-
-        request = HTTPRequest(url=url, method='GET', use_gzip=True, user_agent=settings.PROJECT_TITLE
-                              , connect_timeout=HTTP_CONNECT_TIMEOUT, request_timeout=HTTP_REQUEST_TIMEOUT)
-
-        try:
-            response = yield http_client.fetch(request)
-            if not self.response_ok(response):
-                raise self.build_exception(response)
-
-            result = escape.json_decode(response.body)
-        except HTTPError as ex:
-            msg = "USOS HTTPError response: {0} fetching: {1}".format(ex.message, url)
-            raise UsosClientError(msg)
-
-        raise gen.Return(result)
+            raise UsosClientError('Error code: {0} with body: {1} while fetching: {2}'.format(response.code,
+                                                                                              response.body,
+                                                                                              url))
 
     @gen.coroutine
     def usos_course(self, course_id):
-        create_time = datetime.now()
 
         url = 'services/courses/course'
-        args = {
+        result = yield self.usos_request(path=url, arguments={
             'course_id': course_id,
             'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
-        }
-        result = yield self.usos_request(path=url, user_doc=self.user_doc, args=args)
+        })
 
         result[constants.COURSE_NAME] = result['name']['pl']
         result.pop('name')
@@ -153,46 +106,31 @@ class UsosMixin(OAuthMixin):
         result['bibliography'] = result['bibliography']['pl']
         result['practical_placement'] = result['practical_placement']['pl']
         result[constants.COURSE_ID] = course_id
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_term(self, term_id):
-        create_time = datetime.now()
-
         result = yield self.call_async('services/terms/term', arguments={'term_id': term_id})
 
         result['name'] = result['name']['pl']
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
         result[constants.TERM_ID] = result.pop(constants.ID)
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_user_info(self, user_id=None):
-
-        create_time = datetime.now()
-
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 
         if user_id:
-            result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
+            result = yield self.usos_request(path='services/users/user', arguments={
                 'fields': fields,
                 'user_id': user_id
             })
         else:
-            result = yield self.usos_request(path='services/users/user', user_doc=self.user_doc, args={
+            result = yield self.usos_request(path='services/users/user', arguments={
                 'fields': fields
             })
-
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         # strip english values and if value is empty change to None
         if 'office_hours' in result and 'pl' in result['office_hours']:
@@ -215,45 +153,18 @@ class UsosMixin(OAuthMixin):
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
 
         # strip employment_positions from english names
-        tasks_get_faculties = list()
         for position in result['employment_positions']:
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
-            tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
-        yield tasks_get_faculties
 
         # strip english from building name
         if 'room' in result and result['room'] and 'building_name' in result['room']:
             result['room']['building_name'] = result['room']['building_name']['pl']
 
-        # change course_editions_conducted to list of courses
-        courses_conducted = []
-        if result['course_editions_conducted']:
-            tasks_courses = list()
-            courses = list()
-            for course_conducted in result['course_editions_conducted']:
-                course_id, term_id = course_conducted['id'].split('|')
-                if course_id not in courses:
-                    courses.append(course_id)
-                    tasks_courses.append(self.api_course(course_id))
-
-            try:
-                tasks_results = yield(tasks_courses)
-                for course_doc in tasks_results:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_id,
-                                              constants.TERM_ID: term_id})
-            except Exception, ex:
-                yield self.exc(ex, finish=False)
-
-            result['course_editions_conducted'] = courses_conducted
-
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_faculty(self, faculty_id):
-        create_time = datetime.now()
-
         result = yield self.call_async('services/fac/faculty', arguments={
             'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
             'fac_id': faculty_id
@@ -261,92 +172,64 @@ class UsosMixin(OAuthMixin):
 
         result[constants.FACULTY_ID] = faculty_id
         result['name'] = result['name']['pl']
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
+        if 'path' in result:
+            for elem in result['path']:
+                elem['name'] = elem['name']['pl']
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_group(self, group_id):
-        create_time = datetime.now()
-
         result = yield self.call_async('services/groups/group', arguments={
             'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
             'course_unit_id': group_id,
             'group_number': 1,
         })
-
-        if result:
-            result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-            result[constants.CREATED_TIME] = create_time
-            result[constants.UPDATE_TIME] = create_time
-        else:
-            raise gen.Return(None)
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_courses_editions(self):
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/courses/user', user_doc=self.user_doc, args={
+        result = yield self.usos_request(path='services/courses/user', arguments={
             'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
             'active_terms_only': 'false',
         })
 
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_course_edition(self, course_id, term_id, fetch_participants):
-        create_time = datetime.now()
-
-        try:
-            if fetch_participants:
-                args = {
-                    'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
-                    'course_id': course_id,
-                    'term_id': term_id
-                }
-            else:
-                args = {
-                    'fields': 'course_name|coordinators|course_units_ids|lecturers',
-                    'course_id': course_id,
-                    'term_id': term_id
-                }
-            result = yield self.usos_request(path='services/courses/course_edition', user_doc=self.user_doc, args=args)
-        except Exception, ex:
-            logging.warning("failed to fetch course_edition with %r %r due to %r", course_id, term_id, ex.message)
-            raise gen.Return(None)
+        if fetch_participants:
+            args = {
+                'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
+                'course_id': course_id,
+                'term_id': term_id
+            }
+        else:
+            args = {
+                'fields': 'course_name|coordinators|course_units_ids|lecturers',
+                'course_id': course_id,
+                'term_id': term_id
+            }
+        result = yield self.usos_request(path='services/courses/course_edition', arguments=args)
 
         result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
         result[constants.TERM_ID] = term_id
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_programme(self, programme_id):
-        create_time = datetime.now()
 
         result = yield self.call_async('services/progs/programme', arguments={
-            'fields': 'id|name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
+            'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
             'programme_id': programme_id,
         })
 
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-
-        result[constants.PROGRAMME_ID] = result.pop(constants.ID)
+        result[constants.PROGRAMME_ID] = programme_id
 
         # strip english names
         result['name'] = result['name']['pl']
@@ -363,95 +246,39 @@ class UsosMixin(OAuthMixin):
 
     @gen.coroutine
     def usos_photo(self, user_info_id):
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/photos/photo', user_doc=self.user_doc, args={
+        result = yield self.usos_request(path='services/photos/photo', arguments={
             'user_id': user_info_id,
-        }, photo=True)
+        })
 
         result[constants.ID] = user_info_id
-        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
     @gen.coroutine
     def usos_unit(self, unit_id):
-        create_time = datetime.now()
-
         result = yield self.call_async('services/courses/unit', arguments={
             'fields': 'id|course_id|term_id|groups|classtype_id',
             'unit_id': unit_id,
         })
 
         result[constants.UNIT_ID] = result.pop(constants.ID)
-        result[constants.USOS_ID] = self.usos_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
 
         raise gen.Return(result)
 
     @gen.coroutine
     def time_table(self, given_date):
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/tt/user', user_doc=self.user_doc, args={
+        result = yield self.usos_request(path='services/tt/user', arguments={
             'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
             'start': given_date,
             'days': '7'
         })
 
         tt = dict()
-        tt[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
         tt[constants.TT_STARTDATE] = str(given_date)
-        tt[constants.CREATED_TIME] = create_time
-        tt[constants.UPDATE_TIME] = create_time
         tt['tts'] = result
-        tt[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
+        tt[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
         raise gen.Return(tt)
-
-    @gen.coroutine
-    def usos_subscribe(self, event_type, verify_token):
-        create_time = datetime.now()
-        try:
-            result = yield self.usos_request(path='services/events/subscribe_event', user_doc=self.user_doc, args={
-                'event_type': event_type,
-                'callback_url': settings.DEPLOY_EVENT,
-                'verify_token': verify_token
-            })
-
-            result['event_type'] = event_type
-            result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-            result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-            result[constants.CREATED_TIME] = create_time
-            result[constants.UPDATE_TIME] = create_time
-            raise gen.Return(result)
-
-        except Exception, ex:
-            logging.exception(ex)
-            raise gen.Return(None)
-
-    @gen.coroutine
-    def usos_unsubscribe(self, usos_doc, user_doc):
-        result = yield self.usos_request(path='services/events/unsubscribe', user_doc=user_doc,
-                                         base_url=usos_doc[constants.USOS_URL])
-
-        logging.debug('unsubscribe ok')
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def subscriptions(self):
-        create_time = datetime.now()
-
-        result = yield self.usos_request(path='services/events/subscriptions', user_doc=self.user_doc)
-
-        result[constants.USOS_ID] = self.user_doc[constants.USOS_ID]
-        result[constants.CREATED_TIME] = create_time
-        result[constants.UPDATE_TIME] = create_time
-        result[constants.USER_ID] = self.user_doc[constants.MONGO_ID]
-        raise gen.Return(result)
 
     @gen.coroutine
     def notifier_status(self, usos_doc):
@@ -461,81 +288,4 @@ class UsosMixin(OAuthMixin):
     @gen.coroutine
     def courses_classtypes(self, usos_doc):
         result = yield self.call_async(path='services/courses/classtypes_index', base_url=usos_doc[constants.USOS_URL])
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_users(self, query, start=0):
-        result = yield self.usos_request(path='services/users/search2', user_doc=self.user_doc,  args={
-                'query': query,
-                'start': int(start),
-                'num': 20,
-                'fields': 'items[user[id|student_status|staff_status|employment_positions|titles]|match]|next_page',
-                'lang': 'pl'
-            })
-
-        if 'items' in result:
-            for elem in result['items']:
-                user = elem['user']
-
-                # change student status to name
-                if 'student_status' in user:
-                    user['student_status'] = usoshelper.dict_value_student_status(user['student_status'])
-
-                # change staff_status to dictionary
-                user['staff_status'] = usoshelper.dict_value_staff_status(user['staff_status'])
-
-                # remove english names
-                for position in user['employment_positions']:
-                    position['position']['name'] = position['position']['name']['pl']
-                    position['faculty']['name'] = position['faculty']['name']['pl']
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_courses(self, query, start=0):
-        result = yield self.usos_request(path='services/courses/search', user_doc=self.user_doc, args={
-            'name': query,
-            'start': int(start),
-            'num': 20,
-            'fields': 'items[course_name]|match|next_page]',
-            'lang': 'pl'
-        })
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_faculty(self, query, start=0):
-        result = yield self.usos_request(path='services/fac/search', user_doc=self.user_doc, args={
-            'query': query,
-            'start': int(start),
-            'num': 20,
-            'fields': 'id|match|postal_address',
-            'lang': 'pl'
-        })
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_search_programmes(self, query, start=0):
-        result = yield self.usos_request(path='services/progs/search', user_doc=self.user_doc, args={
-            'query': query,
-            'start': int(start),
-            'num': 20,
-            'fields': 'id|type|title|supervisors|faculty[id|name]',
-            'lang': 'pl'
-        })
-
-        raise gen.Return(result)
-
-    @gen.coroutine
-    def usos_theses(self, user_info_id):
-        result = yield self.usos_request(path='services/theses/user', user_doc=self.user_doc, args={
-            'user_id': user_info_id,
-            'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-        })
-
-        if 'authored_theses' in result:
-            for these in result['authored_theses']:
-                these['faculty']['name'] = these['faculty']['name']['pl']
-
         raise gen.Return(result)

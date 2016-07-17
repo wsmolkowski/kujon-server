@@ -46,7 +46,7 @@ class NotificatorQueue(object):
                                                                                                self.queue.qsize()))
             yield self.queue.put(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def update_job(self, job, status, message=None):
@@ -99,7 +99,7 @@ class NotificatorQueue(object):
         finally:
             self.processing.remove(job)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @gen.coroutine
     def worker(self):
@@ -110,7 +110,7 @@ class NotificatorQueue(object):
                 logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
                     job, self.queue.qsize(), len(self.processing)))
                 yield self.process_job(job)
-            except Exception, ex:
+            except Exception as ex:
                 msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
                 logging.exception(msg)
                 yield self.update_job(job, constants.JOB_FAIL, msg)
@@ -153,8 +153,7 @@ def notification_all(message=None):
 if __name__ == '__main__':
     parse_command_line()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     notificatorQueue = NotificatorQueue()
 

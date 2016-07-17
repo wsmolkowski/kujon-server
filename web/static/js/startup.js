@@ -1,4 +1,6 @@
-define(['jquery', 'scripts', 'bootstrap', 'router', 'datatables'],
-function($, scripts, bootstrap, router, datatables) {
+define(['jquery', 'bootstrap', 'router', 'datatables'],
+    function($, bootstrap, router, datatables) {
 
-});
+
+
+    });

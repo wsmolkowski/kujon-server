@@ -37,9 +37,14 @@ class BaseHandler(RequestHandler, JSendMixin):
         if cookie:
             cookie = json_decode(cookie)
             response = json_util.loads(cookie)
+            if constants.USER_NAME not in response and constants.USER_EMAIL in response:
+                response[constants.USER_NAME] = response[constants.USER_EMAIL]
+            if constants.PICTURE not in response:
+                response[constants.PICTURE] = None
+
             raise gen.Return(response)
 
-        raise gen.Return(None)
+        raise gen.Return()
 
     @tornado.gen.coroutine
     def get_usoses(self):
@@ -54,10 +59,10 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @tornado.gen.coroutine
     def prepare(self):
-        self.current_user = yield self.set_current_user()
+        self._current_user = yield self.set_current_user()
 
     def get_current_user(self):
-        return self.current_user
+        return self._current_user
 
 
 class MainHandler(BaseHandler):
@@ -65,7 +70,7 @@ class MainHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
 
-        token = self.get_argument('token', default=None, strip=True)
+        token = self.get_argument('token', default=None)
         if token:
             user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
         else:
@@ -75,9 +80,21 @@ class MainHandler(BaseHandler):
             self.render("app.html", **CONFIG)
         elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
             data = CONFIG
+
+            user = self.get_current_user()
+            if user:
+                error = yield self.db[constants.COLLECTION_EXCEPTIONS].find_one({
+                    constants.USER_ID: user[constants.MONGO_ID],
+                    constants.EXCEPTION_TYPE: 'authentication'
+                })
+                if error:
+                    data['error'] = error['exception']
+                else:
+                    data['error'] = False
+
             usoses = yield self.get_usoses()
             data['usoses'] = usoses
-            self.render("register.html", **CONFIG)
+            self.render("register.html", **data)
         else:
             self.render("index.html", **CONFIG)
 
@@ -104,8 +121,8 @@ class ContactHandler(BaseHandler):
     @tornado.gen.coroutine
     def post(self):
         try:
-            subject = self.get_argument('subject', default=None, strip=True)
-            message = self.get_argument('message', default=None, strip=True)
+            subject = self.get_argument('subject', default=None)
+            message = self.get_argument('message', default=None)
 
             logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
                 self.get_current_user()[constants.MONGO_ID], subject, message))

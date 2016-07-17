@@ -4,7 +4,7 @@ from datetime import datetime
 from tornado.ioloop import IOLoop
 from tornado.testing import AsyncHTTPTestCase
 
-from api import api
+from api import server
 from commons import constants
 
 TEST_MONGODB_URI = 'mongodb://localmongoinstance/usos-test2'
@@ -24,7 +24,7 @@ class TestBaseClassApp(AsyncHTTPTestCase):
     def setUpClass(self):
         logging.info("Preparing tests for class: {0}".format(self.__name__))
 
-        self.app = api.Application()
+        self.app = server.Application()
         self.app.dao.drop_collections()
         self.app.dao.prepare()
 

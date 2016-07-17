@@ -11,10 +11,12 @@ from tornado import web
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.errors import AuthenticationError
+from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class MainHandler(RequestHandler, JSendMixin):
+class MainHandler(RequestHandler, JSendMixin, DaoMixin):
     SUPPORTED_METHODS = ('GET', 'POST')
     EXCEPTION_TYPE = 'event'
 
@@ -35,94 +37,76 @@ class MainHandler(RequestHandler, JSendMixin):
         exc_doc = {
             'exception': str(exception)
         }
-
-        if hasattr(self, 'argument_mode'):
-            exc_doc['argument_mode'] = self.argument_mode
-        if hasattr(self, 'argument_challenge'):
-            exc_doc['argument_challenge'] = self.argument_challenge
-        if hasattr(self, 'argument_mode'):
-            exc_doc['argument_verify_token'] = self.argument_verify_token
-        if hasattr(self, 'self.event_data'):
-            exc_doc['event_data'] = self.event_data
-
         exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
 
-        logging.debug(exc_doc)
+        logging.exception(exception)
         logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
 
         self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
-
-        return
-
-
-    @gen.coroutine
-    def process_event(self, event_data):
-        self.event_data = event_data
-
-        logging.debug(self.event_data)
-        logging.debug('entry: {0}'.format(self.event_data['entry']))
-        logging.debug('event_type: {0}'.format(self.event_data['event_type']))
-
-        raise gen.Return(None)
 
 
 class EventHandler(MainHandler):
     @gen.coroutine
     @web.asynchronous
     def prepare(self):
-        # if not self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False):
-        #    self.fail('Required headers not passed.')
-        #    return
-
-        mode = self.get_argument('hub.mode', default=None, strip=True)
-        challenge = self.get_argument('hub.challenge', default=None, strip=True)
-        verify_token = self.get_argument('hub.verify_token', default=None, strip=True)
-
-        logging.info(self.db)
-
-        if not mode or not challenge or not verify_token:
-            logging.error('Required parameters not passed. mode: {0} challenge: {1} verify_token: {2}'.format(
-                mode, challenge, verify_token))
-            self.fail(message='Required parameters not passed.')
-        else:
-            self.argument_mode = mode
-            self.argument_challenge = challenge
-            self.argument_verify_token = verify_token
-
-            logging.debug('mode:{0} challenge:{1} verify_token:{2}'.format(
-                self.argument_mode, self.argument_challenge, self.argument_verify_token))
+        header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
+        logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
+        # X-Hub-Signature validation
 
     @web.asynchronous
     @gen.coroutine
-    def get(self):
+    def get(self, usos_id):
         try:
-            user_exists = self.user_exists(self.argument_verify_token)
-            if not user_exists:
-                logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
-                self.fail(message='Token verification failure.')
-            else:
-                logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
-                    self.argument_mode, self.argument_challenge, self.argument_verify_token))
+            mode = self.get_argument('hub.mode', default=None)
+            challenge = self.get_argument('hub.challenge', default=None)
+            verify_token = self.get_argument('hub.verify_token', default=None)
 
-                self.write(self.argument_challenge)
+            if not mode or not challenge or not verify_token:
+                logging.error('Required parameters not passed.')
+                self.error(code=400, message='Required parameters not passed.')
+            else:
+                # enable for production :)
+                # user_exists = yield self.user_exists(verify_token)
+                # if not user_exists:
+                #    logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
+                #    self.fail(message='Token verification failure.')
+
+                logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
+                    mode, challenge, verify_token))
+
+                self.write(challenge)
                 self.finish()
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
     @web.asynchronous
     @gen.coroutine
-    def post(self):
+    def post(self, usos_id):
         try:
-            event_data = json.loads(self.request.body)
-            yield self.process_event(event_data)
+            usos_doc = yield self.db_get_usos(usos_id)
 
-            self.success(data='ok')
-        except Exception, ex:
+            if not usos_doc:
+                raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
+
+            event_data = json.loads(self.request.body)
+            event_data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+
+            yield self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
+                constants.CREATED_TIME: datetime.now(),
+                constants.UPDATE_TIME: None,
+                constants.JOB_MESSAGE: None,
+                constants.JOB_DATA: event_data,
+                constants.JOB_STATUS: constants.JOB_PENDING,
+                constants.JOB_TYPE: 'subscription_event'
+            })
+
+            self.success(data='event consumed')
+        except Exception as ex:
             yield self.exc(ex)
 
 

@@ -1,98 +1,109 @@
-<table class="table table-hover table-responsive">
-<tbody>
-  <tr><td>Jednostka</td><td>{{fac_id.name}}</td></tr>
-  {{#if lang_id}}
-  <tr><td>Język prowadzenia</td><td>{{lang_id}}</td></tr>
-  {{/if}}
-  <tr><td>Czy jest prowadzony</td><td>{{is_currently_conducted}}</td></tr>
-  {{#if description}}
-  <tr><td>Opis</td>
-      <td>
-      <div class="collapse" id="cD{{course_id}}">
-        <div class="well">
-        {{nl2br description}}
-        </div>
-      </div>
-      <a class="btn btn-default collapsed" data-toggle="collapse" href="#cD{{course_id}}">
-          <span class="if-collapsed">Pokaż opis</span>
-          <span class="if-not-collapsed">Ukryj opis</span>
-      </a>
-      </td>
-  </tr>
-  {{/if}}
-  {{#if bibliography}}
-  <tr><td>Bibliografia</td>
-      <td>
-      <div class="collapse" id="cB{{course_id}}">
-        <div class="well">
-        {{nl2br bibliography}}
-        </div>
-      </div>
-      <a class="btn btn-default collapsed" data-toggle="collapse" href="#cB{{course_id}}">
-          <span class="if-collapsed">Pokaż bibliografię</span>
-          <span class="if-not-collapsed">Ukryj bibliografię</span>
-      </a>
-      </td>
-  </tr>
-  {{/if}}
-  {{#if assessment_criteria}}
-  <tr><td>Kryteria oceny</td>
-      <td>
-      <div class="collapse" id="cC{{course_id}}">
-        <div class="well">
-        {{nl2br assessment_criteria}}
-        </div>
-      </div>
-      <a class="btn btn-default collapsed" data-toggle="collapse" href="#cC{{course_id}}">
-          <span class="if-collapsed">Pokaż kryteria</span>
-          <span class="if-not-collapsed">Ukryj kryteria</span>
-      </a>
-      </td>
-  </tr>
-  {{/if}}
-
-  <tr><td>Zajęcia w cyklu</td><td>{{term.name}}</td></tr>
-  <tr><td>Okres</td><td>{{term.start_date}} - {{term.end_date}}</td></tr>
-
-  <tr><td>Prowadzący grup</td>
-    <td>
-    {{#lecturers}}
-      <button class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">
-        {{first_name}} {{last_name}}
-      </button><br>
-    {{/lecturers}}
-    </td>
-  </tr>
-  {{#if coordinators}}
-  <tr><td>Koordynatorzy</td>
-    <td>
-    {{#coordinators}}
-      <button class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">
-        {{first_name}} {{last_name}}
-      </button><br>
-    {{/coordinators}}
-    </td>
-  </tr>
-  {{/if}}
-  {{#groups}}
-  <tr><td>Typ zajęć</td><td>{{class_type}}, numer grupy: {{group_number}} </td></tr>
-  {{/groups}}
-  <tr><td>Studenci</td>
-    <td>
-        <div class="collapse" id="stu{{course_id}}">
-            <div class="well">
-                {{#participants}}
-                    <p class="btn btn-link user-btn" type="button" data-userId="{{user_id}}">
-                        {{last_name}} {{first_name}}
-                    </p><br>
-                {{/participants}}
-            </div>
-        </div>
-        <a class="btn btn-default collapsed" data-toggle="collapse" href="#stu{{course_id}}">
-            <span class="if-collapsed">Pokaż studentów</span>
-            <span class="if-not-collapsed">Ukryj studentów</span>
-        </a>
-    </td>
-  </tr>
-</tbody>
-</table>
+<div class="slider">
+    <table class="col-sm-12" cellspacing="0" border="0">
+        <tr class="row">
+            <td class="col-sm-5">
+                <p class="title-courses">Jednostka:</p>
+                <p class="description-courses"><span>{{fac_id.name}}</span></p>
+            </td>
+            <td class="col-sm-2">
+                <p class="title-courses">Czy jest prowadzony:</p>
+                <p class="description-courses"><span>{{is_currently_conducted}}</span></p>
+            </td>
+            <td class="col-sm-2">
+                <p class="title-courses">Cykl:</p>
+                <p class="description-courses"><span>{{term.name}}</span></p>
+            </td>
+            <td class="col-sm-3">
+                <p class="title-courses">Okres:</p>
+                <p class="description-courses"><span>{{term.start_date}} - {{term.end_date}}</span></p>
+            </td>
+        </tr>
+        <tr class="row">
+            <td class="col-sm-3">
+                <p class="title-courses">Prowadzący:</p>
+                {{#coordinators}}
+                <button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                        data-lecturerId="{{user_id}}">
+                    <span>{{first_name}} {{last_name}}</span>
+                </button>
+                <br> {{/coordinators}}
+            </td>
+            {{#if coordinators}}
+            <td class="col-sm-3">
+                <p class="title-courses">Koordynatorzy:</p>
+                {{#lecturers}}
+                <button data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                        data-lecturerId="{{user_id}}">
+                    <span>{{first_name}} {{last_name}}</span>
+                </button>
+                <br> {{/lecturers}}
+            </td>
+            {{/if}} {{#if assessment_criteria}}
+            <td class="col-sm-2">
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseCritieria" aria-expanded="false"
+                   aria-controls="collapseCritieria">Kryteria oceny:</p>
+                <div class="collapse" id="collapseCritieria">
+                    <div class="row">
+                        <p class="description-courses">
+                            <span>{{nl2br assessment_criteria}}</span></p>
+                    </div>
+                </div>
+            </td>
+            {{/if}}
+            <td class="col-sm-2">
+                <p class="title-courses">Grupy:</p>
+                <p class="description-courses"><span>{{#groups}}</span></p>
+            </td>
+            <td class="col-sm-2">
+                <p class="title-courses">Typ zajęć:</p>
+                <p class="description-courses"><span>{{class_type}}, numer grupy: {{group_number}}</span></p>
+            </td>
+        </tr>
+        {{/groups}}
+        </td>
+        </tr>
+        <tr class="row">
+            {{#if lang_id}}
+            <td class="col-sm-5">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p class="title-courses">Język prowadzenia:</p>
+                        <p class="description-courses"><span>{{lang_id}}</span></p>
+                    </div>
+                </div>
+            </td>
+            {{/if}} {{#if description}}
+            <td class="col-sm-3">
+                <button class="title-courses" data-toggle="collapse" data-target="#collapseDescription"><span> Opis: rozwiń..</span></button>
+                <div class="collapse" id="collapseDescription">
+                    <div class="well">
+                        <p class="description-courses">
+                            <span>{{nl2br description}}</span></p>
+                    </div>
+                </div>
+            </td>
+            {{/if}} {{#if bibliography}}
+            <td class="col-sm-2">
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseBiblio">Bibliografia:</p>
+                <div class="collapse" id="collapseBiblio">
+                    <div class="row">
+                        <p class="description-courses"><span>{{nl2br bibliography}}</span></p>
+                    </div>
+                </div>
+            </td>
+            {{/if}}
+            <td class="col-sm-2">
+                <p class="title-courses" data-toggle="collapse" data-target="#collapseStudents">Studenci:</p>
+                <div class="collapse" id="collapseStudents">
+                    {{#participants}}
+                    <div class="row" data-toggle="modal" data-target="#lecturers-1" class="description-courses"
+                         data-lecturerId="{{user_id}}">
+                        <div class="col-xs-6">{{first_name}}</div>
+                        <div class="col-xs-6">{{last_name}}</div>
+                    </div>
+                    {{/participants}}
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>

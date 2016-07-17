@@ -5,7 +5,7 @@ from datetime import datetime
 from tornado import gen
 from tornado.auth import OAuthMixin
 
-from commons import constants, settings, utils
+from commons import constants, settings
 
 try:
     import urlparse  # py2
@@ -27,9 +27,6 @@ class OAuth2Mixin(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
     _OAUTH_NO_CALLBACKS = False
     _CONSUMER_TOKEN = None
-
-    def get_auth_http_client(self):
-        return utils.http_client()
 
     def _oauth_consumer_token(self):
         return self._CONSUMER_TOKEN

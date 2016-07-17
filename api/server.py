@@ -2,7 +2,6 @@
 
 import logging
 import ssl
-import sys
 
 import motor
 import tornado.ioloop
@@ -11,9 +10,9 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
-from commons import settings, constants
-from handlers.base import DefaultErrorHandler
-from handlers_list import HANDLERS
+from api.handlers.base import DefaultErrorHandler
+from api.handlers_list import HANDLERS
+from commons import settings
 
 define("port", default=settings.API_PORT, help="run on the given port", type=int)
 define('cookie_secret', default=settings.COOKIE_SECRET)
@@ -36,20 +35,9 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
 
-def prepare_environment():
-    # change encoding to utf-8
-    reload(sys)  # Reload does the trick!
-    sys.setdefaultencoding(constants.ENCODING)
-    if sys.getdefaultencoding() != constants.ENCODING:
-        logging.error("Could not change encoding to %s".format(constants.ENCODING))
-
-
 def main():
     parse_command_line()
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    prepare_environment()
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     application = Application()
     if settings.SSL_CERT and settings.SSL_KEY:

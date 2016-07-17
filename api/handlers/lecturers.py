@@ -3,7 +3,7 @@
 import tornado.gen
 import tornado.web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import constants, decorators
 
 
@@ -16,10 +16,10 @@ class LecturersApi(ApiHandler):
         try:
             lecturers_doc = yield self.api_lecturers()
             if not lecturers_doc:
-                self.error("Poczekaj, szukamy informacji o Twoich nauczycielach.")
+                self.error("Brak informacji o Twoich wykładowcach.")
             else:
                 self.success(lecturers_doc, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -31,6 +31,9 @@ class LecturerByIdApi(ApiHandler):
 
         try:
             user_info_doc = yield self.api_lecturer(user_info_id)
-            self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+            if not user_info_doc:
+                self.error("Brak informacji o tym wykładowcy.", code=404)
+            else:
+                self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
+        except Exception as ex:
             yield self.exc(ex)

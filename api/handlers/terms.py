@@ -3,7 +3,7 @@
 from tornado import gen
 from tornado import web
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
@@ -15,12 +15,11 @@ class TermsApi(ApiHandler):
 
         try:
             terms_ordered = yield self.api_terms()
-
             if not terms_ordered:
-                self.error("Poczekaj szukamy cykli")
+                self.error("Nie znaleziono cykli.")
             else:
                 self.success(terms_ordered, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -31,11 +30,11 @@ class TermApi(ApiHandler):
     def get(self, term_id):
 
         try:
-            term_doc = yield self.api_term(term_id)
+            term_doc = yield self.api_term([term_id])
 
             if not term_doc:
-                self.error("Nie znaleźliśmy semestru: {0}.".format(term_id))
+                self.error("Nie znaleźliśmy danego semestru.", code=404)
             else:
                 self.success(term_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

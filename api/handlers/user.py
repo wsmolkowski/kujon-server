@@ -6,10 +6,10 @@ import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
-from base import ApiHandler
+from api.handlers.base import ApiHandler
 from commons import constants, decorators
+from commons import usosinstances
 from commons.errors import ApiError
-from commons.usosutils import usosinstances
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
@@ -34,7 +34,7 @@ class UsersInfoByIdApi(ApiHandler):
                 raise ApiError('Szukamy informacji o Tobie w USOS.')
 
             self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -50,7 +50,7 @@ class UserInfoApi(ApiHandler):
 
         try:
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(self.user_doc[constants.MONGO_ID])},
+                {constants.MONGO_ID: ObjectId(self.get_current_user()[constants.MONGO_ID])},
                 LIMIT_FIELDS_USER)
 
             user_info = yield self.api_user_info()
@@ -72,8 +72,13 @@ class UserInfoApi(ApiHandler):
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
+            user_doc['theses'] = yield self.api_thesis()
+
+            del(user_doc[constants.UPDATE_TIME])
+            del(user_doc[constants.MONGO_ID])
+
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)
 
 
@@ -92,5 +97,5 @@ class UserInfoPhotoApi(ApiHandler):
             self.set_header('Content-Type', 'image/jpeg')
             self.write(b64decode(user_photo['photo']))
 
-        except Exception, ex:
+        except Exception as ex:
             yield self.exc(ex)

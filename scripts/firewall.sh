@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+### BEGIN INIT INFO
+# Provides: firewall
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start and stop firewall
+# Description: firewall
+### END INIT INFO
+
 IPTABLES=/sbin/iptables
 
 echo " * flushing old rules"
@@ -68,19 +80,3 @@ ${IPTABLES} -A INPUT -p ICMP --icmp-type 8 -j ACCEPT
 ${IPTABLES} -A INPUT -j LOG
 ${IPTABLES} -A INPUT -j DROP
 
-#
-# Save settings
-#
-echo " * SAVING RULES"
-
-if [[ -d /etc/network/if-pre-up.d ]]; then
-    if [[ ! -f /etc/network/if-pre-up.d/iptables ]]; then
-        echo -e "#!/bin/bash" > /etc/network/if-pre-up.d/iptables
-        echo -e "test -e /etc/iptables.rules && iptables-restore -c /etc/iptable
-s.rules" >> /etc/network/if-pre-up.d/iptables
-        chmod +x /etc/network/if-pre-up.d/iptables
-    fi
-fi
-
-iptables-save > /etc/fwall.rules
-iptables-restore -c /etc/fwall.rules

@@ -1,4 +1,4 @@
-<section id="wykladowcy">
+<section id="lecturers">
     <div class="container">
         <div class="row">
             <div class="col-sm-12 content table-responsive prof">
@@ -14,9 +14,8 @@
                     </thead>
                     <tbody>
                     {{#data}}
-                    <tr>
-                        <td><a class="btn btn-link lecturer-btn" type="button" data-lecturerId="{{user_id}}">{{last_name}}</a>
-                        </td>
+                    <tr class="lecturer-btn" data-lecturerId="{{user_id}}">
+                        <td>{{last_name}}</td>
                         <td>{{first_name}}</td>
                     </tr>
                     {{/data}}

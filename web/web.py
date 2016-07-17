@@ -20,8 +20,8 @@ class Application(tornado.web.Application):
     def __init__(self):
         __handlers = [
             (r"/", MainHandler),
-            (r"/contact", ContactHandler),
-            (r"/regulamin", DisclaimerHandler),
+            (r"/contact", ContactHandler),  # post only
+            (r"/regulamin", DisclaimerHandler),  # mobi and www modals content
         ]
 
         __settings = dict(
@@ -44,8 +44,7 @@ class Application(tornado.web.Application):
 if __name__ == "__main__":
     parse_command_line()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     application = Application()
 

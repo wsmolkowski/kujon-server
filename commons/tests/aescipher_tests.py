@@ -1,7 +1,7 @@
 import unittest
 
 from commons.AESCipher import AESCipher
-from commons.usosutils.usosinstances import USOSINSTANCES
+from commons.usosinstances import USOSINSTANCES
 
 
 class AESCipherTest(unittest.TestCase):

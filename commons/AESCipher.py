@@ -3,8 +3,7 @@ import hashlib
 from Crypto import Random
 from Crypto.Cipher import AES
 
-import settings
-import constants
+from commons import constants, settings
 
 
 class AESCipher(object):
@@ -12,7 +11,7 @@ class AESCipher(object):
         self.usos_keys = [constants.CONSUMER_KEY, constants.CONSUMER_SECRET]
         self.encoding = constants.ENCODING
         self.bs = 32
-        self.key = hashlib.sha256(settings.AES_SECRET).digest()
+        self.key = hashlib.sha256(settings.AES_SECRET.encode()).digest()
 
     def encrypt(self, raw):
         raw = self._pad(raw)
