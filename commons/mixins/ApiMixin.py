@@ -474,6 +474,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                     if not lecturer_info:
                         exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
                         yield self.exc(exception, finish=False)
+                del(lecturer_info[constants.MONGO_ID])
                 tt['lecturers'] = list()
                 tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
