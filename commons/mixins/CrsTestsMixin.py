@@ -11,7 +11,8 @@ EXCLUDE_FIELDS = {constants.MONGO_ID: False, constants.CREATED_TIME: False, cons
 
 
 class CrsTestsMixin(DaoMixin):
-    def do_refresh(self):
+    @staticmethod
+    def do_refresh():
         return False
 
     @gen.coroutine

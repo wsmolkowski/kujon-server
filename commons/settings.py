@@ -1,9 +1,8 @@
+# coding=utf-8
+
 import os
 
-try:
-    from ConfigParser import RawConfigParser  # 2.7
-except ImportError:
-    from configparser import RawConfigParser  # 3.5
+from configparser import RawConfigParser
 
 config = RawConfigParser(allow_no_value=True)
 DEVELOPMENT = os.environ.get('KUJON_MOBI_DEV')

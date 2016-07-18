@@ -33,7 +33,9 @@ class UsosCaller(OAuthMixin):
         return utils.http_client()
 
     @gen.coroutine
-    def call(self, path, arguments={}):
+    def call(self, path, arguments=None):
+        if not arguments:
+            arguments = dict()
 
         if arguments:
             arguments['lang'] = 'pl'

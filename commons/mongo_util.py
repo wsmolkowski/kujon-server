@@ -116,7 +116,9 @@ def save_statistics():
         constants.COLLECTION_STATISTICS_HISTORY, sh_doc))
 
 
-def drop_collections(skip_collections=[]):
+def drop_collections(skip_collections=None):
+    if not skip_collections:
+        skip_collections = list()
     db = get_client()
 
     for collection in db.collection_names():

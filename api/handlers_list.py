@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from api.handlers import authentication
 from api.handlers.base import UsosesApi, ApplicationConfigHandler
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi

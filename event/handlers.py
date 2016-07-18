@@ -2,7 +2,6 @@
 
 import json
 import logging
-import traceback
 from datetime import datetime
 
 from bson.objectid import ObjectId
@@ -26,27 +25,23 @@ class MainHandler(RequestHandler, JSendMixin, DaoMixin):
 
     @gen.coroutine
     def user_exists(self, user_id):
-        if isinstance(user_id, str) or isinstance(user_id, unicode):
+        if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
         gen.Return(user_doc)
 
-    @gen.coroutine
-    def exc(self, exception):
-        exc_doc = {
-            'exception': str(exception)
-        }
-        exc_doc[constants.TRACEBACK] = traceback.format_exc()
-        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
-        exc_doc[constants.CREATED_TIME] = datetime.now()
-
-        ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
-
-        logging.exception(exception)
-        logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
-
-        self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
+        # @gen.coroutine
+        # def exc(self, exception):
+        #     exc_doc = {'exception': str(exception), constants.TRACEBACK: traceback.format_exc(),
+        #                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE, constants.CREATED_TIME: datetime.now()}
+        #
+        #     ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
+        #
+        #     logging.exception(exception)
+        #     logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
+        #
+        #     self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
 
 class EventHandler(MainHandler):

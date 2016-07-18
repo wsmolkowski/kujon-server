@@ -209,13 +209,12 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
-        classtypes = yield self.db_classtypes()
-
-        def classtype_name(key_id):
-            for key, name in list(classtypes.items()):
-                if str(key_id) == str(key):
-                    return name
-            return key_id
+        # classtypes = yield self.db_classtypes()
+        # def classtype_name(key_id):
+        #     for key, name in list(classtypes.items()):
+        #         if str(key_id) == str(key):
+        #             return name
+        #     return key_id
 
         # get terms
         terms = list()
@@ -431,12 +430,11 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_tt(self, given_date):
 
-        monday = None
         try:
             if isinstance(given_date, str):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-        except Exception as ex:
+        except Exception:
             raise ApiError("Data w niepoprawnym formacie.")
 
         user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])

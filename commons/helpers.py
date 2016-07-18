@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging
 import os
 import traceback
@@ -13,6 +14,7 @@ def search_key_value_onlist(list_check, key, value):
 
 def in_dictlist(key, value, my_dictlist):
     """
+    :param key:
     :param my_dictlist:
     :return:
     """
