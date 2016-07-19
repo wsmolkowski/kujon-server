@@ -474,10 +474,12 @@ class ApiMixin(DaoMixin, UsosMixin):
                     if not lecturer_info:
                         exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
                         yield self.exc(exception, finish=False)
-                
-                tt['lecturers'] = list()
-                tt['lecturers'].append(lecturer_info)
-            del (tt['lecturer_ids'])
+
+                tt['lecturers'].append([lecturer_info])
+
+            if 'lecturer_ids' in tt:
+                del (tt['lecturer_ids'])
+
         raise gen.Return(tt_doc['tts'])
 
     @gen.coroutine
