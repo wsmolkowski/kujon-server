@@ -1,10 +1,10 @@
-#!/usr/bin/python3
+# coding=UTF-8
+
 import argparse
 import logging
 import sys
 
-import tornado.gen
-import tornado.ioloop
+from tornado import ioloop
 
 from commons import settings, constants, utils, mongo_util
 
@@ -28,7 +28,7 @@ def clean(skip_collection=None):
 
 def recreate():
     logging.info('recreate_database start')
-    io_loop = tornado.ioloop.IOLoop.current()
+    io_loop = ioloop.IOLoop.current()
     io_loop.run_sync(mongo_util.recreate_database)
     logging.info('recreate_database end')
 
