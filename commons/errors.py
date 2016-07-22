@@ -1,3 +1,4 @@
+# coding=utf-8
 import json
 
 
@@ -9,7 +10,10 @@ class Error(Exception):
 class ApiError(Exception):
     """Api Errors"""
 
-    def __init__(self, msg, parameters=[]):
+    def __init__(self, msg, parameters=None):
+        if not parameters:
+            parameters = list()
+
         self.msg = msg  # .encode(constants.ENCODING)
         if not isinstance(parameters, list) or not isinstance(parameters, tuple):
             self.parameters = [parameters]
@@ -35,7 +39,10 @@ class ApiError(Exception):
 
 
 class HttpError(Error):
-    def __init__(self, resp, content, uri=None, parameters=[]):
+    def __init__(self, resp, content, uri=None, parameters=None):
+        if not parameters:
+            parameters = list()
+
         self.resp = resp
         self.content = content
         self.uri = uri

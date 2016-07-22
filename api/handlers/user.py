@@ -94,8 +94,10 @@ class UserInfoPhotoApi(ApiHandler):
 
             user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
-            self.set_header('Content-Type', 'image/jpeg')
-            self.write(b64decode(user_photo['photo']))
-
+            if user_photo and 'photo' in user_photo:
+                self.set_header('Content-Type', 'image/jpeg')
+                self.write(b64decode(user_photo['photo']))
+            else:
+                self.error('Nie znaleziono zdjęcia', code=404)
         except Exception as ex:
             yield self.exc(ex)

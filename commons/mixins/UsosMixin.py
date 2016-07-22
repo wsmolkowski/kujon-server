@@ -32,7 +32,9 @@ class UsosMixin(OAuthMixin):
                     secret=self.get_current_usos()[constants.CONSUMER_SECRET])
 
     @gen.coroutine
-    def usos_request(self, path, arguments={}):
+    def usos_request(self, path, arguments=None):
+        if not arguments:
+            arguments = dict()
 
         arguments['lang'] = 'pl'
 
@@ -64,7 +66,9 @@ class UsosMixin(OAuthMixin):
                                                                                               url))
 
     @gen.coroutine
-    def call_async(self, path, arguments={}, base_url=None):
+    def call_async(self, path, arguments=None, base_url=None):
+        if not arguments:
+            arguments = dict()
 
         arguments['lang'] = 'pl'
 
@@ -281,7 +285,7 @@ class UsosMixin(OAuthMixin):
         raise gen.Return(tt)
 
     @gen.coroutine
-    def notifier_status(self, usos_doc):
+    def usos_notifier_status(self, usos_doc):
         result = yield self.call_async(path='services/events/notifier_status', base_url=usos_doc[constants.USOS_URL])
         raise gen.Return(result)
 

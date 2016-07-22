@@ -1,5 +1,8 @@
-from base64 import b64encode, b64decode
+# coding=utf-8
+
 import hashlib
+from base64 import b64encode, b64decode
+
 from Crypto import Random
 from Crypto.Cipher import AES
 

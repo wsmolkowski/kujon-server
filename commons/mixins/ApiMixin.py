@@ -209,13 +209,12 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
-        classtypes = yield self.db_classtypes()
-
-        def classtype_name(key_id):
-            for key, name in list(classtypes.items()):
-                if str(key_id) == str(key):
-                    return name
-            return key_id
+        # classtypes = yield self.db_classtypes()
+        # def classtype_name(key_id):
+        #     for key, name in list(classtypes.items()):
+        #         if str(key_id) == str(key):
+        #             return name
+        #     return key_id
 
         # get terms
         terms = list()
@@ -431,12 +430,11 @@ class ApiMixin(DaoMixin, UsosMixin):
     @gen.coroutine
     def api_tt(self, given_date):
 
-        monday = None
         try:
             if isinstance(given_date, str):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
-        except Exception as ex:
+        except Exception:
             raise ApiError("Data w niepoprawnym formacie.")
 
         user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
@@ -481,6 +479,12 @@ class ApiMixin(DaoMixin, UsosMixin):
                 tt['lecturers'] = list()
                 tt['lecturers'].append(lecturer_info)
             del (tt['lecturer_ids'])
+
+                tt['lecturers'].append([lecturer_info])
+
+            if 'lecturer_ids' in tt:
+                del (tt['lecturer_ids'])
+
         raise gen.Return(tt_doc['tts'])
 
     @gen.coroutine
@@ -518,12 +522,12 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         today = date.today()
         for term in terms_doc:
-            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
+            end_date = datetime.strptime(term['finish_date'], constants.DEFAULT_DATE_FORMAT).date()
             if today <= end_date:
                 term['active'] = True
             else:
                 term['active'] = False
-            del(term[constants.MONGO_ID])
+            del (term[constants.MONGO_ID])
         raise gen.Return(terms_doc)
 
     @gen.coroutine
@@ -603,7 +607,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
-        del(user_info_doc[constants.MONGO_ID])
+        del (user_info_doc[constants.MONGO_ID])
         raise gen.Return(user_info_doc)
 
     @gen.coroutine

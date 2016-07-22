@@ -1,5 +1,7 @@
 {% extends "base.html" %} {% block header_js %}
 <script type="text/javascript" src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="/static/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
 {% end %} {% block navigation %}
 <nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
     <div class="container-fluid">
@@ -87,7 +89,7 @@
             </div>
             <div class="col-sm-6">
                 <ul class="nav navbar-nav navbar-right navbar-bottom">
-                    <li><a href="regulamin">Regulamin i polityka prywatności</a></li>
+                    <li><a href="regulamin" id="btnDisclaimer">Regulamin i polityka prywatności</a></li>
                     <li><a href="mailto:kujon@kujon.mobi"><i class="fa fa-envelope"></i> Kontakt</a></li>
                     <li class="fb"><a href="https://www.facebook.com/kujonmobi-992906237450440/" target="_blank"><span
                             class="fa fa-facebook"></span></a></li>
@@ -103,7 +105,12 @@
 
 {% end %} {% block footer_js %}
 
-<script>
+<script type="text/javascript">
+    $('#btnDisclaimer').on('click', function(e){
+        e.preventDefault();
+        $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+    });
+
     $(window).load(function() {
         if ($('section').hasClass("college-selection")) {
             var kolumnaPrawa = $("div.border-logo-cykle").height();

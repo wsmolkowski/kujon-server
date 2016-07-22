@@ -270,7 +270,7 @@ class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
             usoses = yield self.db_usoses()
             for usos_doc in usoses:
                 try:
-                    data = yield self.notifier_status(usos_doc)
+                    data = yield self.usos_notifier_status(usos_doc)
                     data[constants.CREATED_TIME] = timestamp
                     data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
 
