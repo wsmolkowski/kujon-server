@@ -474,8 +474,13 @@ class ApiMixin(DaoMixin, UsosMixin):
                     if not lecturer_info:
                         exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
                         yield self.exc(exception, finish=False)
+                if lecturer_info[constants.MONGO_ID]:
+                    del(lecturer_info[constants.MONGO_ID])
+                tt['lecturers'] = list()
+                tt['lecturers'].append(lecturer_info)
 
-                tt['lecturers'].append([lecturer_info])
+            del (tt['lecturer_ids'])
+            tt['lecturers'].append([lecturer_info])
 
             if 'lecturer_ids' in tt:
                 del (tt['lecturer_ids'])
@@ -517,12 +522,12 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         today = date.today()
         for term in terms_doc:
-            end_date = datetime.strptime(term['finish_date'], constants.DEFAULT_DATE_FORMAT).date()
+            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
             if today <= end_date:
                 term['active'] = True
             else:
                 term['active'] = False
-            del (term[constants.MONGO_ID])
+            del(term[constants.MONGO_ID])
         raise gen.Return(terms_doc)
 
     @gen.coroutine
@@ -602,7 +607,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
 
-        del (user_info_doc[constants.MONGO_ID])
+        del(user_info_doc[constants.MONGO_ID])
         raise gen.Return(user_info_doc)
 
     @gen.coroutine
