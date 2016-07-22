@@ -14,8 +14,8 @@ echo 'cloning code'
 sudo rm -rf $APPDIR
 mkdir $APPDIR
 cd $APPDIR
-git clone git@github.com:kujonmobi/kujon-server.git .
-ln -s /home/appuser/kujon.mobi/bower_components/ $APPDIR/web/static/
+git clone -b development git@github.com:kujonmobi/kujon-server.git .
+ln -s /home/appuser/demo.kujon.mobi/bower_components/ $APPDIR/web/static/
 
 sudo chown -R appuser:appuser $APPDIR
 sudo chmod +x $APPDIR/scripts/*
