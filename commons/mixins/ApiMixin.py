@@ -466,21 +466,16 @@ class ApiMixin(DaoMixin, UsosMixin):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
         for tt in tt_doc['tts']:
             for lecturer in tt['lecturer_ids']:
-                lecturer_info = yield self.db[constants.COLLECTION_USERS_INFO].find_one(
-                    {constants.ID: str(lecturer)}, lecturer_keys)
-                if not lecturer_info:
-                    lecturer_info = yield self.api_user_info(str(lecturer))
+                lecturer_info = yield self.api_user_info(str(lecturer))
+                if lecturer_info:
                     lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                    if not lecturer_info:
-                        exception = ApiError("Błąd podczas pobierania nauczyciela (%r) dla planu.".format(lecturer))
-                        yield self.exc(exception, finish=False)
-                if lecturer_info[constants.MONGO_ID]:
-                    del(lecturer_info[constants.MONGO_ID])
-                tt['lecturers'] = list()
-                tt['lecturers'].append(lecturer_info)
-
-            del (tt['lecturer_ids'])
-            tt['lecturers'].append([lecturer_info])
+                    if constants.MONGO_ID in lecturer_info:
+                        del(lecturer_info[constants.MONGO_ID])
+                    tt['lecturers'] = list()
+                    tt['lecturers'].append(lecturer_info)
+                else:
+                    exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
+                    yield self.exc(exception, finish=False)
 
             if 'lecturer_ids' in tt:
                 del (tt['lecturer_ids'])
