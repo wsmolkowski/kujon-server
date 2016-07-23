@@ -70,8 +70,7 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
 def main():
     args = parser.parse_args()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(settings.LOG_LEVEL)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     if args.option == 'recreate':
         drop()
