@@ -463,24 +463,29 @@ class ApiMixin(DaoMixin, UsosMixin):
                 t['type'] = 'egzamin'
 
         # add lecturer information
-        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
+        tt_lecturers_fetch_task = list()
         for tt in tt_doc['tts']:
-            for lecturer in tt['lecturer_ids']:
-                lecturer_info = yield self.api_user_info(str(lecturer))
-                if lecturer_info:
-                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                    if constants.MONGO_ID in lecturer_info:
-                        del(lecturer_info[constants.MONGO_ID])
-                    tt['lecturers'] = list()
-                    tt['lecturers'].append(lecturer_info)
-                else:
-                    exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
-                    yield self.exc(exception, finish=False)
+            tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
+        tt_doc = yield tt_lecturers_fetch_task
 
-            if 'lecturer_ids' in tt:
-                del (tt['lecturer_ids'])
+        raise gen.Return(tt_doc)
 
-        raise gen.Return(tt_doc['tts'])
+    @gen.coroutine
+    def _api_tt_attach_lecturers(self, tt):
+        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
+
+        for lecturer in tt['lecturer_ids']:
+            lecturer_info = yield self.api_user_info(str(lecturer))
+            if lecturer_info:
+                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                tt['lecturers'] = list()
+                tt['lecturers'].append(lecturer_info)
+            else:
+                exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
+                yield self.exc(exception, finish=False)
+        if 'lecturer_ids' in tt:
+            del(tt['lecturer_ids'])
+        raise gen.Return(tt)
 
     @gen.coroutine
     def _api_term_task(self, term_id):
