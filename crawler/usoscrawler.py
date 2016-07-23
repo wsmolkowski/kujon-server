@@ -12,11 +12,12 @@ from commons import constants, utils, settings
 from commons.AESCipher import AESCipher
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
+from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
-class UsosCrawler(ApiMixin, CrsTestsMixin, OneSignalMixin):
+class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
     def __init__(self):

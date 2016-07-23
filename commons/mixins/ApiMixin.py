@@ -6,7 +6,7 @@ from datetime import date, timedelta, datetime
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, settings
+from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
@@ -484,7 +484,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
                 yield self.exc(exception, finish=False)
         if 'lecturer_ids' in tt:
-            del(tt['lecturer_ids'])
+            del (tt['lecturer_ids'])
         raise gen.Return(tt)
 
     @gen.coroutine
@@ -527,7 +527,7 @@ class ApiMixin(DaoMixin, UsosMixin):
                 term['active'] = True
             else:
                 term['active'] = False
-            del(term[constants.MONGO_ID])
+            del (term[constants.MONGO_ID])
         raise gen.Return(terms_doc)
 
     @gen.coroutine
@@ -543,72 +543,6 @@ class ApiMixin(DaoMixin, UsosMixin):
         result = yield self.api_term(terms_ids)
 
         raise gen.Return(result)
-
-    @gen.coroutine
-    def api_user_info(self, user_id=None):
-
-        if not user_id:
-            pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                        constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
-        else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
-
-        if self.do_refresh():
-            yield self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
-
-        user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
-
-        if not user_info_doc:
-            try:
-                user_info_doc = yield self.usos_user_info(user_id)
-            except Exception as ex:
-                yield self.exc(ex, finish=False)
-
-            if not user_info_doc:
-                logging.error("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
-                raise gen.Return()
-            if not user_id:
-                user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-
-            # process faculties
-            tasks_get_faculties = list()
-            for position in user_info_doc['employment_positions']:
-                tasks_get_faculties.append(self.api_faculty(position['faculty']['id']))
-            yield tasks_get_faculties
-
-            # process course_editions_conducted
-            courses_conducted = []
-            tasks_courses = list()
-            courses = list()
-            for course_conducted in user_info_doc['course_editions_conducted']:
-                course_id, term_id = course_conducted['id'].split('|')
-                if course_id not in courses:
-                    courses.append(course_id)
-                    tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False))
-
-            try:
-                tasks_results = yield tasks_courses
-                for course_doc in tasks_results:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_doc[constants.COURSE_ID],
-                                              constants.TERM_ID: course_doc[constants.TERM_ID]})
-            except Exception as ex:
-                yield self.exc(ex, finish=False)
-
-            user_info_doc['course_editions_conducted'] = courses_conducted
-
-            # if user has photo
-            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
-                photo_doc = yield self.api_photo(user_info_doc[constants.ID])
-                if photo_doc:
-                    user_info_doc[constants.PHOTO_URL] = settings.DEPLOY_API + '/users_info_photos/' + str(
-                        photo_doc[constants.MONGO_ID])
-
-            yield self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
-            user_info_doc = yield self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_LIMIT_FIELDS)
-
-        del(user_info_doc[constants.MONGO_ID])
-        raise gen.Return(user_info_doc)
 
     @gen.coroutine
     def api_faculty(self, faculty_id):

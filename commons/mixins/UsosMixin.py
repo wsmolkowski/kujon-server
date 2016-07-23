@@ -6,7 +6,7 @@ from tornado import gen, escape
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
-from commons import constants, usoshelper
+from commons import constants
 from commons.errors import UsosClientError
 
 try:
@@ -122,50 +122,6 @@ class UsosMixin(OAuthMixin):
 
         raise gen.Return(result)
 
-    @gen.coroutine
-    def usos_user_info(self, user_id=None):
-        fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
-
-        if user_id:
-            result = yield self.usos_request(path='services/users/user', arguments={
-                'fields': fields,
-                'user_id': user_id
-            })
-        else:
-            result = yield self.usos_request(path='services/users/user', arguments={
-                'fields': fields
-            })
-
-        # strip english values and if value is empty change to None
-        if 'office_hours' in result and 'pl' in result['office_hours']:
-            result['office_hours'] = result['office_hours']['pl']
-            result['interests'] = result['interests']['pl']
-
-        # strip empty values
-        if 'homepage_url' in result and result['homepage_url'] == "":
-            result['homepage_url'] = None
-
-        if 'student_status' in result:
-            result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
-
-        # strip english names from programmes description
-        if 'student_programmes' in result:
-            for programme in result['student_programmes']:
-                programme['programme']['description'] = programme['programme']['description']['pl']
-
-        # change staff_status to dictionary
-        result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
-
-        # strip employment_positions from english names
-        for position in result['employment_positions']:
-            position['position']['name'] = position['position']['name']['pl']
-            position['faculty']['name'] = position['faculty']['name']['pl']
-
-        # strip english from building name
-        if 'room' in result and result['room'] and 'building_name' in result['room']:
-            result['room']['building_name'] = result['room']['building_name']['pl']
-
-        raise gen.Return(result)
 
     @gen.coroutine
     def usos_faculty(self, faculty_id):

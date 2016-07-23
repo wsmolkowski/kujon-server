@@ -29,6 +29,16 @@ def create_ttl_index(collection, field):
     logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
 
 
+def create_unique_indexes():
+    db = get_client()
+    index = db[constants.COLLECTION_USERS_INFO].create_index([(constants.USOS_ID, pymongo.ASCENDING),
+                                                              (constants.ID, pymongo.ASCENDING)],
+                                                             unique=True, drop_dups=True)
+
+    logging.info('unique index: {0} created on collection: {1} and fields {2} {3}'.format(
+        index, constants.COLLECTION_USERS_INFO, constants.ID, constants.USOS_ID))
+
+
 def create_indexes():
     db = get_client()
     for collection in db.collection_names(include_system_collections=False):
@@ -38,6 +48,8 @@ def create_indexes():
                 logging.info('created index {0} on collection {1} and field {2}'.format(index, collection, field))
 
     create_ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
+
+    create_unique_indexes()
 
 
 def reindex():
@@ -72,7 +84,7 @@ def convert_bytes(bytes):
 def print_statistics():
     db = get_client()
 
-    print ('#' * 25 + ' gathering statistics ' + '#' * 25)
+    print('#' * 25 + ' gathering statistics ' + '#' * 25)
 
     summary = {
         "count": 0,
@@ -86,7 +98,7 @@ def print_statistics():
             continue
         stats = db.command('collstats', collection)
 
-        print ('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
+        print('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
         pprint(stats, width=1)
 
         summary["count"] += stats["count"]
@@ -94,13 +106,13 @@ def print_statistics():
         summary["indexSize"] += stats.get("totalIndexSize", 0)
         summary["storageSize"] += stats.get("storageSize", 0)
 
-    print ('#' * 25 + ' statistics ' + '#' * 25)
-    print ("Total Documents:", summary["count"])
-    print ("Total Data Size:", convert_bytes(summary["size"]))
-    print ("Total Index Size:", convert_bytes(summary["indexSize"]))
-    print ("Total Storage Size:", convert_bytes(summary["storageSize"]))
+    print('#' * 25 + ' statistics ' + '#' * 25)
+    print("Total Documents:", summary["count"])
+    print("Total Data Size:", convert_bytes(summary["size"]))
+    print("Total Index Size:", convert_bytes(summary["indexSize"]))
+    print("Total Storage Size:", convert_bytes(summary["storageSize"]))
 
-    print ('#' * 25 + '#' * 25)
+    print('#' * 25 + '#' * 25)
 
 
 def save_statistics():
