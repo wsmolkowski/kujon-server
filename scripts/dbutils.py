@@ -20,7 +20,7 @@ def drop():
 def clean(skip_collection=None):
     if not skip_collection:
         skip_collection = []
-        
+
     logging.info('clean_database start')
     mongo_util.drop_collections(skip_collection)
     logging.info('clean_database end')
@@ -68,11 +68,9 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
 
 
 def main():
-
     args = parser.parse_args()
 
-    if settings.DEBUG:
-        logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(settings.LOG_LEVEL)
 
     if args.option == 'recreate':
         drop()
