@@ -54,6 +54,11 @@ class ApiUserMixin(DaoMixin):
             position['position']['name'] = position['position']['name']['pl']
             position['faculty']['name'] = position['faculty']['name']['pl']
 
+        # strip employment_function from english names
+        for position in result['employment_functions']:
+            position['function'] = position['function']['pl']
+            position['faculty']['name'] = position['faculty']['name']['pl']
+
         # strip english from building name
         if 'room' in result and result['room'] and 'building_name' in result['room']:
             result['room']['building_name'] = result['room']['building_name']['pl']
