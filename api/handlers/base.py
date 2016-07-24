@@ -146,7 +146,7 @@ class UsosesApi(BaseHandler, JSendMixin):
             wanted_keys = [constants.USOS_LOGO, constants.USOS_ID, constants.USOS_NAME, constants.USOS_URL]
             usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
 
-        self.success(usoses, cache_age=constants.SECONDS_1WEEK)
+        self.success(usoses, cache_age=constants.SECONDS_HOUR)
 
 
 class DefaultErrorHandler(BaseHandler, JSendMixin):
