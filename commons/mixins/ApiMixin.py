@@ -694,10 +694,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not theses_doc:
             users_info_doc = yield self.api_user_info()
             theses_doc = yield UsosCaller(self._context).call(path='services/theses/user',
-                                                              arguments={
-                                                                  'user_id': users_info_doc[constants.ID],
-                                                                  'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-                                                              })
+                  arguments={
+                      'user_id': users_info_doc[constants.ID],
+                      'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+                  })
             if 'authored_theses' in theses_doc:
                 for these in theses_doc['authored_theses']:
                     these['faculty']['name'] = these['faculty']['name']['pl']
