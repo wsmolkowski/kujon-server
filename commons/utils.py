@@ -90,6 +90,7 @@ def http_client():
                                              max_clients=constants.MAX_HTTP_CLIENTS)
 
     else:
-        httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()
