@@ -92,7 +92,9 @@ class BaseHandler(RequestHandler, DaoMixin):
         return self._context.user_doc
 
     def get_current_usos(self):
-        return self._context.usos_doc
+        if hasattr(self._context, 'usos_doc') and self._context.usos_doc:
+            return self._context.usos_doc
+        return False
 
     def getUserId(self):
         if self.get_current_user():

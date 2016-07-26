@@ -99,7 +99,8 @@ class DaoMixin(object):
     @gen.coroutine
     def db_insert(self, collection, document):
         create_time = datetime.now()
-        document[constants.USOS_ID] = self.getUsosId()
+        if self.getUsosId():
+            document[constants.USOS_ID] = self.getUsosId()
         document[constants.CREATED_TIME] = create_time
         document[constants.UPDATE_TIME] = create_time
 
