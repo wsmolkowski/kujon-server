@@ -229,13 +229,6 @@ class DaoMixin(object):
 
         yield self.db_remove(constants.COLLECTION_USERS, {constants.MONGO_ID: user_id})
         if user_doc[constants.USOS_PAIRED]:
-            # yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-            #                      {constants.USER_ID: user_id,
-            #                       constants.CREATED_TIME: datetime.now(),
-            #                       constants.UPDATE_TIME: None,
-            #                       constants.JOB_MESSAGE: None,
-            #                       constants.JOB_STATUS: constants.JOB_PENDING,
-            #                       constants.JOB_TYPE: 'unsubscribe_usos'})
 
             yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
                                  {constants.USER_ID: user_id,
