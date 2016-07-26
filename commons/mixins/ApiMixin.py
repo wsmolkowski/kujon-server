@@ -4,6 +4,7 @@ import logging
 from datetime import date, timedelta, datetime
 
 from bson.objectid import ObjectId
+from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
 from commons import constants
@@ -11,7 +12,6 @@ from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
-from commons.mixins.UsosMixin import UsosMixin
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
@@ -35,10 +35,7 @@ USER_INFO_LIMIT_FIELDS = (
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
-class ApiMixin(DaoMixin, UsosMixin):
-    def do_refresh(self):
-        return False
-
+class ApiMixin(DaoMixin):
     @staticmethod
     def filterNone(array):
         return [i for i in array if i is not None]
@@ -56,10 +53,42 @@ class ApiMixin(DaoMixin, UsosMixin):
             pipeline, (constants.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
-            courses_editions_doc = yield self.usos_courses_editions()
+            courses_editions_doc = yield UsosCaller(self._context).call(
+                path='services/courses/user',
+                arguments={
+                    'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
+                    'active_terms_only': 'false',
+                })
+
+            courses_editions_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
             yield self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
 
         raise gen.Return(courses_editions_doc)
+
+    @gen.coroutine
+    def usos_course_edition(self, course_id, term_id, fetch_participants):
+        if fetch_participants:
+            args = {
+                'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
+                'course_id': course_id,
+                'term_id': term_id
+            }
+        else:
+            args = {
+                'fields': 'course_name|coordinators|course_units_ids|lecturers',
+                'course_id': course_id,
+                'term_id': term_id
+            }
+
+        result = yield UsosCaller(self._context).call(path='services/courses/course_edition', arguments=args)
+
+        result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
+        result[constants.COURSE_ID] = course_id
+        result[constants.TERM_ID] = term_id
+        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
+        raise gen.Return(result)
 
     @gen.coroutine
     def api_course_edition(self, course_id, term_id):
@@ -78,6 +107,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not result:
             try:
                 result = yield self.usos_course_edition(course_id, term_id, False)
+
                 logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
             except Exception as ex:
                 raise self.exc(ex, finish=False)
@@ -97,10 +127,13 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
+                yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
+            except DuplicateKeyError as ex:
+                logging.warning(ex)
+                course_doc = yield self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return()
-            yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
         course_doc[constants.TERM_ID] = term_id
 
@@ -167,6 +200,26 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(course_doc)
 
     @gen.coroutine
+    def usos_course(self, course_id):
+        course_doc = yield UsosCaller(self._context).call(
+            path='services/courses/course',
+            arguments={
+                'course_id': course_id,
+                'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
+            })
+
+        course_doc[constants.COURSE_NAME] = course_doc['name']['pl']
+        course_doc.pop('name')
+        course_doc['learning_outcomes'] = course_doc['learning_outcomes']['pl']
+        course_doc['description'] = course_doc['description']['pl']
+        course_doc['assessment_criteria'] = course_doc['assessment_criteria']['pl']
+        course_doc['bibliography'] = course_doc['bibliography']['pl']
+        course_doc['practical_placement'] = course_doc['practical_placement']['pl']
+        course_doc[constants.COURSE_ID] = course_id
+
+        raise gen.Return(course_doc)
+
+    @gen.coroutine
     def api_course(self, course_id):
 
         pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
@@ -179,12 +232,15 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not course_doc:
             try:
                 course_doc = yield self.usos_course(course_id)
+
+                yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
+            except DuplicateKeyError as ex:
+                logging.warning(ex)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
+
             if not course_doc:
                 raise gen.Return()
-
-            yield self.db_insert(constants.COLLECTION_COURSES, course_doc)
 
             # change id to value
             course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
@@ -194,6 +250,7 @@ class ApiMixin(DaoMixin, UsosMixin):
             faculty_doc = yield self.api_faculty(course_doc[constants.FACULTY_ID])
             if not faculty_doc:
                 faculty_doc = yield self.usos_faculty(course_doc[constants.FACULTY_ID])
+
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
@@ -208,13 +265,6 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
-
-        # classtypes = yield self.db_classtypes()
-        # def classtype_name(key_id):
-        #     for key, name in list(classtypes.items()):
-        #         if str(key_id) == str(key):
-        #             return name
-        #     return key_id
 
         # get terms
         terms = list()
@@ -275,9 +325,30 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(courses_sorted_by_term)
 
     @gen.coroutine
+    def get_classtypes(self):
+        classtypes = yield self.db[constants.COLLECTION_COURSES_CLASSTYPES].find_one(
+            {constants.USOS_ID: self._context.usos_doc[constants.USOS_ID]},
+            {constants.MONGO_ID: False, constants.CREATED_TIME: False})
+
+        if not classtypes:
+            classtypes = yield UsosCaller(self._context).async(path='services/courses/classtypes_index',
+                                                               arguments={},
+                                                               lang=False)
+
+            yield self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
+        raise gen.Return(classtypes)
+
+    @staticmethod
+    def classtype_name(classtypes, key_id):
+        for key, name in list(classtypes.items()):
+            if str(key_id) == str(key):
+                return name['name']['pl']
+        return key_id
+
+    @gen.coroutine
     def api_grades(self):
 
-        classtypes = yield self.db_classtypes()
+        classtypes = yield self.get_classtypes()
 
         courses_editions = yield self.api_courses_editions()
 
@@ -332,7 +403,7 @@ class ApiMixin(DaoMixin, UsosMixin):
         units_doc = yield self.api_units(units)
 
         for unit in units_doc:
-            unit[constants.CLASS_TYPE_ID] = classtypes[(unit[constants.CLASS_TYPE_ID])]
+            unit[constants.CLASS_TYPE_ID] = self.classtype_name(classtypes, (unit[constants.CLASS_TYPE_ID]))
         for course in result:
             if 'grades' in course:
                 for grade in course['grades']:
@@ -419,8 +490,32 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if not programme_doc:
             try:
-                programme_doc = yield self.usos_programme(programme_id)
+                programme_doc = yield UsosCaller(self._context).async(
+                    path='services/progs/programme',
+                    arguments={
+                        'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
+                        'programme_id': programme_id,
+                    }
+                )
+
+                programme_doc[constants.PROGRAMME_ID] = programme_id
+
+                # strip english names
+                programme_doc['name'] = programme_doc['name']['pl']
+                programme_doc['mode_of_studies'] = programme_doc['mode_of_studies']['pl']
+                programme_doc['level_of_studies'] = programme_doc['level_of_studies']['pl']
+                programme_doc['professional_status'] = programme_doc['professional_status']['pl']
+                programme_doc['duration'] = programme_doc['duration']['pl']
+                if 'faculty' in programme_doc and 'name' in programme_doc['faculty']:
+                    programme_doc['faculty']['name'] = programme_doc['faculty']['name']['pl']
+                    programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
+                    del (programme_doc['faculty']['id'])
+
                 yield self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            except DuplicateKeyError as ex:
+                logging.warning(ex)
+                programme_doc = yield self.db[constants.COLLECTION_PROGRAMMES].find_one(
+                    pipeline, LIMIT_FIELDS_PROGRAMMES)
             except Exception as ex:
                 yield self.exc(ex, finish=finish)
                 raise gen.Return(None)
@@ -446,7 +541,19 @@ class ApiMixin(DaoMixin, UsosMixin):
                                                                   constants.TT_STARTDATE: str(monday)})
         if not tt_doc:
             try:
-                tt_doc = yield self.time_table(monday)
+                tt_response = yield UsosCaller(self._context).call(
+                    path='services/tt/user',
+                    arguments={
+                        'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
+                        'start': given_date,
+                        'days': '7'
+                    })
+
+                tt_doc = dict()
+                tt_doc[constants.TT_STARTDATE] = str(given_date)
+                tt_doc['tts'] = tt_response
+                tt_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+
                 yield self.db_insert(constants.COLLECTION_TT, tt_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
@@ -483,16 +590,25 @@ class ApiMixin(DaoMixin, UsosMixin):
             else:
                 exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
                 yield self.exc(exception, finish=False)
+
         if 'lecturer_ids' in tt:
             del (tt['lecturer_ids'])
+
         raise gen.Return(tt)
 
     @gen.coroutine
     def _api_term_task(self, term_id):
         term_doc = None
         try:
-            term_doc = yield self.usos_term(term_id)
+            term_doc = yield UsosCaller(self._context).async(
+                path='services/terms/term', arguments={'term_id': term_id}
+            )
+            term_doc['name'] = term_doc['name']['pl']
+            term_doc[constants.TERM_ID] = term_doc.pop(constants.ID)
+
             yield self.db_insert(constants.COLLECTION_TERMS, term_doc)
+        except DuplicateKeyError as ex:
+            logging.warning(ex)
         except Exception as ex:
             yield self.exc(ex, finish=False)
         finally:
@@ -545,6 +661,24 @@ class ApiMixin(DaoMixin, UsosMixin):
         raise gen.Return(result)
 
     @gen.coroutine
+    def usos_faculty(self, faculty_id):
+        faculty_doc = yield UsosCaller(self._context).async(
+            path='services/fac/faculty',
+            arguments={
+                'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
+                'fac_id': faculty_id
+            }
+        )
+
+        faculty_doc[constants.FACULTY_ID] = faculty_id
+        faculty_doc['name'] = faculty_doc['name']['pl']
+        if 'path' in faculty_doc:
+            for elem in faculty_doc['path']:
+                elem['name'] = elem['name']['pl']
+
+        raise gen.Return(faculty_doc)
+
+    @gen.coroutine
     def api_faculty(self, faculty_id):
         pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
 
@@ -556,11 +690,14 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not faculty_doc:
             try:
                 faculty_doc = yield self.usos_faculty(faculty_id)
+
+                yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+            except DuplicateKeyError as ex:
+                logging.warning(ex)
+                faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
                 raise gen.Return()
-            yield self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
-            faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         raise gen.Return(faculty_doc)
 
@@ -609,11 +746,15 @@ class ApiMixin(DaoMixin, UsosMixin):
 
         if not unit_doc:
             try:
-                result = yield self.usos_unit(unit_id)
-                if result:
-                    unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, result)
-                else:
-                    logging.warning("no unit for unit_id: {0} and usos_id: {1)".format(unit_id, self.usos_id))
+                unit_doc = yield UsosCaller(self._context).async(
+                    path='services/courses/unit',
+                    arguments={
+                        'fields': 'id|course_id|term_id|groups|classtype_id',
+                        'unit_id': unit_id,
+                    })
+
+                unit_doc[constants.UNIT_ID] = unit_doc.pop(constants.ID)
+                unit_doc = yield self.db_insert(constants.COLLECTION_COURSES_UNITS, unit_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(unit_doc)
@@ -646,41 +787,24 @@ class ApiMixin(DaoMixin, UsosMixin):
         group_doc = yield self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = yield self.usos_group(group_id)
+                group_doc = yield UsosCaller(self._context).async(
+                    path='services/groups/group',
+                    arguments={
+                        'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
+                        'course_unit_id': group_id,
+                        'group_number': 1,
+                    }
+                )
 
-                classtypes = yield self.db_classtypes()
-
-                def classtype_name(key_id):
-                    for key, name in list(classtypes.items()):
-                        if str(key_id) == str(key):
-                            return name
-                    return key_id
-
-                group_doc['class_type'] = classtype_name(group_doc['class_type_id'])  # changing class_type_id to name
+                classtypes = yield self.get_classtypes()
+                group_doc['class_type'] = self.classtype_name(classtypes, group_doc[
+                    'class_type_id'])  # changing class_type_id to name
                 group_doc.pop('class_type_id')
 
                 yield self.db_insert(constants.COLLECTION_GROUPS, group_doc)
             except Exception as ex:
                 yield self.exc(ex, finish=finish)
         raise gen.Return(group_doc)
-
-    @gen.coroutine
-    def api_photo(self, user_info_id):
-        pipeline = {constants.ID: user_info_id}
-        if self.do_refresh():
-            yield self.db_remove(constants.COLLECTION_PHOTOS, pipeline)
-
-        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
-
-        if not photo_doc:
-            try:
-                photo_doc = yield self.usos_photo(user_info_id)
-                photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
-                photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(
-                    {constants.MONGO_ID: ObjectId(photo_id)})
-            except Exception as ex:
-                logging.exception(ex)
-        raise gen.Return(photo_doc)
 
     @gen.coroutine
     def api_thesis(self):
@@ -694,10 +818,10 @@ class ApiMixin(DaoMixin, UsosMixin):
         if not theses_doc:
             users_info_doc = yield self.api_user_info()
             theses_doc = yield UsosCaller(self._context).call(path='services/theses/user',
-                  arguments={
-                      'user_id': users_info_doc[constants.ID],
-                      'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-                  })
+                                                              arguments={
+                                                                  'user_id': users_info_doc[constants.ID],
+                                                                  'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+                                                              })
             if 'authored_theses' in theses_doc:
                 for these in theses_doc['authored_theses']:
                     these['faculty']['name'] = these['faculty']['name']['pl']

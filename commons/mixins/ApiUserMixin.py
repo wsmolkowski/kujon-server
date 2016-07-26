@@ -20,6 +20,31 @@ class ApiUserMixin(DaoMixin):
         return False
 
     @gen.coroutine
+    def api_photo(self, user_info_id):
+        pipeline = {constants.ID: user_info_id}
+        if self.do_refresh():
+            yield self.db_remove(constants.COLLECTION_PHOTOS, pipeline)
+
+        photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
+
+        if not photo_doc:
+            try:
+                photo_doc = yield UsosCaller(self._context).call(
+                    path='services/photos/photo',
+                    arguments={
+                        'user_id': user_info_id,
+                    })
+
+                photo_doc[constants.ID] = user_info_id
+
+                photo_id = yield self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
+                photo_doc = yield self.db[constants.COLLECTION_PHOTOS].find_one(
+                    {constants.MONGO_ID: ObjectId(photo_id)})
+            except Exception as ex:
+                logging.exception(ex)
+        raise gen.Return(photo_doc)
+
+    @gen.coroutine
     def usos_user_info(self, user_id=None):
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 

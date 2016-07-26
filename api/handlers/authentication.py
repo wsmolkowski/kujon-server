@@ -56,7 +56,7 @@ class ArchiveHandler(ApiHandler):
             self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=settings.SITE_DOMAIN)
             yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
 
-            self.success('ok')
+            self.success({})
             # self.redirect(settings.DEPLOY_WEB)
         except Exception as ex:
             yield self.exc(ex)
