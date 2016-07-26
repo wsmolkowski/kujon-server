@@ -148,7 +148,8 @@ class ApiMixin(DaoMixin):
             user_info_doc = yield self.api_user_info(user_id)
 
         if not user_info_doc:
-            raise ApiError("Błąd podczas pobierania danych użytkownika", (course_id, term_id))
+            raise ApiError(
+                "Błąd podczas pobierania danych użytkownika course_id (0} term_id (1}".format(course_id, term_id))
 
         # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
@@ -255,7 +256,7 @@ class ApiMixin(DaoMixin):
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
             if not course_doc:
-                raise ApiError("Nie znaleźliśmy danych kursu.", course_id)
+                raise ApiError("Nie znaleźliśmy danych kursu {0}".format(course_id))
 
         raise gen.Return(course_doc)
 
@@ -588,8 +589,8 @@ class ApiMixin(DaoMixin):
                 tt['lecturers'] = list()
                 tt['lecturers'].append(lecturer_info)
             else:
-                exception = ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer))
-                yield self.exc(exception, finish=False)
+                yield self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
+                               finish=False)
 
         if 'lecturer_ids' in tt:
             del (tt['lecturer_ids'])
