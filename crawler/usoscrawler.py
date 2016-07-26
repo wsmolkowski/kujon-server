@@ -246,8 +246,16 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             logging.debug('user_grade: {0}'.format(user_grade))
 
             if user_grade:
-                signal_grade = yield self.signal_message('wiadomosc {0}'.format(user_grade),
-                                                         user_doc[constants.USER_EMAIL])
+                message_text = 'wiadomosc {0}'.format(user_grade)
+                signal_grade = yield self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+
+                yield self.db[constants.COLLECTION_MESSAGES].insert({
+                    constants.CREATED_TIME: datetime.now(),
+                    constants.FIELD_MESSAGE_FROM: 'USOS' + self.getUserId(),
+                    constants.FIELD_MESSAGE_TYPE: 'subskrypcja',
+                    constants.FIELD_MESSAGE_TEXT: message_text
+                })
+
                 logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:
