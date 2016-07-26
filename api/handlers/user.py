@@ -50,7 +50,7 @@ class UserInfoApi(ApiHandler):
 
         try:
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(self.get_current_user()[constants.MONGO_ID])},
+                {constants.MONGO_ID: self.getUserId()},
                 LIMIT_FIELDS_USER)
 
             user_info = yield self.api_user_info()

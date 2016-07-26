@@ -48,6 +48,16 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     def get_current_usos(self):
         return self._context.usos_doc
 
+    def getUserId(self):
+        if self.get_current_user():
+            return ObjectId(self.get_current_user()[constants.MONGO_ID])
+        return None
+
+    def getUsosId(self):
+        if self.get_current_usos():
+            return self.get_current_user()[constants.USOS_ID]
+        return None
+
     def get_auth_http_client(self):
         return self._context.http_client
 
@@ -160,7 +170,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
         yield self._setUp(user_id)
 
-        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
+        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.getUsosId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:

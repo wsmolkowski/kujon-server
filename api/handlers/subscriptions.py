@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-from bson import ObjectId
 from tornado import gen
 from tornado import web
 
@@ -21,8 +20,8 @@ class SubscriptionsHandler(DaoMixin):
         try:
             subscriptions_doc = dict()
             subscriptions = yield self.db_subscriptions({
-                constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                constants.USOS_ID: self.get_current_user()[constants.USOS_ID]
+                constants.USER_ID: self.getUserId(),
+                constants.USOS_ID: self.getUsosId()
             })
 
             if subscriptions:
