@@ -22,7 +22,7 @@ class SocialMixin(object):
 
         except Exception as ex:
             logging.exception(ex)
-            raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
+            raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex))
         else:
             raise gen.Return(result)
 
@@ -39,6 +39,6 @@ class SocialMixin(object):
 
         except Exception as ex:
             logging.exception(ex)
-            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex.message))
+            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex))
         else:
             raise gen.Return(result)
