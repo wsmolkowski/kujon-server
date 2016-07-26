@@ -16,6 +16,9 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
 
+    def do_refresh(self):
+        return False
+
     _db = None
 
     @property
@@ -100,8 +103,8 @@ class DaoMixin(object):
     @gen.coroutine
     def db_insert(self, collection, document):
         create_time = datetime.now()
-        if self.get_current_user() and constants.USOS_ID in self.get_current_user():
-            document[constants.USOS_ID] = self.get_current_user()[constants.USOS_ID]
+        if hasattr(self, '_context') and hasattr(self._context, 'usos_doc'):
+            document[constants.USOS_ID] = self._context.usos_doc[constants.USOS_ID]
         document[constants.CREATED_TIME] = create_time
         document[constants.UPDATE_TIME] = create_time
 
@@ -331,23 +334,6 @@ class DaoMixin(object):
     def db_find_token(self, email):
         token_doc = yield self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
         raise gen.Return(token_doc)
-
-    _classtypes = dict()
-
-    @gen.coroutine
-    def db_classtypes(self):
-
-        if self.get_current_user()[constants.USOS_ID] not in self._classtypes:
-            class_type = dict()
-            cursor = self.db[constants.COLLECTION_COURSES_CLASSTYPES].find(
-                {constants.USOS_ID: self.get_current_user()[constants.USOS_ID]})
-            ct_doc = yield cursor.to_list(None)
-            for ct in ct_doc:
-                class_type[ct['id']] = ct['name']['pl']
-
-            self._classtypes[self.get_current_user()[constants.USOS_ID]] = class_type
-
-        raise gen.Return(self._classtypes[self.get_current_user()[constants.USOS_ID]])
 
     @gen.coroutine
     def db_subscriptions(self, pipeline):

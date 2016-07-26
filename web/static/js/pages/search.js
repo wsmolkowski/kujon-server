@@ -4,8 +4,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
         'text!templates/search_results.html', 'text!templates/modal_lecturer.html',
         'text!templates/modal_course.html'
     ],
-    function($, Handlebars, main, tpl, tplError, tplModalLecturer, tplModalUser
-        , spinnerTpl, resultsTpl, lecturerTpl, courseTpl) {
+    function($, Handlebars, main, tpl, tplError, tplModalLecturer, tplModalUser, spinnerTpl, resultsTpl, lecturerTpl, courseTpl) {
         'use strict';
         return {
             render: function() {
@@ -22,17 +21,46 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
 
                 $('#section-content').html(template());
 
+                $("#searchText").on("change paste keyup", function() {
+                  $('#search_warning').empty();
+                  $('#search_results').empty();
+                });
+
                 $('#searchSubmit').click(function() {
 
-                    if ($('#searchText').val()=='') {
+                    if ($('#searchText').val().length < 4) {
+                        $('#searchText').focus();
+                        $('#search_warning').html(
+                            '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                            'Wprowadź minimum 4 znaki.' +
+                            '</div>'
+                        );
                         return;
                     }
+
+                    if ($('#searchText').val().length > 30) {
+                        $('#searchText').focus();
+                        $('#search_warning').html(
+                            '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                            'Maksymalna długość frazy wynosi 30 znaków.' +
+                            '</div>'
+                        );
+                        return;
+                    }
+
+                    $('#search_results').empty();
+
+                    event.preventDefault();
 
                     var searchUrl = "/search/" + $('#searchType').val() + '/' + $('#searchText').val();
 
                     $('#search_results').html(templateSpinner);
 
                     main.ajaxGet(searchUrl).then(function(data) {
+                        $("#searchText").empty();
+                        
                         if (data.status == 'success') {
                             processResponse(data.data);
                             bindListeners();
@@ -42,31 +70,14 @@ define(['jquery', 'handlebars', 'main', 'text!templates/search.html',
                             }));
                         }
                     });
-
-                    event.preventDefault();
                 });
 
                 function processResponse(response) {
-
-                    switch ($('#searchType').val()) {
-                        case 'users':
-                            $('#search_results').html(templateResults(response));
-                            break;
-                        case 'courses':
-                            $('#search_results').html(templateResults(response));
-                            break;
-                        case 'faculties':
-                            $('#search_results').html(templateResults(response));
-                            break;
-                        case 'programmes':
-                            $('#search_results').html(templateResults(response));
-                            break;
-                    }
-
+                    $('#search_results').html(templateResults(response));
                     $('#table-results').DataTable(main.getDataTableConfig());
                 }
 
-                function bindListeners(){
+                function bindListeners() {
                     $('#errorModal').modal();
 
                     $('#table-results').on('click', '.lecturer-btn', function() {

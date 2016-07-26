@@ -20,7 +20,7 @@
                                         <span></span></a></p>
                                 </div>
                                 <div class="col-sm-2 text-right">
-                                    <p data-toggle="modal" data-target="#wykladowca-1">Usuń konto</p>
+                                    <p data-toggle="modal" data-target="#removeAccountModal">Usuń konto</p>
                                 </div>
                             </div>
                         </div>
@@ -114,6 +114,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -121,10 +122,9 @@
                 </div>
             </div>
         </div>
-    </div>
 </section>
 
-<div class="modal fade" id="wykladowca-1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+<div class="modal fade" id="removeAccountModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog modal-md" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -134,20 +134,17 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-sm-12 usuwanie-konta text-center">
-                        <h3>Czy na pewno chcesz usunąć<br> konto na <span>Kujon.mobi</span>?</h3>
-                        <div class="col-sm-8 col-sm-offset-2 col-xs-12">
-                            <div class="row">
-                                <div class="col-sm-7 col-xs-12">
-                                    <input class="col-xs-12" type="text" name="Usuń konto"
-                                           placeholder="Wpisz adres email">
-                                </div>
-                                <div class="col-sm-5 col-xs-12">
-                                    <a class="btn btn-default" href="{{API_URL}}/authentication/archive" role="button">Usuń
-                                        konto</a>
-                                </div>
+                    <div id="removeForm" class="col-sm-12 usuwanie-konta text-center">
+                        <form class="form-horizontal">
+                            <div class="col-sm-7 col-xs-12">
+                                <input type="email" class="form-control" id="removeEmail"
+                                       placeholder="Wpisz adres email" required/>
+                                <span id="helpBlock" class="help-block"></span>
                             </div>
-                        </div>
+                            <div class="col-sm-5 col-xs-12">
+                                <button type="submit" id="removeSubmit" class="btn btn-default">Usuń konto</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

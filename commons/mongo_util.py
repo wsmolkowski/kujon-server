@@ -5,11 +5,9 @@ from datetime import datetime
 from pprint import pprint
 
 import pymongo
-from tornado import escape
 from tornado import gen
-from tornado.httpclient import HTTPRequest
 
-from commons import constants, settings, utils, usosinstances
+from commons import constants, settings, usosinstances
 from commons.AESCipher import AESCipher
 from crawler import job_factory
 
@@ -29,14 +27,25 @@ def create_ttl_index(collection, field):
     logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
 
 
-def create_unique_indexes():
+def create_unique_index(collection, fields):
     db = get_client()
-    index = db[constants.COLLECTION_USERS_INFO].create_index([(constants.USOS_ID, pymongo.ASCENDING),
-                                                              (constants.ID, pymongo.ASCENDING)],
-                                                             unique=True, drop_dups=True)
+    index = db[collection].create_index(fields, unique=True, drop_dups=True)
 
-    logging.info('unique index: {0} created on collection: {1} and fields {2} {3}'.format(
-        index, constants.COLLECTION_USERS_INFO, constants.ID, constants.USOS_ID))
+    logging.info('unique index: {0} created on collection: {1} and fields {2}'.format(
+        index, collection, fields))
+
+
+def create_unique_indexes():
+    # create_unique_index(constants.COLLECTION_USERS_INFO,
+    #                     [(constants.USOS_ID, pymongo.ASCENDING), (constants.ID, pymongo.ASCENDING)])
+    create_unique_index(constants.COLLECTION_TERMS,
+                        [(constants.USOS_ID, pymongo.ASCENDING), (constants.TERM_ID, pymongo.ASCENDING)])
+    create_unique_index(constants.COLLECTION_FACULTIES,
+                        [(constants.USOS_ID, pymongo.ASCENDING), (constants.FACULTY_ID, pymongo.ASCENDING)])
+    create_unique_index(constants.COLLECTION_PROGRAMMES,
+                        [(constants.USOS_ID, pymongo.ASCENDING), (constants.PROGRAMME_ID, pymongo.ASCENDING)])
+    create_unique_index(constants.COLLECTION_COURSES,
+                        [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
 
 
 def create_indexes():
@@ -142,58 +151,6 @@ def drop_collections(skip_collections=None):
         db.drop_collection(collection)
 
 
-@gen.coroutine
-def _do_recreate(db, usos_doc):
-    url = None
-    try:
-        url = usos_doc[constants.USOS_URL] + 'services/courses/classtypes_index'
-        http_client = utils.http_client()
-
-        response = yield http_client.fetch(HTTPRequest(url=url,
-                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
-
-        if response.code is not 200 and response.reason != 'OK':
-            logging.error('Błedna odpowiedź USOS dla {0}'.format(url))
-            logging.error(response)
-            raise gen.Return()
-
-        class_types = escape.json_decode(response.body)
-
-        if class_types and len(class_types) > 0:
-            class_type_list = list()
-            for class_type in class_types.values():
-                class_type[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-                class_type[constants.CREATED_TIME] = datetime.now()
-                class_type_list.append(class_type)
-            db[constants.COLLECTION_COURSES_CLASSTYPES].insert(class_type_list)
-            logging.info("dictionary course classtypes for usos {0} inserted.".format(usos_doc[constants.USOS_ID]))
-        else:
-            logging.error("empty dictionaries {0} for {1}".format(constants.COLLECTION_COURSES_CLASSTYPES,
-                                                                  usos_doc[constants.USOS_ID]))
-
-    except Exception as ex:
-        logging.error("failed to recreate_dictionaries for {0} {1} {2}".format(
-            usos_doc[constants.USOS_ID], url, ex.message))
-        logging.exception(ex)
-
-    raise gen.Return()
-
-
-@gen.coroutine
-def recreate_dictionaries():
-    db = get_client()
-
-    tasks = list()
-    db.drop_collection(constants.COLLECTION_COURSES_CLASSTYPES)
-    for usos in db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True}):
-        tasks.append(_do_recreate(db, usos))
-
-    yield tasks
-
-    raise gen.Return(True)
-
-
 def recreate_usos():
     aes = AESCipher()
     db = get_client()
@@ -212,7 +169,6 @@ def recreate_usos():
 def recreate_database():
     try:
         recreate_usos()
-        yield recreate_dictionaries()
     except Exception as ex:
         msg = "Problem during database recreate: {0}".format(ex.message)
         logging.exception(msg, ex)

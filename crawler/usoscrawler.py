@@ -70,25 +70,25 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
                     logging.exception(ex)
                     continue
 
-                # for lecturer in course[constants.LECTURERS]:
-                #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.USER_ID])
-                #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                #         users_ids.append(lecturer[constants.ID])
-                # for participant in course[constants.PARTICIPANTS]:
-                #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                #         users_ids.append(participant[constants.USER_ID])
-                #     if constants.ID in participant and participant[constants.ID] not in users_ids:
-                #         users_ids.append(participant[constants.ID])
-                # for coordinator in course[constants.COORDINATORS]:
-                #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.USER_ID])
-                #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                #         users_ids.append(coordinator[constants.ID])
-                #
-                # for course_unit in course['course_units_ids']:
-                #     if course_unit not in course_units_ids:
-                #         course_units_ids.append(course_unit)
+                    # for lecturer in course[constants.LECTURERS]:
+                    #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
+                    #         users_ids.append(lecturer[constants.USER_ID])
+                    #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
+                    #         users_ids.append(lecturer[constants.ID])
+                    # for participant in course[constants.PARTICIPANTS]:
+                    #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
+                    #         users_ids.append(participant[constants.USER_ID])
+                    #     if constants.ID in participant and participant[constants.ID] not in users_ids:
+                    #         users_ids.append(participant[constants.ID])
+                    # for coordinator in course[constants.COORDINATORS]:
+                    #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
+                    #         users_ids.append(coordinator[constants.USER_ID])
+                    #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
+                    #         users_ids.append(coordinator[constants.ID])
+                    #
+                    # for course_unit in course['course_units_ids']:
+                    #     if course_unit not in course_units_ids:
+                    #         course_units_ids.append(course_unit)
 
         try:
             yield courses_terms
@@ -160,11 +160,6 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
         yield self._setUp(user_id)
 
-        try:
-            yield UsosCaller(self._context).call(path='services/events/unsubscribe')
-        except Exception as ex:
-            logging.warning(ex)
-
         callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
@@ -173,7 +168,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
                                                                      arguments={
                                                                          'event_type': event_type,
                                                                          'callback_url': callback_url,
-                                                                         'verify_token': self.get_current_user()[constants.MONGO_ID]
+                                                                         'verify_token': self.get_current_user()[
+                                                                             constants.MONGO_ID]
                                                                      })
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
@@ -271,7 +267,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             usoses = yield self.db_usoses()
             for usos_doc in usoses:
                 try:
-                    data = yield self.usos_notifier_status(usos_doc)
+                    data = yield UsosCaller().async(path='services/events/notifier_status',
+                                                    base_url=usos_doc[constants.USOS_URL])
+
                     data[constants.CREATED_TIME] = timestamp
                     data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
 
