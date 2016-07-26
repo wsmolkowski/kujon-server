@@ -89,6 +89,13 @@ class EmailQueue(object):
 
             smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
 
+            yield self.db[constants.COLLECTION_MESSAGES].insert({
+                constants.CREATED_TIME: datetime.now(),
+                constants.FIELD_MESSAGE_FROM: settings.PROJECT_TITLE,
+                constants.FIELD_MESSAGE_TYPE: 'email',
+                constants.FIELD_MESSAGE_TEXT: job[constants.SMTP_TEXT]
+            })
+
             yield self.update_job(job, constants.JOB_FINISH)
 
             logging.info("processed job: {0}".format(job[constants.MONGO_ID]))

@@ -91,10 +91,10 @@ class ApiUserMixin(DaoMixin):
     def api_user_info(self, user_id=None):
 
         if not user_id:
-            pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                        constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
+            pipeline = {constants.USER_ID: self.getUserId(),
+                        constants.USOS_ID: self.getUsosId()}
         else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
+            pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)

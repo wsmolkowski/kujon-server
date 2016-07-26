@@ -16,7 +16,8 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
 
-    def do_refresh(self):
+    @staticmethod
+    def do_refresh():
         return False
 
     _db = None
@@ -98,8 +99,7 @@ class DaoMixin(object):
     @gen.coroutine
     def db_insert(self, collection, document):
         create_time = datetime.now()
-        if hasattr(self, '_context') and hasattr(self._context, 'usos_doc'):
-            document[constants.USOS_ID] = self._context.usos_doc[constants.USOS_ID]
+        document[constants.USOS_ID] = self.getUsosId()
         document[constants.CREATED_TIME] = create_time
         document[constants.UPDATE_TIME] = create_time
 
@@ -328,3 +328,9 @@ class DaoMixin(object):
         cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)
         subscriptions = yield cursor.to_list(None)
         raise gen.Return(subscriptions)
+
+    @gen.coroutine
+    def db_messages(self, pipeline):
+        cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline)
+        messages = yield cursor.to_list(None)
+        raise gen.Return(messages)

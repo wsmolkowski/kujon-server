@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, helpers
@@ -13,7 +12,7 @@ class ApiMixinFriends(DaoMixin):
     @gen.coroutine
     def api_friends(self):
         friends_returned = list()
-        pipeline = [{'$match': {'user_id': ObjectId(self.get_current_user()[constants.MONGO_ID])}},
+        pipeline = [{'$match': {'user_id': self.getUserId()}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
         cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
@@ -34,7 +33,7 @@ class ApiMixinFriends(DaoMixin):
     @gen.coroutine
     def api_friends_add(self, user_info_id):
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one(
-            {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+            {constants.USER_ID: self.getUserId(),
              constants.FRIEND_ID: user_info_id})
         if not friend_doc:
             user_info_doc = yield self.api_user_info(user_info_id)
@@ -53,7 +52,7 @@ class ApiMixinFriends(DaoMixin):
     @gen.coroutine
     def api_friends_remove(self, user_info_id):
 
-        pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
+        pipeline = {constants.USER_ID: self.getUserId(),
                     constants.FRIEND_ID: user_info_id}
 
         friend_doc = yield self.db[constants.COLLECTION_FRIENDS].find_one(pipeline)

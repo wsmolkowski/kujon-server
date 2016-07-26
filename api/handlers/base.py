@@ -2,7 +2,7 @@
 
 import logging
 
-from bson import json_util
+from bson import json_util, ObjectId
 from tornado import gen, web, escape
 from tornado.escape import json_decode
 from tornado.util import ObjectDict
@@ -93,6 +93,16 @@ class BaseHandler(RequestHandler, DaoMixin):
 
     def get_current_usos(self):
         return self._context.usos_doc
+
+    def getUserId(self):
+        if self.get_current_user():
+            return ObjectId(self.get_current_user()[constants.MONGO_ID])
+        return None
+
+    def getUsosId(self):
+        if self.get_current_usos():
+            return self.get_current_user()[constants.USOS_ID]
+        return None
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
