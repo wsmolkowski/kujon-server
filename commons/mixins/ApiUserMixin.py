@@ -16,9 +16,6 @@ USER_INFO_SKIP_FIELDS = {constants.MONGO_ID: False, 'email_access': False, 'inte
 
 
 class ApiUserMixin(DaoMixin):
-    def do_refresh(self):
-        return False
-
     @gen.coroutine
     def api_photo(self, user_info_id):
         pipeline = {constants.ID: user_info_id}

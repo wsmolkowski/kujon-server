@@ -12,7 +12,6 @@ from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
-from commons.mixins.DaoMixin import DaoMixin
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
@@ -36,7 +35,7 @@ USER_INFO_LIMIT_FIELDS = (
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
-class ApiMixin(DaoMixin, ApiUserMixin):
+class ApiMixin(ApiUserMixin):
     @staticmethod
     def filterNone(array):
         return [i for i in array if i is not None]
