@@ -96,9 +96,11 @@ class BaseHandler(RequestHandler, DaoMixin):
             return self._context.usos_doc
         return False
 
-    def getUserId(self):
+    def getUserId(self, return_object_id=True):
         if self.get_current_user():
-            return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
         return None
 
     def getUsosId(self):

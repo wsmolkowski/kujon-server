@@ -48,9 +48,11 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     def get_current_usos(self):
         return self._context.usos_doc
 
-    def getUserId(self):
+    def getUserId(self, return_object_id=True):
         if self.get_current_user():
-            return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
         return None
 
     def getUsosId(self):
@@ -178,8 +180,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
                                                                      arguments={
                                                                          'event_type': event_type,
                                                                          'callback_url': callback_url,
-                                                                         'verify_token': self.get_current_user()[
-                                                                             constants.MONGO_ID]
+                                                                         'verify_token':
+                                                                             self.getUserId(return_object_id=False)
                                                                      })
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
