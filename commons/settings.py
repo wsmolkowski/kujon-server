@@ -46,7 +46,6 @@ WEB_PORT = config.getint('deployment', 'WEB_PORT')
 DEPLOY_WEB = config.get('deployment', 'DEPLOY_WEB')
 CALLBACK_URL = config.get('deployment', 'CALLBACK_URL')
 CALLBACK_MOBI_URL = config.get('deployment', 'CALLBACK_MOBI_URL')
-LOGIN_URL = config.get('deployment', 'LOGIN_URL')
 
 EVENT_PORT = config.getint('deployment', 'EVENT_PORT')
 DEPLOY_EVENT = config.get('deployment', 'DEPLOY_EVENT')
