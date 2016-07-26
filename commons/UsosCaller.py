@@ -78,7 +78,9 @@ class UsosCaller(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        response = yield self.get_auth_http_client().fetch(HTTPRequest(url=url))
+        response = yield self.get_auth_http_client().fetch(HTTPRequest(url=url,
+                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             raise gen.Return(escape.json_decode(response.body))

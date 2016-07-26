@@ -12,8 +12,8 @@ class SocialMixin(object):
     @gen.coroutine
     def google_token(self, token):
         try:
-            http_client = utils.http_client()
-            tokeninfo = yield http_client.fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token)
+            tokeninfo = yield utils.http_client().fetch(
+                'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token)
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
             else:
@@ -22,15 +22,14 @@ class SocialMixin(object):
 
         except Exception as ex:
             logging.exception(ex)
-            raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex.message))
+            raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex))
         else:
             raise gen.Return(result)
 
     @gen.coroutine
     def facebook_token(self, token):
         try:
-            http_client = utils.http_client()
-            tokeninfo = yield http_client.fetch(
+            tokeninfo = yield utils.http_client().fetch(
                 'https://graph.facebook.com/me?fields=id,name,email&access_token=' + token)
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
@@ -40,6 +39,6 @@ class SocialMixin(object):
 
         except Exception as ex:
             logging.exception(ex)
-            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex.message))
+            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex))
         else:
             raise gen.Return(result)

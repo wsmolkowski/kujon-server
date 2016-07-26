@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 
 from commons import constants, settings
-from commons.errors import ApiError, AuthenticationError, UsosClientError
+from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
 
@@ -31,12 +31,9 @@ class DaoMixin(object):
     def exc(self, exception, finish=True):
         logging.exception(exception)
 
-        if isinstance(exception, ApiError):
-            exc_doc = exception.data()
-        else:
-            exc_doc = {
-                'exception': str(exception)
-            }
+        exc_doc = {
+            'exception': str(exception)
+        }
 
         if hasattr(self, 'get_current_user') and self.get_current_user():
             user_id = self.get_current_user()[constants.MONGO_ID]
@@ -51,11 +48,9 @@ class DaoMixin(object):
         yield self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
 
         if finish:
-            if isinstance(exception, ApiError):
-                self.error(message=exception.message())
-            elif isinstance(exception, AuthenticationError):
-                self.error(message=exception)
-            elif isinstance(exception, UsosClientError):
+            if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):
+                self.error(message=str(exception))
+            elif isinstance(exception, CallerError):
                 self.error(message='Wystąpił błąd USOS.')
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
