@@ -251,8 +251,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
                 yield self.db[constants.COLLECTION_MESSAGES].insert({
                     constants.CREATED_TIME: datetime.now(),
-                    constants.FIELD_MESSAGE_FROM: 'USOS' + self.getUserId(),
-                    constants.FIELD_MESSAGE_TYPE: 'subskrypcja',
+                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
+                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
                     constants.FIELD_MESSAGE_TEXT: message_text
                 })
 
