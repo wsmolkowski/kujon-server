@@ -5,7 +5,7 @@ from datetime import date, time, datetime
 
 from bson import ObjectId
 
-from commons import settings, constants
+from commons import constants
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -80,9 +80,6 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
-        if settings.DEVELOPMENT:
-            self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
         self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
         self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder))
         self.finish()

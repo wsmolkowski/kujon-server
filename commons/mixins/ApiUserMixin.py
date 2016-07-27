@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons import constants, settings
+from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.mixins.DaoMixin import DaoMixin
@@ -144,7 +144,7 @@ class ApiUserMixin(DaoMixin):
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
                 if photo_doc:
-                    user_info_doc[constants.PHOTO_URL] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                    user_info_doc[constants.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
                         photo_doc[constants.MONGO_ID])
 
             try:

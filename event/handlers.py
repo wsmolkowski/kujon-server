@@ -23,6 +23,10 @@ class MainHandler(RequestHandler, JSendMixin, DaoMixin):
     def db(self):
         return self.application.settings['db']
 
+    @property
+    def config(self):
+        return self.application.settings['config']
+
     @gen.coroutine
     def user_exists(self, user_id):
         if isinstance(user_id, str):
@@ -30,18 +34,6 @@ class MainHandler(RequestHandler, JSendMixin, DaoMixin):
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
         gen.Return(user_doc)
-
-        # @gen.coroutine
-        # def exc(self, exception):
-        #     exc_doc = {'exception': str(exception), constants.TRACEBACK: traceback.format_exc(),
-        #                constants.EXCEPTION_TYPE: self.EXCEPTION_TYPE, constants.CREATED_TIME: datetime.now()}
-        #
-        #     ex_id = yield self.db[constants.COLLECTION_EXCEPTIONS].insert(exc_doc)
-        #
-        #     logging.exception(exception)
-        #     logging.error('handled exception {0} and saved in db with {1}'.format(exc_doc, ex_id))
-        #
-        #     self.fail(message='Wystąpił błąd techniczny. Pracujemy nad rozwiązaniem.')
 
 
 class EventHandler(MainHandler):

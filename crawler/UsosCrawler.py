@@ -8,8 +8,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 from tornado.util import ObjectDict
 
-from commons import constants, utils, settings
-from commons.AESCipher import AESCipher
+from commons import constants, utils
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
@@ -20,8 +19,9 @@ from commons.mixins.OneSignalMixin import OneSignalMixin
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
-    def __init__(self):
-        self.aes = AESCipher()
+    def __init__(self, config):
+        self.config = config
+        # self._aes = AESCipher(self._config.AES_SECRET.encode())
 
     @gen.coroutine
     def _setUp(self, user_id):
@@ -29,6 +29,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             user_id = ObjectId(user_id)
 
         self._context = ObjectDict()
+        self._context.proxy_url = self.config.PROXY_URL
+        self._context.proxy_port = self.config.PROXY_PORT
         self._context.http_client = utils.http_client()
         self._context.user_doc = yield self.db_get_user(user_id)
         if not self._context.user_doc:
@@ -172,7 +174,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
         yield self._setUp(user_id)
 
-        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.getUsosId())
+        callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:

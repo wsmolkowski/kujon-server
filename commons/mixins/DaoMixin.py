@@ -8,7 +8,8 @@ import motor
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, settings
+from commons import constants
+from commons.AESCipher import AESCipher
 from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
@@ -25,8 +26,16 @@ class DaoMixin(object):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
+        return self._db[self.config.MONGODB_NAME]
+
+    _aes = None
+
+    @property
+    def aes(self):
+        if not self._aes:
+            self._aes = AESCipher(self.config.AES_SECRET)
+        return self._aes
 
     @gen.coroutine
     def exc(self, exception, finish=True):
@@ -64,9 +73,9 @@ class DaoMixin(object):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
         usoses_doc = yield cursor.to_list(None)
         for usos in usoses_doc:
-            usos[constants.USOS_LOGO] = settings.DEPLOY_WEB + usos[constants.USOS_LOGO]
+            usos[constants.USOS_LOGO] = self.config.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
-            if settings.ENCRYPT_USOSES_KEYS:
+            if self.config.ENCRYPT_USOSES_KEYS:
                 usos = dict(self.aes.decrypt_usos(usos))
 
             result.append(usos)
@@ -230,7 +239,6 @@ class DaoMixin(object):
 
         yield self.db_remove(constants.COLLECTION_USERS, {constants.MONGO_ID: user_id})
         if user_doc[constants.USOS_PAIRED]:
-
             yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
                                  {constants.USER_ID: user_id,
                                   constants.CREATED_TIME: datetime.now(),

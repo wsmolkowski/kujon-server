@@ -7,7 +7,7 @@ from bson import ObjectId, json_util
 from tornado import auth, gen, web, escape
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants, settings
+from commons import constants
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
@@ -21,13 +21,13 @@ class ArchiveHandler(ApiHandler):
     def db_email_archive_user(self, recipient):
         email_job = email_factory.email_job(
             'Usunęliśmy Twoje konto w Kujon.mobi',
-            settings.SMTP_EMAIL,
+            self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,'
             '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas..\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {0}\n'.format(settings.SMTP_EMAIL)
+            '\nemail: {0}\n'.format(self.config.SMTP_EMAIL)
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -40,9 +40,9 @@ class ArchiveHandler(ApiHandler):
         if user_doc:
             yield self.db_archive_user(user_doc[constants.MONGO_ID])
 
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=settings.SITE_DOMAIN)
+        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
-        self.redirect(settings.DEPLOY_WEB)
+        self.redirect(self.config.DEPLOY_WEB)
 
     @web.asynchronous
     @gen.coroutine
@@ -53,11 +53,10 @@ class ArchiveHandler(ApiHandler):
             if user_doc:
                 yield self.db_archive_user(user_doc[constants.MONGO_ID])
 
-            self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=settings.SITE_DOMAIN)
+            self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
             yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
 
             self.success({})
-            # self.redirect(settings.DEPLOY_WEB)
         except Exception as ex:
             yield self.exc(ex)
 
@@ -72,15 +71,15 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
-                               domain=settings.SITE_DOMAIN)
+                               domain=self.config.SITE_DOMAIN)
 
         raise gen.Return()
 
 
 class LogoutHandler(AuthenticationHandler):
     def get(self):
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=settings.SITE_DOMAIN)
-        self.redirect(settings.DEPLOY_WEB)
+        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        self.redirect(self.config.DEPLOY_WEB)
 
 
 class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin):
@@ -89,7 +88,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
     def get(self):
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
+                redirect_uri=self.config.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 client_secret=self.settings['facebook_oauth']['secret'],
                 code=self.get_argument('code'),
@@ -130,11 +129,10 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
             user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
             yield self.reset_user_cookie(user_doc)
 
-            # + '?token={0}'.format(user_doc[constants.MONGO_ID])
-            self.redirect(settings.DEPLOY_WEB)
+            self.redirect(self.config.DEPLOY_WEB)
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_API + '/authentication/facebook',
+                redirect_uri=self.config.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 scope=['public_profile', 'email', 'user_friends'],
                 response_type='code',
@@ -148,12 +146,12 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
         if self.get_argument('error', False):
             logging.error('Błąd autoryzacji Google+.')
-            self.redirect(settings.DEPLOY_WEB + '/')
+            self.redirect(self.config.DEPLOY_WEB + '/')
             return
 
         if self.get_argument('code', False):
             access = yield self.get_authenticated_user(
-                redirect_uri=settings.DEPLOY_API + '/authentication/google',
+                redirect_uri=self.config.DEPLOY_API + '/authentication/google',
                 code=self.get_argument('code'))
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
@@ -200,11 +198,11 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
 
             yield self.reset_user_cookie(user_doc)
-            self.redirect(settings.DEPLOY_WEB)
+            self.redirect(self.config.DEPLOY_WEB)
 
         else:
             yield self.authorize_redirect(
-                redirect_uri=settings.DEPLOY_API + '/authentication/google',
+                redirect_uri=self.config.DEPLOY_API + '/authentication/google',
                 client_id=self.settings['google_oauth']['key'],
                 scope=['profile', 'email'],
                 response_type='code',
@@ -276,13 +274,13 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades|crstests',
-                'oauth_callback': settings.DEPLOY_API + '/authentication/verify'
+                'oauth_callback': self.config.DEPLOY_API + '/authentication/verify'
             })
 
         except Exception as ex:
             if login_type and login_type.upper() == 'WWW':
                 yield self.exc(ex, finish=False)
-                self.redirect(settings.DEPLOY_WEB)
+                self.redirect(self.config.DEPLOY_WEB)
             else:
                 yield self.exc(ex)
 
@@ -295,14 +293,14 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
         email_job = email_factory.email_job(
             'Rejestracja w Kujon.mobi',
-            settings.SMTP_EMAIL,
+            self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,\n'
             '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
             '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_name, settings.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(usos_name, self.config.SMTP_EMAIL)
         )
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -350,7 +348,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.clear_cookie(constants.KUJON_MOBI_REGISTER)
                 yield self.reset_user_cookie(user_doc)
-                self.redirect(settings.DEPLOY_WEB)
+                self.redirect(self.config.DEPLOY_WEB)
 
             if user_doc:
 
@@ -376,9 +374,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 else:
                     logging.info('zakonczona rejestracja WWW')
                     yield self.db_email_registration(user_doc, usos_doc[constants.USOS_NAME])
-                    self.redirect(settings.DEPLOY_WEB)
+                    self.redirect(self.config.DEPLOY_WEB)
             else:
-                self.redirect(settings.DEPLOY_WEB)
+                self.redirect(self.config.DEPLOY_WEB)
 
         except Exception as ex:
             yield self.exc(ex)

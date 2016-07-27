@@ -13,20 +13,12 @@ try:
 except ImportError:
     from httplib2 import socks
 
-from commons import settings
 from commons import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
 
 log = logging.getLogger(__name__)
-
-
-# def get_proxy():
-#     if settings.PROXY_PORT and settings.PROXY_URL:
-#         return httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host=settings.PROXY_URL,
-#                                   proxy_port=settings.PROXY_PORT, proxy_rdns=False)
-#     return None
 
 
 def mkdir(newdir):
@@ -42,20 +34,20 @@ def mkdir(newdir):
             os.mkdir(newdir)
 
 
-def initialize_logging(logger_name):
+def initialize_logging(logger_name, log_level='DEBUG', log_dir=None, ):
     log_format = DEFAULT_FORMAT % logger_name
 
     try:
         logging.basicConfig(
             format=log_format,
-            level=logging.DEBUG if settings.DEBUG else logging.INFO,
+            level=log_level,
         )
 
         # set up file loggers
-        if not settings.LOG_DIR:
-            log_dir = os.path.join(tempfile.gettempdir(), settings.PROJECT_TITLE)
+        if not log_dir:
+            log_dir = os.path.join(tempfile.gettempdir(), 'kujon.mobi')
         else:
-            log_dir = settings.LOG_DIR
+            log_dir = log_dir
 
         if not os.path.exists(log_dir):
             mkdir(log_dir)
@@ -81,16 +73,15 @@ def initialize_logging(logger_name):
     log = logging.getLogger(__name__)
 
 
-def http_client():
-    if settings.PROXY_URL and settings.PROXY_PORT:
+def http_client(proxy_url=None, proxy_port=None):
+    if proxy_url and proxy_port:
         httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=settings.PROXY_URL,
-                                                           proxy_port=settings.PROXY_PORT,
+                                             defaults=dict(proxy_host=proxy_url,
+                                                           proxy_port=proxy_port,
                                                            validate_cert=False),
                                              max_clients=constants.MAX_HTTP_CLIENTS)
 
     else:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
+        httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()

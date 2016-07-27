@@ -12,51 +12,55 @@ from tornado.options import parse_command_line, define, options
 
 from api.handlers.base import DefaultErrorHandler
 from api.handlers_list import HANDLERS
-from commons import settings
+from commons.config import Config
 
-define("port", default=settings.API_PORT, help="run on the given port", type=int)
-define('cookie_secret', default=settings.COOKIE_SECRET)
+define('environment', default='development')
 
 
-class Application(tornado.web.Application):
+def get_application(config):
+    class Application(tornado.web.Application):
+        def __init__(self):
+            _settings = dict(
+                debug=config.DEBUG,
+                autoreload=config.RELOAD,
+                compress_response=config.COMPRESS_RESPONSE,
+                cookie_secret=config.COOKIE_SECRET,
+                google_oauth={'key': config.GOOGLE_CLIENT_ID, 'secret': config.GOOGLE_CLIENT_SECRET},
+                facebook_oauth={'key': config.FACEBOOK_CLIENT_ID, 'secret': config.FACEBOOK_CLIENT_SECRET},
+                default_handler_class=DefaultErrorHandler,
+                xheaders=True,
+            )
 
-    def __init__(self):
-        _settings = dict(
-            debug=settings.DEBUG,
-            autoreload=settings.RELOAD,
-            compress_response=settings.COMPRESS_RESPONSE,
-            cookie_secret=options.cookie_secret,
-            google_oauth={'key': settings.GOOGLE_CLIENT_ID, 'secret': settings.GOOGLE_CLIENT_SECRET},
-            facebook_oauth={'key': settings.FACEBOOK_CLIENT_ID, 'secret': settings.FACEBOOK_CLIENT_SECRET},
-            default_handler_class=DefaultErrorHandler,
-            xheaders=True,
-        )
+            tornado.web.Application.__init__(self, HANDLERS, **_settings)
 
-        tornado.web.Application.__init__(self, HANDLERS, **_settings)
+    return Application()
 
 
 def main():
     parse_command_line()
-    logging.getLogger().setLevel(settings.LOG_LEVEL)
+    config = Config(options.environment)
+    logging.getLogger().setLevel(config.LOG_LEVEL)
 
-    application = Application()
-    if settings.SSL_CERT and settings.SSL_KEY:
+    application = get_application(config)
+
+    if config.SSL_CERT and config.SSL_KEY:
         ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        ssl_ctx.load_cert_chain(settings.SSL_CERT, settings.SSL_KEY)
+        ssl_ctx.load_cert_chain(config.SSL_CERT, config.SSL_KEY)
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
-        server.bind(options.port)
+        server.bind(config.API_PORT)
         server.start(0)  # Forks multiple sub-processes
-        logging.info('SSL ENABLED FOR API on port: {0}'.format(options.port))
+        logging.info('SSL ENABLED FOR API on port: {0}'.format(config.API_PORT))
     else:
         server = HTTPServer(application)
-        server.listen(options.port)
-        logging.info('SSL DISABLED FOR API on port: {0}'.format(options.port))
+        server.listen(config.API_PORT)
+        logging.info('SSL DISABLED FOR API on port: {0}'.format(config.API_PORT))
 
-    db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+    db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
     logging.info(db)
     application.settings['db'] = db
-    logging.info(settings.DEPLOY_API)
+    application.settings['config'] = config
+    logging.info(config.DEPLOY_API)
     IOLoop.instance().start()
 
 

@@ -10,18 +10,11 @@ from tornado import gen
 from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
-from commons import constants, settings
+from commons import constants
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
 
 CONFIG_COOKIE_EXPIRATION = 1
-
-CONFIG = {
-    'PROJECT_TITLE': settings.PROJECT_TITLE,
-    'KUJON_SECURE_COOKIE': constants.KUJON_SECURE_COOKIE,
-    'API_URL': settings.DEPLOY_API,
-    'WEB_VERSION': settings.WEB_VERSION,
-}
 
 
 class BaseHandler(RequestHandler, JSendMixin):
@@ -30,6 +23,18 @@ class BaseHandler(RequestHandler, JSendMixin):
     @property
     def db(self):
         return self.application.settings['db']
+
+    @property
+    def config(self):
+        return self.application.settings['config']
+
+    def get_config(self):
+        return {
+            'PROJECT_TITLE': self.config.PROJECT_TITLE,
+            'KUJON_SECURE_COOKIE': self.config.COOKIE_SECRET,
+            'API_URL': self.config.DEPLOY_API,
+            'WEB_VERSION': self.config.WEB_VERSION,
+        }
 
     @gen.coroutine
     def set_current_user(self):
@@ -52,7 +57,7 @@ class BaseHandler(RequestHandler, JSendMixin):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
         while (yield cursor.fetch_next):
             usos = cursor.next_object()
-            usos['logo'] = settings.DEPLOY_WEB + usos['logo']
+            usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
             usoses.append(usos)
 
         raise tornado.gen.Return(usoses)
@@ -77,9 +82,9 @@ class MainHandler(BaseHandler):
             user = self.get_current_user()
 
         if user and constants.USOS_PAIRED in user and user[constants.USOS_PAIRED]:
-            self.render("app.html", **CONFIG)
+            self.render("app.html", **self.get_config())
         elif user and constants.USOS_PAIRED in user and not user[constants.USOS_PAIRED]:
-            data = CONFIG
+            data = self.get_config()
 
             user = self.get_current_user()
             if user:
@@ -96,7 +101,7 @@ class MainHandler(BaseHandler):
             data['usoses'] = usoses
             self.render("register.html", **data)
         else:
-            self.render("index.html", **CONFIG)
+            self.render("index.html", **self.get_config())
 
 
 class ContactHandler(BaseHandler):
@@ -106,8 +111,8 @@ class ContactHandler(BaseHandler):
     def email_contact(self, subject, message):
         email_job = email_factory.email_job(
             '[KUJON.MOBI][CONTACT]: {0}'.format(subject),
-            settings.SMTP_EMAIL,
-            [settings.SMTP_EMAIL],
+            self.config.SMTP_EMAIL,
+            [self.config.SMTP_EMAIL],
             '\nNowa wiadomość od użytkownik: email: {0} mongo_id: {1}\n'
             '\nwiadomość:\n{2}\n'.format(self.get_current_user()[constants.USER_EMAIL],
                                          self.get_current_user()[constants.MONGO_ID],
@@ -138,13 +143,13 @@ class ContactHandler(BaseHandler):
 class DisclaimerHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.render("disclaimer.html", **CONFIG)
+        self.render("disclaimer.html", **self.get_config())
 
 
 class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        data = CONFIG
+        data = self.get_config()
         data['MESSAGE'] = '404 - Strona o podanym adresie nie istnieje.'
         self.render('error.html', **data)
