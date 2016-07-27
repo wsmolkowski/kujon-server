@@ -28,9 +28,8 @@ class UsosCaller(OAuthMixin):
     def _oauth_consumer_token(self):
         return self._context.consumer_token
 
-    @staticmethod
-    def get_auth_http_client():
-        return utils.http_client()
+    def get_auth_http_client(self):
+        return utils.http_client(self._context.proxy_url, self._context.proxy_port)
 
     @gen.coroutine
     def call(self, path, arguments=None):

@@ -3,7 +3,6 @@
 import logging
 from datetime import date, timedelta, datetime
 
-from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
@@ -11,7 +10,7 @@ from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
-from commons.mixins.DaoMixin import DaoMixin
+from commons.mixins.ApiUserMixin import ApiUserMixin
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
@@ -35,16 +34,14 @@ USER_INFO_LIMIT_FIELDS = (
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
-class ApiMixin(DaoMixin):
+class ApiMixin(ApiUserMixin):
     @staticmethod
     def filterNone(array):
         return [i for i in array if i is not None]
 
     @gen.coroutine
     def api_courses_editions(self):
-        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
-
-        pipeline = {constants.USER_ID: user_id}
+        pipeline = {constants.USER_ID: self.getUserId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
@@ -117,7 +114,7 @@ class ApiMixin(DaoMixin):
     @gen.coroutine
     def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -223,7 +220,7 @@ class ApiMixin(DaoMixin):
     @gen.coroutine
     def api_course(self, course_id):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES, pipeline)
@@ -283,7 +280,7 @@ class ApiMixin(DaoMixin):
                 cursor = self.db[constants.COLLECTION_GROUPS].find(
                     {constants.COURSE_ID: course[constants.COURSE_ID],
                      constants.TERM_ID: course[constants.TERM_ID],
-                     constants.USOS_ID: self.get_current_user()[constants.USOS_ID]},
+                     constants.USOS_ID: self.getUsosId()},
                     LIMIT_FIELDS_GROUPS
                 )
                 groups_doc = yield cursor.to_list(None)
@@ -328,7 +325,7 @@ class ApiMixin(DaoMixin):
     @gen.coroutine
     def get_classtypes(self):
         classtypes = yield self.db[constants.COLLECTION_COURSES_CLASSTYPES].find_one(
-            {constants.USOS_ID: self._context.usos_doc[constants.USOS_ID]},
+            {constants.USOS_ID: self.getUsosId()},
             {constants.MONGO_ID: False, constants.CREATED_TIME: False})
 
         if not classtypes:
@@ -533,7 +530,7 @@ class ApiMixin(DaoMixin):
         except Exception:
             raise ApiError("Data w niepoprawnym formacie.")
 
-        user_id = ObjectId(self.get_current_user()[constants.MONGO_ID])
+        user_id = self.getUserId()
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TT, {constants.USER_ID: user_id})
@@ -618,7 +615,7 @@ class ApiMixin(DaoMixin):
     @gen.coroutine
     def api_term(self, term_ids):
 
-        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.getUsosId()}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_TERMS, pipeline)
 
@@ -681,7 +678,7 @@ class ApiMixin(DaoMixin):
 
     @gen.coroutine
     def api_faculty(self, faculty_id):
-        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_FACULTIES, pipeline)
@@ -698,7 +695,6 @@ class ApiMixin(DaoMixin):
                 faculty_doc = yield self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
             except Exception as ex:
                 yield self.exc(ex, finish=False)
-                raise gen.Return()
 
         raise gen.Return(faculty_doc)
 
@@ -739,7 +735,7 @@ class ApiMixin(DaoMixin):
 
     @gen.coroutine
     def api_unit(self, unit_id, finish=False):
-        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.getUsosId()}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
 
@@ -763,7 +759,7 @@ class ApiMixin(DaoMixin):
     @gen.coroutine
     def api_units(self, units_id, finish=False):
         pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))},
-                    constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+                    constants.USOS_ID: self.getUsosId()}
         cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline).sort("unit_id")
         units_doc = yield cursor.to_list(None)
 
@@ -781,7 +777,7 @@ class ApiMixin(DaoMixin):
 
     @gen.coroutine
     def api_group(self, group_id, finish=False):
-        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.getUsosId()}
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_GROUPS, pipeline)
 
@@ -818,11 +814,13 @@ class ApiMixin(DaoMixin):
 
         if not theses_doc:
             users_info_doc = yield self.api_user_info()
-            theses_doc = yield UsosCaller(self._context).call(path='services/theses/user',
-                                                              arguments={
-                                                                  'user_id': users_info_doc[constants.ID],
-                                                                  'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
-                                                              })
+            theses_doc = yield UsosCaller(self._context).call(
+                path='services/theses/user',
+                arguments={
+                    'user_id': users_info_doc[constants.ID],
+                    'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
+                })
+
             if 'authored_theses' in theses_doc:
                 for these in theses_doc['authored_theses']:
                     these['faculty']['name'] = these['faculty']['name']['pl']

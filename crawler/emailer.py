@@ -9,19 +9,24 @@ from email.mime.text import MIMEText
 import motor
 from tornado import queues, gen
 from tornado.ioloop import IOLoop
+from tornado.options import define, options
 from tornado.options import parse_command_line
 
-from commons import settings, constants
+from commons import constants
+from commons.config import Config
 
 QUEUE_MAXSIZE = 100
 MAX_WORKERS = 4
 SLEEP = 2
 
+define('environment', default='development')
+
 
 class EmailQueue(object):
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
-        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
         self.processing = []
 
         logging.info(self.db)
@@ -76,9 +81,9 @@ class EmailQueue(object):
             self.processing.append(job)
             logging.info("processing job: {0}".format(job[constants.MONGO_ID]))
 
-            smtp.connect(settings.SMTP_HOST, settings.SMTP_PORT)
+            smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
             smtp.starttls()
-            smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
 
             yield self.update_job(job, constants.JOB_START)
 
@@ -88,6 +93,13 @@ class EmailQueue(object):
             msg['To'] = ','.join(job[constants.SMTP_TO])
 
             smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+
+            yield self.db[constants.COLLECTION_MESSAGES].insert({
+                constants.CREATED_TIME: datetime.now(),
+                constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
+                constants.FIELD_MESSAGE_TYPE: 'email',
+                constants.FIELD_MESSAGE_TEXT: job[constants.SMTP_TEXT]
+            })
 
             yield self.update_job(job, constants.JOB_FINISH)
 
@@ -127,10 +139,10 @@ class EmailQueue(object):
 
 if __name__ == '__main__':
     parse_command_line()
+    config = Config(options.environment)
+    logging.getLogger().setLevel(config.LOG_LEVEL)
 
-    logging.getLogger().setLevel(settings.LOG_LEVEL)
-
-    emailQueue = EmailQueue()
+    emailQueue = EmailQueue(config)
 
     io_loop = IOLoop.current()
     io_loop.run_sync(emailQueue.workers)

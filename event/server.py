@@ -1,7 +1,6 @@
-# coding=utf-8
+# coding=UTF-8
 
 import logging
-import os
 import ssl
 
 import motor
@@ -11,7 +10,7 @@ from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
 from commons.config import Config
-from web.handlers import MainHandler, ContactHandler, DisclaimerHandler, DefaultErrorHandler
+from event.handlers import EventHandler, DefaultErrorHandler
 
 define('environment', default='development')
 
@@ -20,23 +19,15 @@ def get_application(config):
     class Application(tornado.web.Application):
         def __init__(self):
             __handlers = [
-                (r"/", MainHandler),
-                (r"/contact", ContactHandler),  # post only
-                (r"/regulamin", DisclaimerHandler),  # mobi and www modals content
+                (r"/([^/]+)", EventHandler),
             ]
 
             __settings = dict(
                 debug=config.DEBUG,
                 autoreload=config.RELOAD,
                 compress_response=config.COMPRESS_RESPONSE,
-                template_path=os.path.join(os.path.dirname(__file__), "templates"),
-                static_path=os.path.join(os.path.dirname(__file__), "static"),
-                cookie_secret=config.COOKIE_SECRET,
-                google_oauth={'key': config.GOOGLE_CLIENT_ID, 'secret': config.GOOGLE_CLIENT_SECRET},
-                facebook_oauth={'key': config.FACEBOOK_CLIENT_ID, 'secret': config.FACEBOOK_CLIENT_SECRET},
                 default_handler_class=DefaultErrorHandler,
                 xheaders=True,
-                xsrf_cookies=True,
             )
 
             tornado.web.Application.__init__(self, __handlers, **__settings)
@@ -44,8 +35,9 @@ def get_application(config):
     return Application()
 
 
-if __name__ == "__main__":
+def main():
     parse_command_line()
+
     config = Config(options.environment)
     logging.getLogger().setLevel(config.LOG_LEVEL)
 
@@ -56,18 +48,21 @@ if __name__ == "__main__":
         ssl_ctx.load_cert_chain(config.SSL_CERT, config.SSL_KEY)
 
         server = HTTPServer(application, ssl_options=ssl_ctx)
-        server.bind(config.WEB_PORT)
+        server.bind(config.EVENT_PORT)
         server.start(0)  # Forks multiple sub-processes
-        logging.info('SSL ENABLED FOR WEB')
+        logging.info('SSL ENABLED FOR EVENT on port: {0}'.format(config.EVENT_PORT))
     else:
         server = HTTPServer(application)
-        server.listen(config.WEB_PORT)
-        logging.info('SSL DISABLED FOR WEB')
+        server.listen(config.EVENT_PORT)
+        logging.info('SSL DISABLED FOR EVENT on port: {0}'.format(config.EVENT_PORT))
 
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
     logging.info(db)
     application.settings['db'] = db
+    logging.info(config.DEPLOY_EVENT)
     application.settings['config'] = config
-
-    logging.info(config.DEPLOY_WEB)
     tornado.ioloop.IOLoop.current().start()
+
+
+if __name__ == "__main__":
+    main()

@@ -5,21 +5,11 @@ from datetime import datetime
 from tornado import gen
 from tornado.auth import OAuthMixin
 
-from commons import constants, settings
-
-try:
-    import urlparse  # py2
-except ImportError:
-    import urllib.parse as urlparse  # py3
-
-try:
-    import urllib.parse as urllib_parse  # py3
-except ImportError:
-    import urllib as urllib_parse  # py2
+from commons import constants
 
 
 class OAuth2Mixin(OAuthMixin):
-    _OAUTH_CALLBACK_URI = settings.DEPLOY_API + '/authentication/verify'
+    _OAUTH_CALLBACK_URI = None
     _OAUTH_BASE_URL = None
     _OAUTH_REQUEST_TOKEN_URL = None
     _OAUTH_AUTHORIZE_URL = None
@@ -37,7 +27,7 @@ class OAuth2Mixin(OAuthMixin):
         :param usos_doc:
         :return:
         """
-
+        self._OAUTH_CALLBACK_URI = self.config.DEPLOY_API + '/authentication/verify'
         self._CONSUMER_TOKEN = dict(key=usos_doc[constants.CONSUMER_KEY], secret=usos_doc[constants.CONSUMER_SECRET])
         self._OAUTH_BASE_URL = usos_doc[constants.USOS_URL]
         self._OAUTH_REQUEST_TOKEN_URL = '{0}services/oauth/request_token'.format(self._OAUTH_BASE_URL)

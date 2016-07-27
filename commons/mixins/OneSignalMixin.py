@@ -7,7 +7,7 @@ from tornado import gen, escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons import utils, settings, constants
+from commons import utils, constants
 from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
@@ -16,11 +16,11 @@ SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 class OneSignalMixin(object):
     @gen.coroutine
     def signal_fetch(self, fetch_url):
-        client = utils.http_client()
+        client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
         headers = HTTPHeaders({
             'Content-Type': 'application/json',
-            'Authorization': settings.AUTHORIZATION
+            'Authorization': self.config.AUTHORIZATION
         })
 
         response = yield client.fetch(HTTPRequest(url=fetch_url,
@@ -40,26 +40,25 @@ class OneSignalMixin(object):
 
     @gen.coroutine
     def signal_message(self, message, email_reciepient, language='en'):
-        client = utils.http_client()
 
         headers = HTTPHeaders({
             'Content-Type': 'application/json',
-            'Authorization': settings.SIGNAL_AUTHORIZATION
+            'Authorization': self.config.SIGNAL_AUTHORIZATION
         })
 
         body = json.dumps({
-            'app_id': settings.APPLICATION_ID,
+            'app_id': self.config.APPLICATION_ID,
             'tags': [{"key": "user_email", "relation": "=", email_reciepient: "true"}],
             'contents': {language: message}
         })
 
-        response = yield client.fetch(HTTPRequest(url=SIGNAL_NOTIFICATION_URL,
-                                                  method='POST',
-                                                  headers=headers,
-                                                  body=body,
-                                                  user_agent=settings.PROJECT_TITLE,
-                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        response = yield self.get_auth_http_client().fetch(HTTPRequest(url=SIGNAL_NOTIFICATION_URL,
+                                                                       method='POST',
+                                                                       headers=headers,
+                                                                       body=body,
+                                                                       user_agent=self.config.PROJECT_TITLE,
+                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         logging.debug('signal_message response code: {0} reason: {1}'.format(response.code, response.reason))
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:

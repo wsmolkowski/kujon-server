@@ -6,8 +6,8 @@ export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 echo 'stopping services...'
 sudo service nginx stop
-sudo supervisorctl stop all
-sudo killall -9 python
+sudo supervisorctl stop kujon-prod-api kujon-prod-web kujon-prod-event kujon-prod-crawler kujon-prod-emailer
+#sudo killall -9 python3
 echo 'services stopped'
 
 echo 'cloning code'
@@ -24,7 +24,7 @@ sudo chown -R appuser:appuser $LOGDIR
 sudo chmod -R g+w $LOGDIR
 
 echo 'starting services...'
-sudo service nginx start
-sudo supervisorctl start all
+#sudo service nginx start
+sudo supervisorctl start kujon-prod-api kujon-prod-web kujon-prod-event kujon-prod-crawler kujon-prod-emailer
 sudo supervisorctl status
 echo 'services started'

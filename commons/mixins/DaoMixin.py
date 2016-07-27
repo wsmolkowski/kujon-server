@@ -8,7 +8,8 @@ import motor
 from bson.objectid import ObjectId
 from tornado import gen
 
-from commons import constants, settings
+from commons import constants
+from commons.AESCipher import AESCipher
 from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
@@ -16,7 +17,8 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
 
-    def do_refresh(self):
+    @staticmethod
+    def do_refresh():
         return False
 
     _db = None
@@ -24,8 +26,16 @@ class DaoMixin(object):
     @property
     def db(self):
         if not self._db:
-            self._db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)
-        return self._db[settings.MONGODB_NAME]
+            self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
+        return self._db[self.config.MONGODB_NAME]
+
+    _aes = None
+
+    @property
+    def aes(self):
+        if not self._aes:
+            self._aes = AESCipher(self.config.AES_SECRET)
+        return self._aes
 
     @gen.coroutine
     def exc(self, exception, finish=True):
@@ -63,9 +73,9 @@ class DaoMixin(object):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
         usoses_doc = yield cursor.to_list(None)
         for usos in usoses_doc:
-            usos[constants.USOS_LOGO] = settings.DEPLOY_WEB + usos[constants.USOS_LOGO]
+            usos[constants.USOS_LOGO] = self.config.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
-            if settings.ENCRYPT_USOSES_KEYS:
+            if self.config.ENCRYPT_USOSES_KEYS:
                 usos = dict(self.aes.decrypt_usos(usos))
 
             result.append(usos)
@@ -98,8 +108,8 @@ class DaoMixin(object):
     @gen.coroutine
     def db_insert(self, collection, document):
         create_time = datetime.now()
-        if hasattr(self, '_context') and hasattr(self._context, 'usos_doc'):
-            document[constants.USOS_ID] = self._context.usos_doc[constants.USOS_ID]
+        if self.getUsosId():
+            document[constants.USOS_ID] = self.getUsosId()
         document[constants.CREATED_TIME] = create_time
         document[constants.UPDATE_TIME] = create_time
 
@@ -229,14 +239,6 @@ class DaoMixin(object):
 
         yield self.db_remove(constants.COLLECTION_USERS, {constants.MONGO_ID: user_id})
         if user_doc[constants.USOS_PAIRED]:
-            # yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-            #                      {constants.USER_ID: user_id,
-            #                       constants.CREATED_TIME: datetime.now(),
-            #                       constants.UPDATE_TIME: None,
-            #                       constants.JOB_MESSAGE: None,
-            #                       constants.JOB_STATUS: constants.JOB_PENDING,
-            #                       constants.JOB_TYPE: 'unsubscribe_usos'})
-
             yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
                                  {constants.USER_ID: user_id,
                                   constants.CREATED_TIME: datetime.now(),
@@ -335,3 +337,9 @@ class DaoMixin(object):
         cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)
         subscriptions = yield cursor.to_list(None)
         raise gen.Return(subscriptions)
+
+    @gen.coroutine
+    def db_messages(self, pipeline):
+        cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline)
+        messages = yield cursor.to_list(None)
+        raise gen.Return(messages)

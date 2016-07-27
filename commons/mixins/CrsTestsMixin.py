@@ -11,9 +11,6 @@ EXCLUDE_FIELDS = {constants.MONGO_ID: False, constants.CREATED_TIME: False, cons
 
 
 class CrsTestsMixin(DaoMixin):
-    @staticmethod
-    def do_refresh():
-        return False
 
     @gen.coroutine
     def api_crstests(self):
@@ -47,7 +44,7 @@ class CrsTestsMixin(DaoMixin):
 
     @gen.coroutine
     def api_crstests_grades(self, node_id):
-        pipeline = {constants.NODE_ID: node_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.NODE_ID: node_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_CRSTESTS_GRADES, pipeline)
@@ -69,7 +66,7 @@ class CrsTestsMixin(DaoMixin):
 
     @gen.coroutine
     def api_crstests_points(self, node_id):
-        pipeline = {constants.NODE_ID: node_id, constants.USOS_ID: self.get_current_user()[constants.USOS_ID]}
+        pipeline = {constants.NODE_ID: node_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_CRSTESTS_POINTS, pipeline)

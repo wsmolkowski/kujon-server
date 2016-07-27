@@ -1,15 +1,14 @@
 # coding=UTF-8
 
-from bson import ObjectId
 from tornado import gen
 from tornado import web
 
-from api.handlers.base import DaoMixin
+from api.handlers.base import ApiHandler
 from commons import decorators, constants
 from commons.UsosCaller import UsosCaller
 
 
-class SubscriptionsHandler(DaoMixin):
+class SubscriptionsHandler(ApiHandler):
     """
         displays user subscriptions, not casched in db, request go directly to usos api
     """
@@ -21,8 +20,9 @@ class SubscriptionsHandler(DaoMixin):
         try:
             subscriptions_doc = dict()
             subscriptions = yield self.db_subscriptions({
-                constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                constants.USOS_ID: self.get_current_user()[constants.USOS_ID]
+                constants.USER_ID: self.getUserId(),
+                constants.USOS_ID: self.getUsosId(),
+                constants.MONGO_ID: False
             })
 
             if subscriptions:

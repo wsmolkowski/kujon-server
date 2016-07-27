@@ -2,7 +2,6 @@
 import logging
 
 import facebook
-from bson.objectid import ObjectId
 from tornado import auth
 from tornado import gen
 from tornado import web
@@ -19,7 +18,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     def get(self):
 
         user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: ObjectId(self.get_current_user()[constants.MONGO_ID])})
+            {constants.MONGO_ID: self.getUserId()})
 
         if constants.FACEBOOK not in user_doc:
             raise ApiError('Użytkownik nie ma konta połączonego z Facebook.')

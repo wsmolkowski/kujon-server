@@ -1,5 +1,5 @@
 pycurl
-pycryptodome
+cryptography
 pymongo
 motor
 tornado

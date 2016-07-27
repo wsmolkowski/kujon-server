@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons import constants, settings
+from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
 from commons.mixins.DaoMixin import DaoMixin
@@ -16,9 +16,6 @@ USER_INFO_SKIP_FIELDS = {constants.MONGO_ID: False, 'email_access': False, 'inte
 
 
 class ApiUserMixin(DaoMixin):
-    def do_refresh(self):
-        return False
-
     @gen.coroutine
     def api_photo(self, user_info_id):
         pipeline = {constants.ID: user_info_id}
@@ -94,10 +91,10 @@ class ApiUserMixin(DaoMixin):
     def api_user_info(self, user_id=None):
 
         if not user_id:
-            pipeline = {constants.USER_ID: ObjectId(self.get_current_user()[constants.MONGO_ID]),
-                        constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
+            pipeline = {constants.USER_ID: self.getUserId(),
+                        constants.USOS_ID: self.getUsosId()}
         else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: self.get_current_usos()[constants.USOS_ID]}
+            pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
             yield self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
@@ -147,7 +144,7 @@ class ApiUserMixin(DaoMixin):
             if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
                 photo_doc = yield self.api_photo(user_info_doc[constants.ID])
                 if photo_doc:
-                    user_info_doc[constants.PHOTO_URL] = settings.DEPLOY_API + '/users_info_photos/' + str(
+                    user_info_doc[constants.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
                         photo_doc[constants.MONGO_ID])
 
             try:

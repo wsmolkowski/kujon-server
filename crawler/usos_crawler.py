@@ -7,21 +7,24 @@ from datetime import datetime
 import motor
 from tornado import queues, gen
 from tornado.ioloop import IOLoop
-from tornado.options import parse_command_line
+from tornado.options import parse_command_line, define, options
 
-from commons import settings, constants
-from usoscrawler import UsosCrawler
+from commons import constants
+from commons.config import Config
+from crawler.UsosCrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
 MAX_WORKERS = 4
 SLEEP = 2
 
+define('environment', default='development')
+
 
 class MongoDbQueue(object):
-    def __init__(self):
-
+    def __init__(self, config):
+        self.config = config
         self.queue = queues.Queue(maxsize=QUEUE_MAXSIZE)
-        self.db = motor.motor_tornado.MotorClient(settings.MONGODB_URI)[settings.MONGODB_NAME]
+        self.db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
         self.processing = []
 
         logging.info(self.db)
@@ -71,13 +74,13 @@ class MongoDbQueue(object):
             yield self.update_job(job, constants.JOB_START)
 
             if job[constants.JOB_TYPE] == 'initial_user_crawl':
-                yield UsosCrawler().initial_user_crawl(job[constants.USER_ID])
+                yield UsosCrawler(self.config).initial_user_crawl(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'archive_user':
-                yield UsosCrawler().archive_user(job[constants.USER_ID])
+                yield UsosCrawler(self.config).archive_user(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscribe_usos':
-                yield UsosCrawler().subscribe(job[constants.USER_ID])
+                yield UsosCrawler(self.config).subscribe(job[constants.USER_ID])
             elif job[constants.JOB_TYPE] == 'subscription_event':
-                yield UsosCrawler().process_event(job[constants.JOB_DATA])
+                yield UsosCrawler(self.config).process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, constants.JOB_FINISH)
@@ -118,9 +121,10 @@ class MongoDbQueue(object):
 if __name__ == '__main__':
     parse_command_line()
 
-    logging.getLogger().setLevel(settings.LOG_LEVEL)
+    config = Config(options.environment)
+    logging.getLogger().setLevel(config.LOG_LEVEL)
 
-    mongoQueue = MongoDbQueue()
+    mongoQueue = MongoDbQueue(config)
 
     io_loop = IOLoop.current()
     io_loop.run_sync(mongoQueue.workers)

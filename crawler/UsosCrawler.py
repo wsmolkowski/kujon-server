@@ -8,8 +8,7 @@ from bson.objectid import ObjectId
 from tornado import gen
 from tornado.util import ObjectDict
 
-from commons import constants, utils, settings
-from commons.AESCipher import AESCipher
+from commons import constants, utils
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
@@ -20,8 +19,9 @@ from commons.mixins.OneSignalMixin import OneSignalMixin
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
-    def __init__(self):
-        self.aes = AESCipher()
+    def __init__(self, config):
+        self.config = config
+        # self._aes = AESCipher(self._config.AES_SECRET.encode())
 
     @gen.coroutine
     def _setUp(self, user_id):
@@ -29,6 +29,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             user_id = ObjectId(user_id)
 
         self._context = ObjectDict()
+        self._context.proxy_url = self.config.PROXY_URL
+        self._context.proxy_port = self.config.PROXY_PORT
         self._context.http_client = utils.http_client()
         self._context.user_doc = yield self.db_get_user(user_id)
         if not self._context.user_doc:
@@ -47,6 +49,18 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
     def get_current_usos(self):
         return self._context.usos_doc
+
+    def getUserId(self, return_object_id=True):
+        if self.get_current_user():
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
+        return None
+
+    def getUsosId(self):
+        if self.get_current_usos():
+            return self.get_current_user()[constants.USOS_ID]
+        return None
 
     def get_auth_http_client(self):
         return self._context.http_client
@@ -160,7 +174,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
         yield self._setUp(user_id)
 
-        callback_url = '{0}/{1}'.format(settings.DEPLOY_EVENT, self.get_current_usos()[constants.USOS_ID])
+        callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
@@ -168,8 +182,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
                                                                      arguments={
                                                                          'event_type': event_type,
                                                                          'callback_url': callback_url,
-                                                                         'verify_token': self.get_current_user()[
-                                                                             constants.MONGO_ID]
+                                                                         'verify_token':
+                                                                             self.getUserId(return_object_id=False)
                                                                      })
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
@@ -236,8 +250,16 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             logging.debug('user_grade: {0}'.format(user_grade))
 
             if user_grade:
-                signal_grade = yield self.signal_message('wiadomosc {0}'.format(user_grade),
-                                                         user_doc[constants.USER_EMAIL])
+                message_text = 'wiadomosc {0}'.format(user_grade)
+                signal_grade = yield self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+
+                yield self.db[constants.COLLECTION_MESSAGES].insert({
+                    constants.CREATED_TIME: datetime.now(),
+                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
+                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
+                    constants.FIELD_MESSAGE_TEXT: message_text
+                })
+
                 logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:

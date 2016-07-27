@@ -2,14 +2,13 @@
 
 import logging
 
-from bson import json_util
+from bson import json_util, ObjectId
 from tornado import gen, web, escape
 from tornado.escape import json_decode
 from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
-from commons import constants, settings, utils
-from commons.AESCipher import AESCipher
+from commons import constants, utils
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
@@ -20,6 +19,14 @@ from commons.mixins.JSendMixin import JSendMixin
 
 class BaseHandler(RequestHandler, DaoMixin):
     EXCEPTION_TYPE = 'base'
+
+    @property
+    def db(self):
+        return self.application.settings['db']
+
+    @property
+    def config(self):
+        return self.application.settings['config']
 
     @gen.coroutine
     def _prepare_user(self):
@@ -64,6 +71,8 @@ class BaseHandler(RequestHandler, DaoMixin):
     @gen.coroutine
     def prepare(self):
         self._context = ObjectDict()
+        self._context.proxy_url = self.config.PROXY_URL
+        self._context.proxy_port = self.config.PROXY_PORT
         self._context.usoses = yield self.get_usos_instances()
         self._context.user_doc = yield self._prepare_user()
 
@@ -92,7 +101,21 @@ class BaseHandler(RequestHandler, DaoMixin):
         return self._context.user_doc
 
     def get_current_usos(self):
-        return self._context.usos_doc
+        if hasattr(self._context, 'usos_doc') and self._context.usos_doc:
+            return self._context.usos_doc
+        return False
+
+    def getUserId(self, return_object_id=True):
+        if self.get_current_user():
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
+        return None
+
+    def getUsosId(self):
+        if self.get_current_usos() and constants.USOS_ID in self.get_current_usos():
+            return self.get_current_usos()[constants.USOS_ID]
+        return None
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
@@ -101,25 +124,16 @@ class BaseHandler(RequestHandler, DaoMixin):
             self.set_header("Access-Control-Allow-Origin", "*")
         else:
             # web client access
-            self.set_header("Access-Control-Allow-Origin", settings.DEPLOY_WEB)
+            self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
 
-    @staticmethod
-    def get_auth_http_client():
-        return utils.http_client()
-
-    _aes = None
-
-    @property
-    def aes(self):
-        if not self._aes:
-            self._aes = AESCipher()
-        return self._aes
+    def get_auth_http_client(self):
+        return utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)
         self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
-                               domain=settings.SITE_DOMAIN)
+                               domain=self.config.SITE_DOMAIN)
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin):
@@ -129,12 +143,6 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMi
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             return True
         return False
-
-    _db = None
-
-    @property
-    def db(self):
-        return self.application.settings['db']
 
 
 class UsosesApi(BaseHandler, JSendMixin):
@@ -172,7 +180,7 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
             usos_paired = False
 
         config = {
-            'API_URL': settings.DEPLOY_API,
+            'API_URL': self.config.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False
         }
