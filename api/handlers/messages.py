@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-from tornado import gen
 from tornado import web
 
 from api.handlers.base import ApiHandler
@@ -14,10 +13,9 @@ class MessagesHandler(ApiHandler):
 
     @decorators.authenticated
     @web.asynchronous
-    @gen.coroutine
-    def get(self):
+    async def get(self):
         try:
-            messages_doc = yield self.db_messages({constants.USER_ID: self.getUserId(), constants.MONGO_ID: False})
+            messages_doc = await self.db_messages({constants.USER_ID: self.getUserId(), constants.MONGO_ID: False})
             self.success(messages_doc)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)

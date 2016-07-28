@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-from tornado import gen
 from tornado import web
 
 from api.handlers.base import ApiHandler
@@ -12,16 +11,15 @@ LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers
 class GroupsApi(ApiHandler):
     @decorators.authenticated
     @web.asynchronous
-    @gen.coroutine
-    def get(self, course):
+    async def get(self, course):
 
         try:
-            user_info = yield self.api_user_info()
+            user_info = await self.api_user_info()
 
             programmes = []
             for program in user_info['student_programmes']:
                 program_id = program['programme']['id']
-                result = yield self.api_programme(program_id, finish=False)
+                result = await self.api_programme(program_id, finish=False)
                 programmes.append(result)
 
             if not programmes:
@@ -30,4 +28,4 @@ class GroupsApi(ApiHandler):
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
 
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)

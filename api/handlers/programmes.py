@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import tornado.gen
 import tornado.web
 
 from api.handlers.base import ApiHandler
@@ -12,30 +11,28 @@ LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studi
 class ProgrammesByIdApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self, programme_id):
+    async def get(self, programme_id):
 
         try:
-            programme = yield self.api_programme(programme_id, finish=False)
+            programme = await self.api_programme(programme_id, finish=False)
             if not programme:
                 self.error("Brak podanego kierunku.", code=404)
             else:
                 self.success(programme, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class ProgrammesApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
+    async def get(self):
 
         try:
-            programmes = yield self.api_programmes()
+            programmes = await self.api_programmes()
             if not programmes:
                 self.error("Brak inforamcji o Twoich kierunkach.", code=404)
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)

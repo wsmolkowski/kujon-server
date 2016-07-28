@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-from tornado import gen
-
 from commons.UsosCaller import UsosCaller
 from commons.usoshelper import dict_value_student_status, dict_value_staff_status
 
@@ -9,11 +7,10 @@ NUMBER_SEARCH_RESULTS = 20  # USOS api max
 
 
 class ApiMixinSearch(object):
-    @gen.coroutine
-    def api_search_users(self, query):
+    async def api_search_users(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/users/search2',
+        search_doc = await UsosCaller(self._context).call(path='services/users/search2',
                                                           arguments={
                                                               'query': query,
                                                               'start': int(start),
@@ -37,13 +34,12 @@ class ApiMixinSearch(object):
                     position['position']['name'] = position['position']['name']['pl']
                     position['faculty']['name'] = position['faculty']['name']['pl']
 
-        raise gen.Return(search_doc)
+        return search_doc
 
-    @gen.coroutine
-    def api_search_courses(self, query):
+    async def api_search_courses(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/courses/search',
+        search_doc = await UsosCaller(self._context).call(path='services/courses/search',
                                                           arguments={
                                                               'name': query,
                                                               'start': int(start),
@@ -51,13 +47,12 @@ class ApiMixinSearch(object):
                                                               'fields': 'items[course_name]|match|next_page]',
                                                           })
 
-        raise gen.Return(search_doc)
+        return search_doc
 
-    @gen.coroutine
-    def api_search_faculties(self, query):
+    async def api_search_faculties(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/fac/search',
+        search_doc = await UsosCaller(self._context).call(path='services/fac/search',
                                                           arguments={
                                                               'query': query,
                                                               'start': int(start),
@@ -66,13 +61,12 @@ class ApiMixinSearch(object):
                                                               'visibility': 'all'
                                                           })
 
-        raise gen.Return(search_doc)
+        return search_doc
 
-    @gen.coroutine
-    def api_search_programmes(self, query):
+    async def api_search_programmes(self, query):
         start = self.get_argument('start', default=0, strip=True)
 
-        search_doc = yield UsosCaller(self._context).call(path='services/progs/search',
+        search_doc = await UsosCaller(self._context).call(path='services/progs/search',
                                                           arguments={
                                                               'query': query,
                                                               'start': int(start),
@@ -86,4 +80,4 @@ class ApiMixinSearch(object):
             programme['programme']['level_of_studies'] = programme['programme']['level_of_studies']['pl']
             programme['programme']['duration'] = programme['programme']['duration']['pl']
 
-        raise gen.Return(search_doc)
+        return search_doc
