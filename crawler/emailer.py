@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import asyncio
 import logging
 import smtplib
 from datetime import datetime
@@ -7,7 +8,7 @@ from email.header import Header
 from email.mime.text import MIMEText
 
 import motor
-from tornado import queues, gen
+from tornado import queues
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.options import parse_command_line
@@ -31,8 +32,7 @@ class EmailQueue(object):
 
         logging.info(self.db)
 
-    @gen.coroutine
-    def load_work(self):
+    async def load_work(self):
         # try re-run failed jobs
         # delta = datetime.now() - timedelta(minutes=60)
         #
@@ -40,41 +40,37 @@ class EmailQueue(object):
         #     constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FAIL}). \
         #     sort([(constants.UPDATE_TIME, -1)])
         #
-        # while (yield cursor.fetch_next):
+        # while (await cursor.fetch_next):
         #     job = cursor.next_object()
-        #     yield self.update_job(job, constants.JOB_PENDING)
+        #     await self.update_job(job, constants.JOB_PENDING)
 
         # create jobs and put into queue
         cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
 
-        while (yield cursor.fetch_next):
+        while (await cursor.fetch_next):
             if len(self.processing) >= MAX_WORKERS:
                 break
             job = cursor.next_object()
-            yield self.queue.put(job)
+            await self.queue.put(job)
 
-        raise gen.Return()
-
-    @gen.coroutine
-    def update_job(self, job, status, message=None):
+    async def update_job(self, job, status, message=None):
         # insert current job to history collection
         old = job.copy()
         old.pop(constants.MONGO_ID)
-        yield self.db[constants.COLLECTION_EMAIL_QUEUE_LOG].insert(old)
+        await self.db[constants.COLLECTION_EMAIL_QUEUE_LOG].insert(old)
 
         # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
         job[constants.JOB_MESSAGE] = message
 
-        update = yield self.db[constants.COLLECTION_EMAIL_QUEUE].update(
+        update = await self.db[constants.COLLECTION_EMAIL_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
         logging.info(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
-    @gen.coroutine
-    def process_job(self, job):
+    async def process_job(self, job):
         smtp = smtplib.SMTP()
 
         try:
@@ -85,7 +81,7 @@ class EmailQueue(object):
             smtp.starttls()
             smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
 
-            yield self.update_job(job, constants.JOB_START)
+            await self.update_job(job, constants.JOB_START)
 
             msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
             msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
@@ -94,47 +90,44 @@ class EmailQueue(object):
 
             smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
 
-            yield self.db[constants.COLLECTION_MESSAGES].insert({
+            await self.db[constants.COLLECTION_MESSAGES].insert({
                 constants.CREATED_TIME: datetime.now(),
                 constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                 constants.FIELD_MESSAGE_TYPE: 'email',
                 constants.FIELD_MESSAGE_TEXT: job[constants.SMTP_TEXT]
             })
 
-            yield self.update_job(job, constants.JOB_FINISH)
+            await self.update_job(job, constants.JOB_FINISH)
 
             logging.info("processed job: {0}".format(job[constants.MONGO_ID]))
         finally:
             smtp.quit()
             self.processing.remove(job)
 
-    @gen.coroutine
-    def worker(self):
+    async def worker(self):
 
         while True:
             try:
-                job = yield self.queue.get()
+                job = await self.queue.get()
                 logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
                     job, self.queue.qsize(), len(self.processing)))
-                yield self.process_job(job)
+                await self.process_job(job)
             except Exception as ex:
                 msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
                 logging.exception(msg)
-                yield self.update_job(job, constants.JOB_FAIL, msg)
+                await self.update_job(job, constants.JOB_FAIL, msg)
             finally:
                 self.queue.task_done()
 
-    @gen.coroutine
-    def producer(self):
+    async def producer(self):
         while True:
-            yield self.load_work()
-            yield gen.sleep(SLEEP)
+            await self.load_work()
+            await asyncio(SLEEP)
 
-    @gen.coroutine
-    def workers(self):
+    async def workers(self):
         IOLoop.current().spawn_callback(self.producer)
         futures = [self.worker() for _ in range(MAX_WORKERS)]
-        yield futures
+        await futures
 
 
 if __name__ == '__main__':

@@ -3,7 +3,6 @@ import logging
 
 import facebook
 from tornado import auth
-from tornado import gen
 from tornado import web
 
 from api.handlers.base import ApiHandler
@@ -14,10 +13,9 @@ from commons.errors import ApiError
 class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     @decorators.authenticated
     @web.asynchronous
-    @gen.coroutine
-    def get(self):
+    async def get(self):
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one(
             {constants.MONGO_ID: self.getUserId()})
 
         if constants.FACEBOOK not in user_doc:

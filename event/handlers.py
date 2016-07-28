@@ -5,7 +5,6 @@ import logging
 from datetime import datetime
 
 from bson.objectid import ObjectId
-from tornado import gen
 from tornado import web
 from tornado.web import RequestHandler
 
@@ -27,26 +26,23 @@ class MainHandler(RequestHandler, JSendMixin, DaoMixin):
     def config(self):
         return self.application.settings['config']
 
-    @gen.coroutine
-    def user_exists(self, user_id):
+    async def user_exists(self, user_id):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
-        user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
-        gen.Return(user_doc)
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
+        return user_doc
 
 
 class EventHandler(MainHandler):
-    @gen.coroutine
     @web.asynchronous
-    def prepare(self):
+    async def prepare(self):
         header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
         # X-Hub-Signature validation
 
     @web.asynchronous
-    @gen.coroutine
-    def get(self, usos_id):
+    async def get(self, usos_id):
         try:
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
@@ -57,7 +53,7 @@ class EventHandler(MainHandler):
                 self.error(code=400, message='Required parameters not passed.')
             else:
                 # enable for production :)
-                # user_exists = yield self.user_exists(verify_token)
+                # user_exists = await self.user_exists(verify_token)
                 # if not user_exists:
                 #    logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
                 #    self.fail(message='Token verification failure.')
@@ -69,13 +65,12 @@ class EventHandler(MainHandler):
                 self.finish()
 
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
     @web.asynchronous
-    @gen.coroutine
-    def post(self, usos_id):
+    async def post(self, usos_id):
         try:
-            usos_doc = yield self.db_get_usos(usos_id)
+            usos_doc = await self.db_get_usos(usos_id)
 
             if not usos_doc:
                 raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
@@ -83,7 +78,7 @@ class EventHandler(MainHandler):
             event_data = json.loads(self.request.body)
             event_data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
 
-            yield self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
+            await self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
                 constants.CREATED_TIME: datetime.now(),
                 constants.UPDATE_TIME: None,
                 constants.JOB_MESSAGE: None,
@@ -94,7 +89,7 @@ class EventHandler(MainHandler):
 
             self.success(data='event consumed')
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class DefaultErrorHandler(RequestHandler, JSendMixin):

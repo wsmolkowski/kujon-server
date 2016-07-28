@@ -2,11 +2,9 @@
 
 import logging
 
-import tornado.gen
 import tornado.web
 from bson import ObjectId
 from bson import json_util
-from tornado import gen
 from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
@@ -36,8 +34,7 @@ class BaseHandler(RequestHandler, JSendMixin):
             'WEB_VERSION': self.config.WEB_VERSION,
         }
 
-    @gen.coroutine
-    def set_current_user(self):
+    async def set_current_user(self):
         cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
         if cookie:
             cookie = json_decode(cookie)
@@ -47,24 +44,21 @@ class BaseHandler(RequestHandler, JSendMixin):
             if constants.PICTURE not in response:
                 response[constants.PICTURE] = None
 
-            raise gen.Return(response)
+            return response
+        return None
 
-        raise gen.Return()
-
-    @tornado.gen.coroutine
-    def get_usoses(self):
+    async def get_usoses(self):
         usoses = []
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-        while (yield cursor.fetch_next):
+        while (await cursor.fetch_next):
             usos = cursor.next_object()
             usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
             usoses.append(usos)
 
-        raise tornado.gen.Return(usoses)
+        return usoses
 
-    @tornado.gen.coroutine
-    def prepare(self):
-        self._current_user = yield self.set_current_user()
+    async def prepare(self):
+        self._current_user = await self.set_current_user()
 
     def get_current_user(self):
         return self._current_user
@@ -72,12 +66,11 @@ class BaseHandler(RequestHandler, JSendMixin):
 
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
+    async def get(self):
 
         token = self.get_argument('token', default=None)
         if token:
-            user = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
+            user = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
         else:
             user = self.get_current_user()
 
@@ -88,7 +81,7 @@ class MainHandler(BaseHandler):
 
             user = self.get_current_user()
             if user:
-                error = yield self.db[constants.COLLECTION_EXCEPTIONS].find_one({
+                error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
                     constants.USER_ID: user[constants.MONGO_ID],
                     constants.EXCEPTION_TYPE: 'authentication'
                 })
@@ -97,7 +90,7 @@ class MainHandler(BaseHandler):
                 else:
                     data['error'] = False
 
-            usoses = yield self.get_usoses()
+            usoses = await self.get_usoses()
             data['usoses'] = usoses
             self.render("register.html", **data)
         else:
@@ -107,8 +100,7 @@ class MainHandler(BaseHandler):
 class ContactHandler(BaseHandler):
     SUPPORTED_METHODS = ('POST',)
 
-    @gen.coroutine
-    def email_contact(self, subject, message):
+    async def email_contact(self, subject, message):
         email_job = email_factory.email_job(
             '[KUJON.MOBI][CONTACT]: {0}'.format(subject),
             self.config.SMTP_EMAIL,
@@ -119,12 +111,11 @@ class ContactHandler(BaseHandler):
                                          message)
         )
 
-        job_id = yield self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
-        raise gen.Return(job_id)
+        job_id = await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
+        return job_id
 
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def post(self):
+    async def post(self):
         try:
             subject = self.get_argument('subject', default=None)
             message = self.get_argument('message', default=None)
@@ -132,7 +123,7 @@ class ContactHandler(BaseHandler):
             logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
                 self.get_current_user()[constants.MONGO_ID], subject, message))
 
-            job_id = yield self.email_contact(subject, message)
+            job_id = await self.email_contact(subject, message)
 
             self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
         except Exception as ex:
@@ -148,7 +139,6 @@ class DisclaimerHandler(BaseHandler):
 
 class DefaultErrorHandler(BaseHandler):
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
     def get(self):
         data = self.get_config()
         data['MESSAGE'] = '404 - Strona o podanym adresie nie istnieje.'

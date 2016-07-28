@@ -33,7 +33,8 @@ class CrawlerTest(AsyncTestCase, DaoMixin):
     @gen_test
     def testRecreateDictionaries(self):
         # assume - run crawler
-        yield self.crawler.recreate_dictionaries()
+        await
+        self.crawler.recreate_dictionaries()
 
         # then - check if tables are filled
         result = self.dao.count(constants.COLLECTION_COURSES_CLASSTYPES)
@@ -47,7 +48,8 @@ class CrawlerTest(AsyncTestCase, DaoMixin):
                      "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
 
         user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
-        yield self.crawler.initial_user_crawl(ObjectId(str(user)))
+        await
+        self.crawler.initial_user_crawl(ObjectId(str(user)))
 
         # then
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
@@ -65,7 +67,8 @@ class CrawlerTest(AsyncTestCase, DaoMixin):
                      "access_token_secret": "RPKghB2d8y9qGskq698P45ZYuKa9V2XXR2Gv5NUG"}
         user = self.dao.db_insert(constants.COLLECTION_USERS, self.user)
 
-        yield self.crawler.initial_user_crawl(ObjectId(str(user)))
+        await
+        self.crawler.initial_user_crawl(ObjectId(str(user)))
 
         # then
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)
@@ -88,7 +91,8 @@ class CrawlerTest(AsyncTestCase, DaoMixin):
         user = self.dao.db_insert(constants.COLLECTION_USERS, user)
 
         # when
-        yield self.crawler.initial_user_crawl(ObjectId(str(user)))
+        await
+        self.crawler.initial_user_crawl(ObjectId(str(user)))
 
         # then
         self.assertTrue((self.dao.count(constants.COLLECTION_USERS)) > 0)

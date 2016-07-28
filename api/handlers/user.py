@@ -2,7 +2,6 @@
 
 from base64 import b64decode
 
-import tornado.gen
 import tornado.web
 from bson.objectid import ObjectId
 
@@ -24,36 +23,34 @@ LIMIT_FIELDS_USER = (
 class UsersInfoByIdApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self, user_info_id):
+    async def get(self, user_info_id):
 
         try:
-            user_info_doc = yield self.api_user_info(user_id=user_info_id)
+            user_info_doc = await self.api_user_info(user_id=user_info_id)
 
             if not user_info_doc:
                 raise ApiError('Szukamy informacji o Tobie w USOS.')
 
             self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class UserInfoApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self):
+    async def get(self):
         """
         :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO and
                     school name from usosinstances.USOSINSTANCES
         """
 
         try:
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
+            user_doc = await self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: self.getUserId()},
                 LIMIT_FIELDS_USER)
 
-            user_info = yield self.api_user_info()
+            user_info = await self.api_user_info()
 
             if not user_info or not user_info or not user_doc:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
@@ -72,27 +69,26 @@ class UserInfoApi(ApiHandler):
             user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                           usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
-            user_doc['theses'] = yield self.api_thesis()
+            user_doc['theses'] = await self.api_thesis()
 
             del(user_doc[constants.UPDATE_TIME])
             del(user_doc[constants.MONGO_ID])
 
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class UserInfoPhotoApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def get(self, photo_id):
+    async def get(self, photo_id):
 
         try:
             if str(photo_id) == 'False' or str(photo_id) == 'True':
                 raise ApiError('Nie podano odpowiedniego parametru photo_id')
 
-            user_photo = yield self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+            user_photo = await self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
 
             if user_photo and 'photo' in user_photo:
                 self.set_header('Content-Type', 'image/jpeg')
@@ -100,4 +96,4 @@ class UserInfoPhotoApi(ApiHandler):
             else:
                 self.error('Nie znaleziono zdjęcia', code=404)
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
