@@ -32,17 +32,17 @@ class ArchiveHandler(ApiHandler):
 
         yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
-        user_doc = self.get_current_user()
-
-        if user_doc:
-            yield self.db_archive_user(user_doc[constants.MONGO_ID])
-
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-        yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
-        self.redirect(self.config.DEPLOY_WEB)
+    # @web.asynchronous
+    # @gen.coroutine
+    # def get(self):
+    #     user_doc = self.get_current_user()
+    #
+    #     if user_doc:
+    #         yield self.db_archive_user(user_doc[constants.MONGO_ID])
+    #
+    #     self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+    #     yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
+    #     self.redirect(self.config.DEPLOY_WEB)
 
     @web.asynchronous
     @gen.coroutine
