@@ -6,7 +6,6 @@ import sys
 import tempfile
 import traceback
 
-from tornado import httpclient
 
 try:
     import socks
@@ -72,16 +71,3 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None, ):
     global log
     log = logging.getLogger(__name__)
 
-
-def http_client(proxy_url=None, proxy_port=None):
-    if proxy_url and proxy_port:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=proxy_url,
-                                                           proxy_port=proxy_port,
-                                                           validate_cert=False),
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
-
-    else:
-        httpclient.AsyncHTTPClient.configure(None, max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
