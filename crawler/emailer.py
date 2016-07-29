@@ -122,7 +122,7 @@ class EmailQueue(object):
     async def producer(self):
         while True:
             await self.load_work()
-            await asyncio(SLEEP)
+            await asyncio.sleep(SLEEP)
 
     async def workers(self):
         IOLoop.current().spawn_callback(self.producer)
