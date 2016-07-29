@@ -142,7 +142,7 @@ class ApiMixin(ApiUserMixin):
 
         if not user_info_doc:
             raise ApiError(
-                "Błąd podczas pobierania danych użytkownika course_id {0} term_id (1}".format(course_id, term_id))
+                "Błąd podczas pobierania danych użytkownika course_id {0} term_id {1}".format(course_id, term_id))
 
         # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:

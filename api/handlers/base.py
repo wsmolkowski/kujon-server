@@ -18,16 +18,11 @@ from commons.mixins.JSendMixin import JSendMixin
 
 
 def http_client(proxy_url=None, proxy_port=None):
-    if proxy_url and proxy_port:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=proxy_url,
-                                                           proxy_port=proxy_port,
-                                                           validate_cert=False),
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
-
-    else:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                         defaults=dict(proxy_host=proxy_url,
+                                                       proxy_port=proxy_port,
+                                                       validate_cert=False),
+                                         max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()
 
