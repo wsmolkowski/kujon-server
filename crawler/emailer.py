@@ -8,7 +8,7 @@ from email.header import Header
 from email.mime.text import MIMEText
 
 import motor
-from tornado import queues
+from tornado import queues, gen
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.options import parse_command_line
@@ -127,7 +127,7 @@ class EmailQueue(object):
     async def workers(self):
         IOLoop.current().spawn_callback(self.producer)
         futures = [self.worker() for _ in range(MAX_WORKERS)]
-        await futures
+        await gen.multi(futures)
 
 
 if __name__ == '__main__':
