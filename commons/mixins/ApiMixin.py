@@ -133,7 +133,7 @@ class ApiMixin(ApiUserMixin):
         course_edition = await self.api_course_edition(course_id, term_id)
 
         if not course_edition:
-            raise self.Return()
+            return
 
         if not user_id:
             user_info_doc = await self.api_user_info()
