@@ -4,18 +4,34 @@ import json
 import logging
 
 from tornado import escape
+from tornado import httpclient
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons import utils, constants
+from commons import constants
 from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 
+def http_client(proxy_url=None, proxy_port=None):
+    if proxy_url and proxy_port:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(proxy_host=proxy_url,
+                                                           proxy_port=proxy_port,
+                                                           validate_cert=False),
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    else:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    return httpclient.AsyncHTTPClient()
+
+
 class OneSignalMixin(object):
     async def signal_fetch(self, fetch_url):
-        client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        client = http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
         headers = HTTPHeaders({
             'Content-Type': 'application/json',

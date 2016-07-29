@@ -3,18 +3,33 @@
 import logging
 
 from bson import json_util, ObjectId
-from tornado import web, escape
+from tornado import web, escape, httpclient
 from tornado.escape import json_decode
 from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
-from commons import constants, utils
+from commons import constants
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
+
+
+def http_client(proxy_url=None, proxy_port=None):
+    if proxy_url and proxy_port:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(proxy_host=proxy_url,
+                                                           proxy_port=proxy_port,
+                                                           validate_cert=False),
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    else:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    return httpclient.AsyncHTTPClient()
 
 
 class BaseHandler(RequestHandler, DaoMixin):
@@ -126,7 +141,7 @@ class BaseHandler(RequestHandler, DaoMixin):
             self.set_header("Access-Control-Allow-Credentials", "true")
 
     def get_auth_http_client(self):
-        return utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        return http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(constants.KUJON_SECURE_COOKIE)

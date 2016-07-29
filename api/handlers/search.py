@@ -21,7 +21,7 @@ class AbstractSearch(ApiHandler):
             self.error('Wprowadź fragment dłuższy niż {0} znaki i krótszy niż {1}.'.format(self.MIN_SEARCH,
                                                                                            self.MAX_SEARCH))
 
-    async def on_finish(self):
+    async def on_finally(self):
         await self.db_insert(constants.COLLECTION_SEARCH, {
             'type': self.EXCEPTION_TYPE,
             constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
@@ -60,6 +60,8 @@ class SearchCoursesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
+        finally:
+            await self.on_finally()
 
 
 class SearchFacultiesApi(AbstractSearch):
@@ -74,6 +76,8 @@ class SearchFacultiesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
+        finally:
+            await self.on_finally()
 
 
 class SearchProgrammesApi(AbstractSearch):
@@ -88,3 +92,5 @@ class SearchProgrammesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
+        finally:
+            await self.on_finally()

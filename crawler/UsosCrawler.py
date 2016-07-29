@@ -6,14 +6,30 @@ from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
+from tornado import httpclient
 from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import constants
 from commons.UsosCaller import UsosCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
+
+
+def http_client(proxy_url=None, proxy_port=None):
+    if proxy_url and proxy_port:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             defaults=dict(proxy_host=proxy_url,
+                                                           proxy_port=proxy_port,
+                                                           validate_cert=False),
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    else:
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                             max_clients=constants.MAX_HTTP_CLIENTS)
+
+    return httpclient.AsyncHTTPClient()
 
 
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
@@ -30,7 +46,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
         self._context = ObjectDict()
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
-        self._context.http_client = utils.http_client()
+        self._context.http_client = http_client()
         self._context.user_doc = await self.db_get_user(user_id)
         if not self._context.user_doc:
             self._context.user_doc = await self.db_get_archive_user(user_id)
@@ -107,23 +123,23 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
         except Exception as ex:
             await self.exc(ex, finish=False)
 
-        # api_user_infos = list()
-        # for user_id in users_ids:
-        #     api_user_infos.append(self.api_user_info(user_id))
-        #
-        # try:
+            # api_user_infos = list()
+            # for user_id in users_ids:
+            #     api_user_infos.append(self.api_user_info(user_id))
+            #
+            # try:
             #     await api_user_infos
-        # except Exception as ex:
+            # except Exception as ex:
             #     await self.exc(ex, finish=False)
-        #
-        # units_groups = list()
-        # for unit in course_units_ids:
-        #     units_groups.append(self.api_unit(unit))
-        #     units_groups.append(self.api_group(unit))
-        #
-        # try:
+            #
+            # units_groups = list()
+            # for unit in course_units_ids:
+            #     units_groups.append(self.api_unit(unit))
+            #     units_groups.append(self.api_group(unit))
+            #
+            # try:
             #     await units_groups
-        # except Exception as ex:
+            # except Exception as ex:
             #     await self.exc(ex, finish=False)
 
     async def __process_crstests(self):
