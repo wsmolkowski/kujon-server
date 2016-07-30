@@ -62,7 +62,7 @@ class DbUtils(object):
             ri = self.client[collection].reindex()
             logging.info('collection {0} reindexed: {1}'.format(collection, ri))
 
-    def _convert_bytes(bytes):
+    def _convert_bytes(self, bytes):
         bytes = float(bytes)
         magnitude = abs(bytes)
         if magnitude >= 1099511627776:
