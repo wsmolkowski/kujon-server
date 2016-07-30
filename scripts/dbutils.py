@@ -105,7 +105,7 @@ class DbUtils(object):
 
             print("Collection {0} count: {1} size: {2} index_size: {3} storage_size: {4}".format(
                 collection,
-                self._convert_bytes(stats["count"]),
+                stats["count"],
                 self._convert_bytes(stats["size"]),
                 self._convert_bytes(stats["totalIndexSize"]),
                 self._convert_bytes(stats["storageSize"])))
