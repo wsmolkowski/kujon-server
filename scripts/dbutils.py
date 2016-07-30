@@ -99,7 +99,6 @@ class DbUtils(object):
             stats = db.command('collstats', collection)
 
             print('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
-            print(stats, width=1)
 
             summary["count"] += stats["count"]
             summary["size"] += stats["size"]
