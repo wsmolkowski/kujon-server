@@ -57,7 +57,7 @@ class DbUtils(object):
 
         self._unique_indexes()
 
-    def reindex(self, ):
+    def reindex(self):
         for collection in self.client.collection_names(include_system_collections=False):
             ri = self.client[collection].reindex()
             logging.info('collection {0} reindexed: {1}'.format(collection, ri))
@@ -98,12 +98,17 @@ class DbUtils(object):
                 continue
             stats = db.command('collstats', collection)
 
-            print('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
-
             summary["count"] += stats["count"]
             summary["size"] += stats["size"]
             summary["indexSize"] += stats.get("totalIndexSize", 0)
             summary["storageSize"] += stats.get("storageSize", 0)
+
+            print("Collection {0} count: {1} size: {2} index_size: {3} storage_size: {4}".format(
+                collection,
+                self._convert_bytes(stats["count"]),
+                self._convert_bytes(stats["size"]),
+                self._convert_bytes(stats["totalIndexSize"]),
+                self._convert_bytes(stats["storageSize"])))
 
         print('#' * 25 + ' statistics ' + '#' * 25)
         print("Total Documents:", summary["count"])
