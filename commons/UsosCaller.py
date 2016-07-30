@@ -53,6 +53,11 @@ class UsosCaller(OAuthMixin):
                                                                                                response.body,
                                                                                                url))
 
+
+class AsyncCaller(object):
+    def __init__(self, context=None):
+        self._context = context
+
     async def call_async(self, path, arguments=None, base_url=None, lang=True):
         if not arguments:
             arguments = dict()
@@ -61,7 +66,7 @@ class UsosCaller(OAuthMixin):
             arguments['lang'] = 'pl'
 
         if not base_url:
-            url = self._oauth_base_uri() + path
+            url = self._context.base_uri + path
         else:
             url = base_url + path
 
