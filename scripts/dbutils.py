@@ -110,7 +110,7 @@ class DbUtils(object):
                 self._convert_bytes(stats["totalIndexSize"]),
                 self._convert_bytes(stats["storageSize"])))
 
-        print('#' * 25 + ' statistics ' + '#' * 25)
+        print('#' * 25 + ' Total statistics ' + '#' * 25)
         print("Total Documents:", summary["count"])
         print("Total Data Size:", self._convert_bytes(summary["size"]))
         print("Total Index Size:", self._convert_bytes(summary["indexSize"]))
