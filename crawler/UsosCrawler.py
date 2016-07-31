@@ -10,7 +10,7 @@ from tornado import httpclient
 from tornado.util import ObjectDict
 
 from commons import constants
-from commons.UsosCaller import UsosCaller
+from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
@@ -282,8 +282,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             usoses = await self.db_usoses()
             for usos_doc in usoses:
                 try:
-                    data = await UsosCaller().call_async(path='services/events/notifier_status',
-                                                         base_url=usos_doc[constants.USOS_URL])
+                    data = await AsyncCaller().call_async(path='services/events/notifier_status',
+                                                          base_url=usos_doc[constants.USOS_URL])
 
                     data[constants.CREATED_TIME] = timestamp
                     data[constants.USOS_ID] = usos_doc[constants.USOS_ID]

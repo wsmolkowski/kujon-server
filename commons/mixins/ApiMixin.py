@@ -8,7 +8,7 @@ from tornado import gen
 
 from commons import constants
 from commons import usoshelper
-from commons.UsosCaller import UsosCaller
+from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 
@@ -320,8 +320,8 @@ class ApiMixin(ApiUserMixin):
             {constants.MONGO_ID: False, constants.CREATED_TIME: False})
 
         if not classtypes:
-            classtypes = await UsosCaller(self._context).call_async(path='services/courses/classtypes_index',
-                                                                    lang=False)
+            classtypes = await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index',
+                                                                     lang=False)
 
             await self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
         return classtypes
@@ -470,7 +470,7 @@ class ApiMixin(ApiUserMixin):
 
         if not programme_doc:
             try:
-                programme_doc = await UsosCaller(self._context).call_async(
+                programme_doc = await AsyncCaller(self._context).call_async(
                     path='services/progs/programme',
                     arguments={
                         'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
@@ -577,7 +577,7 @@ class ApiMixin(ApiUserMixin):
     async def _api_term_task(self, term_id):
         term_doc = None
         try:
-            term_doc = await UsosCaller(self._context).call_async(
+            term_doc = await AsyncCaller(self._context).call_async(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
             term_doc['name'] = term_doc['name']['pl']
@@ -637,7 +637,7 @@ class ApiMixin(ApiUserMixin):
         return result
 
     async def usos_faculty(self, faculty_id):
-        faculty_doc = await UsosCaller(self._context).call_async(
+        faculty_doc = await AsyncCaller(self._context).call_async(
             path='services/fac/faculty',
             arguments={
                 'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
@@ -719,7 +719,7 @@ class ApiMixin(ApiUserMixin):
 
         if not unit_doc:
             try:
-                unit_doc = await UsosCaller(self._context).call_async(
+                unit_doc = await AsyncCaller(self._context).call_async(
                     path='services/courses/unit',
                     arguments={
                         'fields': 'id|course_id|term_id|groups|classtype_id',
@@ -759,7 +759,7 @@ class ApiMixin(ApiUserMixin):
         group_doc = await self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = await UsosCaller(self._context).call_async(
+                group_doc = await AsyncCaller(self._context).call_async(
                     path='services/groups/group',
                     arguments={
                         'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',

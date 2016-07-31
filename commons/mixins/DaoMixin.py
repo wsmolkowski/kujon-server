@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import motor
 from bson.objectid import ObjectId
+from tornado.httpclient import HTTPError
 
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -42,6 +43,12 @@ class DaoMixin(object):
         exc_doc = {
             'exception': str(exception)
         }
+
+        if isinstance(exception, HTTPError):
+            exc_doc['code'] = exception.code
+            exc_doc['body'] = str(exception.response.body)
+            exc_doc['effective_url'] = exception.response.effective_url
+            exc_doc['message'] = exception.message
 
         if hasattr(self, 'get_current_user') and self.get_current_user():
             user_id = self.get_current_user()[constants.MONGO_ID]

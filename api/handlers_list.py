@@ -11,7 +11,8 @@ from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from api.handlers.lecturers import LecturersApi, LecturerByIdApi
 from api.handlers.messages import MessagesHandler
 from api.handlers.programmes import ProgrammesApi, ProgrammesByIdApi
-from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi
+from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultiesApi, SearchProgrammesApi, \
+    SearchThesesApi
 from api.handlers.subscriptions import SubscriptionsHandler
 from api.handlers.terms import TermsApi, TermApi
 from api.handlers.theses import ThesesApi
@@ -64,6 +65,7 @@ HANDLERS = [
     (r"/search/courses/([^/]+)", SearchCoursesApi),
     (r"/search/faculties/([^/]+)", SearchFacultiesApi),
     (r"/search/programmes/([^/]+)", SearchProgrammesApi),
+    (r"/search/theses/([^/]+)", SearchThesesApi),
 
     (r"/theses", ThesesApi),
     (r"/crstests", CrsTestsApi),
