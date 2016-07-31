@@ -46,9 +46,10 @@ class DaoMixin(object):
 
         if isinstance(exception, HTTPError):
             exc_doc['code'] = exception.code
-            exc_doc['body'] = str(exception.response.body)
-            exc_doc['effective_url'] = exception.response.effective_url
             exc_doc['message'] = exception.message
+            if hasattr(exception, 'response'):
+                exc_doc['body'] = str(exception.response.body)
+                exc_doc['effective_url'] = exception.response.effective_url
 
         if hasattr(self, 'get_current_user') and self.get_current_user():
             user_id = self.get_current_user()[constants.MONGO_ID]

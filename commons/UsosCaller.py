@@ -3,12 +3,22 @@
 import urllib.parse as urllib_parse
 from base64 import b64encode
 
-from tornado import escape
+from tornado import escape, httpclient
 from tornado.auth import OAuthMixin
 from tornado.httpclient import HTTPRequest
 
 from commons import constants
 from commons.errors import CallerError
+
+
+def http_client(proxy_url=None, proxy_port=None):
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                         defaults=dict(proxy_host=proxy_url,
+                                                       proxy_port=proxy_port,
+                                                       validate_cert=False),
+                                         max_clients=constants.MAX_HTTP_CLIENTS)
+
+    return httpclient.AsyncHTTPClient()
 
 
 class UsosCaller(OAuthMixin):
@@ -40,9 +50,10 @@ class UsosCaller(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        response = await self.get_auth_http_client().fetch(HTTPRequest(url=url,
-                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        client = http_client()
+        response = await client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)
@@ -73,9 +84,10 @@ class AsyncCaller(object):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        response = await self.get_auth_http_client().fetch(HTTPRequest(url=url,
-                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        client = http_client()
+        response = await client.fetch(HTTPRequest(url=url,
+                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)
