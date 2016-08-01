@@ -178,6 +178,11 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
         await self._setUp(user_id)
 
+        try:
+            await UsosCaller(self._context).call(path='services/events/unsubscribe')
+        except Exception as ex:
+            logging.warning(ex)
+
         callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
