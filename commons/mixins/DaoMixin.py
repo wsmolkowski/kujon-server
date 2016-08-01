@@ -61,7 +61,7 @@ class DaoMixin(object):
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
-        await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc)
+        await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
 
         if finish:
             if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):
@@ -105,12 +105,14 @@ class DaoMixin(object):
         })
         return usos_doc
 
-    async def db_insert(self, collection, document):
+    async def db_insert(self, collection, document, update=True):
         create_time = datetime.now()
         if self.getUsosId():
             document[constants.USOS_ID] = self.getUsosId()
         document[constants.CREATED_TIME] = create_time
-        document[constants.UPDATE_TIME] = create_time
+
+        if update:
+            document[constants.UPDATE_TIME] = create_time
 
         doc = await self.db[collection].insert(document)
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
