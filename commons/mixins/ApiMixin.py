@@ -8,7 +8,7 @@ from tornado import gen
 
 from commons import constants
 from commons import usoshelper
-from commons.UsosCaller import UsosCaller
+from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 
@@ -88,6 +88,9 @@ class ApiMixin(ApiUserMixin):
     async def api_course_edition(self, course_id, term_id):
 
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy kursów.")
+
         result = None
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             if term != term_id:
@@ -133,7 +136,7 @@ class ApiMixin(ApiUserMixin):
         course_edition = await self.api_course_edition(course_id, term_id)
 
         if not course_edition:
-            raise self.Return()
+            return
 
         if not user_id:
             user_info_doc = await self.api_user_info()
@@ -142,7 +145,7 @@ class ApiMixin(ApiUserMixin):
 
         if not user_info_doc:
             raise ApiError(
-                "Błąd podczas pobierania danych użytkownika course_id (0} term_id (1}".format(course_id, term_id))
+                "Błąd podczas pobierania danych użytkownika course_id {0} term_id {1}".format(course_id, term_id))
 
         # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
@@ -253,7 +256,6 @@ class ApiMixin(ApiUserMixin):
 
     async def api_courses(self, fields=None):
         courses_editions = await self.api_courses_editions()
-
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
@@ -320,8 +322,8 @@ class ApiMixin(ApiUserMixin):
             {constants.MONGO_ID: False, constants.CREATED_TIME: False})
 
         if not classtypes:
-            classtypes = await UsosCaller(self._context).call_async(path='services/courses/classtypes_index',
-                                                                    lang=False)
+            classtypes = await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index',
+                                                                     lang=False)
 
             await self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
         return classtypes
@@ -336,8 +338,9 @@ class ApiMixin(ApiUserMixin):
     async def api_grades(self):
 
         classtypes = await self.get_classtypes()
-
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy ocen.")
 
         result = list()
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
@@ -427,6 +430,8 @@ class ApiMixin(ApiUserMixin):
 
     async def api_lecturers(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy nauczycieli.")
 
         result = list()
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
@@ -442,11 +447,7 @@ class ApiMixin(ApiUserMixin):
         return user_info
 
     async def api_programmes(self, finish=False):
-
         user_info = await self.api_user_info()
-
-        if not user_info:
-            raise ApiError("Brak danych o użytkowniku.")
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -470,7 +471,7 @@ class ApiMixin(ApiUserMixin):
 
         if not programme_doc:
             try:
-                programme_doc = await UsosCaller(self._context).call_async(
+                programme_doc = await AsyncCaller(self._context).call_async(
                     path='services/progs/programme',
                     arguments={
                         'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
@@ -554,20 +555,24 @@ class ApiMixin(ApiUserMixin):
             tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
         tt_doc = await gen.multi(tt_lecturers_fetch_task)
 
-        return tt_doc
+        return self.filterNone(tt_doc)
 
     async def _api_tt_attach_lecturers(self, tt):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
 
         for lecturer in tt['lecturer_ids']:
-            lecturer_info = await self.api_user_info(str(lecturer))
-            if lecturer_info:
-                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                tt['lecturers'] = list()
-                tt['lecturers'].append(lecturer_info)
-            else:
-                await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
-                               finish=False)
+            try:
+                lecturer_info = await self.api_user_info(str(lecturer))
+                if lecturer_info:
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    tt['lecturers'] = list()
+                    tt['lecturers'].append(lecturer_info)
+                else:
+                    await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
+                                   finish=False)
+                    return
+            except Exception as ex:
+                await self.exc(ex, finish=False)
 
         if 'lecturer_ids' in tt:
             del (tt['lecturer_ids'])
@@ -577,7 +582,7 @@ class ApiMixin(ApiUserMixin):
     async def _api_term_task(self, term_id):
         term_doc = None
         try:
-            term_doc = await UsosCaller(self._context).call_async(
+            term_doc = await AsyncCaller(self._context).call_async(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
             term_doc['name'] = term_doc['name']['pl']
@@ -625,6 +630,8 @@ class ApiMixin(ApiUserMixin):
 
     async def api_terms(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy jednostek.")
 
         terms_ids = list()
         for term_id in courses_editions[constants.COURSE_EDITIONS]:
@@ -637,7 +644,7 @@ class ApiMixin(ApiUserMixin):
         return result
 
     async def usos_faculty(self, faculty_id):
-        faculty_doc = await UsosCaller(self._context).call_async(
+        faculty_doc = await AsyncCaller(self._context).call_async(
             path='services/fac/faculty',
             arguments={
                 'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
@@ -719,7 +726,7 @@ class ApiMixin(ApiUserMixin):
 
         if not unit_doc:
             try:
-                unit_doc = await UsosCaller(self._context).call_async(
+                unit_doc = await AsyncCaller(self._context).call_async(
                     path='services/courses/unit',
                     arguments={
                         'fields': 'id|course_id|term_id|groups|classtype_id',
@@ -759,7 +766,7 @@ class ApiMixin(ApiUserMixin):
         group_doc = await self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = await UsosCaller(self._context).call_async(
+                group_doc = await AsyncCaller(self._context).call_async(
                     path='services/groups/group',
                     arguments={
                         'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',

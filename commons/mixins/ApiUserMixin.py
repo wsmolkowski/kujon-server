@@ -9,6 +9,7 @@ from tornado import gen
 from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
+from commons.errors import CallerError
 from commons.mixins.DaoMixin import DaoMixin
 
 USER_INFO_SKIP_FIELDS = {constants.MONGO_ID: False, 'email_access': False, 'interests': False,
@@ -105,8 +106,8 @@ class ApiUserMixin(DaoMixin):
                 await self.exc(ex, finish=False)
 
             if not user_info_doc:
-                logging.error("api_user_info - nie znaleziono użytkownika: {0}".format(user_id))
-                return None
+                raise CallerError("Nie znaleziono danych dla użytkownika: {0}".format(user_id))
+
             if not user_id:
                 user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 

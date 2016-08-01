@@ -57,12 +57,12 @@ class DbUtils(object):
 
         self._unique_indexes()
 
-    def reindex(self, ):
+    def reindex(self):
         for collection in self.client.collection_names(include_system_collections=False):
             ri = self.client[collection].reindex()
             logging.info('collection {0} reindexed: {1}'.format(collection, ri))
 
-    def _convert_bytes(bytes):
+    def _convert_bytes(self, bytes):
         bytes = float(bytes)
         magnitude = abs(bytes)
         if magnitude >= 1099511627776:
@@ -98,15 +98,19 @@ class DbUtils(object):
                 continue
             stats = db.command('collstats', collection)
 
-            print('#' * 25 + ' collection {0} '.format(collection) + '#' * 25)
-            print(stats, width=1)
-
             summary["count"] += stats["count"]
             summary["size"] += stats["size"]
             summary["indexSize"] += stats.get("totalIndexSize", 0)
             summary["storageSize"] += stats.get("storageSize", 0)
 
-        print('#' * 25 + ' statistics ' + '#' * 25)
+            print("Collection {0} count: {1} size: {2} index_size: {3} storage_size: {4}".format(
+                collection,
+                stats["count"],
+                self._convert_bytes(stats["size"]),
+                self._convert_bytes(stats["totalIndexSize"]),
+                self._convert_bytes(stats["storageSize"])))
+
+        print('#' * 25 + ' Total statistics ' + '#' * 25)
         print("Total Documents:", summary["count"])
         print("Total Data Size:", self._convert_bytes(summary["size"]))
         print("Total Index Size:", self._convert_bytes(summary["indexSize"]))

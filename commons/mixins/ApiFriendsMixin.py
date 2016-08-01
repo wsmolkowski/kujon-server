@@ -66,6 +66,8 @@ class ApiMixinFriends(DaoMixin):
 
         try:
             courses_editions_doc = await self.api_courses_editions()
+            if not courses_editions_doc:
+                raise ApiError("Poczekaj szukamy znajomych w Twoim otoczeniu.")
 
             if courses_editions_doc:
                 for term in courses_editions_doc['course_editions']:

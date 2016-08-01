@@ -94,3 +94,19 @@ class SearchProgrammesApi(AbstractSearch):
             await self.exc(ex)
         finally:
             await self.on_finally()
+
+
+class SearchThesesApi(AbstractSearch):
+    @decorators.authenticated
+    @tornado.web.asynchronous
+    async def get(self, query):
+        try:
+            result_doc = await self.api_search_theses(query)
+            if result_doc['items']:
+                self.success(result_doc)
+            else:
+                self.error('Niestety nie znaleźliśmy danych.', code=404)
+        except Exception as ex:
+            await self.exc(ex)
+        finally:
+            await self.on_finally()

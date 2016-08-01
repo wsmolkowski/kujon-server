@@ -9,6 +9,7 @@ from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.UsosCaller import AsyncCaller
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
@@ -18,16 +19,11 @@ from commons.mixins.JSendMixin import JSendMixin
 
 
 def http_client(proxy_url=None, proxy_port=None):
-    if proxy_url and proxy_port:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=proxy_url,
-                                                           proxy_port=proxy_port,
-                                                           validate_cert=False),
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
-
-    else:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                         defaults=dict(proxy_host=proxy_url,
+                                                       proxy_port=proxy_port,
+                                                       validate_cert=False),
+                                         max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()
 
@@ -62,7 +58,7 @@ class BaseHandler(RequestHandler, DaoMixin):
                 if not token_exists:
                     logging.warning('Authentication token does not exists for email: {0}'.format(header_email))
 
-                user = await self.db_current_user(header_email)
+                user = await self.db_find_user_email(header_email)
 
         return user
 
@@ -180,6 +176,15 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
         for mobile use only
     """
 
+    async def usos_works(self):
+        try:
+            await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
+            await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index')
+            return True
+        except Exception as ex:
+            logging.exception(ex)
+            return False
+
     @web.asynchronous
     async def get(self):
 
@@ -189,10 +194,16 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
         else:
             usos_paired = False
 
+        if usos_paired:
+            usos_works = await self.usos_works()
+        else:
+            usos_works = False
+
         config = {
             'API_URL': self.config.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
-            'USER_LOGGED': True if user else False
+            'USER_LOGGED': True if user else False,
+            'USOS_WORKS': usos_works
         }
 
         self.success(data=config)

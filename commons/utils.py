@@ -5,7 +5,7 @@ import os
 import sys
 import tempfile
 import traceback
-
+from logging import handlers
 
 try:
     import socks
@@ -53,7 +53,7 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None, ):
 
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
-        file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
+        file_handler = handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
         formatter = logging.Formatter(log_format, constants.DEFAULT_DATE_FORMAT)
         file_handler.setFormatter(formatter)
 

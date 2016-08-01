@@ -10,7 +10,7 @@ from tornado import httpclient
 from tornado.util import ObjectDict
 
 from commons import constants
-from commons.UsosCaller import UsosCaller
+from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
@@ -18,16 +18,11 @@ from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
 def http_client(proxy_url=None, proxy_port=None):
-    if proxy_url and proxy_port:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             defaults=dict(proxy_host=proxy_url,
-                                                           proxy_port=proxy_port,
-                                                           validate_cert=False),
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
-
-    else:
-        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                             max_clients=constants.MAX_HTTP_CLIENTS)
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                         defaults=dict(proxy_host=proxy_url,
+                                                       proxy_port=proxy_port,
+                                                       validate_cert=False),
+                                         max_clients=constants.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()
 
@@ -82,6 +77,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
     async def __process_courses_editions(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            logging.error('Empty response from: api_courses_editions() Not processing.')
+            return
 
         # users_ids = list()
         courses_terms = list()
@@ -168,7 +166,6 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
             await self.api_user_info()
             await self.api_thesis()
-            await self.api_courses_editions()
             await self.__process_courses_editions()
             await self.api_terms()
             await self.api_programmes()
@@ -182,6 +179,11 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     async def subscribe(self, user_id):
 
         await self._setUp(user_id)
+
+        try:
+            await UsosCaller(self._context).call(path='services/events/unsubscribe')
+        except Exception as ex:
+            logging.warning(ex)
 
         callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
@@ -287,8 +289,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             usoses = await self.db_usoses()
             for usos_doc in usoses:
                 try:
-                    data = await UsosCaller().call_async(path='services/events/notifier_status',
-                                                         base_url=usos_doc[constants.USOS_URL])
+                    data = await AsyncCaller().call_async(path='services/events/notifier_status',
+                                                          base_url=usos_doc[constants.USOS_URL])
 
                     data[constants.CREATED_TIME] = timestamp
                     data[constants.USOS_ID] = usos_doc[constants.USOS_ID]

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import motor
 from bson.objectid import ObjectId
+from tornado.httpclient import HTTPError
 
 from commons import constants
 from commons.AESCipher import AESCipher
@@ -43,6 +44,13 @@ class DaoMixin(object):
             'exception': str(exception)
         }
 
+        if isinstance(exception, HTTPError):
+            exc_doc['code'] = exception.code
+            exc_doc['message'] = exception.message
+            if hasattr(exception, 'response') and hasattr(exception.response, 'body'):
+                exc_doc['body'] = str(exception.response.body)
+                exc_doc['effective_url'] = exception.response.effective_url
+
         if hasattr(self, 'get_current_user') and self.get_current_user():
             user_id = self.get_current_user()[constants.MONGO_ID]
             if not isinstance(user_id, ObjectId):
@@ -58,8 +66,8 @@ class DaoMixin(object):
         if finish:
             if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):
                 self.error(message=str(exception))
-            elif isinstance(exception, CallerError):
-                self.error(message='Wystąpił błąd USOS.')
+            elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
+                self.usos()
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
@@ -269,14 +277,6 @@ class DaoMixin(object):
         updated = await self.db[collection].update({constants.MONGO_ID: _id}, document)
         logging.debug('collection: {0} updated: {1}'.format(collection, updated))
         return updated
-
-    async def db_current_user(self, email):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
-                                                                      (constants.ID, constants.ACCESS_TOKEN_KEY,
-                                                                       constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                                                                       constants.USOS_PAIRED, constants.USER_EMAIL)
-                                                                      )
-        return user_doc
 
     async def db_update_user(self, _id, document):
         update_doc = await self.db_update(constants.COLLECTION_USERS, _id, document)

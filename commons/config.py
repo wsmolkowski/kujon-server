@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import tempfile
 from configparser import RawConfigParser
 
 
@@ -74,7 +75,11 @@ class Config(object):
         self.SSL_KEY = self.config.get('ssl', 'SSL_KEY') if self.config.get('ssl', 'SSL_KEY') else None
 
         # administration
-        self.LOG_DIR = self.config.get('administration', 'LOG_DIR')
+        if self.config.get('administration', 'LOG_DIR'):
+            self.LOG_DIR = self.config.get('administration', 'LOG_DIR')
+        else:
+            self.LOG_DIR = tempfile.gettempdir()
+
         self.DEVELOPMENT = self.config.getboolean('administration', 'DEVELOPMENT')
 
         # notification

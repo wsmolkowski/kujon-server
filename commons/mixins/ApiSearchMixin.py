@@ -81,3 +81,16 @@ class ApiMixinSearch(object):
             programme['programme']['duration'] = programme['programme']['duration']['pl']
 
         return search_doc
+
+    async def api_search_theses(self, query):
+        start = self.get_argument('start', default=0, strip=True)
+
+        search_doc = await UsosCaller(self._context).call(path='services/theses/search',
+                                                          arguments={
+                                                              'query': query,
+                                                              'start': int(start),
+                                                              'num': NUMBER_SEARCH_RESULTS,
+                                                              'fields': 'items[match|thesis[type|id|title]]|next_page',
+                                                          })
+
+        return search_doc
