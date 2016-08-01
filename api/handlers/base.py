@@ -194,11 +194,16 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
         else:
             usos_paired = False
 
+        if usos_paired:
+            usos_works = await self.usos_works()
+        else:
+            usos_works = False
+
         config = {
             'API_URL': self.config.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False,
-            'USOS_WORKS': await self.usos_works()
+            'USOS_WORKS': usos_works
         }
 
         self.success(data=config)

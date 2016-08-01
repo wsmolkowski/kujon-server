@@ -447,11 +447,7 @@ class ApiMixin(ApiUserMixin):
         return user_info
 
     async def api_programmes(self, finish=False):
-
         user_info = await self.api_user_info()
-
-        if not user_info:
-            raise ApiError("Brak danych o użytkowniku.")
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -559,20 +555,24 @@ class ApiMixin(ApiUserMixin):
             tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
         tt_doc = await gen.multi(tt_lecturers_fetch_task)
 
-        return tt_doc
+        return self.filterNone(tt_doc)
 
     async def _api_tt_attach_lecturers(self, tt):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
 
         for lecturer in tt['lecturer_ids']:
-            lecturer_info = await self.api_user_info(str(lecturer))
-            if lecturer_info:
-                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                tt['lecturers'] = list()
-                tt['lecturers'].append(lecturer_info)
-            else:
-                await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
-                               finish=False)
+            try:
+                lecturer_info = await self.api_user_info(str(lecturer))
+                if lecturer_info:
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    tt['lecturers'] = list()
+                    tt['lecturers'].append(lecturer_info)
+                else:
+                    await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
+                                   finish=False)
+                    return
+            except Exception as ex:
+                await self.exc(ex, finish=False)
 
         if 'lecturer_ids' in tt:
             del (tt['lecturer_ids'])

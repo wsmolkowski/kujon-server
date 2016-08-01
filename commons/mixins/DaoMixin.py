@@ -47,7 +47,7 @@ class DaoMixin(object):
         if isinstance(exception, HTTPError):
             exc_doc['code'] = exception.code
             exc_doc['message'] = exception.message
-            if hasattr(exception, 'response'):
+            if hasattr(exception, 'response') and hasattr(exception.response, 'body'):
                 exc_doc['body'] = str(exception.response.body)
                 exc_doc['effective_url'] = exception.response.effective_url
 

@@ -27,10 +27,6 @@ class UsersInfoByIdApi(ApiHandler):
 
         try:
             user_info_doc = await self.api_user_info(user_id=user_info_id)
-
-            if not user_info_doc:
-                raise ApiError('Szukamy informacji o Tobie w USOS.')
-
             self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
             await self.exc(ex)
