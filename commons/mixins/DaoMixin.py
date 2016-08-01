@@ -278,14 +278,6 @@ class DaoMixin(object):
         logging.debug('collection: {0} updated: {1}'.format(collection, updated))
         return updated
 
-    async def db_current_user(self, email):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email},
-                                                                      (constants.ID, constants.ACCESS_TOKEN_KEY,
-                                                                       constants.ACCESS_TOKEN_SECRET, constants.USOS_ID,
-                                                                       constants.USOS_PAIRED, constants.USER_EMAIL)
-                                                                      )
-        return user_doc
-
     async def db_update_user(self, _id, document):
         update_doc = await self.db_update(constants.COLLECTION_USERS, _id, document)
         return update_doc
