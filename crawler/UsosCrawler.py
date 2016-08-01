@@ -170,7 +170,6 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
             await self.api_terms()
             await self.api_programmes()
             await self.api_faculties()
-            await self.api_tt(self.__get_monday())
             await self.__process_crstests()
 
         except Exception as ex:
