@@ -50,7 +50,7 @@ class UsosCaller(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = http_client()
+        client = http_client(self._context.proxy_url, self._context.proxy_port)
         response = await client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                   request_timeout=constants.HTTP_REQUEST_TIMEOUT))
@@ -84,7 +84,7 @@ class AsyncCaller(object):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = http_client()
+        client = http_client(self._context.proxy_url, self._context.proxy_port)
         response = await client.fetch(HTTPRequest(url=url,
                                                   connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                   request_timeout=constants.HTTP_REQUEST_TIMEOUT))

@@ -37,13 +37,13 @@ class UsosChecker(object):
                 try:
                     async with session.get(url) as response:
                         if response.status != 200 and 'application/json' not in response.headers['Content-Type']:
-                            logging.info(url)
+                            logging.error(url)
                             logging.error(response)
                         else:
                             json = await response.json()
                             logging.debug('USOS {0} response ok: {1}'.format(usos_doc[constants.USOS_ID], json))
                 except Exception as ex:
-                    logging.info(url)
+                    logging.exceptio(url)
                     logging.exception(ex)
 
             await asyncio.sleep(SLEEP)
