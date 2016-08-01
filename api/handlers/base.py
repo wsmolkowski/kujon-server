@@ -57,7 +57,7 @@ class BaseHandler(RequestHandler, DaoMixin):
                 if not token_exists:
                     logging.warning('Authentication token does not exists for email: {0}'.format(header_email))
 
-                user = await self.db_current_user(header_email)
+                user = await self.db_find_user_email(header_email)
 
         return user
 

@@ -88,6 +88,9 @@ class ApiMixin(ApiUserMixin):
     async def api_course_edition(self, course_id, term_id):
 
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy kursów.")
+
         result = None
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             if term != term_id:
@@ -253,7 +256,6 @@ class ApiMixin(ApiUserMixin):
 
     async def api_courses(self, fields=None):
         courses_editions = await self.api_courses_editions()
-
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
@@ -336,8 +338,9 @@ class ApiMixin(ApiUserMixin):
     async def api_grades(self):
 
         classtypes = await self.get_classtypes()
-
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy ocen.")
 
         result = list()
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
@@ -427,6 +430,8 @@ class ApiMixin(ApiUserMixin):
 
     async def api_lecturers(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy nauczycieli.")
 
         result = list()
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
@@ -625,6 +630,8 @@ class ApiMixin(ApiUserMixin):
 
     async def api_terms(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy jednostek.")
 
         terms_ids = list()
         for term_id in courses_editions[constants.COURSE_EDITIONS]:

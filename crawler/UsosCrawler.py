@@ -77,6 +77,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
     async def __process_courses_editions(self):
         courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            logging.error('Empty response from: api_courses_editions() Not processing.')
+            return
 
         # users_ids = list()
         courses_terms = list()
@@ -163,7 +166,6 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
             await self.api_user_info()
             await self.api_thesis()
-            await self.api_courses_editions()
             await self.__process_courses_editions()
             await self.api_terms()
             await self.api_programmes()
@@ -177,6 +179,11 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
     async def subscribe(self, user_id):
 
         await self._setUp(user_id)
+
+        try:
+            await UsosCaller(self._context).call(path='services/events/unsubscribe')
+        except Exception as ex:
+            logging.warning(ex)
 
         callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
