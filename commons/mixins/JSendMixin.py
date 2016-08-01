@@ -40,7 +40,7 @@ class JSendMixin(object):
 
     def usos(self):
         result = {'status': 'usos',
-                  'message': 'Wystąpił błąd serwera USOS. Spróbuj ponownie za jakiś czas.',
+                  'message': 'Przerwa w dostępie do USOS. Spróbuj ponownie za jakiś czas :)',
                   'code': 504
                   }
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
