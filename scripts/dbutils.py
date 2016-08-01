@@ -5,7 +5,7 @@ import logging
 import sys
 
 import pymongo
-
+from bson.objectid import ObjectId
 from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
@@ -150,12 +150,44 @@ class DbUtils(object):
         #         self.client[constants.COLLECTION_JOBS_QUEUE].insert(
         #             job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
 
+    def copy_user_crediteltials(self, email_from, email_to):
 
-# def create_user_jobs():
-#     logging.info('create_user_jobs start')
-#     dbutils.create_user_jobs()
-#     logging.info('create_user_jobs end')
+        try:
 
+            user_from_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
+            if not user_from_doc:
+                logging.error("user from %r not found.", email_from)
+                return None
+
+            user_from_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
+                {constants.USER_ID: user_from_doc[constants.MONGO_ID]})
+            if not user_from_info_doc:
+                logging.error("user_info from  %r or %r not found ", email_from)
+                return None
+
+            user_to_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
+            if not user_from_doc:
+                logging.error("user to %r not found.", email_to)
+                return None
+
+            user_to_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
+                {constants.USER_ID: ObjectId(user_to_doc[constants.MONGO_ID])})
+            if not user_from_info_doc:
+                logging.error("user_info to  %r or %r not found ", email_to)
+                return None
+
+            document = user_to_info_doc
+            document[constants.USER_ID] = ObjectId(user_from_doc[constants.MONGO_ID])
+            update_doc = self.db_update(constants.COLLECTION_USERS_INFO, document[constants.MONGO_ID], document)
+
+
+            return None
+        except Exception as ex:
+            print(ex.messg)
+
+        pass
+
+        return None
 
 parser = argparse.ArgumentParser(
     description="Script for local mongo database manipulation.",
@@ -173,6 +205,9 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
                     help="creates indexes on collections")
 parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
+parser.add_argument('-f', '--fakeuser', nargs=2, action='store', dest='user',
+                    help="copy credentials from user1 to user2")
+
 
 
 def main():
@@ -184,7 +219,12 @@ def main():
 
     logging.getLogger().setLevel(config.LOG_LEVEL)
 
-    if args.option == 'recreate':
+    if args.user and len(args.user) == 2:
+        logging.info('coping creditentials from users1 to user2 (by email)')
+        dbutils.copy_user_crediteltials(args.user[0], args.user[1])
+        logging.info('done.')
+
+    elif args.option == 'recreate':
         logging.info('drop_collections start')
         dbutils.drop_collections()
         logging.info('drop_collections end')
