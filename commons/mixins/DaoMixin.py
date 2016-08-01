@@ -67,7 +67,7 @@ class DaoMixin(object):
             if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):
                 self.error(message=str(exception))
             elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
-                self.usos_error()
+                self.usos()
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 

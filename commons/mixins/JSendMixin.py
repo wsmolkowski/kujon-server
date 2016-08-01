@@ -38,8 +38,8 @@ class JSendMixin(object):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'fail', 'message': message, 'code': code})
 
-    def usos_error(self):
-        result = {'status': 'usos_error',
+    def usos(self):
+        result = {'status': 'usos',
                   'message': 'Wystąpił błąd serwera USOS. Spróbuj ponownie za jakiś czas.',
                   'code': 504
                   }
