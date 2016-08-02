@@ -92,7 +92,7 @@ class TTApi(ApiHandler):
             tt_doc = await self.api_tt(given_date)
             self.success(tt_doc, cache_age=constants.SECONDS_1WEEK)
         except (ApiError, CallerError) as ex:
-            logging.warning(ex)
+            logging.debug(ex)
             self.success(dict())
         except Exception as ex:
             await self.exc(ex)
