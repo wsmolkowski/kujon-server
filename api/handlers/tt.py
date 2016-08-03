@@ -3,7 +3,7 @@
 import logging
 from datetime import date, timedelta
 
-from tornado import gen, web
+from tornado import web
 
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
@@ -19,14 +19,11 @@ class TTApi(ApiHandler):
         for lecturer in tt['lecturer_ids']:
             try:
                 lecturer_info = await self.api_user_info(str(lecturer))
-                if lecturer_info:
-                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                    lecturers_infos.append(lecturer_info)
-                else:
-                    await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
-                                   finish=False)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
+                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                lecturers_infos.append(lecturer_info)
+
+            except Exception:
+                pass  # exception save in self.api_user_info
 
         return lecturers_infos
 
@@ -72,21 +69,21 @@ class TTApi(ApiHandler):
             elif t['type'] == 'exam':
                 t['type'] = 'egzamin'
 
-        # add lecturer information
-        try:
-            if 'tts' in tt_doc:
-                tt_lecturers_fetch_task = list()
-                for tt in tt_doc['tts']:
-                    tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
-                tt_lecturers = await gen.multi(tt_lecturers_fetch_task)
-                tt_lecturers = self.filterNone(tt_lecturers)
-            else:
-                tt_lecturers = list()
-        except Exception as ex:
-            await self.exc(ex, finish=False)
-            tt_lecturers = list()
+        # add lecturer information  - API errors
+        # try:
+        #     if 'tts' in tt_doc:
+        #         tt_lecturers_fetch_task = list()
+        #         for tt in tt_doc['tts']:
+        #             tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
+        #         tt_lecturers = await gen.multi(tt_lecturers_fetch_task)
+        #         tt_lecturers = self.filterNone(tt_lecturers)
+        #     else:
+        #         tt_lecturers = list()
+        # except Exception as ex:
+        #     await self.exc(ex, finish=False)
+        #     tt_lecturers = list()
 
-        tt_doc['lecturers'] = tt_lecturers
+        tt_doc['lecturers'] = list()
 
         return tt_doc
 
