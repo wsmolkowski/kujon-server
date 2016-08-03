@@ -38,14 +38,14 @@ class DbUtils(object):
     def _unique_indexes(self):
         # create_unique_index(constants.COLLECTION_USERS_INFO,
         #                     [(constants.USOS_ID, pymongo.ASCENDING), (constants.ID, pymongo.ASCENDING)])
-        # self._unique_index(constants.COLLECTION_TERMS,
-        #                    [(constants.USOS_ID, pymongo.ASCENDING), (constants.TERM_ID, pymongo.ASCENDING)])
-        # self._unique_index(constants.COLLECTION_FACULTIES,
-        #                    [(constants.USOS_ID, pymongo.ASCENDING), (constants.FACULTY_ID, pymongo.ASCENDING)])
-        # self._unique_index(constants.COLLECTION_PROGRAMMES,
-        #                    [(constants.USOS_ID, pymongo.ASCENDING), (constants.PROGRAMME_ID, pymongo.ASCENDING)])
-        # self._unique_index(constants.COLLECTION_COURSES,
-        #                    [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_TERMS,
+                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.TERM_ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_FACULTIES,
+                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.FACULTY_ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_PROGRAMMES,
+                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.PROGRAMME_ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_COURSES,
+                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
         self._unique_index(constants.COLLECTION_COURSES_EDITIONS, [(constants.USER_ID, pymongo.ASCENDING)])
 
     def create_indexes(self):
