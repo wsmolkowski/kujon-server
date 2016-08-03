@@ -82,7 +82,7 @@ class TTApi(ApiHandler):
         #     tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
         # tt_doc = await gen.multi(tt_lecturers_fetch_task)
 
-        return self.filterNone(tt_doc)
+        return tt_doc
 
     @decorators.authenticated
     @tornado.web.asynchronous
