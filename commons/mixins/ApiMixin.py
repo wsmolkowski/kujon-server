@@ -58,7 +58,12 @@ class ApiMixin(ApiUserMixin):
 
             courses_editions_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
-            await self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
+            try:
+                await self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
+            except DuplicateKeyError as ex:
+                logging.warning(ex)
+                courses_editions_doc = await self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
+                    pipeline, (constants.COURSE_EDITIONS,))
 
         return courses_editions_doc
 
