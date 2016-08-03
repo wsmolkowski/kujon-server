@@ -48,7 +48,7 @@ class UserInfoApi(ApiHandler):
 
             user_info = await self.api_user_info()
 
-            if not user_info or not user_info or not user_doc:
+            if not user_info or not user_doc:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
 
             user_doc.update(user_info)
