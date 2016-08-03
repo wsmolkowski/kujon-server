@@ -26,7 +26,7 @@ class UsersInfoByIdApi(ApiHandler):
     async def get(self, user_info_id):
 
         try:
-            user_info_doc = await self.api_user_info(user_id=user_info_id)
+            user_info_doc = await self.api_user_info(user_info_id)
             self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
             await self.exc(ex)
@@ -46,7 +46,7 @@ class UserInfoApi(ApiHandler):
                 {constants.MONGO_ID: self.getUserId()},
                 LIMIT_FIELDS_USER)
 
-            user_info = await self.api_user_info()
+            user_info = await self.api_user_usos_info()
 
             if not user_info or not user_doc:
                 raise ApiError('Poczekaj szukamy informacji o użytkowniku.')

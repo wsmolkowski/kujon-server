@@ -59,7 +59,7 @@ class ApiMixinFriends(DaoMixin):
             raise ApiError('Użytkownik nie jest przyjacielem.')
 
     async def api_friends_suggestions(self):
-        user_info = await self.api_user_info()
+        user_info = await self.api_user_usos_info()
 
         courses = dict()
         suggested_participants = dict()

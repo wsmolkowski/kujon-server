@@ -30,6 +30,7 @@ GRADES = 'grades'
 SEARCH_QUERY = 'query'
 SEARCH_ENDPOINT = 'endpoint'
 NODE_ID = 'node_id'
+USOS_INFO_ID = 'usos_info_id'
 
 FACEBOOK = "facebook"
 FACEBOOK_ID = "id"

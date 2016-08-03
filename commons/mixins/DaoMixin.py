@@ -310,3 +310,11 @@ class DaoMixin(object):
         cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline)
         messages = await cursor.to_list(None)
         return messages
+
+    async def db_user_usos_id(self):
+        user_usos_id = await self.db_find_user()
+        if user_usos_id and constants.USOS_INFO_ID in user_usos_id:
+            user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one({
+                constants.MONGO_ID: user_usos_id[constants.USOS_INFO_ID]}, (constants.ID,))
+            return user_info_doc[constants.ID]
+        return None

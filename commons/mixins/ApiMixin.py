@@ -144,7 +144,7 @@ class ApiMixin(ApiUserMixin):
             return
 
         if not user_id:
-            user_info_doc = await self.api_user_info()
+            user_info_doc = await self.api_user_usos_info()
         else:
             user_info_doc = await self.api_user_info(user_id)
 
@@ -452,7 +452,7 @@ class ApiMixin(ApiUserMixin):
         return user_info
 
     async def api_programmes(self, finish=False):
-        user_info = await self.api_user_info()
+        user_info = await self.api_user_usos_info()
 
         programmes = []
         for program in user_info['student_programmes']:
@@ -496,6 +496,9 @@ class ApiMixin(ApiUserMixin):
                     programme_doc['faculty']['name'] = programme_doc['faculty']['name']['pl']
                     programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
                     del (programme_doc['faculty']['id'])
+
+                # ects_used_sum = await UsosCaller(self._context).call(path='services/credits/used_sum')
+                # programme_doc['ects_used_sum'] = ects_used_sum
 
                 await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             except DuplicateKeyError as ex:
@@ -611,7 +614,7 @@ class ApiMixin(ApiUserMixin):
         return faculty_doc
 
     async def api_faculties(self):
-        users_info_doc = await self.api_user_info()
+        users_info_doc = await self.api_user_usos_info()
 
         # get programmes for user
         programmes_ids = list()
@@ -723,7 +726,7 @@ class ApiMixin(ApiUserMixin):
         theses_doc = await self.db[constants.COLLECTION_THESES].find_one(pipeline)
 
         if not theses_doc:
-            users_info_doc = await self.api_user_info()
+            users_info_doc = await self.api_user_usos_info()
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',
                 arguments={

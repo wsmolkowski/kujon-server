@@ -12,7 +12,7 @@ from commons.UsosCaller import UsosCaller
 from commons.errors import CallerError
 from commons.mixins.DaoMixin import DaoMixin
 
-USER_INFO_SKIP_FIELDS = {constants.MONGO_ID: False, 'email_access': False, 'interests': False,
+USER_INFO_SKIP_FIELDS = {'email_access': False, 'interests': False,
                          'employment_functions': False, constants.CREATED_TIME: False, 'email': False}
 
 
@@ -86,6 +86,23 @@ class ApiUserMixin(DaoMixin):
 
         return result
 
+    async def api_user_usos_info(self):
+        try:
+            user_usos_id = await self.db_user_usos_id()
+            if user_usos_id:
+                user_info_doc = await self.api_user_info(user_usos_id)
+                return user_info_doc
+
+            user_info_doc = await self.api_user_info()
+            user_doc = await self.db_find_user()
+            user_doc[constants.USOS_INFO_ID] = user_info_doc[constants.MONGO_ID]
+            await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+
+            return user_info_doc
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+            return
+
     async def api_user_info(self, user_id=None):
 
         if not user_id:
@@ -107,9 +124,6 @@ class ApiUserMixin(DaoMixin):
 
             if not user_info_doc:
                 raise CallerError("Nie znaleziono danych dla użytkownika: {0}".format(user_id))
-
-            if not user_id:
-                user_info_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
             # process faculties
             tasks_faculties = list()
@@ -151,9 +165,6 @@ class ApiUserMixin(DaoMixin):
             except DuplicateKeyError as ex:
                 logging.warning(ex)
             finally:
-                user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
-
-        if constants.MONGO_ID in user_info_doc:
-            del (user_info_doc[constants.MONGO_ID])
+                user_info_doc = await self.api_user_info(user_info_doc[constants.ID])
 
         return user_info_doc

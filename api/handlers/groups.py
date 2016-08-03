@@ -14,7 +14,7 @@ class GroupsApi(ApiHandler):
     async def get(self, course):
 
         try:
-            user_info = await self.api_user_info()
+            user_info = await self.api_user_usos_info()
 
             programmes = []
             for program in user_info['student_programmes']:
