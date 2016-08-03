@@ -6,6 +6,7 @@ import sys
 
 import pymongo
 from bson.objectid import ObjectId
+
 from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
@@ -45,6 +46,7 @@ class DbUtils(object):
                            [(constants.USOS_ID, pymongo.ASCENDING), (constants.PROGRAMME_ID, pymongo.ASCENDING)])
         self._unique_index(constants.COLLECTION_COURSES,
                            [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_COURSES_EDITIONS, [(constants.USER_ID, pymongo.ASCENDING)])
 
     def create_indexes(self):
         for collection in self.client.collection_names(include_system_collections=False):
