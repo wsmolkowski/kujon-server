@@ -454,7 +454,7 @@ class ApiMixin(ApiUserMixin):
     async def api_programmes(self, finish=False):
         user_info = await self.api_user_usos_info()
 
-        programmes = []
+        programmes = list()
         for program in user_info['student_programmes']:
             result = await self.api_programme(program['programme']['id'], finish=finish)
             if result:

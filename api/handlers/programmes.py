@@ -31,7 +31,7 @@ class ProgrammesApi(ApiHandler):
         try:
             programmes = await self.api_programmes()
             if not programmes:
-                self.error("Brak inforamcji o Twoich kierunkach.", code=404)
+                self.success(list())
             else:
                 self.success(programmes, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
