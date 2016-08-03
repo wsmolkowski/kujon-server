@@ -15,22 +15,20 @@ class TTApi(ApiHandler):
     async def _api_tt_attach_lecturers(self, tt):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
 
+        lecturers_infos = list()
         for lecturer in tt['lecturer_ids']:
             try:
                 lecturer_info = await self.api_user_info(str(lecturer))
                 if lecturer_info:
-                    return dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    lecturers_infos.append(lecturer_info)
                 else:
                     await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
                                    finish=False)
-                    return
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
-        if 'lecturer_ids' in tt:
-            del (tt['lecturer_ids'])
-
-        return tt
+        return lecturers_infos
 
     async def api_tt(self, given_date):
 
