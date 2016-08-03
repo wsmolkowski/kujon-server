@@ -30,14 +30,17 @@ class DbUtils(object):
         logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
 
     def _unique_index(self, collection, fields):
-        index = self.client[collection].create_index(fields, unique=True, drop_dups=True)
+        try:
+            index = self.client[collection].create_index(fields, unique=True, drop_dups=True)
 
-        logging.info('unique index: {0} created on collection: {1} and fields {2}'.format(
-            index, collection, fields))
+            logging.info('unique index: {0} created on collection: {1} and fields {2}'.format(
+                index, collection, fields))
+        except Exception as ex:
+            logging.exception(ex)
 
     def _unique_indexes(self):
-        # create_unique_index(constants.COLLECTION_USERS_INFO,
-        #                     [(constants.USOS_ID, pymongo.ASCENDING), (constants.ID, pymongo.ASCENDING)])
+        self._unique_index(constants.COLLECTION_USERS_INFO,
+                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.ID, pymongo.ASCENDING)])
         self._unique_index(constants.COLLECTION_TERMS,
                            [(constants.USOS_ID, pymongo.ASCENDING), (constants.TERM_ID, pymongo.ASCENDING)])
         self._unique_index(constants.COLLECTION_FACULTIES,
@@ -52,8 +55,12 @@ class DbUtils(object):
         for collection in self.client.collection_names(include_system_collections=False):
             for field in self.INDEXED_FIELDS:
                 if self.client[collection].find_one({field: {'$exists': True, '$ne': False}}):
-                    index = self.client[collection].create_index(field)
-                    logging.info('created index {0} on collection {1} and field {2}'.format(index, collection, field))
+                    try:
+                        index = self.client[collection].create_index(field)
+                        logging.info(
+                            'created index {0} on collection {1} and field {2}'.format(index, collection, field))
+                    except Exception as ex:
+                        logging.exception(ex)
 
         self._ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
 
