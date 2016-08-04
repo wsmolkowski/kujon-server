@@ -58,7 +58,7 @@ class ApiMixin(ApiUserMixin):
             try:
                 await self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
             except DuplicateKeyError as ex:
-                logging.warning(ex)
+                logging.debug(ex)
                 courses_editions_doc = await self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
                     pipeline, (constants.COURSE_EDITIONS,))
 
@@ -127,7 +127,7 @@ class ApiMixin(ApiUserMixin):
                 course_doc = await self.usos_course(course_id)
                 await self.db_insert(constants.COLLECTION_COURSES, course_doc)
             except DuplicateKeyError as ex:
-                logging.warning(ex)
+                logging.debug(ex)
                 course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
             except Exception as ex:
                 await self.exc(ex, finish=False)
@@ -232,7 +232,7 @@ class ApiMixin(ApiUserMixin):
 
                 await self.db_insert(constants.COLLECTION_COURSES, course_doc)
             except DuplicateKeyError as ex:
-                logging.warning(ex)
+                logging.debug(ex)
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
@@ -488,7 +488,7 @@ class ApiMixin(ApiUserMixin):
             await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             return programme_doc
         except DuplicateKeyError as ex:
-            logging.warning(ex)
+            logging.debug(ex)
             programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(
                 pipeline, LIMIT_FIELDS_PROGRAMMES)
             return programme_doc
@@ -526,7 +526,7 @@ class ApiMixin(ApiUserMixin):
 
                 await self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
             except DuplicateKeyError as ex:
-                logging.warning(ex)
+                logging.debug(ex)
                 faculty_doc = await self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
             except Exception as ex:
                 await self.exc(ex, finish=False)

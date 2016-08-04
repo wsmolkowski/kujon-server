@@ -26,7 +26,7 @@ class ApiTermMixin(object):
 
             await self.db_insert(constants.COLLECTION_TERMS, term_doc)
         except DuplicateKeyError as ex:
-            logging.warning(ex)
+            logging.debug(ex)
         except Exception as ex:
             await self.exc(ex, finish=False)
         finally:
