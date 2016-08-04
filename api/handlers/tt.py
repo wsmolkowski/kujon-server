@@ -12,11 +12,11 @@ from commons.errors import ApiError, CallerError
 
 
 class TTApi(ApiHandler):
-    async def _lecturers_info(self, tt):
+    async def _lecturers_info(self, lecturer_ids):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
 
         lecturers_infos = list()
-        for lecturer_id in tt['lecturer_ids']:
+        for lecturer_id in lecturer_ids:
             try:
                 lecturer_info = await self.api_user_info(lecturer_id)
                 lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
@@ -58,7 +58,7 @@ class TTApi(ApiHandler):
             tt_doc['tts'] = tt_response
             tt_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
 
-            await self.db_insert(constants.COLLECTION_TT, tt_doc)
+            # await self.db_insert(constants.COLLECTION_TT, tt_doc)
 
         for t in tt_doc['tts']:
             t['name'] = t['name']['pl']
@@ -69,23 +69,14 @@ class TTApi(ApiHandler):
             elif t['type'] == 'exam':
                 t['type'] = 'egzamin'
 
-        # add lecturer information  - API errors
-        # try:
-        #     if 'tts' in tt_doc:
-        #         lecturers_infos = list()
-        #         for tt in tt_doc['tts']:
-        #             lecturers_infos.append(self._lecturers_info(tt))
-        #         tt_lecturers = await gen.multi(lecturers_infos)
-        #         tt_lecturers = self.filterNone(tt_lecturers)
-        #     else:
-        #         tt_lecturers = list()
-        # except Exception as ex:
-        #     await self.exc(ex, finish=False)
-        #     tt_lecturers = list()
+            if 'lecturer_ids' in t:
+                t['lecturers'] = await self._lecturers_info(t['lecturer_ids'])
 
-        tt_doc['lecturers'] = list()
+                del (t['lecturer_ids'])
+            else:
+                t['lecturers'] = list()
 
-        return tt_doc
+        return tt_doc['tts']
 
     @decorators.authenticated
     @web.asynchronous
