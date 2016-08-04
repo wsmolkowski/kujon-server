@@ -460,11 +460,7 @@ header{background: url('../img/header.jpg') no-repeat;width:100%;background-size
 @media (max-width: 560px){
 .navbar-form {padding: 0px;}
 }
-@media (max-width:1100px) { 
-.navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
-.navbar-landing>.container>.slide-active>ul>li:first-child {border-bottom: 1px solid #444;}
-button.btn.btn-group.log.logowanie {padding: 0;border: none;padding: 17px 20px;margin: 0;font-size: 18px;}
-.log:hover {background: transparent;color: white;border: 1px solid #3976FF;transition: All 0.2s linear;-webkit-transition: All 0.2s linear;-moz-transition: All 0.2s linear;-o-transition: All 0.2s linear;}}
+
 @media (max-width:767px) { 
 header{background: url('../img/header.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
 #wybor-uczelni>.container>.row>.col-sm-12>.form-group>input {padding: 2% 0 0 40px;    background: url(../img/search.png) no-repeat 3% 57%;}
@@ -473,8 +469,8 @@ header{background: url('../img/header.jpg') no-repeat;width:100%;background-size
 .slide-active>section>.container>.row>.heading{padding-top:50px !important;}
 .slide-active>section>.container>.row>.col-sm-12{margin-top:50px !important;}
 .navbar-landing>.container>#slidemenu>.nav>li>a {font-size: 18px;padding: 19px 20px;}
-
-
+.navbar-landing>.container>.slide-active>ul>li:first-child {border-bottom: 1px solid #444;}
+button.btn.btn-group.log.logowanie {padding: 0;border: none;padding: 17px 20px;margin: 0;font-size: 18px;}
 #demo>.container>.row>.demo-col>.col-sm-4 {margin: 40px 0;}
 #demo>.container>.row>.text-center {margin-bottom: 40px;}
 #demo>.container>.row>.demo-col>.col-sm-4>h3 {margin-bottom: 20px;font-size: 22px;}
@@ -508,9 +504,9 @@ body.slide-active {overflow-x: hidden;padding:0;}
 .navbar-landing>.container>.navbar-header{margin: 0 15px;}
 
 .slide-active.navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
-
+.navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
 .navbar-landing>.container>.navbar-header>a{padding:15px 0;}
-
+.log:hover {background: transparent;color: white;border: 1px solid #3976FF;transition: All 0.2s linear;-webkit-transition: All 0.2s linear;-moz-transition: All 0.2s linear;-o-transition: All 0.2s linear;}
 #profil>.container>.row>.col-sm-12>.col-sm-10>.row>.profil-head>.row>.col-sm-2>p {padding-top: 0px;cursor: pointer;margin:0;color:#888;font-size:16px;text-align: center;}
 .dane>p {padding: 20px 0 20px 0;margin: 0;font-size:18px;}
 .dane>p>.fa {padding-right: 10px;font-size: 20px;}
@@ -542,9 +538,7 @@ tr.detail-view>td>.col-sm-12{padding:15px;}
 /*errror*/
 .error{margin-top: 50px;min-height:auto;}
 	
-@media (min-width:1100px) and  (max-width: 1150px{ .navbar-default .navbar-nav > li > a {
-  font-size:12px;
-}}
+
 @media (min-width: 1111px) {
 	.navbar {
     border-radius: 4px;
