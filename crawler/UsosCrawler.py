@@ -12,6 +12,7 @@ from tornado.util import ObjectDict
 from commons import constants
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.mixins.ApiMixin import ApiMixin
+from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
@@ -27,7 +28,7 @@ def http_client(proxy_url=None, proxy_port=None):
     return httpclient.AsyncHTTPClient()
 
 
-class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
+class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTermMixin):
     EXCEPTION_TYPE = 'usoscrawler'
 
     def __init__(self, config):
