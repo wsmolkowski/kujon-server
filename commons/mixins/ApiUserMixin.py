@@ -146,10 +146,11 @@ class ApiUserMixin(DaoMixin):
 
         try:
             user_info_doc = await self.user_info()
-            user_doc = await self.db_find_user()
-            user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
+            if user_info_doc:
+                user_doc = await self.db_find_user()
+                user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
 
-            await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
 
             return user_info_doc
         except Exception as ex:
