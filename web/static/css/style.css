@@ -460,7 +460,11 @@ header{background: url('../img/header.jpg') no-repeat;width:100%;background-size
 @media (max-width: 560px){
 .navbar-form {padding: 0px;}
 }
+@media (max-width:767px) { 
+.navbar-landing>.container>.slide-active>ul>li:first-child {border-bottom: 1px solid #444;}
 
+
+}
 @media (max-width:767px) { 
 header{background: url('../img/header.jpg') no-repeat;width:100%;background-size: cover;background-position-x: center;background-position-y: center;}
 #wybor-uczelni>.container>.row>.col-sm-12>.form-group>input {padding: 2% 0 0 40px;    background: url(../img/search.png) no-repeat 3% 57%;}
@@ -503,7 +507,7 @@ body.slide-active {overflow-x: hidden;padding:0;}
 .slide-active>.nav>.dropdown>ul>li>a{padding:15px 15px;}
 .navbar-landing>.container>.navbar-header{margin: 0 15px;}
 
-.slide-active.navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
+
 .navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
 .navbar-landing>.container>.navbar-header>a{padding:15px 0;}
 .log:hover {background: transparent;color: white;border: 1px solid #3976FF;transition: All 0.2s linear;-webkit-transition: All 0.2s linear;-moz-transition: All 0.2s linear;-o-transition: All 0.2s linear;}
@@ -703,11 +707,12 @@ tr.detail-view>td>.col-sm-12 {
 	.navbar>.container .navbar-brand, .navbar>.container-fluid .navbar-brand {
     margin-left: 0px;
 }
+.slide-active.navbar-landing>.container>#slidemenu>ul>li:last-child{display:none;}
 .navbar-header {
   float:none !important;
 }
 .navbar-nav>li {
-    float: none;
+    float: none !important;
 }
 .navbar-bottom>li {
     float: left;
@@ -1152,3 +1157,12 @@ a.cookiebar-close{text-decoration:none;}
 #cookie-bar span{float:left;padding:12px 0;}
 #cookie-bar .cb-enable{float:right;padding:0;}
 #cookie-bar .cb-policy{float:left;padding:12px 0;}
+
+
+@media screen and (min-width: 1110px) and (max-width: 1200px) { 
+
+.nawigacja-app.navbar-default .navbar-left > li > a {
+    color: #2b2b2b;
+    font-size: 12px;
+}
+}
