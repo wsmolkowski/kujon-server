@@ -1,7 +1,6 @@
 # coding=UTF-8
 
 import logging
-from datetime import date, datetime
 
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
@@ -19,13 +18,11 @@ LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'cou
 LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
                         'path', 'stats')
-LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
 LIMIT_FIELDS_USER = (
     'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id', constants.TERMS_ORDER_KEY)
 USER_INFO_LIMIT_FIELDS = (
     'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
     'student_programmes',
@@ -56,7 +53,7 @@ class ApiMixin(ApiUserMixin):
                     'active_terms_only': 'false',
                 })
 
-            courses_editions_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+            courses_editions_doc[constants.USER_ID] = self.getUserId()
 
             try:
                 await self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
@@ -86,7 +83,7 @@ class ApiMixin(ApiUserMixin):
         result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
         result[constants.TERM_ID] = term_id
-        result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+        result[constants.USER_ID] = self.getUserId()
 
         return result
 
@@ -455,107 +452,48 @@ class ApiMixin(ApiUserMixin):
             await self.db_remove(constants.COLLECTION_PROGRAMMES, pipeline)
 
         programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
+        if programme_doc:
+            return programme_doc
 
-        if not programme_doc:
-            try:
-                programme_doc = await AsyncCaller(self._context).call_async(
-                    path='services/progs/programme',
-                    arguments={
-                        'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
-                        'programme_id': programme_id,
-                    }
-                )
-
-                programme_doc[constants.PROGRAMME_ID] = programme_id
-
-                # strip english names
-                programme_doc['name'] = programme_doc['name']['pl']
-                programme_doc['mode_of_studies'] = programme_doc['mode_of_studies']['pl']
-                programme_doc['level_of_studies'] = programme_doc['level_of_studies']['pl']
-                programme_doc['professional_status'] = programme_doc['professional_status']['pl']
-                programme_doc['duration'] = programme_doc['duration']['pl']
-                if 'faculty' in programme_doc and 'name' in programme_doc['faculty']:
-                    programme_doc['faculty']['name'] = programme_doc['faculty']['name']['pl']
-                    programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
-                    del (programme_doc['faculty']['id'])
-
-                # ects_used_sum = await UsosCaller(self._context).call(path='services/credits/used_sum')
-                # programme_doc['ects_used_sum'] = ects_used_sum
-
-                await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
-            except DuplicateKeyError as ex:
-                logging.warning(ex)
-                programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(
-                    pipeline, LIMIT_FIELDS_PROGRAMMES)
-            except Exception as ex:
-                await self.exc(ex, finish=finish)
-                return
-
-        return programme_doc
-
-    async def _api_term_task(self, term_id):
-        term_doc = None
         try:
-            term_doc = await AsyncCaller(self._context).call_async(
-                path='services/terms/term', arguments={'term_id': term_id}
+            programme_doc = await AsyncCaller(self._context).call_async(
+                path='services/progs/programme',
+                arguments={
+                    'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
+                    'programme_id': programme_id,
+                }
             )
-            term_doc['name'] = term_doc['name']['pl']
-            term_doc[constants.TERM_ID] = term_doc.pop(constants.ID)
 
-            await self.db_insert(constants.COLLECTION_TERMS, term_doc)
+            programme_doc[constants.PROGRAMME_ID] = programme_id
+
+            # strip english names
+            programme_doc['name'] = programme_doc['name']['pl']
+            programme_doc['mode_of_studies'] = programme_doc['mode_of_studies']['pl']
+            programme_doc['level_of_studies'] = programme_doc['level_of_studies']['pl']
+            programme_doc['professional_status'] = programme_doc['professional_status']['pl']
+            programme_doc['duration'] = programme_doc['duration']['pl']
+            if 'faculty' in programme_doc and 'name' in programme_doc['faculty']:
+                programme_doc['faculty']['name'] = programme_doc['faculty']['name']['pl']
+                programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
+                del (programme_doc['faculty']['id'])
+
+            # ects_used_sum = await UsosCaller(self._context).call(
+            #     path='services/credits/used_sum',
+            #     arguments={
+            #         'students_programme_id': programme_id
+            #     })
+            #
+            # programme_doc['ects_used_sum'] = ects_used_sum
+
+            await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            return programme_doc
         except DuplicateKeyError as ex:
             logging.warning(ex)
+            programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(
+                pipeline, LIMIT_FIELDS_PROGRAMMES)
+            return programme_doc
         except Exception as ex:
-            await self.exc(ex, finish=False)
-        finally:
-            return term_doc
-
-    async def api_term(self, term_ids):
-
-        pipeline = {constants.TERM_ID: {"$in": term_ids}, constants.USOS_ID: self.getUsosId()}
-        if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_TERMS, pipeline)
-
-        cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort("order_key", -1)
-        terms_doc = await cursor.to_list(None)
-
-        if not terms_doc:
-            try:
-                terms_task = list()
-                for term_id in term_ids:
-                    terms_task.append(self._api_term_task(term_id))
-                await gen.multi(terms_task)
-                cursor.rewind()
-                terms_doc = await cursor.to_list(None)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-                return
-
-        today = date.today()
-        for term in terms_doc:
-            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
-            if today <= end_date:
-                term['active'] = True
-            else:
-                term['active'] = False
-            del (term[constants.MONGO_ID])
-
-        return terms_doc
-
-    async def api_terms(self):
-        courses_editions = await self.api_courses_editions()
-        if not courses_editions:
-            raise ApiError("Poczekaj szukamy jednostek.")
-
-        terms_ids = list()
-        for term_id in courses_editions[constants.COURSE_EDITIONS]:
-            if term_id in terms_ids:
-                continue
-            terms_ids.append(term_id)
-
-        result = await self.api_term(terms_ids)
-
-        return result
+            await self.exc(ex, finish=finish)
 
     async def usos_faculty(self, faculty_id):
         faculty_doc = await AsyncCaller(self._context).call_async(
@@ -701,7 +639,7 @@ class ApiMixin(ApiUserMixin):
 
     async def api_thesis(self):
 
-        pipeline = {constants.USER_ID: self.get_current_user()[constants.MONGO_ID]}
+        pipeline = {constants.USER_ID: self.getUserId()}
         if self.do_refresh():
             await self.db_remove(constants.COLLECTION_THESES, pipeline)
 
@@ -723,7 +661,7 @@ class ApiMixin(ApiUserMixin):
                 for these in theses_doc['authored_theses']:
                     these['faculty']['name'] = these['faculty']['name']['pl']
 
-            theses_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+            theses_doc[constants.USER_ID] = self.getUserId()
 
             await self.db_insert(constants.COLLECTION_THESES, theses_doc)
 
