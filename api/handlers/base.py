@@ -10,6 +10,7 @@ from tornado.web import RequestHandler
 
 from commons import constants
 from commons.UsosCaller import AsyncCaller
+from commons.errors import AuthenticationError
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
@@ -17,6 +18,7 @@ from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
+from commons.mixins.SocialMixin import SocialMixin
 
 
 def http_client(proxy_url=None, proxy_port=None):
@@ -29,7 +31,7 @@ def http_client(proxy_url=None, proxy_port=None):
     return httpclient.AsyncHTTPClient()
 
 
-class BaseHandler(RequestHandler, DaoMixin):
+class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
     EXCEPTION_TYPE = 'base'
 
     @property
@@ -57,9 +59,15 @@ class BaseHandler(RequestHandler, DaoMixin):
                 token_exists = await self.db_find_token(header_email)
 
                 if not token_exists:
-                    logging.warning('Authentication token does not exists for email: {0}'.format(header_email))
-
-                user = await self.db_find_user_email(header_email)
+                    try:
+                        logging.debug('Authentication token does not exists for email: {0}'.format(header_email))
+                        google_token = await self.google_token(header_token)
+                        await self.db_insert_token(google_token)
+                        user = await self.db_find_user_email(header_email)
+                    except AuthenticationError as ex:
+                        logging.exception(ex)
+                else:
+                    user = await self.db_find_user_email(header_email)
 
         return user
 
