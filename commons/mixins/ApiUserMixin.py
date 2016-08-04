@@ -167,7 +167,7 @@ class ApiUserMixin(DaoMixin):
             if user_usos_id:
                 user_info_doc = await self.api_user_info(user_usos_id)
 
-                if constants.USOS_USER_ID not in user_info_doc:
+                if user_info_doc and constants.USOS_USER_ID not in user_info_doc:
                     ''' update for old users '''
                     user_info_doc = await self.updated_user_doc()
 
