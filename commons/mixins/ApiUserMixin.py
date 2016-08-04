@@ -114,11 +114,13 @@ class ApiUserMixin(DaoMixin):
             course_id, term_id = course_conducted['id'].split('|')
             if course_id not in courses:
                 courses.append(course_id)
-                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False))
+                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False, log_exception=False))
 
         try:
             tasks_results = await gen.multi(tasks_courses)
             for course_doc in tasks_results:
+                if not course_doc:
+                    continue
                 courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
                                           constants.COURSE_ID: course_doc[constants.COURSE_ID],
                                           constants.TERM_ID: course_doc[constants.TERM_ID]})
@@ -165,7 +167,7 @@ class ApiUserMixin(DaoMixin):
             if user_usos_id:
                 user_info_doc = await self.api_user_info(user_usos_id)
 
-                if constants.USOS_USER_ID not in user_info_doc:
+                if user_info_doc and constants.USOS_USER_ID not in user_info_doc:
                     ''' update for old users '''
                     user_info_doc = await self.updated_user_doc()
 
@@ -196,7 +198,7 @@ class ApiUserMixin(DaoMixin):
                 user_info_doc = await self.user_info(user_id)
                 await self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             except DuplicateKeyError as ex:
-                logging.warning(ex)
+                logging.debug(ex)
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
