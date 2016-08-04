@@ -113,7 +113,7 @@ class ApiMixin(ApiUserMixin):
 
         return result
 
-    async def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True):
+    async def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True, log_exception=True):
 
         pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
 
@@ -130,7 +130,8 @@ class ApiMixin(ApiUserMixin):
                 logging.debug(ex)
                 course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
             except Exception as ex:
-                await self.exc(ex, finish=False)
+                if log_exception:
+                    await self.exc(ex, finish=False)
                 return
 
         course_doc[constants.TERM_ID] = term_id
