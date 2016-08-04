@@ -119,6 +119,8 @@ class ApiUserMixin(DaoMixin):
         try:
             tasks_results = await gen.multi(tasks_courses)
             for course_doc in tasks_results:
+                if not course_doc:
+                    continue
                 courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
                                           constants.COURSE_ID: course_doc[constants.COURSE_ID],
                                           constants.TERM_ID: course_doc[constants.TERM_ID]})
