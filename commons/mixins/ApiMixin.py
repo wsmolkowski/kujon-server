@@ -433,20 +433,6 @@ class ApiMixin(ApiUserMixin):
                                           'courses': grades_by_term[term[constants.TERM_ID]]})
         return grades_sorted_by_term
 
-    async def api_lecturers(self):
-        courses_editions = await self.api_courses_editions()
-        if not courses_editions:
-            raise ApiError("Poczekaj szukamy nauczycieli.")
-
-        result = list()
-        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
-            for course in courses:
-                for lecturer in course[constants.LECTURERS]:
-                    if lecturer not in result:
-                        result.append(lecturer)
-        result = sorted(result, key=lambda k: k['last_name'])
-        return result
-
     async def api_programmes(self, finish=False):
         user_info = await self.api_user_usos_info()
 
