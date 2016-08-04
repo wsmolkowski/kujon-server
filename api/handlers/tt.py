@@ -56,7 +56,7 @@ class TTApi(ApiHandler):
             tt_doc = dict()
             tt_doc[constants.TT_STARTDATE] = str(given_date)
             tt_doc['tts'] = tt_response
-            tt_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+            tt_doc[constants.USER_ID] = self.getUserId()
 
             # await self.db_insert(constants.COLLECTION_TT, tt_doc)
 
@@ -87,6 +87,6 @@ class TTApi(ApiHandler):
             self.success(tt_doc, cache_age=constants.SECONDS_1WEEK)
         except (ApiError, CallerError) as ex:
             logging.debug(ex)
-            self.success(dict())
+            self.success(list())
         except Exception as ex:
             await self.exc(ex)
