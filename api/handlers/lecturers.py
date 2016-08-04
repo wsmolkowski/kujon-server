@@ -22,6 +22,10 @@ class LecturersApi(ApiHandler):
 
 
 class LecturerByIdApi(ApiHandler):
+    async def api_lecturer(self, user_info_id):
+        user_info = await self.api_user_info(user_info_id)
+        return user_info
+
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self, user_info_id):

@@ -447,10 +447,6 @@ class ApiMixin(ApiUserMixin):
         result = sorted(result, key=lambda k: k['last_name'])
         return result
 
-    async def api_lecturer(self, user_info_id):
-        user_info = await self.api_user_info(user_info_id)
-        return user_info
-
     async def api_programmes(self, finish=False):
         user_info = await self.api_user_usos_info()
 
