@@ -21,8 +21,8 @@ class UsosChecker(object):
         self.db = motor.motor_asyncio.AsyncIOMotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
 
         if self.config.PROXY_PORT and self.config.PROXY_URL:
-            proxy = 'http://{0}:{1}'.format(self.config.PROXY_URL, self.config.PROXY_PORT)
-            self.conector = aiohttp.ProxyConnector(proxy=proxy, conn_timeout=50, limit=100)
+            proxy_url = 'http://{0}:{1}'.format(self.config.PROXY_URL, self.config.PROXY_PORT)
+            self.conector = aiohttp.ProxyConnector(proxy=proxy_url, conn_timeout=50, limit=100)
         else:
             self.conector = aiohttp.TCPConnector(verify_ssl=False, limit=100)
 

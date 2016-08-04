@@ -4,9 +4,24 @@ import tornado.web
 
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
+from commons.errors import ApiError
 
 
 class LecturersApi(ApiHandler):
+    async def api_lecturers(self):
+        courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy nauczycieli.")
+
+        result = list()
+        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
+            for course in courses:
+                for lecturer in course[constants.LECTURERS]:
+                    if lecturer not in result:
+                        result.append(lecturer)
+        result = sorted(result, key=lambda k: k['last_name'])
+        return result
+
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self):
@@ -22,6 +37,10 @@ class LecturersApi(ApiHandler):
 
 
 class LecturerByIdApi(ApiHandler):
+    async def api_lecturer(self, user_info_id):
+        user_info = await self.api_user_info(user_info_id)
+        return user_info
+
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self, user_info_id):

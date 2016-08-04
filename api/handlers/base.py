@@ -13,6 +13,7 @@ from commons.UsosCaller import AsyncCaller
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
+from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
@@ -145,7 +146,7 @@ class BaseHandler(RequestHandler, DaoMixin):
                                domain=self.config.SITE_DOMAIN)
 
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin):
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
     EXCEPTION_TYPE = 'api'
 
     def do_refresh(self):  # overwrite from ApiMixin

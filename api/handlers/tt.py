@@ -3,7 +3,7 @@
 import logging
 from datetime import date, timedelta
 
-import tornado.web
+from tornado import web
 
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
@@ -12,27 +12,20 @@ from commons.errors import ApiError, CallerError
 
 
 class TTApi(ApiHandler):
-    async def _api_tt_attach_lecturers(self, tt):
+    async def _lecturers_info(self, tt):
         lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
 
-        for lecturer in tt['lecturer_ids']:
+        lecturers_infos = list()
+        for lecturer_id in tt['lecturer_ids']:
             try:
-                lecturer_info = await self.api_user_info(str(lecturer))
-                if lecturer_info:
-                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                    tt['lecturers'] = list()
-                    tt['lecturers'].append(lecturer_info)
-                else:
-                    await self.exc(ApiError("Błąd podczas pobierania nauczyciela {0} dla planu.".format(lecturer)),
-                                   finish=False)
-                    return
+                lecturer_info = await self.api_user_info(lecturer_id)
+                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                lecturers_infos.append(lecturer_info)
+
             except Exception as ex:
-                await self.exc(ex, finish=False)
+                logging.debug(ex)  # exception save in self.api_user_info
 
-        if 'lecturer_ids' in tt:
-            del (tt['lecturer_ids'])
-
-        return tt
+        return lecturers_infos
 
     async def api_tt(self, given_date):
 
@@ -76,16 +69,26 @@ class TTApi(ApiHandler):
             elif t['type'] == 'exam':
                 t['type'] = 'egzamin'
 
-        # add lecturer information
-        # tt_lecturers_fetch_task = list()
-        # for tt in tt_doc['tts']:
-        #     tt_lecturers_fetch_task.append(self._api_tt_attach_lecturers(tt))
-        # tt_doc = await gen.multi(tt_lecturers_fetch_task)
+        # add lecturer information  - API errors
+        # try:
+        #     if 'tts' in tt_doc:
+        #         lecturers_infos = list()
+        #         for tt in tt_doc['tts']:
+        #             lecturers_infos.append(self._lecturers_info(tt))
+        #         tt_lecturers = await gen.multi(lecturers_infos)
+        #         tt_lecturers = self.filterNone(tt_lecturers)
+        #     else:
+        #         tt_lecturers = list()
+        # except Exception as ex:
+        #     await self.exc(ex, finish=False)
+        #     tt_lecturers = list()
 
-        return self.filterNone(tt_doc)
+        tt_doc['lecturers'] = list()
+
+        return tt_doc
 
     @decorators.authenticated
-    @tornado.web.asynchronous
+    @web.asynchronous
     async def get(self, given_date):
 
         try:
