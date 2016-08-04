@@ -226,44 +226,46 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin):
 
     async def __user_event(self, user_id, node_id):
         try:
-            user_doc = await self.db_find_user_id(user_id)
-            usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
+            users_doc = await self.db_find_users_id(user_id, self.getUsosId())
 
-            context = ObjectDict()
-            context.base_uri = usos_doc[constants.USOS_URL]
-            context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
-                                          secret=usos_doc[constants.CONSUMER_SECRET])
-            context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
-                                        secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+            for user_doc in users_doc:
+                usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
 
-            caller = UsosCaller(context)
+                context = ObjectDict()
+                context.base_uri = usos_doc[constants.USOS_URL]
+                context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
+                                              secret=usos_doc[constants.CONSUMER_SECRET])
+                context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
+                                            secret=user_doc[constants.ACCESS_TOKEN_SECRET])
 
-            user_point = await caller.call(path='services/crstests/user_point',
-                                           arguments={'node_id': node_id})
+                caller = UsosCaller(context)
 
-            logging.debug('user_point: {0}'.format(user_point))
+                user_point = await caller.call(path='services/crstests/user_point',
+                                               arguments={'node_id': node_id})
 
-            if user_point:
-                signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
-                                                         user_doc[constants.USER_EMAIL])
-                logging.debug('user_point signal_response: {1}'.format(signal_point))
+                logging.debug('user_point: {0}'.format(user_point))
 
-            user_grade = await caller.call(path='services/crstests/user_grade',
-                                           arguments={'node_id': node_id})
-            logging.debug('user_grade: {0}'.format(user_grade))
+                if user_point:
+                    signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
+                                                             user_doc[constants.USER_EMAIL])
+                    logging.debug('user_point signal_response: {1}'.format(signal_point))
 
-            if user_grade:
-                message_text = 'wiadomosc {0}'.format(user_grade)
-                signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+                user_grade = await caller.call(path='services/crstests/user_grade',
+                                               arguments={'node_id': node_id})
+                logging.debug('user_grade: {0}'.format(user_grade))
 
-                await self.db[constants.COLLECTION_MESSAGES].insert({
-                    constants.CREATED_TIME: datetime.now(),
-                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
-                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
-                    constants.FIELD_MESSAGE_TEXT: message_text
-                })
+                if user_grade:
+                    message_text = 'wiadomosc {0}'.format(user_grade)
+                    signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
 
-                logging.debug('user_point signal_response: {1}'.format(signal_grade))
+                    await self.db[constants.COLLECTION_MESSAGES].insert({
+                        constants.CREATED_TIME: datetime.now(),
+                        constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
+                        constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
+                        constants.FIELD_MESSAGE_TEXT: message_text
+                    })
+
+                    logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:
             logging.error(

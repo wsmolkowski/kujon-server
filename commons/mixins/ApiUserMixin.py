@@ -9,7 +9,6 @@ from tornado import gen
 from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
-from commons.errors import CallerError
 from commons.mixins.DaoMixin import DaoMixin
 
 USER_INFO_SKIP_FIELDS = {'email_access': False, 'interests': False,
@@ -42,6 +41,11 @@ class ApiUserMixin(DaoMixin):
         return photo_doc
 
     async def usos_user_info(self, user_id=None):
+        '''
+        :param user_id:
+        :return: parsed usos user info
+        '''
+
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 
         if user_id:
@@ -86,16 +90,63 @@ class ApiUserMixin(DaoMixin):
 
         return result
 
-    async def api_user_usos_info(self):
-        try:
-            user_usos_id = await self.db_user_usos_id()
-            if user_usos_id:
-                user_info_doc = await self.api_user_info(user_usos_id)
-                return user_info_doc
+    async def user_info(self, user_id=None):
+        '''
+        build user info based on usos_info, faculties, course_editions_conducted and has_photo
+        :param user_id:
+        :return:
+        '''
 
-            user_info_doc = await self.api_user_info()
+        user_info_doc = await self.usos_user_info(user_id)
+
+        # process faculties
+        tasks_faculties = list()
+        for position in user_info_doc['employment_positions']:
+            tasks_faculties.append(self.api_faculty(position['faculty']['id']))
+
+        await gen.multi(tasks_faculties)
+
+        # process course_editions_conducted
+        courses_conducted = []
+        tasks_courses = list()
+        courses = list()
+        for course_conducted in user_info_doc['course_editions_conducted']:
+            course_id, term_id = course_conducted['id'].split('|')
+            if course_id not in courses:
+                courses.append(course_id)
+                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False))
+
+        try:
+            tasks_results = await gen.multi(tasks_courses)
+            for course_doc in tasks_results:
+                courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
+                                          constants.COURSE_ID: course_doc[constants.COURSE_ID],
+                                          constants.TERM_ID: course_doc[constants.TERM_ID]})
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+
+        user_info_doc['course_editions_conducted'] = courses_conducted
+
+        # if user has photo
+        if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+            photo_doc = await self.api_photo(user_info_doc[constants.ID])
+            if photo_doc:
+                user_info_doc[constants.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
+                    photo_doc[constants.MONGO_ID])
+
+        return user_info_doc
+
+    async def updated_user_doc(self):
+        '''
+        update user collection with USOS_INFO_ID and USOS_USER_ID
+        :return:
+        '''
+
+        try:
+            user_info_doc = await self.user_info()
             user_doc = await self.db_find_user()
-            user_doc[constants.USOS_INFO_ID] = user_info_doc[constants.MONGO_ID]
+            user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
+
             await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
 
             return user_info_doc
@@ -103,68 +154,50 @@ class ApiUserMixin(DaoMixin):
             await self.exc(ex, finish=False)
             return
 
-    async def api_user_info(self, user_id=None):
+    async def api_user_usos_info(self):
+        '''
+        get usos user info for current user (without usos_user_id)
+        :return:
+        '''
 
-        if not user_id:
-            pipeline = {constants.USER_ID: self.getUserId(),
-                        constants.USOS_ID: self.getUsosId()}
-        else:
-            pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
+        try:
+            user_usos_id = await self.db_user_usos_id()
+            if user_usos_id:
+                user_info_doc = await self.api_user_info(user_usos_id)
 
-        if self.do_refresh():
+                if constants.USOS_USER_ID not in user_info_doc:
+                    ''' update for old users '''
+                    user_info_doc = await self.updated_user_doc()
+
+                return user_info_doc
+
+            user_info_doc = await self.updated_user_doc()
+            return user_info_doc
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+            return
+
+    async def api_user_info(self, user_id):
+        '''
+        get usos user info for id
+        :param user_id:
+        :return:
+        '''
+
+        pipeline = {constants.USER_ID: self.getUserId(), constants.USOS_ID: self.getUsosId()}
+
+        if self.do_refresh() and user_id:
             await self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
 
         user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
 
         if not user_info_doc:
             try:
-                user_info_doc = await self.usos_user_info(user_id)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
-            if not user_info_doc:
-                raise CallerError("Nie znaleziono danych dla użytkownika: {0}".format(user_id))
-
-            # process faculties
-            tasks_faculties = list()
-            for position in user_info_doc['employment_positions']:
-                tasks_faculties.append(self.api_faculty(position['faculty']['id']))
-
-            await gen.multi(tasks_faculties)
-
-            # process course_editions_conducted
-            courses_conducted = []
-            tasks_courses = list()
-            courses = list()
-            for course_conducted in user_info_doc['course_editions_conducted']:
-                course_id, term_id = course_conducted['id'].split('|')
-                if course_id not in courses:
-                    courses.append(course_id)
-                    tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False))
-
-            try:
-                tasks_results = await gen.multi(tasks_courses)
-                for course_doc in tasks_results:
-                    courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                              constants.COURSE_ID: course_doc[constants.COURSE_ID],
-                                              constants.TERM_ID: course_doc[constants.TERM_ID]})
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
-            user_info_doc['course_editions_conducted'] = courses_conducted
-
-            # if user has photo
-            if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
-                photo_doc = await self.api_photo(user_info_doc[constants.ID])
-                if photo_doc:
-                    user_info_doc[constants.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
-                        photo_doc[constants.MONGO_ID])
-
-            try:
+                user_info_doc = await self.user_info(user_id)
                 await self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             except DuplicateKeyError as ex:
                 logging.warning(ex)
-            finally:
-                user_info_doc = await self.api_user_info(user_info_doc[constants.ID])
+            except Exception as ex:
+                await self.exc(ex, finish=False)
 
         return user_info_doc

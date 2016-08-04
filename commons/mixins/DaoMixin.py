@@ -52,10 +52,7 @@ class DaoMixin(object):
                 exc_doc['effective_url'] = exception.response.effective_url
 
         if hasattr(self, 'get_current_user') and self.get_current_user():
-            user_id = self.get_current_user()[constants.MONGO_ID]
-            if not isinstance(user_id, ObjectId):
-                user_id = ObjectId(user_id)
-            exc_doc[constants.USER_ID] = user_id
+            exc_doc[constants.USER_ID] = self.getUserId()
 
         exc_doc[constants.TRACEBACK] = traceback.format_exc()
         exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
@@ -236,26 +233,32 @@ class DaoMixin(object):
 
     async def db_find_user(self):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.get_current_user()[constants.MONGO_ID]})
+            {constants.MONGO_ID: self.getUserId()})
 
         return user_doc
 
-    async def db_find_user_id(self, user_id):
+    async def db_find_users_id(self, user_id, usos_id):
+        '''
+        :param user_id:
+        :param usos_id:
+        :return: list of documents from  COLLECTION_USERS
+        '''
+
         if not isinstance(user_id, str):
             user_id = str(user_id)
 
-        user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one({
-            constants.ID: user_id
+        cursor = await self.db[constants.COLLECTION_USERS].find_one({
+            constants.USOS_USER_ID: user_id,
+            constants.USOS_ID: usos_id
         })
 
-        if constants.USER_ID in user_info_doc:
-            user_doc = await self.db[constants.COLLECTION_USERS].find_one({
-                constants.MONGO_ID: ObjectId(user_info_doc[constants.USER_ID])
-            })
+        users_info_doc = await cursor.to_list(None)
 
-            return user_doc
+        if not users_info_doc:
+            raise DaoError('Nie znaleziono użytkownika na podstawie użytkownika usos: {0} dla usos: {1}'.format(
+                user_id, usos_id))
 
-        raise DaoError('Nie znaleziono użytkownika aplikacyjnego na podstawie użytkownika usos: {0}'.format(user_id))
+        return users_info_doc
 
     async def db_cookie_user_id(self, user_id):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
@@ -312,9 +315,7 @@ class DaoMixin(object):
         return messages
 
     async def db_user_usos_id(self):
-        user_usos_id = await self.db_find_user()
-        if user_usos_id and constants.USOS_INFO_ID in user_usos_id:
-            user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one({
-                constants.MONGO_ID: user_usos_id[constants.USOS_INFO_ID]}, (constants.ID,))
-            return user_info_doc[constants.ID]
+        user_doc = await self.db_find_user()
+        if user_doc and constants.USOS_USER_ID in user_doc:
+            return user_doc[constants.USOS_USER_ID]
         return None

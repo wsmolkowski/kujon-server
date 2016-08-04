@@ -727,6 +727,9 @@ class ApiMixin(ApiUserMixin):
 
         if not theses_doc:
             users_info_doc = await self.api_user_usos_info()
+            if not users_info_doc:
+                return
+
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',
                 arguments={
