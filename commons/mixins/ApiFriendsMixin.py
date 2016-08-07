@@ -1,7 +1,7 @@
 # coding=UTF-8
 
 from commons import constants, helpers
-from commons.errors import ApiError
+from commons.errors import ApiError, CallerError
 from commons.mixins.DaoMixin import DaoMixin
 
 
@@ -65,6 +65,9 @@ class ApiMixinFriends(DaoMixin):
         suggested_participants = dict()
 
         try:
+            if not user_info:
+                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
+
             courses_editions_doc = await self.api_courses_editions()
             if not courses_editions_doc:
                 raise ApiError("Poczekaj szukamy znajomych w Twoim otoczeniu.")

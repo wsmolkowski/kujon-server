@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
 from commons import usosinstances
-from commons.errors import ApiError
+from commons.errors import ApiError, CallerError
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
@@ -49,7 +49,7 @@ class UserInfoApi(ApiHandler):
             user_info = await self.api_user_usos_info()
 
             if not user_info or not user_doc:
-                raise ApiError('Poczekaj szukamy informacji o użytkowniku.')
+                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             user_doc.update(user_info)
 
@@ -67,8 +67,8 @@ class UserInfoApi(ApiHandler):
 
             user_doc['theses'] = await self.api_thesis()
 
-            del(user_doc[constants.UPDATE_TIME])
-            del(user_doc[constants.MONGO_ID])
+            del (user_doc[constants.UPDATE_TIME])
+            del (user_doc[constants.MONGO_ID])
 
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
