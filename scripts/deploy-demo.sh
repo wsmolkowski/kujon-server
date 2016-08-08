@@ -6,7 +6,7 @@ export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 echo 'stopping services...'
 #sudo service nginx stop
-sudo supervisorctl stop kujon-demo-api kujon-demo-web kujon-demo-event kujon-demo-crawler
+sudo supervisorctl stop kujon-demo:*
 #sudo killall -9 python3
 echo 'services stopped'
 
@@ -25,6 +25,6 @@ sudo chmod -R g+w $LOGDIR
 
 echo 'starting services...'
 #sudo service nginx start
-sudo supervisorctl start kujon-demo-api kujon-demo-web kujon-demo-event kujon-demo-crawler
-sudo supervisorctl status
+sudo supervisorctl start kujon-demo:*
+sudo supervisorctl status all
 echo 'services started'
