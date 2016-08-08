@@ -182,12 +182,12 @@ class DefaultErrorHandler(BaseHandler, JSendMixin):
 
 class ApplicationConfigHandler(BaseHandler, JSendMixin):
     """
-        for mobile use only
+        for mobile and www use
     """
 
     async def usos_works(self):
         try:
-            await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
+            # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
             await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index')
             return True
         except Exception as ex:
@@ -209,6 +209,7 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
             usos_works = False
 
         config = {
+            'PROJECT_TITLE': self.config.PROJECT_TITLE,
             'API_URL': self.config.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False,
