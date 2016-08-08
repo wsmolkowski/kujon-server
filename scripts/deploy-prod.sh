@@ -5,8 +5,8 @@ LOGDIR=/home/appuser/prod.kujon.mobi/log
 export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 echo 'stopping services...'
-sudo service nginx stop
-sudo supervisorctl stop kujon-prod-api kujon-prod-web kujon-prod-event kujon-prod-crawler kujon-prod-emailer
+# sudo service nginx stop
+sudo supervisorctl stop kujon-prod:*
 #sudo killall -9 python3
 echo 'services stopped'
 
@@ -25,6 +25,6 @@ sudo chmod -R g+w $LOGDIR
 
 echo 'starting services...'
 #sudo service nginx start
-sudo supervisorctl start kujon-prod-api kujon-prod-web kujon-prod-event kujon-prod-crawler kujon-prod-emailer
-sudo supervisorctl status
+sudo supervisorctl start kujon-prod:*
+sudo supervisorctl status all
 echo 'services started'
