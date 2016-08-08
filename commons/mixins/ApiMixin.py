@@ -8,7 +8,7 @@ from tornado import gen
 from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller, AsyncCaller
-from commons.errors import ApiError
+from commons.errors import ApiError, CallerError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 
 LIMIT_FIELDS = (
@@ -434,6 +434,9 @@ class ApiMixin(ApiUserMixin):
     async def api_programmes(self, finish=False):
         user_info = await self.api_user_usos_info()
 
+        if not user_info:
+            raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
+
         programmes = list()
         for program in user_info['student_programmes']:
             result = await self.api_programme(program['programme']['id'], finish=finish)
@@ -535,12 +538,15 @@ class ApiMixin(ApiUserMixin):
         return faculty_doc
 
     async def api_faculties(self):
-        users_info_doc = await self.api_user_usos_info()
+        user_info = await self.api_user_usos_info()
+
+        if not user_info:
+            raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
         # get programmes for user
         programmes_ids = list()
-        if 'student_programmes' in users_info_doc:
-            for programme in users_info_doc['student_programmes']:
+        if 'student_programmes' in user_info:
+            for programme in user_info['student_programmes']:
                 programmes_ids.append(programme['programme']['id'])
 
         programmes = []
@@ -647,14 +653,14 @@ class ApiMixin(ApiUserMixin):
         theses_doc = await self.db[constants.COLLECTION_THESES].find_one(pipeline)
 
         if not theses_doc:
-            users_info_doc = await self.api_user_usos_info()
-            if not users_info_doc:
-                return
+            user_info = await self.api_user_usos_info()
+            if not user_info:
+                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',
                 arguments={
-                    'user_id': users_info_doc[constants.ID],
+                    'user_id': user_info[constants.ID],
                     'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
                 })
 
