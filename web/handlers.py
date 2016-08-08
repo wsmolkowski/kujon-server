@@ -35,7 +35,7 @@ class BaseHandler(RequestHandler, JSendMixin):
         }
 
     async def set_current_user(self):
-        cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+        cookie = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
         if cookie:
             cookie = json_decode(cookie)
             response = json_util.loads(cookie)
