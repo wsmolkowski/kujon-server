@@ -146,7 +146,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
         if self.get_argument('error', False):
             logging.error('Błąd autoryzacji Google+.')
-            self.redirect(self.config.DEPLOY_WEB + '/')
+            self.redirect(self.config.DEPLOY_WEB)
             return
 
         if self.get_argument('code', False):
