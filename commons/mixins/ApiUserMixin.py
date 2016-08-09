@@ -107,15 +107,19 @@ class ApiUserMixin(DaoMixin):
         await gen.multi(tasks_faculties)
 
         # process course_editions_conducted
+
         courses_conducted = []
         tasks_courses = list()
         courses = list()
+
+        courses_editions = await self.api_courses_editions()
+
         for course_conducted in user_info_doc['course_editions_conducted']:
             course_id, term_id = course_conducted['id'].split('|')
             if course_id not in courses:
                 courses.append(course_id)
                 tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False, log_exception=False,
-                                                          user_info_doc=user_info_doc))
+                                                          courses_editions=courses_editions))
 
         try:
             tasks_results = await gen.multi(tasks_courses)
