@@ -114,7 +114,8 @@ class ApiUserMixin(DaoMixin):
             course_id, term_id = course_conducted['id'].split('|')
             if course_id not in courses:
                 courses.append(course_id)
-                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False, log_exception=False))
+                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False, log_exception=False,
+                                                          user_info_doc=user_info_doc))
 
         try:
             tasks_results = await gen.multi(tasks_courses)
@@ -187,7 +188,7 @@ class ApiUserMixin(DaoMixin):
         :return:
         '''
 
-        pipeline = {constants.USER_ID: self.getUserId(), constants.USOS_ID: self.getUsosId()}
+        pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh() and user_id:
             await self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)

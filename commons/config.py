@@ -52,6 +52,9 @@ class Config(object):
         self.FACEBOOK_CLIENT_SECRET = self.config.get('social', 'FACEBOOK_CLIENT_SECRET')
 
         # deployment
+        self.KUJON_SECURE_COOKIE = self.config.get('deployment', 'KUJON_SECURE_COOKIE')
+        self.KUJON_MOBI_REGISTER = self.config.get('deployment', 'KUJON_MOBI_REGISTER')
+
         self.SITE_DOMAIN = self.config.get('deployment', 'SITE_DOMAIN')
         self.API_PORT = self.config.getint('deployment', 'API_PORT')
         self.DEPLOY_API = self.config.get('deployment', 'DEPLOY_API')

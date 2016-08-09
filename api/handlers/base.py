@@ -46,7 +46,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
         user = None
 
         if not user:
-            cookie = self.get_secure_cookie(constants.KUJON_SECURE_COOKIE)
+            cookie = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
             if cookie:
                 cookie = json_decode(cookie)
                 user = json_util.loads(cookie)
@@ -149,8 +149,8 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
         return http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     def reset_user_cookie(self, user_doc):
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
+        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=self.config.SITE_DOMAIN)
 
 
@@ -182,12 +182,12 @@ class DefaultErrorHandler(BaseHandler, JSendMixin):
 
 class ApplicationConfigHandler(BaseHandler, JSendMixin):
     """
-        for mobile use only
+        for mobile and www use
     """
 
     async def usos_works(self):
         try:
-            await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
+            # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
             await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index')
             return True
         except Exception as ex:
@@ -209,6 +209,7 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
             usos_works = False
 
         config = {
+            'PROJECT_TITLE': self.config.PROJECT_TITLE,
             'API_URL': self.config.DEPLOY_API,
             'USOS_PAIRED': usos_paired,
             'USER_LOGGED': True if user else False,

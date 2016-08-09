@@ -53,7 +53,7 @@ class ArchiveHandler(ApiHandler):
             if user_doc:
                 yield self.db_archive_user(user_doc[constants.MONGO_ID])
 
-            self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+            self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
             yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
 
             self.success({})
@@ -69,8 +69,8 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
         if constants.USER_NAME not in user_doc and constants.USER_EMAIL in user_doc:
             user_doc[constants.USER_NAME] = user_doc[constants.USER_EMAIL]
 
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(constants.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
+        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=self.config.SITE_DOMAIN)
 
         raise gen.Return()
@@ -78,7 +78,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
 class LogoutHandler(AuthenticationHandler):
     def get(self):
-        self.clear_cookie(constants.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         self.redirect(self.config.DEPLOY_WEB)
 
 
@@ -146,7 +146,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
         if self.get_argument('error', False):
             logging.error('Błąd autoryzacji Google+.')
-            self.redirect(self.config.DEPLOY_WEB + '/')
+            self.redirect(self.config.DEPLOY_WEB)
             return
 
         if self.get_argument('code', False):
@@ -267,10 +267,10 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 user_doc[constants.CREATED_TIME] = datetime.now()
                 new_id = yield self.db_insert_user(user_doc)
 
-                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(new_id))
+                self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(new_id))
             else:
                 yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                self.set_cookie(constants.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
+                self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
 
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades|crstests',
@@ -322,13 +322,13 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             if not oauth_token_key or not oauth_verifier:
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
-            user_id = self.get_cookie(constants.KUJON_MOBI_REGISTER)
+            user_id = self.get_cookie(self.config.KUJON_MOBI_REGISTER)
             logging.info('verifying user: {0} for oauth_token: {1} and oauth_verifier: {2}'.format(
                 user_id, oauth_token_key, oauth_token_key
             ))
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
 
-            self.clear_cookie(constants.KUJON_MOBI_REGISTER)
+            self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
             usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
 
@@ -346,7 +346,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
 
-                self.clear_cookie(constants.KUJON_MOBI_REGISTER)
+                self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
                 yield self.reset_user_cookie(user_doc)
                 self.redirect(self.config.DEPLOY_WEB)
 
@@ -363,7 +363,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 yield self._create_jobs(user_doc)
 
-                self.clear_cookie(constants.KUJON_MOBI_REGISTER)
+                self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
                 header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
