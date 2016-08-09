@@ -76,7 +76,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     def get_auth_http_client(self):
         return self._context.http_client
 
-    async def __process_courses_editions(self):
+    async def __process_courses_editions(self, user_info_doc=None):
         courses_editions = await self.api_courses_editions()
         if not courses_editions:
             logging.error('Empty response from: api_courses_editions() Not processing.')
@@ -92,7 +92,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 try:
                     courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
                                                               course[constants.TERM_ID],
-                                                              extra_fetch=False))
+                                                              extra_fetch=False,
+                                                              user_info_doc=user_info_doc))
                 except Exception as ex:
                     logging.exception(ex)
                     continue
@@ -165,9 +166,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         try:
             await self._setUp(user_id)
 
-            await self.api_user_usos_info()
+            user_info_doc = await self.api_user_usos_info()
             await self.api_thesis()
-            await self.__process_courses_editions()
+            await self.__process_courses_editions(user_info_doc=user_info_doc)
             await self.api_terms()
             await self.api_programmes()
             await self.api_faculties()

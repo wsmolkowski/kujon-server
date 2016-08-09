@@ -113,7 +113,8 @@ class ApiMixin(ApiUserMixin):
 
         return result
 
-    async def api_course_term(self, course_id, term_id, user_id=None, extra_fetch=True, log_exception=True):
+    async def api_course_term(self, course_id, term_id, user_id=None, user_info_doc=None, extra_fetch=True,
+                              log_exception=True):
 
         pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
 
@@ -141,14 +142,15 @@ class ApiMixin(ApiUserMixin):
         if not course_edition:
             return
 
-        if not user_id:
-            user_info_doc = await self.api_user_usos_info()
-        else:
-            user_info_doc = await self.api_user_info(user_id)
+        if not user_info_doc:
+            if not user_id:
+                user_info_doc = await self.api_user_usos_info()
+            else:
+                user_info_doc = await self.api_user_info(user_id)
 
         if not user_info_doc:
             raise ApiError(
-                "Błąd podczas pobierania danych użytkownika course_id {0} term_id {1}".format(course_id, term_id))
+                "Błąd podczas pobierania danych użytkownika dla course_id {0} term_id {1}".format(course_id, term_id))
 
         # checking if user is on this course, so have access to this course # FIXME
         if 'participants' in course_edition and constants.ID in user_info_doc:
