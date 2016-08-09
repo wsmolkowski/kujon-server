@@ -165,7 +165,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         try:
             await self._setUp(user_id)
 
-            await self.api_user_usos_info()
+            await self.api_user_usos_info()  # info from usos_user_info needed later
+            await self._setUp(user_id)
+
             await self.api_thesis()
             await self.__process_courses_editions()
             await self.api_terms()
