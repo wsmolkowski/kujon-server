@@ -66,19 +66,17 @@ class ApiMixin(ApiUserMixin):
 
     async def usos_course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
-            args = {
+            result = await UsosCaller(self._context).call(path='services/courses/course_edition', arguments={
                 'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
                 'course_id': course_id,
                 'term_id': term_id
-            }
+            })
         else:
-            args = {
+            result = await AsyncCaller(self._context).call_async(path='services/courses/course_edition', arguments={
                 'fields': 'course_name|coordinators|course_units_ids|lecturers',
                 'course_id': course_id,
                 'term_id': term_id
-            }
-
-        result = await AsyncCaller(self._context).call_async(path='services/courses/course_edition', arguments=args)
+            })
 
         result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
@@ -87,34 +85,33 @@ class ApiMixin(ApiUserMixin):
 
         return result
 
-    async def api_course_edition(self, course_id, term_id):
+    async def api_course_edition(self, course_id, term_id, courses_editions=None):
 
-        courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            courses_editions = await self.api_courses_editions()
         if not courses_editions:
             raise ApiError("Poczekaj szukamy kursów.")
 
-        result = None
         for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
             if term != term_id:
                 continue
 
             for course in courses:
                 if course[constants.COURSE_ID] == course_id:
-                    result = course
-                    break
+                    return course
 
-        if not result:
-            try:
-                result = await self.usos_course_edition(course_id, term_id, False)
+        try:
+            result = await self.usos_course_edition(course_id, term_id, False)
+            result[constants.USOS_ID] = self.getUsosId()
+            logging.warning('found extra course_edition for : {0} {1} not savingi'.format(course_id, term_id))
+            return result
+        # except DuplicateKeyError as ex:
+        #    logging.warning(ex)
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+            return
 
-                logging.debug('found extra course_edition for : {0} {1} not saving i'.format(course_id, term_id))
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
-        return result
-
-    async def api_course_term(self, course_id, term_id, user_id=None, user_info_doc=None, extra_fetch=True,
-                              log_exception=True):
+    async def api_course_term(self, course_id, term_id, extra_fetch=True, log_exception=True, courses_editions=False):
 
         pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
 
@@ -137,29 +134,19 @@ class ApiMixin(ApiUserMixin):
 
         course_doc[constants.TERM_ID] = term_id
 
-        course_edition = await self.api_course_edition(course_id, term_id)
+        course_edition = await self.api_course_edition(course_id, term_id, courses_editions)
 
         if not course_edition:
             return
 
-        if not user_info_doc:
-            if not user_id:
-                user_info_doc = await self.api_user_usos_info()
-            else:
-                user_info_doc = await self.api_user_info(user_id)
-
-        if not user_info_doc:
-            raise ApiError(
-                "Błąd podczas pobierania danych użytkownika dla course_id {0} term_id {1}".format(course_id, term_id))
-
         # checking if user is on this course, so have access to this course # FIXME
-        if 'participants' in course_edition and constants.ID in user_info_doc:
+        if 'participants' in course_edition:
             # sort participants
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
 
             participants = course_doc['participants']
             for participant in course_doc['participants']:
-                if participant[constants.USER_ID] == user_info_doc[constants.ID]:
+                if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
                     participants.remove(participant)
                     break
 
