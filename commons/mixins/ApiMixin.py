@@ -78,7 +78,7 @@ class ApiMixin(ApiUserMixin):
                 'term_id': term_id
             }
 
-        result = await UsosCaller(self._context).call(path='services/courses/course_edition', arguments=args)
+        result = await AsyncCaller(self._context).call_async(path='services/courses/course_edition', arguments=args)
 
         result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
         result[constants.COURSE_ID] = course_id
