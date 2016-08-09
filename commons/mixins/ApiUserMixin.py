@@ -187,7 +187,7 @@ class ApiUserMixin(DaoMixin):
         :return:
         '''
 
-        pipeline = {constants.USER_ID: self.getUserId(), constants.USOS_ID: self.getUsosId()}
+        pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
 
         if self.do_refresh() and user_id:
             await self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
