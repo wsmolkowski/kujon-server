@@ -48,7 +48,7 @@ class LecturerByIdApi(ApiHandler):
         try:
             user_info_doc = await self.api_lecturer(user_info_id)
             if not user_info_doc:
-                self.error("Brak informacji o tym wykładowcy.", code=404)
+                self.error("Brak informacji o wykładowcy {0}".format(user_info_id), code=404)
             else:
                 self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
         except Exception as ex:
