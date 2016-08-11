@@ -215,7 +215,7 @@ class DaoMixin(object):
 
         if not user_doc:
             logging.warning('cannot archive user which does not exists {0}'.format(user_id))
-            return None
+            return
 
         user_doc[constants.USER_ID] = user_doc.pop(constants.MONGO_ID)
 

@@ -103,7 +103,7 @@ class ApiMixin(ApiUserMixin):
         try:
             result = await self.usos_course_edition(course_id, term_id, False)
             result[constants.USOS_ID] = self.getUsosId()
-            logging.warning('found extra course_edition for : {0} {1} not savingi'.format(course_id, term_id))
+            logging.warning('found extra course_edition for : {0} {1} not saving'.format(course_id, term_id))
             return result
         # except DuplicateKeyError as ex:
         #    logging.warning(ex)
@@ -145,7 +145,7 @@ class ApiMixin(ApiUserMixin):
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
 
             participants = course_doc['participants']
-            for participant in course_doc['participants']:
+            for participant in course_doc['participants'] and constants.USOS_USER_ID in self._context.user_doc:
                 if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
                     participants.remove(participant)
                     break
