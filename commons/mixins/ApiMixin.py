@@ -103,7 +103,7 @@ class ApiMixin(ApiUserMixin):
         try:
             result = await self.usos_course_edition(course_id, term_id, False)
             result[constants.USOS_ID] = self.getUsosId()
-            logging.warning('found extra course_edition for : {0} {1} not savingi'.format(course_id, term_id))
+            logging.warning('found extra course_edition for : {0} {1} not saving'.format(course_id, term_id))
             return result
         # except DuplicateKeyError as ex:
         #    logging.warning(ex)
