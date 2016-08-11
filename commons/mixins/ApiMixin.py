@@ -145,7 +145,7 @@ class ApiMixin(ApiUserMixin):
             course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
 
             participants = course_doc['participants']
-            for participant in course_doc['participants']:
+            for participant in course_doc['participants'] and constants.USOS_USER_ID in self._context.user_doc:
                 if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
                     participants.remove(participant)
                     break
