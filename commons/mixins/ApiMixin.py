@@ -139,17 +139,21 @@ class ApiMixin(ApiUserMixin):
         if not course_edition:
             return
 
-        # checking if user is on this course, so have access to this course # FIXME
-        if 'participants' in course_edition:
-            # sort participants
-            course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
+        try:
+            participants = list()
+            if 'participants' in course_edition:
+                # sort participants
+                course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
 
-            participants = course_doc['participants']
-            for participant in course_doc['participants'] and constants.USOS_USER_ID in self._context.user_doc:
-                if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
-                    participants.remove(participant)
-                    break
+                participants = course_doc['participants']
+                for participant in course_doc['participants']:
+                    if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
+                        participants.remove(participant)
+                        break
 
+                course_doc['participants'] = participants
+        except Exception as ex:
+            logging.debug(ex)
             course_doc['participants'] = participants
 
         # change int to value
