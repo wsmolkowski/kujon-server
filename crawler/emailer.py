@@ -113,7 +113,7 @@ class EmailQueue(object):
                     job, self.queue.qsize(), len(self.processing)))
                 await self.process_job(job)
             except Exception as ex:
-                msg = "Exception while executing job with: {1}".format(job[constants.MONGO_ID], ex.message)
+                msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex.message)
                 logging.exception(msg)
                 await self.update_job(job, constants.JOB_FAIL, msg)
             finally:
