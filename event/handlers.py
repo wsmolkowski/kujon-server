@@ -9,6 +9,7 @@ from tornado import web
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.enumerators import JobStatus, JobType
 from commons.errors import AuthenticationError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
@@ -83,8 +84,8 @@ class EventHandler(MainHandler):
                 constants.UPDATE_TIME: None,
                 constants.JOB_MESSAGE: None,
                 constants.JOB_DATA: event_data,
-                constants.JOB_STATUS: constants.JOB_PENDING,
-                constants.JOB_TYPE: 'subscription_event'
+                constants.JOB_STATUS: JobStatus.PENDING.value,
+                constants.JOB_TYPE: JobType.SUBSCRIPTION_EVENT.value
             })
 
             self.success(data='event consumed')

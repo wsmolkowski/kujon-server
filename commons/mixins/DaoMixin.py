@@ -10,6 +10,7 @@ from tornado.httpclient import HTTPError
 
 from commons import constants
 from commons.AESCipher import AESCipher
+from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
@@ -54,8 +55,8 @@ class DaoMixin(object):
         if hasattr(self, 'get_current_user') and self.get_current_user():
             exc_doc[constants.USER_ID] = self.getUserId()
 
-        exc_doc[constants.TRACEBACK] = traceback.format_exc()
-        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
+        exc_doc['traceback'] = traceback.format_exc()
+        exc_doc['exception_type'] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
@@ -228,8 +229,8 @@ class DaoMixin(object):
                                   constants.CREATED_TIME: datetime.now(),
                                   constants.UPDATE_TIME: None,
                                   constants.JOB_MESSAGE: None,
-                                  constants.JOB_STATUS: constants.JOB_PENDING,
-                                  constants.JOB_TYPE: 'archive_user'})
+                                  constants.JOB_STATUS: JobStatus.PENDING.value,
+                                  constants.JOB_TYPE: JobType.ARCHIVE_USER.value})
 
     async def db_find_user(self):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one(

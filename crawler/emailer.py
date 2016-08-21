@@ -15,6 +15,8 @@ from tornado.options import parse_command_line
 
 from commons import constants
 from commons.config import Config
+from commons.enumerators import JobStatus
+from . import email_factory
 
 QUEUE_MAXSIZE = 100
 MAX_WORKERS = 4
@@ -37,15 +39,15 @@ class EmailQueue(object):
         # delta = datetime.now() - timedelta(minutes=60)
         #
         # cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({
-        #     constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: constants.JOB_FAIL}). \
+        #     constants.UPDATE_TIME: {'$lt': delta}, constants.JOB_STATUS: JobStatus.FAIL.value}). \
         #     sort([(constants.UPDATE_TIME, -1)])
         #
         # while (await cursor.fetch_next):
         #     job = cursor.next_object()
-        #     await self.update_job(job, constants.JOB_PENDING)
+        #     await self.update_job(job, JobStatus.PENDING.value)
 
         # create jobs and put into queue
-        cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
+        cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: JobStatus.PENDING.value})
 
         while (await cursor.fetch_next):
             if len(self.processing) >= MAX_WORKERS:
@@ -71,37 +73,38 @@ class EmailQueue(object):
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
     async def process_job(self, job):
-        smtp = smtplib.SMTP()
-
         try:
+            smtp = smtplib.SMTP()
+
             self.processing.append(job)
-            logging.info("processing job: {0}".format(job[constants.MONGO_ID]))
+
+            logging.debug("processing job: {0}".format(job[constants.MONGO_ID]))
 
             smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
-            smtp.starttls()
+            # smtp.starttls()
             smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
 
-            await self.update_job(job, constants.JOB_START)
+            await self.update_job(job, JobStatus.START.value)
 
-            msg = MIMEText(job[constants.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
-            msg['Subject'] = Header(job[constants.SMTP_SUBJECT], constants.ENCODING)
-            msg['From'] = job[constants.SMTP_FROM]
-            msg['To'] = ','.join(job[constants.SMTP_TO])
+            msg = MIMEText(job[email_factory.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
+            msg['Subject'] = Header(job[email_factory.SMTP_SUBJECT], constants.ENCODING)
+            msg['From'] = job[email_factory.SMTP_FROM]
+            msg['To'] = ','.join(job[email_factory.SMTP_TO])
 
-            smtp.sendmail(job[constants.SMTP_FROM], job[constants.SMTP_TO], msg.as_string())
+            smtp.sendmail(job[email_factory.SMTP_FROM], job[email_factory.SMTP_TO], msg.as_string())
 
             await self.db[constants.COLLECTION_MESSAGES].insert({
                 constants.CREATED_TIME: datetime.now(),
                 constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                 constants.FIELD_MESSAGE_TYPE: 'email',
-                constants.FIELD_MESSAGE_TEXT: job[constants.SMTP_TEXT]
+                constants.FIELD_MESSAGE_TEXT: job[email_factory.SMTP_TEXT]
             })
 
-            await self.update_job(job, constants.JOB_FINISH)
+            await self.update_job(job, JobStatus.START.value)
 
             logging.info("processed job: {0}".format(job[constants.MONGO_ID]))
-        finally:
             smtp.quit()
+        finally:
             self.processing.remove(job)
 
     async def worker(self):
@@ -109,13 +112,13 @@ class EmailQueue(object):
         while True:
             try:
                 job = await self.queue.get()
-                logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
+                logging.debug("consuming queue job {0}. current queue size: {1} processing: {2}".format(
                     job, self.queue.qsize(), len(self.processing)))
                 await self.process_job(job)
             except Exception as ex:
                 logging.exception("Exception while executing job {0}".format(job[constants.MONGO_ID]))
                 logging.exception(ex)
-                await self.update_job(job, constants.JOB_FAIL, str(ex))
+                await self.update_job(job, JobStatus.FAIL.value, str(ex))
             finally:
                 self.queue.task_done()
 
