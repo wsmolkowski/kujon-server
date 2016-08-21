@@ -1166,3 +1166,13 @@ a.cookiebar-close{text-decoration:none;}
     font-size: 12px;
 }
 }
+
+@media (max-width: 766px){
+.landing-page footer .nav li {
+margin:5px 0;    float: left !important;
+}
+.landing-page footer .nav li:first-child {
+    float: none !important;
+}
+}
+
