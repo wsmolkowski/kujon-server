@@ -157,7 +157,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
     EXCEPTION_TYPE = 'api'
 
-    def do_refresh(self):  # overwrite from ApiMixin
+    def do_refresh(self):  # overwrite from DaoMixin
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             return True
         return False
