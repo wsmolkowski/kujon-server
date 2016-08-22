@@ -18,6 +18,7 @@ class JobStatus(Abstract):
 class JobType(Abstract):
     ARCHIVE_USER = 'archive_user'
     INITIAL_USER_CRAWL = 'initial_user_crawl'
+    REFRESH_USER_CRAWL = 'refresh_user_crawl'
     UPDATE_USER_CRAWL = 'update_user_crawl'
     SUBSCRIBE_USOS = 'subscribe_usos'
     SUBSCRIPTION_EVENT = 'subscription_event'

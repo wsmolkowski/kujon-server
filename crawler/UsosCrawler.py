@@ -6,26 +6,15 @@ from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
-from tornado import httpclient
 from tornado.util import ObjectDict
 
-from commons import constants
+from commons import constants, utils
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
-
-
-def http_client(proxy_url=None, proxy_port=None):
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
-                                                       proxy_port=proxy_port,
-                                                       validate_cert=False),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
 
 
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTermMixin):
@@ -35,14 +24,15 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self.config = config
         # self._aes = AESCipher(self._config.AES_SECRET.encode())
 
-    async def _setUp(self, user_id):
+    async def _setUp(self, user_id, refresh=False):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
         self._context = ObjectDict()
+        self._context.refresh = refresh
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
-        self._context.http_client = http_client()
+        self._context.http_client = utils.http_client()
         self._context.user_doc = await self.db_get_user(user_id)
         if not self._context.user_doc:
             self._context.user_doc = await self.db_get_archive_user(user_id)
@@ -161,12 +151,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
 
-    async def initial_user_crawl(self, user_id):
+    async def initial_user_crawl(self, user_id, refresh=False):
         try:
-            await self._setUp(user_id)
+            await self._setUp(user_id, refresh)
 
             await self.api_user_usos_info()  # info from usos_user_info needed later
-            await self._setUp(user_id)
+            await self._setUp(user_id, refresh)
 
             await self.api_thesis()
             await self.__process_courses_editions()

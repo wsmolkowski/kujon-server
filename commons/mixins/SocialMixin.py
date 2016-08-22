@@ -3,20 +3,18 @@
 import logging
 
 from tornado import escape
-from tornado.httpclient import HTTPRequest
 
-from commons import constants
+from commons import utils
 from commons.errors import AuthenticationError
 
 
 class SocialMixin(object):
     async def google_token(self, token):
         try:
-            tokeninfo = await self.get_auth_http_client().fetch(HTTPRequest(
-                url='https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token,
-                connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                request_timeout=constants.HTTP_REQUEST_TIMEOUT
-            ))
+            tokeninfo = await self.get_auth_http_client().fetch(
+                utils.http_request(url='https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token,
+                                   proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
             else:
@@ -31,11 +29,10 @@ class SocialMixin(object):
 
     async def facebook_token(self, token):
         try:
-            tokeninfo = await self.get_auth_http_client().fetch(HTTPRequest(
-                url='https://graph.facebook.com/me?fields=id,name,email&access_token=' + token,
-                connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                request_timeout=constants.HTTP_REQUEST_TIMEOUT
-            ))
+            tokeninfo = await self.get_auth_http_client().fetch(
+                utils.http_request(url='https://graph.facebook.com/me?fields=id,name,email&access_token=' + token,
+                                   proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
             else:

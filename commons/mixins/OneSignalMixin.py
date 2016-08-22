@@ -4,40 +4,29 @@ import json
 import logging
 
 from tornado import escape
-from tornado import httpclient
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons import constants
+from commons import constants, utils
 from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 
-def http_client(proxy_url=None, proxy_port=None):
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
-                                                       proxy_port=proxy_port,
-                                                       validate_cert=False),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
-
-
 class OneSignalMixin(object):
     async def signal_fetch(self, fetch_url):
-        client = http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
         headers = HTTPHeaders({
             'Content-Type': 'application/json',
             'Authorization': self.config.AUTHORIZATION
         })
 
-        response = await client.fetch(HTTPRequest(url=fetch_url,
-                                                  use_gzip=True,
-                                                  headers=headers,
-                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        response = await client.fetch(utils.http_request(url=fetch_url,
+                                                         decompress_response=True,
+                                                         headers=headers,
+                                                         proxy_url=self.config.PROXY_URL,
+                                                         proxy_port=self.config.PROXY_PORT))
 
         logging.info('signal_fetch response code: {0} reason: {1}'.format(response.code, response.reason))
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
@@ -67,7 +56,10 @@ class OneSignalMixin(object):
                                                                        body=body,
                                                                        user_agent=self.config.PROJECT_TITLE,
                                                                        connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT,
+                                                                       proxy_url=self.config.PROXY_URL,
+                                                                       proxy_port=self.config.PROXY_PORT
+                                                                       ))
 
         logging.debug('signal_message response code: {0} reason: {1}'.format(response.code, response.reason))
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:

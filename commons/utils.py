@@ -7,6 +7,10 @@ import tempfile
 import traceback
 from logging import handlers
 
+import certifi
+from tornado import httpclient
+from tornado.httpclient import HTTPRequest
+
 try:
     import socks
 except ImportError:
@@ -71,3 +75,23 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None, ):
     global log
     log = logging.getLogger(__name__)
 
+
+def http_client(proxy_url=None, proxy_port=None):
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
+                                         defaults=dict(proxy_host=proxy_url,
+                                                       proxy_port=proxy_port,
+                                                       validate_cert=constants.HTTP_VALIDATE_CERT,
+                                                       ca_certs=certifi.where()),
+                                         max_clients=constants.MAX_HTTP_CLIENTS)
+
+    return httpclient.AsyncHTTPClient()
+
+
+def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None):
+    return HTTPRequest(url=url,
+                       decompress_response=decompress_response,
+                       headers=headers,
+                       proxy_host=proxy_url,
+                       proxy_port=proxy_port,
+                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
+                       request_timeout=constants.HTTP_REQUEST_TIMEOUT)

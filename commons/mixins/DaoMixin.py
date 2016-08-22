@@ -18,8 +18,13 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
 
-    @staticmethod
-    def do_refresh():
+    def do_refresh(self):
+        try:
+            if hasattr(self, '_context') and hasattr(self._context, 'refresh'):
+                return self._context.refresh
+        except Exception as ex:
+            logging.debug(ex)
+
         return False
 
     _db = None
