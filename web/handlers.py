@@ -83,7 +83,7 @@ class MainHandler(BaseHandler):
             if user:
                 error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
                     constants.USER_ID: user[constants.MONGO_ID],
-                    constants.EXCEPTION_TYPE: 'authentication'
+                    'exception_type': 'authentication'
                 })
                 if error:
                     data['error'] = error['exception']
