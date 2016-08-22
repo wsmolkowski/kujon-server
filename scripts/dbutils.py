@@ -193,7 +193,6 @@ class DbUtils(object):
             document[constants.USER_ID] = ObjectId(user_from_doc[constants.MONGO_ID])
             update_doc = self.db_update(constants.COLLECTION_USERS_INFO, document[constants.MONGO_ID], document)
 
-
             return None
         except Exception as ex:
             print(ex.messg)
@@ -201,6 +200,7 @@ class DbUtils(object):
         pass
 
         return None
+
 
 parser = argparse.ArgumentParser(
     description="Script for local mongo database manipulation.",
@@ -220,7 +220,6 @@ parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
 parser.add_argument('-f', '--fakeuser', nargs=2, action='store', dest='user',
                     help="copy credentials from user1 to user2")
-
 
 
 def main():
