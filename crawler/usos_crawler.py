@@ -11,6 +11,7 @@ from tornado.options import parse_command_line, define, options
 
 from commons import constants
 from commons.config import Config
+from commons.enumerators import JobStatus, JobType
 from crawler.UsosCrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
@@ -33,7 +34,7 @@ class MongoDbQueue(object):
     def load_work(self):
 
         # create jobs and put into queue
-        cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: constants.JOB_PENDING})
+        cursor = self.db[constants.COLLECTION_JOBS_QUEUE].find({constants.JOB_STATUS: JobStatus.PENDING.value})
 
         while (yield cursor.fetch_next):
             if len(self.processing) >= MAX_WORKERS:
@@ -71,19 +72,21 @@ class MongoDbQueue(object):
             self.processing.append(job)
             logging.info("processing job: {0} with job type: {1} queue size: {2}".format(
                 job[constants.MONGO_ID], job[constants.JOB_TYPE], self.queue.qsize()))
-            yield self.update_job(job, constants.JOB_START)
+            yield self.update_job(job, JobStatus.START.value)
 
-            if job[constants.JOB_TYPE] == 'initial_user_crawl':
+            if job[constants.JOB_TYPE] == JobType.INITIAL_USER_CRAWL.value:
                 yield UsosCrawler(self.config).initial_user_crawl(job[constants.USER_ID])
-            elif job[constants.JOB_TYPE] == 'archive_user':
+            elif job[constants.JOB_TYPE] == JobType.REFRESH_USER_CRAWL.value:
+                yield UsosCrawler(self.config).initial_user_crawl(job[constants.USER_ID], refresh=True)
+            elif job[constants.JOB_TYPE] == JobType.ARCHIVE_USER.value:
                 yield UsosCrawler(self.config).archive_user(job[constants.USER_ID])
-            elif job[constants.JOB_TYPE] == 'subscribe_usos':
+            elif job[constants.JOB_TYPE] == JobType.SUBSCRIBE_USOS.value:
                 yield UsosCrawler(self.config).subscribe(job[constants.USER_ID])
-            elif job[constants.JOB_TYPE] == 'subscription_event':
+            elif job[constants.JOB_TYPE] == JobType.SUBSCRIPTION_EVENT.value:
                 yield UsosCrawler(self.config).process_event(job[constants.JOB_DATA])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
-            yield self.update_job(job, constants.JOB_FINISH)
+            yield self.update_job(job, JobStatus.FINISH.value)
 
             logging.info(
                 "processed job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
@@ -101,7 +104,7 @@ class MongoDbQueue(object):
             except Exception as ex:
                 msg = "Exception while executing job {0} with: {1}".format(job[constants.MONGO_ID], ex)
                 logging.exception(msg)
-                yield self.update_job(job, constants.JOB_FAIL, msg)
+                yield self.update_job(job, JobStatus.FAIL.value, msg)
             finally:
                 self.queue.task_done()
 

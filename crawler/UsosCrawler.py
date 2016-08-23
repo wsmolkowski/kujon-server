@@ -6,26 +6,15 @@ from datetime import timedelta, date
 
 from bson.objectid import ObjectId
 from tornado import gen
-from tornado import httpclient
 from tornado.util import ObjectDict
 
-from commons import constants
+from commons import constants, utils
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
-
-
-def http_client(proxy_url=None, proxy_port=None):
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
-                                                       proxy_port=proxy_port,
-                                                       validate_cert=False),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
 
 
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTermMixin):
@@ -35,14 +24,15 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self.config = config
         # self._aes = AESCipher(self._config.AES_SECRET.encode())
 
-    async def _setUp(self, user_id):
+    async def _setUp(self, user_id, refresh=False):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
         self._context = ObjectDict()
+        self._context.refresh = refresh
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
-        self._context.http_client = http_client()
+        self._context.http_client = utils.http_client()
         self._context.user_doc = await self.db_get_user(user_id)
         if not self._context.user_doc:
             self._context.user_doc = await self.db_get_archive_user(user_id)
@@ -161,12 +151,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         monday = today - timedelta(days=(today.weekday()) % 7)
         return monday
 
-    async def initial_user_crawl(self, user_id):
+    async def initial_user_crawl(self, user_id, refresh=False):
         try:
-            await self._setUp(user_id)
+            await self._setUp(user_id, refresh)
 
             await self.api_user_usos_info()  # info from usos_user_info needed later
-            await self._setUp(user_id)
+            await self._setUp(user_id, refresh)
 
             await self.api_thesis()
             await self.__process_courses_editions()
@@ -227,48 +217,48 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         result = await gen.multi(remove_tasks)
         logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
 
-    async def __user_event(self, user_id, node_id):
+    async def __user_event(self, user_id, node_id, usos_id):
         try:
-            users_doc = await self.db_find_users_id(user_id, self.getUsosId())
+            user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
 
-            for user_doc in users_doc:
-                usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
+            await self._setUp(user_doc[constants.MONGO_ID])
 
-                context = ObjectDict()
-                context.base_uri = usos_doc[constants.USOS_URL]
-                context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
-                                              secret=usos_doc[constants.CONSUMER_SECRET])
-                context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
-                                            secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+            # usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
+            # context = ObjectDict()
+            # context.base_uri = usos_doc[constants.USOS_URL]
+            # context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
+            #                               secret=usos_doc[constants.CONSUMER_SECRET])
+            # context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
+            #                             secret=user_doc[constants.ACCESS_TOKEN_SECRET])
 
-                caller = UsosCaller(context)
+            caller = UsosCaller(self._context)
 
-                user_point = await caller.call(path='services/crstests/user_point',
-                                               arguments={'node_id': node_id})
+            user_point = await caller.call(path='services/crstests/user_point',
+                                           arguments={'node_id': node_id})
 
-                logging.debug('user_point: {0}'.format(user_point))
+            logging.debug('user_point: {0}'.format(user_point))
 
-                if user_point:
-                    signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
-                                                             user_doc[constants.USER_EMAIL])
-                    logging.debug('user_point signal_response: {1}'.format(signal_point))
+            if user_point:
+                signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
+                                                         user_doc[constants.USER_EMAIL])
+                logging.debug('user_point signal_response: {1}'.format(signal_point))
 
-                user_grade = await caller.call(path='services/crstests/user_grade',
-                                               arguments={'node_id': node_id})
-                logging.debug('user_grade: {0}'.format(user_grade))
+            user_grade = await caller.call(path='services/crstests/user_grade',
+                                           arguments={'node_id': node_id})
+            logging.debug('user_grade: {0}'.format(user_grade))
 
-                if user_grade:
-                    message_text = 'wiadomosc {0}'.format(user_grade)
-                    signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+            if user_grade:
+                message_text = 'wiadomosc {0}'.format(user_grade)
+                signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
 
-                    await self.db[constants.COLLECTION_MESSAGES].insert({
-                        constants.CREATED_TIME: datetime.now(),
-                        constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
-                        constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
-                        constants.FIELD_MESSAGE_TEXT: message_text
-                    })
+                await self.db[constants.COLLECTION_MESSAGES].insert({
+                    constants.CREATED_TIME: datetime.now(),
+                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
+                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
+                    constants.FIELD_MESSAGE_TEXT: message_text
+                })
 
-                    logging.debug('user_point signal_response: {1}'.format(signal_grade))
+                logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:
             logging.error(
@@ -276,11 +266,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             await self.exc(ex, finish=False)
 
     async def process_event(self, event):
-        logging.info(event)
+        logging.info('processing event: {0}'.format(event))
+
         user_events = list()
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
-                user_events.append(self.__user_event(user_id, entry['node_id']))
+                user_events.append(self.__user_event(user_id, entry['node_id'], event[constants.USOS_ID]))
 
         result = await gen.multi(user_events)
         logging.debug('process_event results: {0}'.format(result))
@@ -305,31 +296,3 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
         except Exception as ex:
             self.exc(ex, finish=False)
-
-# @gen.coroutine
-# def main():
-#     crawler = UsosCrawler()
-#     user_id = '578896c9d54c4b1e083f2fe9'
-#     await crawler.initial_user_crawl(user_id)
-#     # await crawler.unsubscribe(user_id)
-#
-#     # event = {u'entry': [
-#     #     # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
-#     # ],
-#     #     u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-#     # await crawler.process_event(event)
-#
-#
-# if __name__ == '__main__':
-#     from tornado import ioloop
-#     from tornado.options import parse_command_line
-#
-#     parse_command_line()
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     io_loop = ioloop.IOLoop.current()
-#     io_loop.run_sync(main)

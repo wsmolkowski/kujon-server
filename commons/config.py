@@ -17,6 +17,8 @@ def config_parser(name):
         config.read(config_path('settings-dev.conf'))
     elif name == 'demo':
         config.read(config_path('settings-demo.conf'))
+    elif name == 'tests':
+        config.read(config_path('settings-tests.conf'))
     else:
         raise Exception('Could not return config file for unknown: {0}'.format(name))
 

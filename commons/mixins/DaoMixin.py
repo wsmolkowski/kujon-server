@@ -10,6 +10,7 @@ from tornado.httpclient import HTTPError
 
 from commons import constants
 from commons.AESCipher import AESCipher
+from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
@@ -17,8 +18,13 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = 'dao'
 
-    @staticmethod
-    def do_refresh():
+    def do_refresh(self):
+        try:
+            if hasattr(self, '_context') and hasattr(self._context, 'refresh'):
+                return self._context.refresh
+        except Exception as ex:
+            logging.debug(ex)
+
         return False
 
     _db = None
@@ -51,11 +57,11 @@ class DaoMixin(object):
                 exc_doc['body'] = str(exception.response.body)
                 exc_doc['effective_url'] = exception.response.effective_url
 
-        if hasattr(self, 'get_current_user') and self.get_current_user():
+        if hasattr(self, '_context') and self.get_current_user():
             exc_doc[constants.USER_ID] = self.getUserId()
 
-        exc_doc[constants.TRACEBACK] = traceback.format_exc()
-        exc_doc[constants.EXCEPTION_TYPE] = self.EXCEPTION_TYPE
+        exc_doc['traceback'] = traceback.format_exc()
+        exc_doc['exception_type'] = self.EXCEPTION_TYPE
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
@@ -228,8 +234,8 @@ class DaoMixin(object):
                                   constants.CREATED_TIME: datetime.now(),
                                   constants.UPDATE_TIME: None,
                                   constants.JOB_MESSAGE: None,
-                                  constants.JOB_STATUS: constants.JOB_PENDING,
-                                  constants.JOB_TYPE: 'archive_user'})
+                                  constants.JOB_STATUS: JobStatus.PENDING.value,
+                                  constants.JOB_TYPE: JobType.ARCHIVE_USER.value})
 
     async def db_find_user(self):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one(
@@ -237,28 +243,26 @@ class DaoMixin(object):
 
         return user_doc
 
-    async def db_find_users_id(self, user_id, usos_id):
+    async def db_find_user_by_usos_id(self, user_id, usos_id):
         '''
         :param user_id:
         :param usos_id:
-        :return: list of documents from  COLLECTION_USERS
+        :return: document from  COLLECTION_USERS
         '''
 
         if not isinstance(user_id, str):
             user_id = str(user_id)
 
-        cursor = await self.db[constants.COLLECTION_USERS].find_one({
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one({
             constants.USOS_USER_ID: user_id,
             constants.USOS_ID: usos_id
         })
 
-        users_info_doc = await cursor.to_list(None)
-
-        if not users_info_doc:
+        if not user_doc:
             raise DaoError('Nie znaleziono użytkownika na podstawie użytkownika usos: {0} dla usos: {1}'.format(
                 user_id, usos_id))
 
-        return users_info_doc
+        return user_doc
 
     async def db_cookie_user_id(self, user_id):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},

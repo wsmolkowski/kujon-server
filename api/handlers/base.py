@@ -3,12 +3,12 @@
 import logging
 
 from bson import json_util, ObjectId
-from tornado import web, escape, httpclient
+from tornado import web, escape
 from tornado.escape import json_decode
 from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
-from commons import constants
+from commons import constants, utils
 from commons.UsosCaller import AsyncCaller
 from commons.errors import AuthenticationError
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
@@ -19,16 +19,6 @@ from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.SocialMixin import SocialMixin
-
-
-def http_client(proxy_url=None, proxy_port=None):
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
-                                                       proxy_port=proxy_port,
-                                                       validate_cert=False),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
 
 
 class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
@@ -146,7 +136,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
             self.set_header("Access-Control-Allow-Credentials", "true")
 
     def get_auth_http_client(self):
-        return http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        return utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     def reset_user_cookie(self, user_doc):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
@@ -157,7 +147,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
     EXCEPTION_TYPE = 'api'
 
-    def do_refresh(self):  # overwrite from ApiMixin
+    def do_refresh(self):  # overwrite from DaoMixin
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             return True
         return False

@@ -3,22 +3,11 @@
 import urllib.parse as urllib_parse
 from base64 import b64encode
 
-from tornado import escape, httpclient
+from tornado import escape
 from tornado.auth import OAuthMixin
-from tornado.httpclient import HTTPRequest
 
-from commons import constants
+from commons import utils
 from commons.errors import CallerError
-
-
-def http_client(proxy_url=None, proxy_port=None):
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
-                                                       proxy_port=proxy_port,
-                                                       validate_cert=False),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
-
-    return httpclient.AsyncHTTPClient()
 
 
 class UsosCaller(OAuthMixin):
@@ -50,10 +39,9 @@ class UsosCaller(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = http_client(self._context.proxy_url, self._context.proxy_port)
-        response = await client.fetch(HTTPRequest(url=url,
-                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
+        response = await client.fetch(
+            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)
@@ -84,10 +72,9 @@ class AsyncCaller(object):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = http_client(self._context.proxy_url, self._context.proxy_port)
-        response = await client.fetch(HTTPRequest(url=url,
-                                                  connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                  request_timeout=constants.HTTP_REQUEST_TIMEOUT))
+        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
+        response = await client.fetch(
+            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)

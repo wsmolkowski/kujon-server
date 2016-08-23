@@ -66,10 +66,6 @@ CONSUMER_SECRET = "consumer_secret"
 
 JOB_STATUS = "status"
 JOB_TYPE = "type"
-JOB_PENDING = "pending"
-JOB_START = "start"
-JOB_FINISH = "finish"
-JOB_FAIL = "fail"
 JOB_MESSAGE = "message"
 JOB_DATA = "job_data"
 
@@ -133,18 +129,6 @@ COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED
 DEFAULT_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 
-EXCEPTION_TYPE = 'exception_type'
-TRACEBACK = 'traceback'
-
-CRAWL_TYPE = "crawl_type"
-
-SMTP_SUBJECT = 'subject'
-SMTP_FROM = 'from'
-SMTP_TO = 'to'
-SMTP_TEXT = 'text'
-SMTP_MIME_TYPE = 'mime_type'
-SMTP_CHARSET = 'charset'
-
 MOBILE_X_HEADER_EMAIL = 'X-Kujonmobiemail'
 MOBILE_X_HEADER_TOKEN = 'X-Kujonmobitoken'
 MOBILE_X_HEADER_REFRESH = 'X-Kujonrefresh'
@@ -161,3 +145,4 @@ MAX_HTTP_CLIENTS = 1000
 
 HTTP_CONNECT_TIMEOUT = 50
 HTTP_REQUEST_TIMEOUT = 50
+HTTP_VALIDATE_CERT = True
