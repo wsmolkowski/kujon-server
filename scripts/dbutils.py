@@ -23,6 +23,7 @@ class DbUtils(object):
         self.config = config
         self.encrypt_usoses_keys = encrypt_usoses_keys
         self.client = pymongo.Connection(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+        logging.info(self.client)
 
     def _ttl_index(self, collection, field):
         ttl_index = self.client[constants.COLLECTION_TOKENS].create_index(field,
