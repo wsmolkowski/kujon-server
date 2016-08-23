@@ -80,12 +80,9 @@ class CrawlerTest(AsyncTestCase):
     @gen_test(timeout=30)
     def testProcessEvent(self):
         event = {u'entry': [
-            # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-            # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-            # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-            {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-            {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-            {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
+            {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+            {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
+            {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
         ],
             u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
         # await crawler.process_event(event)

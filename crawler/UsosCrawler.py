@@ -217,50 +217,48 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         result = await gen.multi(remove_tasks)
         logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
 
-    async def __user_event(self, user_id, node_id):
+    async def __user_event(self, user_id, node_id, usos_id):
         try:
-            users_doc = await self.db_find_users_id(user_id, self.getUsosId())
+            user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
 
-            for user_doc in users_doc:
-                usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
+            await self._setUp(user_doc[constants.MONGO_ID])
 
-                context = ObjectDict()
-                context.base_uri = usos_doc[constants.USOS_URL]
-                context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
-                                              secret=usos_doc[constants.CONSUMER_SECRET])
-                context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
-                                            secret=user_doc[constants.ACCESS_TOKEN_SECRET])
+            # usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
+            # context = ObjectDict()
+            # context.base_uri = usos_doc[constants.USOS_URL]
+            # context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
+            #                               secret=usos_doc[constants.CONSUMER_SECRET])
+            # context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
+            #                             secret=user_doc[constants.ACCESS_TOKEN_SECRET])
 
-                self._context = context
+            caller = UsosCaller(self._context)
 
-                caller = UsosCaller(self._context)
+            user_point = await caller.call(path='services/crstests/user_point',
+                                           arguments={'node_id': node_id})
 
-                user_point = await caller.call(path='services/crstests/user_point',
-                                               arguments={'node_id': node_id})
+            logging.debug('user_point: {0}'.format(user_point))
 
-                logging.debug('user_point: {0}'.format(user_point))
+            if user_point:
+                signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
+                                                         user_doc[constants.USER_EMAIL])
+                logging.debug('user_point signal_response: {1}'.format(signal_point))
 
-                if user_point:
-                    signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
-                                                             user_doc[constants.USER_EMAIL])
-                    logging.debug('user_point signal_response: {1}'.format(signal_point))
+            user_grade = await caller.call(path='services/crstests/user_grade',
+                                           arguments={'node_id': node_id})
+            logging.debug('user_grade: {0}'.format(user_grade))
 
-                user_grade = await caller.call(path='services/crstests/user_grade',
-                                               arguments={'node_id': node_id})
-                logging.debug('user_grade: {0}'.format(user_grade))
+            if user_grade:
+                message_text = 'wiadomosc {0}'.format(user_grade)
+                signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
 
-                if user_grade:
-                    message_text = 'wiadomosc {0}'.format(user_grade)
-                    signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+                await self.db[constants.COLLECTION_MESSAGES].insert({
+                    constants.CREATED_TIME: datetime.now(),
+                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
+                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
+                    constants.FIELD_MESSAGE_TEXT: message_text
+                })
 
-                    await self.db[constants.COLLECTION_MESSAGES].insert({
-                        constants.CREATED_TIME: datetime.now(),
-                        constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
-                        constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
-                        constants.FIELD_MESSAGE_TEXT: message_text
-                    })
-
-                    logging.debug('user_point signal_response: {1}'.format(signal_grade))
+                logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
         except Exception as ex:
             logging.error(
@@ -268,11 +266,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             await self.exc(ex, finish=False)
 
     async def process_event(self, event):
-        logging.info(event)
+        logging.info('processing event: {0}'.format(event))
+
         user_events = list()
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
-                user_events.append(self.__user_event(user_id, entry['node_id']))
+                user_events.append(self.__user_event(user_id, entry['node_id'], event[constants.USOS_ID]))
 
         result = await gen.multi(user_events)
         logging.debug('process_event results: {0}'.format(result))
