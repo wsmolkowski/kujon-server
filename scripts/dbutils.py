@@ -169,25 +169,21 @@ class DbUtils(object):
 
             user_from_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
             if not user_from_doc:
-                logging.error("user from %r not found.", email_from)
-                return None
+                raise Exception("user from {0} not found.".format(email_from))
 
             user_from_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
                 {constants.USER_ID: user_from_doc[constants.MONGO_ID]})
             if not user_from_info_doc:
-                logging.error("user_info from  %r or %r not found ", email_from)
-                return None
+                raise Exception("user_info from {0} not found.".format(email_from))
 
             user_to_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
             if not user_from_doc:
-                logging.error("user to %r not found.", email_to)
-                return None
+                raise Exception("user to {0} not found.".format(email_to))
 
             user_to_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
                 {constants.USER_ID: ObjectId(user_to_doc[constants.MONGO_ID])})
             if not user_from_info_doc:
-                logging.error("user_info to  %r or %r not found ", email_to)
-                return None
+                raise Exception("user_info to {0} not found.".format(email_to))
 
             document = user_to_info_doc
             document[constants.USER_ID] = ObjectId(user_from_doc[constants.MONGO_ID])
@@ -196,10 +192,6 @@ class DbUtils(object):
             return None
         except Exception as ex:
             print(ex.messg)
-
-        pass
-
-        return None
 
 
 parser = argparse.ArgumentParser(
