@@ -12,10 +12,7 @@ from tornado.testing import AsyncHTTPTestCase
 from api import server
 from commons import constants, utils
 from commons.config import Config
-
-TEST_MONGODB_URI = 'mongodb://localmongoinstance/kujon-tests'
-TEST_MONGODB_NAME = 'kujon-tests'
-TEST_PORT = 7777
+from scripts.dbutils import DbUtils
 
 USER_DOC = {"access_token_secret": "59eYAFujVpvLRN7R6uWrMPeQCdxLVYBANduyGnzL",
             "access_token_key": "j2m28SYPnNXma8csg25M",
@@ -59,30 +56,47 @@ TOKEN_DOC = {"locale": "pl",
              "azp": "896765768628-e6ja58ug43hacq7usqnmn5uakgvnorvd.apps.googleusercontent.com"}
 
 
-class TestBaseClassApp(AsyncHTTPTestCase):
+class BaseTestClass(AsyncHTTPTestCase):
     @staticmethod
     def prepareDatabase(config):
+        dbu = DbUtils(config)
+        dbu.drop_collections()
+        dbu.recreate_database(config.AES_SECRET)
+
         client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
-        # drop all collections
-        for collection in client_db.collection_names():
-            if 'system' in collection:
-                continue
-            client_db.drop_collection(collection)
-
-        result = client_db[constants.COLLECTION_USERS].insert(USER_DOC)
-        logging.info(result)
-        result = client_db[constants.COLLECTION_TOKENS].insert(TOKEN_DOC)
-        logging.info(result)
+        client_db[constants.COLLECTION_USERS].insert(USER_DOC)
+        client_db[constants.COLLECTION_TOKENS].insert(TOKEN_DOC)
 
     @classmethod
     def setUpClass(self):
-        logging.getLogger().setLevel(logging.INFO)
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config('tests')
         self.http_client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
         self.prepareDatabase(self.config)
+
+        self.assertEquals(34, self.client_db[constants.COLLECTION_USOSINSTANCES].count())
+
+        self.application = server.get_application(self.config)
+        db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+        logging.info(db)
+        self.application.settings['db'] = db
+        self.application.settings['config'] = self.config
+
+    @classmethod
+    def tearDownClass(self):
+        super(BaseTestClass, self).tearDown()
+        logging.info("Finishing tests for class: {0}".format(self.__name__))
+
+    def get_new_ioloop(self):
+        return IOLoop.instance()
+
+
+class AbstractApplicationTestBase(BaseTestClass):
+    @classmethod
+    def setUpClass(self):
+        super(AbstractApplicationTestBase, self).setUpClass()
 
         self.application = server.get_application(self.config)
         db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]

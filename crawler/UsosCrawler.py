@@ -295,31 +295,3 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
         except Exception as ex:
             self.exc(ex, finish=False)
-
-# @gen.coroutine
-# def main():
-#     crawler = UsosCrawler()
-#     user_id = '578896c9d54c4b1e083f2fe9'
-#     await crawler.initial_user_crawl(user_id)
-#     # await crawler.unsubscribe(user_id)
-#
-#     # event = {u'entry': [
-#     #     # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     # {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     # {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1167405'], u'time': 1467979077},
-#     #     {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1167405'], u'time': 1467979077}
-#     # ],
-#     #     u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-#     # await crawler.process_event(event)
-#
-#
-# if __name__ == '__main__':
-#     from tornado import ioloop
-#     from tornado.options import parse_command_line
-#
-#     parse_command_line()
-#     logging.getLogger().setLevel(logging.DEBUG)
-#     io_loop = ioloop.IOLoop.current()
-#     io_loop.run_sync(main)
