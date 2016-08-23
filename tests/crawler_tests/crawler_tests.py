@@ -67,7 +67,8 @@ class CrawlerTest(AsyncTestCase):
         yield UsosCrawler(self.config).archive_user(self.user_id)
 
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_USERS_ARCHIVE].count())
+        # this is not the best - better test DaoMixin
+        self.assertEqual(0, self.client_db[constants.COLLECTION_USERS_ARCHIVE].count())
 
     @gen_test(timeout=30)
     def testSubscribe(self):
