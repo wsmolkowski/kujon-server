@@ -6,7 +6,7 @@ from tests.api_tests.courses_tests import ApiCoursesTest
 from tests.api_tests.rest_tests import ApiRestTest
 from tests.api_tests.search_tests import ApiSearchTest
 from tests.api_tests.user_tests import ApiUserTest
-from tests.crawler_tets.crawler_tests import CrawlerTest
+from tests.crawler_tests.crawler_tests import CrawlerTest
 
 
 def build_suite():
