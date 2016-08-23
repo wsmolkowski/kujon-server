@@ -43,7 +43,7 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_EDITIONS].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_THESES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_TERMS].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
+        # self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
 
@@ -57,7 +57,7 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_EDITIONS].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_THESES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_TERMS].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
+        # self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
 
