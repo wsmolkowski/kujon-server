@@ -33,7 +33,7 @@ class CrawlerTest(AsyncTestCase):
         super(CrawlerTest, self).tearDown()
         self.stop()
 
-    @gen_test(timeout=120)
+    @gen_test(timeout=300)
     def testInitialUserCrawl(self):
         # assume - run crawler
         yield UsosCrawler(self.config).initial_user_crawl(self.user_id)
@@ -47,7 +47,7 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
 
-    @gen_test(timeout=120)
+    @gen_test(timeout=300)
     def testInitialUserCrawlRefresh(self):
         # assume - run crawler
         yield UsosCrawler(self.config).initial_user_crawl(self.user_id, refresh=True)
@@ -61,7 +61,7 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
 
-    @gen_test(timeout=120)
+    @gen_test(timeout=30)
     def testArchiveUser(self):
         # assume - run crawler
         yield UsosCrawler(self.config).archive_user(self.user_id)
@@ -69,7 +69,7 @@ class CrawlerTest(AsyncTestCase):
         # then - check if tables are filled
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_USERS_ARCHIVE].count())
 
-    @gen_test(timeout=120)
+    @gen_test(timeout=30)
     def testSubscribe(self):
         # assume - run crawler
         yield UsosCrawler(self.config).subscribe(self.user_id)
@@ -77,7 +77,7 @@ class CrawlerTest(AsyncTestCase):
         # then - check if tables are filled
         self.assertNotEqual(0, self.client_db[constants.COLLECTION_SUBSCRIPTIONS].count())
 
-    @gen_test(timeout=120)
+    @gen_test(timeout=30)
     def testProcessEvent(self):
         event = {u'entry': [
             # {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
