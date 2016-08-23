@@ -24,7 +24,7 @@ class CrawlerTest(AsyncTestCase):
         self.dbu.drop_collections()
         self.dbu.recreate_database(self.config.AES_SECRET)
 
-        self.assertEquals(34, self.client_db[constants.COLLECTION_USOSINSTANCES].count())
+        self.assertNotEqual(0, self.client_db[constants.COLLECTION_USOSINSTANCES].count())
 
         self.user_id = self.client_db[constants.COLLECTION_USERS].insert(USER_DOC)
         logging.info(self.user_id)
