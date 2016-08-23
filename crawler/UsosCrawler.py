@@ -231,7 +231,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
                                             secret=user_doc[constants.ACCESS_TOKEN_SECRET])
 
-                caller = UsosCaller(context)
+                self._context = context
+
+                caller = UsosCaller(self._context)
 
                 user_point = await caller.call(path='services/crstests/user_point',
                                                arguments={'node_id': node_id})
