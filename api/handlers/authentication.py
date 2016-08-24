@@ -57,7 +57,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
         if constants.USER_NAME not in user_doc and constants.USER_EMAIL in user_doc:
             user_doc[constants.USER_NAME] = user_doc[constants.USER_EMAIL]
 
-        self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
                                domain=self.config.SITE_DOMAIN)
 

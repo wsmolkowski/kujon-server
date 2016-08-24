@@ -21,8 +21,6 @@ async def main():
 
     cursor = db[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True})
     async for user_doc in cursor:
-        logging.info(user_doc)
-
         try:
             logging.info('create refresh job for user {0}'.format(user_doc[constants.MONGO_ID]))
 

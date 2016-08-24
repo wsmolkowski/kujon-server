@@ -6,7 +6,9 @@ from tests.api_tests.courses_tests import ApiCoursesTest
 from tests.api_tests.rest_tests import ApiRestTest
 from tests.api_tests.search_tests import ApiSearchTest
 from tests.api_tests.user_tests import ApiUserTest
+from tests.commons_tests.config_tests import ConfigTest
 from tests.crawler_tests.crawler_tests import CrawlerTest
+from tests.scripts_tests.dbutilts_tests import DbUtilsTest
 
 
 def build_suite():
@@ -21,9 +23,13 @@ def build_suite():
     # commons
     # test_suite.addTest(unittest.makeSuite(SerializationTest))
     # test_suite.addTest(unittest.makeSuite(AESCipher))
+    test_suite.addTest(unittest.makeSuite(ConfigTest))
 
     # crawler
     test_suite.addTest(unittest.makeSuite(CrawlerTest))
+
+    # scripts
+    test_suite.addTest(unittest.makeSuite(DbUtilsTest))
 
     return test_suite
 

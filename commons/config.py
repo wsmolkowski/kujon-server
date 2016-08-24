@@ -4,6 +4,8 @@ import os
 import tempfile
 from configparser import RawConfigParser
 
+from commons.enumerators import Environment
+
 
 def config_path(config_name):
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config', config_name)
@@ -11,13 +13,13 @@ def config_path(config_name):
 
 def config_parser(name):
     config = RawConfigParser(allow_no_value=True)
-    if name == 'production':
+    if name == Environment.PRODUCTION.value:
         config.read(config_path('settings-prod.conf'))
-    elif name == 'development':
+    elif name == Environment.DEVELOPMENT.value:
         config.read(config_path('settings-dev.conf'))
-    elif name == 'demo':
+    elif name == Environment.DEMO.value:
         config.read(config_path('settings-demo.conf'))
-    elif name == 'tests':
+    elif name == Environment.TESTS.value:
         config.read(config_path('settings-tests.conf'))
     else:
         raise Exception('Could not return config file for unknown: {0}'.format(name))
@@ -27,6 +29,9 @@ def config_parser(name):
 
 class Config(object):
     def __init__(self, config_environment):
+        if isinstance(config_environment, Environment):
+            config_environment = str(config_environment)
+
         self.config = config_parser(config_environment)
 
         # database

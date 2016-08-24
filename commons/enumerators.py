@@ -22,3 +22,10 @@ class JobType(Abstract):
     UPDATE_USER_CRAWL = 'update_user_crawl'
     SUBSCRIBE_USOS = 'subscribe_usos'
     SUBSCRIPTION_EVENT = 'subscription_event'
+
+
+class Environment(Abstract):
+    PRODUCTION = 'production'
+    DEVELOPMENT = 'development'
+    DEMO = 'demo'
+    TESTS = 'tests'
