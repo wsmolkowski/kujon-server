@@ -23,7 +23,7 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-    if len(sys.argv()) != 5:
-        sys.exc_info('')
+    if len(sys.argv) != 5:
+        sys.exc_info('Provide 4 parameters: email_from email_to environment_from environment_to')
 
     main(sys.argv[1:])
