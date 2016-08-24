@@ -375,6 +375,10 @@ class ApiMixin(ApiUserMixin):
                             elem = course['grades']['course_units_grades'][unit][unit2]
                             elem['value_description'] = elem['value_description']['pl']
                             elem['unit'] = unit
+
+                            # if constants.CLASS_TYPE not in elem:
+                            #     elem[constants.CLASS_TYPE] = 'TRATATA'
+
                             grade['grades'].append(elem)
 
                     # jeżeli są jakieś oceny
@@ -393,6 +397,7 @@ class ApiMixin(ApiUserMixin):
 
         for unit in units_doc:
             unit[constants.CLASS_TYPE_ID] = self.classtype_name(classtypes, (unit[constants.CLASS_TYPE_ID]))
+
         for course in result:
             if 'grades' in course:
                 for grade in course['grades']:
@@ -402,6 +407,8 @@ class ApiMixin(ApiUserMixin):
                             if int(unit) == unit_doc[constants.UNIT_ID]:
                                 grade[constants.CLASS_TYPE] = unit_doc[constants.CLASS_TYPE_ID]
                                 del (grade['unit'])
+                            else:
+                                grade[constants.CLASS_TYPE] = 'Brak danych'
 
         return result
 
