@@ -5,11 +5,11 @@ import logging
 import sys
 
 import pymongo
-from bson.objectid import ObjectId
 
 from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.enumerators import Environment
 
 utils.initialize_logging('dbutils')
 
@@ -158,42 +158,51 @@ class DbUtils(object):
             return False
         return True
 
-        # def create_user_jobs(self):
-        #     for user_doc in self.client[constants.COLLECTION_USERS].find():
-        #         logging.info('creating initial job for user {0}'.format(user_doc[constants.MONGO_ID]))
-        #         self.client[constants.COLLECTION_JOBS_QUEUE].insert(
-        #             job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
-
-    def copy_user_crediteltials(self, email_from, email_to):
+    def copy_user_credentials(self, email_from, email_to, environment_from, environment_to='demo'):
 
         try:
+            if environment_to == Environment.PRODUCTION.value:
+                raise Exception('Can not copy values to {0} environment. :('.format(Environment.PRODUCTION.value))
 
-            user_from_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
+            self.config_from = Config(environment_from)
+            self.config_to = Config(environment_to)
+
+            self.client_from = pymongo.Connection(self.config_from.MONGODB_URI)
+            self.db_from = self.client_from[self.config_from.MONGODB_NAME]
+            self.client_to = pymongo.Connection(self.config_to.MONGODB_URI)
+            self.db_to = self.client_to[self.config_to.MONGODB_NAME]
+
+            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
-            user_from_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
-                {constants.USER_ID: user_from_doc[constants.MONGO_ID]})
-            if not user_from_info_doc:
-                raise Exception("user_info from {0} not found.".format(email_from))
+            logging.debug('user_from_doc: {0}'.format(user_from_doc))
 
-            user_to_doc = self.client[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
+            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
-            user_to_info_doc = self.client[constants.COLLECTION_USERS_INFO].find_one(
-                {constants.USER_ID: ObjectId(user_to_doc[constants.MONGO_ID])})
-            if not user_from_info_doc:
-                raise Exception("user_info to {0} not found.".format(email_to))
+            logging.debug('user_to_doc: {0}'.format(user_to_doc))
 
-            document = user_to_info_doc
-            document[constants.USER_ID] = ObjectId(user_from_doc[constants.MONGO_ID])
-            update_doc = self.db_update(constants.COLLECTION_USERS_INFO, document[constants.MONGO_ID], document)
+            user_to_doc[constants.ACCESS_TOKEN_KEY] = user_from_doc[constants.ACCESS_TOKEN_KEY]
+            user_to_doc[constants.ACCESS_TOKEN_SECRET] = user_from_doc[constants.ACCESS_TOKEN_SECRET]
+            user_to_doc[constants.USOS_ID] = user_from_doc[constants.USOS_ID]
+            user_to_doc[constants.USOS_USER_ID] = user_from_doc[constants.USOS_USER_ID]
 
-            return None
+            updated = self.db_to[constants.COLLECTION_USERS].update(
+                {constants.MONGO_ID: user_to_doc[constants.MONGO_ID]}, user_to_doc)
+
+            logging.info('collection: {0} updated: {1}'.format(constants.COLLECTION_USERS, updated))
         except Exception as ex:
-            print(ex.messg)
+            logging.exception(ex)
+        finally:
+            if self.client_from:
+                self.client_from.close()
+            if self.client_to:
+                self.client_to.close()
 
+
+##################################################################
 
 parser = argparse.ArgumentParser(
     description="Script for local mongo database manipulation.",
@@ -211,8 +220,6 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
                     help="creates indexes on collections")
 parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
-parser.add_argument('-f', '--fakeuser', nargs=2, action='store', dest='user',
-                    help="copy credentials from user1 to user2")
 
 
 def main():
@@ -222,14 +229,7 @@ def main():
     logging.getLogger().setLevel(config.LOG_LEVEL)
     dbutils = DbUtils(config)
 
-    logging.getLogger().setLevel(config.LOG_LEVEL)
-
-    if args.user and len(args.user) == 2:
-        logging.info('coping creditentials from users1 to user2 (by email)')
-        dbutils.copy_user_crediteltials(args.user[0], args.user[1])
-        logging.info('done.')
-
-    elif args.option == 'recreate':
+    if args.option == 'recreate':
         logging.info('drop_collections start')
         dbutils.drop_collections()
         logging.info('drop_collections end')
@@ -242,10 +242,12 @@ def main():
         logging.info('clean_database start')
         dbutils.drop_collections([constants.COLLECTION_USOSINSTANCES, constants.COLLECTION_COURSES_CLASSTYPES])
         logging.info('clean_database end')
+
     elif args.option == 'index':
         logging.info('create_indexes start')
         dbutils.create_indexes()
         logging.info('create_indexes end')
+
     elif args.option == 'statistics':
         dbutils.print_statistics()
     else:
