@@ -179,13 +179,15 @@ class DbUtils(object):
             self.client_to = pymongo.Connection(self.config_to.MONGODB_URI)
             self.db_to = self.client_to[self.config_to.MONGODB_NAME]
 
-            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
+            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({
+                constants.USER_EMAIL: email_from, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
             logging.debug('user_from_doc: {0}'.format(user_from_doc))
 
-            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
+            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({
+                constants.USER_EMAIL: email_to, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
