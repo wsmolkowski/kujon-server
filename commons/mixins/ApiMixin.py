@@ -320,8 +320,11 @@ class ApiMixin(ApiUserMixin):
         if not classtypes:
             classtypes = await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index',
                                                                      lang=False)
+            try:
+                await self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
+            except DuplicateKeyError as ex:
+                logging.debug(ex)
 
-            await self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
         return classtypes
 
     @staticmethod

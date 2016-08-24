@@ -2,7 +2,7 @@
 
 import logging
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import motor
 from bson.objectid import ObjectId
@@ -297,10 +297,6 @@ class DaoMixin(object):
 
     async def db_insert_token(self, token):
         await self.db_remove(constants.COLLECTION_TOKENS, token)
-        if constants.FIELD_TOKEN_EXPIRATION not in token:
-            token[constants.FIELD_TOKEN_EXPIRATION] = datetime.now() + timedelta(
-                seconds=constants.TOKEN_EXPIRATION_TIMEOUT)
-
         token_doc = await self.db_insert(constants.COLLECTION_TOKENS, token)
         return token_doc
 
