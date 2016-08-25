@@ -310,7 +310,7 @@ def main():
     elif args.option == 'statistics':
         dbutils.print_statistics()
 
-    elif args.option == 'recall_failures':
+    elif args.option == 'refresh_failures':
         dbutils.refresh_failures()
     else:
         parser.print_help()
