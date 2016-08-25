@@ -10,6 +10,7 @@ from logging import handlers
 import certifi
 from tornado import httpclient
 from tornado.httpclient import HTTPRequest
+from tornado.httputil import HTTPHeaders
 
 try:
     import socks
@@ -87,7 +88,14 @@ def http_client(proxy_url=None, proxy_port=None):
     return httpclient.AsyncHTTPClient()
 
 
-def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None):
+def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None):
+    if not headers:
+        headers = HTTPHeaders({})
+
+    headers.add('application/json', 'application/json')
+    if x_forwarded_for:
+        headers.add('X-Forwarded-For', x_forwarded_for)
+
     return HTTPRequest(url=url,
                        decompress_response=decompress_response,
                        headers=headers,

@@ -33,6 +33,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self._context.refresh = refresh
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
+        self._context.remote_ip = None
         self._context.http_client = utils.http_client()
         self._context.user_doc = await self.db_get_user(user_id)
         if not self._context.user_doc:

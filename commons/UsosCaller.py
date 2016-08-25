@@ -41,7 +41,8 @@ class UsosCaller(OAuthMixin):
 
         client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
         response = await client.fetch(
-            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port,
+                               x_forwarded_for=self._context.remote_ip))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)
@@ -74,7 +75,8 @@ class AsyncCaller(object):
 
         client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
         response = await client.fetch(
-            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port,
+                               x_forwarded_for=self._context.remote_ip))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return escape.json_decode(response.body)
