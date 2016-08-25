@@ -2,7 +2,7 @@
 
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import motor
 from bson.objectid import ObjectId
@@ -124,6 +124,9 @@ class DaoMixin(object):
         return doc
 
     async def db_remove(self, collection, pipeline):
+        pipeline[constants.CREATED_TIME] = {
+            '$lt': datetime.now() - timedelta(seconds=constants.SECONDS_REMOVE_ON_REFRESH)}
+
         result = await self.db[collection].remove(pipeline)
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         return result
