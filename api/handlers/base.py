@@ -33,6 +33,10 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
     def config(self):
         return self.application.settings['config']
 
+    def get_remote_ip(self):
+        return self.request.headers.get('X-Forwarded-For',
+                                        self.request.headers.get('X-Real-Ip', self.request.remote_ip))
+
     async def _prepare_user(self):
         user = None
 
@@ -84,6 +88,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
         self._context.proxy_port = self.config.PROXY_PORT
         self._context.usoses = await self.get_usos_instances()
         self._context.user_doc = await self._prepare_user()
+        self._context.remote_ip = self.get_remote_ip()
 
         if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
             usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated

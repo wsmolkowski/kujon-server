@@ -33,6 +33,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self._context.refresh = refresh
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
+        self._context.remote_ip = None
         self._context.http_client = utils.http_client()
         self._context.user_doc = await self.db_get_user(user_id)
         if not self._context.user_doc:
@@ -154,10 +155,19 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
     async def initial_user_crawl(self, user_id, refresh=False):
         try:
-            await self._setUp(user_id, refresh)
+            await self._setUp(user_id)
+
+            if refresh:
+                skip_collections = [constants.COLLECTION_USERS, constants.COLLECTION_JOBS_QUEUE,
+                                    constants.COLLECTION_JOBS_LOG, constants.COLLECTION_MESSAGES,
+                                    constants.COLLECTION_SEARCH, constants.COLLECTION_TOKENS,
+                                    constants.COLLECTION_EMAIL_QUEUE, constants.COLLECTION_EMAIL_QUEUE_LOG,
+                                    constants.COLLECTION_EXCEPTIONS, constants.COLLECTION_SUBSCRIPTIONS]
+
+                await self.remove_user_data(skip_collections)
 
             await self.api_user_usos_info()  # info from usos_user_info needed later
-            await self._setUp(user_id, refresh)
+            await self._setUp(user_id)
 
             await self.api_thesis()
             await self.__process_courses_editions()
@@ -204,19 +214,28 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         except Exception as ex:
             logging.warning(ex)
 
-        collections = await self.db.collection_names(include_system_collections=False)
-        remove_tasks = list()
-        for collection in collections:
+        await self.remove_user_data([constants.COLLECTION_USERS_ARCHIVE, ])
 
-            if collection == constants.COLLECTION_USERS_ARCHIVE:
-                continue
+    async def remove_user_data(self, skip_collections=None):
+        if not skip_collections:
+            skip_collections = list()
 
-            exists = await self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
-            if exists:
-                remove_tasks.append(self.db[collection].remove({constants.USER_ID: user_id}))
+        try:
+            collections = await self.db.collection_names(include_system_collections=False)
+            remove_tasks = list()
+            for collection in collections:
 
-        result = await gen.multi(remove_tasks)
-        logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
+                if collection in skip_collections:
+                    continue
+
+                exists = await self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+                if exists:
+                    remove_tasks.append(self.db[collection].remove({constants.USER_ID: self.getUserId()}))
+
+            result = await gen.multi(remove_tasks)
+            logging.info('removed user data for user_id: {0} resulted in: {1}'.format(self.getUserId(), result))
+        except Exception as ex:
+            logging.exception(ex)
 
     async def __user_event(self, user_id, node_id, usos_id):
         try:

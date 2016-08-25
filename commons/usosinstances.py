@@ -37,6 +37,7 @@ USOSINSTANCES = [
      'logo': '/static/img/logo/logo-uam-64x64.jpg',
      'consumer_key': 'aUvvxdTH9kLj7VqNxqcy',
      'consumer_secret': 'RSE9tqZpEdzqQxjQBVvqxJPCjy44e6JDY6LtZ3HH',
+     'contact': 'usosweb@amu.edu.pl',
      'enabled': True,
      'validate_ssl_certificate': True,
      },

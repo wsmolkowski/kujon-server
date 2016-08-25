@@ -252,7 +252,7 @@ class DbUtils(object):
                 self.client[constants.COLLECTION_EXCEPTIONS].remove({constants.USER_ID: user_id})
                 logging.info('removed exception data for user_id {0}'.format(user_id))
 
-                self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
+                self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
                 logging.info('created refresh task created for user_id {0}'.format(user_id))
 
         except Exception as ex:
@@ -310,7 +310,7 @@ def main():
     elif args.option == 'statistics':
         dbutils.print_statistics()
 
-    elif args.option == 'recall_failures':
+    elif args.option == 'refresh_failures':
         dbutils.refresh_failures()
     else:
         parser.print_help()
