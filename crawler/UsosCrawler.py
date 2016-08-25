@@ -203,7 +203,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         except Exception as ex:
             logging.warning(ex)
 
-        collections = await self.db.collection_names()
+        collections = await self.db.collection_names(include_system_collections=False)
         remove_tasks = list()
         for collection in collections:
 

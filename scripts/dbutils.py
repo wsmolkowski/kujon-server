@@ -110,9 +110,7 @@ class DbUtils(object):
             "storageSize": 0
         }
 
-        for collection in db.collection_names():
-            if 'system' in collection:
-                continue
+        for collection in db.collection_names(include_system_collections=False):
             stats = db.command('collstats', collection)
 
             summary["count"] += stats["count"]
@@ -140,9 +138,7 @@ class DbUtils(object):
             skip_collections = list()
         db = self.client
 
-        for collection in db.collection_names():
-            if 'system' in collection:
-                continue
+        for collection in db.collection_names(include_system_collections=False):
             if collection in skip_collections:
                 logging.info('skipping collection: {0}'.format(collection))
                 continue
