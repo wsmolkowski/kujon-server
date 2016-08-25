@@ -10,6 +10,7 @@ from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.enumerators import Environment
+from commons.enumerators import ExceptionTypes
 from crawler import job_factory
 
 utils.initialize_logging('dbutils')
@@ -228,6 +229,35 @@ class DbUtils(object):
             if self.client_to:
                 self.client_to.close()
 
+    def refresh_failures(self):
+        '''
+            for each distinct user_id for exception  type - API
+            cleanup exception collection for each user_id
+            create refresh user job for each user user_id
+        '''
+
+        try:
+            user_ids = self.client[constants.COLLECTION_EXCEPTIONS].find({'exception_type': ExceptionTypes.API.value}) \
+                .distinct(constants.USER_ID)
+
+            for user_id in user_ids:
+                if not user_id:
+                    continue
+
+                user_doc = self.client[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: user_id, constants.USOS_PAIRED: True})
+                if not user_doc:
+                    continue
+
+                self.client[constants.COLLECTION_EXCEPTIONS].remove({constants.USER_ID: user_id})
+                logging.info('removed exception data for user_id {0}'.format(user_id))
+
+                self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
+                logging.info('created refresh task created for user_id {0}'.format(user_id))
+
+        except Exception as ex:
+            logging.exception(ex)
+
 
 ##################################################################
 
@@ -247,6 +277,8 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
                     help="creates indexes on collections")
 parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
+parser.add_argument('-f', '--refresh_failures', action='store_const', dest='option', const='refresh_failures',
+                    help="create refresh jobs for users with failure USOS API calls", default='development')
 
 
 def main():
@@ -277,6 +309,9 @@ def main():
 
     elif args.option == 'statistics':
         dbutils.print_statistics()
+
+    elif args.option == 'recall_failures':
+        dbutils.refresh_failures()
     else:
         parser.print_help()
         sys.exit(1)
