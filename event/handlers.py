@@ -9,6 +9,7 @@ from tornado import web
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import AuthenticationError
 from commons.mixins.DaoMixin import DaoMixin
@@ -17,7 +18,7 @@ from commons.mixins.JSendMixin import JSendMixin
 
 class MainHandler(RequestHandler, JSendMixin, DaoMixin):
     SUPPORTED_METHODS = ('GET', 'POST')
-    EXCEPTION_TYPE = 'event'
+    EXCEPTION_TYPE = ExceptionTypes.EVENT.value
 
     @property
     def db(self):

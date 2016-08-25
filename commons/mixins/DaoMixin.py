@@ -10,13 +10,14 @@ from tornado.httpclient import HTTPError
 
 from commons import constants
 from commons.AESCipher import AESCipher
+from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError
 from commons.errors import DaoError
 
 
 class DaoMixin(object):
-    EXCEPTION_TYPE = 'dao'
+    EXCEPTION_TYPE = ExceptionTypes.DAO.value
 
     def do_refresh(self):
         try:
@@ -61,7 +62,8 @@ class DaoMixin(object):
             exc_doc[constants.USER_ID] = self.getUserId()
 
         exc_doc['traceback'] = traceback.format_exc()
-        exc_doc['exception_type'] = self.EXCEPTION_TYPE
+        exc_doc['exception_type'] = self.EXCEPTION_TYPE if hasattr(self,
+                                                                   'EXCEPTION_TYPE') else ExceptionTypes.UNKNOWN.value
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
         await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)

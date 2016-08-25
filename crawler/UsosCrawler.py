@@ -10,6 +10,7 @@ from tornado.util import ObjectDict
 
 from commons import constants, utils
 from commons.UsosCaller import UsosCaller, AsyncCaller
+from commons.enumerators import ExceptionTypes
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
@@ -18,7 +19,7 @@ from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTermMixin):
-    EXCEPTION_TYPE = 'usoscrawler'
+    EXCEPTION_TYPE = ExceptionTypes.CRAWLER.value
 
     def __init__(self, config):
         self.config = config
@@ -203,7 +204,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         except Exception as ex:
             logging.warning(ex)
 
-        collections = await self.db.collection_names()
+        collections = await self.db.collection_names(include_system_collections=False)
         remove_tasks = list()
         for collection in collections:
 

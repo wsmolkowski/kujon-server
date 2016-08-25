@@ -10,6 +10,8 @@ from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.enumerators import Environment
+from commons.enumerators import ExceptionTypes
+from crawler import job_factory
 
 utils.initialize_logging('dbutils')
 
@@ -110,9 +112,7 @@ class DbUtils(object):
             "storageSize": 0
         }
 
-        for collection in db.collection_names():
-            if 'system' in collection:
-                continue
+        for collection in db.collection_names(include_system_collections=False):
             stats = db.command('collstats', collection)
 
             summary["count"] += stats["count"]
@@ -140,9 +140,7 @@ class DbUtils(object):
             skip_collections = list()
         db = self.client
 
-        for collection in db.collection_names():
-            if 'system' in collection:
-                continue
+        for collection in db.collection_names(include_system_collections=False):
             if collection in skip_collections:
                 logging.info('skipping collection: {0}'.format(collection))
                 continue
@@ -165,6 +163,18 @@ class DbUtils(object):
             return False
         return True
 
+    def remove_user_data(self, user_id, client=False):
+        if not client:
+            client = self.db
+
+        for collection in client.collection_names(include_system_collections=False):
+            if collection in (constants.COLLECTION_USERS,):
+                continue
+
+            exists = client[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            if exists:
+                client[collection].remove({constants.USER_ID: user_id})
+
     def copy_user_credentials(self, email_from, email_to, environment_from, environment_to='demo'):
 
         try:
@@ -184,14 +194,17 @@ class DbUtils(object):
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
-            logging.debug('user_from_doc: {0}'.format(user_from_doc))
+            logging.info('user_from_doc: {0}'.format(user_from_doc))
 
             user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({
                 constants.USER_EMAIL: email_to, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
-            logging.debug('user_to_doc: {0}'.format(user_to_doc))
+            logging.info('user_to_doc: {0}'.format(user_to_doc))
+
+            self.remove_user_data(user_to_doc[constants.MONGO_ID], self.db_to)
+            logging.info('removed user to data')
 
             user_to_doc[constants.ACCESS_TOKEN_KEY] = user_from_doc[constants.ACCESS_TOKEN_KEY]
             user_to_doc[constants.ACCESS_TOKEN_SECRET] = user_from_doc[constants.ACCESS_TOKEN_SECRET]
@@ -202,6 +215,12 @@ class DbUtils(object):
                 {constants.MONGO_ID: user_to_doc[constants.MONGO_ID]}, user_to_doc)
 
             logging.info('collection: {0} updated: {1}'.format(constants.COLLECTION_USERS, updated))
+
+            self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(
+                job_factory.refresh_user_job(user_to_doc[constants.MONGO_ID]))
+
+            logging.info('created refresh task for updated user')
+
         except Exception as ex:
             logging.exception(ex)
         finally:
@@ -209,6 +228,35 @@ class DbUtils(object):
                 self.client_from.close()
             if self.client_to:
                 self.client_to.close()
+
+    def refresh_failures(self):
+        '''
+            for each distinct user_id for exception  type - API
+            cleanup exception collection for each user_id
+            create refresh user job for each user user_id
+        '''
+
+        try:
+            user_ids = self.client[constants.COLLECTION_EXCEPTIONS].find({'exception_type': ExceptionTypes.API.value}) \
+                .distinct(constants.USER_ID)
+
+            for user_id in user_ids:
+                if not user_id:
+                    continue
+
+                user_doc = self.client[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: user_id, constants.USOS_PAIRED: True})
+                if not user_doc:
+                    continue
+
+                self.client[constants.COLLECTION_EXCEPTIONS].remove({constants.USER_ID: user_id})
+                logging.info('removed exception data for user_id {0}'.format(user_id))
+
+                self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
+                logging.info('created refresh task created for user_id {0}'.format(user_id))
+
+        except Exception as ex:
+            logging.exception(ex)
 
 
 ##################################################################
@@ -229,6 +277,8 @@ parser.add_argument('-s', '--statistics', action='store_const', dest='option', c
                     help="creates indexes on collections")
 parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
+parser.add_argument('-f', '--refresh_failures', action='store_const', dest='option', const='refresh_failures',
+                    help="create refresh jobs for users with failure USOS API calls", default='development')
 
 
 def main():
@@ -259,6 +309,9 @@ def main():
 
     elif args.option == 'statistics':
         dbutils.print_statistics()
+
+    elif args.option == 'recall_failures':
+        dbutils.refresh_failures()
     else:
         parser.print_help()
         sys.exit(1)
