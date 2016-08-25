@@ -200,10 +200,10 @@ class DbUtils(object):
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
-            logging.info('remove user data')
-            self.remove_user_data(user_to_doc[constants.MONGO_ID], self.db_to)
+            logging.info('user_to_doc: {0}'.format(user_to_doc))
 
-            logging.debug('user_to_doc: {0}'.format(user_to_doc))
+            self.remove_user_data(user_to_doc[constants.MONGO_ID], self.db_to)
+            logging.info('removed user to data')
 
             user_to_doc[constants.ACCESS_TOKEN_KEY] = user_from_doc[constants.ACCESS_TOKEN_KEY]
             user_to_doc[constants.ACCESS_TOKEN_SECRET] = user_from_doc[constants.ACCESS_TOKEN_SECRET]
