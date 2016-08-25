@@ -20,19 +20,23 @@ class DbUtils(object):
                       constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
 
     def __init__(self, config, encrypt_usoses_keys=False):
-        self.config = config
-        self.encrypt_usoses_keys = encrypt_usoses_keys
-        self.client = pymongo.Connection(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
-        logging.info(self.client)
+        if config:
+            self.config = config
+            self.encrypt_usoses_keys = encrypt_usoses_keys
+            self.client = pymongo.Connection(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+            logging.info(self.client)
 
-    def _ttl_index(self, collection, field):
-        ttl_index = self.client[constants.COLLECTION_TOKENS].create_index(field,
-                                                                          expireAfterSeconds=constants.TOKEN_EXPIRATION_TIMEOUT)
-        logging.info('created ttl index {0} on collection {1} and field {2}'.format(ttl_index, collection, field))
+    def _ttl_index(self, collection, field, after_seconds):
+        try:
+            ttl_index = self.client[constants.COLLECTION_TOKENS].create_index(field, expireAfterSeconds=after_seconds)
+            logging.info('created ttl index {0} on collection {1} and field {2} after_seconds {3}'.format(
+                ttl_index, collection, field, after_seconds))
+        except Exception as ex:
+            logging.exception(ex)
 
     def _unique_index(self, collection, fields):
         try:
-            index = self.client[collection].create_index(fields, unique=True, drop_dups=True)
+            index = self.client[collection].create_index(fields, unique=True)
 
             logging.info('unique index: {0} created on collection: {1} and fields {2}'.format(
                 index, collection, fields))
@@ -52,6 +56,8 @@ class DbUtils(object):
                            [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
         self._unique_index(constants.COLLECTION_COURSES_EDITIONS, [(constants.USER_ID, pymongo.ASCENDING)])
 
+        self.client[constants.COLLECTION_COURSES_CLASSTYPES].create_index(constants.USOS_ID, unique=True)
+
     def create_indexes(self):
         for collection in self.client.collection_names(include_system_collections=False):
             for field in self.INDEXED_FIELDS:
@@ -63,7 +69,8 @@ class DbUtils(object):
                     except Exception as ex:
                         logging.exception(ex)
 
-        self._ttl_index(constants.COLLECTION_TOKENS, constants.FIELD_TOKEN_EXPIRATION)
+        self._ttl_index(constants.COLLECTION_TOKENS, constants.CREATED_TIME, constants.SECONDS_HOUR)
+        self._ttl_index(constants.COLLECTION_COURSES_CLASSTYPES, constants.CREATED_TIME, constants.SECONDS_DAY)
 
         self._unique_indexes()
 
@@ -172,13 +179,15 @@ class DbUtils(object):
             self.client_to = pymongo.Connection(self.config_to.MONGODB_URI)
             self.db_to = self.client_to[self.config_to.MONGODB_NAME]
 
-            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_from})
+            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({
+                constants.USER_EMAIL: email_from, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
             logging.debug('user_from_doc: {0}'.format(user_from_doc))
 
-            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email_to})
+            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({
+                constants.USER_EMAIL: email_to, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
