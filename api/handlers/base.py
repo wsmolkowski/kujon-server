@@ -10,6 +10,7 @@ from tornado.web import RequestHandler
 
 from commons import constants, utils
 from commons.UsosCaller import AsyncCaller
+from commons.enumerators import ExceptionTypes
 from commons.errors import AuthenticationError
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
@@ -22,7 +23,7 @@ from commons.mixins.SocialMixin import SocialMixin
 
 
 class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
-    EXCEPTION_TYPE = 'base'
+    EXCEPTION_TYPE = ExceptionTypes.DEFAULT.value
 
     @property
     def db(self):
@@ -145,7 +146,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
-    EXCEPTION_TYPE = 'api'
+    EXCEPTION_TYPE = ExceptionTypes.API.value
 
     def do_refresh(self):  # overwrite from DaoMixin
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):

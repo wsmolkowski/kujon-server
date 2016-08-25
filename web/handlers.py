@@ -9,6 +9,7 @@ from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
 from commons import constants
+from commons.enumerators import ExceptionTypes
 from commons.mixins.JSendMixin import JSendMixin
 from crawler import email_factory
 
@@ -83,7 +84,7 @@ class MainHandler(BaseHandler):
             if user:
                 error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
                     constants.USER_ID: user[constants.MONGO_ID],
-                    'exception_type': 'authentication'
+                    'exception_type': ExceptionTypes.AUTHENTICATION.value
                 })
                 if error:
                     data['error'] = error['exception']

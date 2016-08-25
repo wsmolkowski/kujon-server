@@ -8,6 +8,7 @@ from tornado import auth, gen, web, escape
 
 from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants
+from commons.enumerators import ExceptionTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
@@ -50,7 +51,7 @@ class ArchiveHandler(ApiHandler):
 
 
 class AuthenticationHandler(BaseHandler, JSendMixin):
-    EXCEPTION_TYPE = 'authentication'
+    EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
     @gen.coroutine
     def reset_user_cookie(self, user_doc):

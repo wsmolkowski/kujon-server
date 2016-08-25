@@ -29,3 +29,13 @@ class Environment(Abstract):
     DEVELOPMENT = 'development'
     DEMO = 'demo'
     TESTS = 'tests'
+
+
+class ExceptionTypes(Abstract):
+    DEFAULT = 'default'
+    DAO = 'dao'
+    API = 'api'
+    AUTHENTICATION = 'authentication'
+    CRAWLER = 'crawler'
+    EVENT = 'event'
+    UNKNOWN = 'unknown'
