@@ -155,7 +155,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
     async def initial_user_crawl(self, user_id, refresh=False):
         try:
-            await self._setUp(user_id, refresh)
+            await self._setUp(user_id)
 
             if refresh:
                 skip_collections = [constants.COLLECTION_USERS, constants.COLLECTION_JOBS_QUEUE,
@@ -167,7 +167,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 await self.remove_user_data(skip_collections)
 
             await self.api_user_usos_info()  # info from usos_user_info needed later
-            await self._setUp(user_id, refresh)
+            await self._setUp(user_id)
 
             await self.api_thesis()
             await self.__process_courses_editions()
