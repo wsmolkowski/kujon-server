@@ -10,6 +10,7 @@ from commons import constants, usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.enumerators import Environment
+from crawler import job_factory
 
 utils.initialize_logging('dbutils')
 
@@ -161,6 +162,18 @@ class DbUtils(object):
             return False
         return True
 
+    def remove_user_data(self, user_id, client=False):
+        if not client:
+            client = self.db
+
+        for collection in client.collection_names(include_system_collections=False):
+            if collection in (constants.COLLECTION_USERS,):
+                continue
+
+            exists = client[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            if exists:
+                client[collection].remove({constants.USER_ID: user_id})
+
     def copy_user_credentials(self, email_from, email_to, environment_from, environment_to='demo'):
 
         try:
@@ -180,12 +193,15 @@ class DbUtils(object):
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
-            logging.debug('user_from_doc: {0}'.format(user_from_doc))
+            logging.info('user_from_doc: {0}'.format(user_from_doc))
 
             user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({
                 constants.USER_EMAIL: email_to, constants.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
+
+            logging.info('remove user data')
+            self.remove_user_data(user_to_doc[constants.MONGO_ID], self.db_to)
 
             logging.debug('user_to_doc: {0}'.format(user_to_doc))
 
@@ -198,6 +214,12 @@ class DbUtils(object):
                 {constants.MONGO_ID: user_to_doc[constants.MONGO_ID]}, user_to_doc)
 
             logging.info('collection: {0} updated: {1}'.format(constants.COLLECTION_USERS, updated))
+
+            self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(
+                job_factory.refresh_user_job(user_to_doc[constants.MONGO_ID]))
+
+            logging.info('created refresh task for updated user')
+
         except Exception as ex:
             logging.exception(ex)
         finally:
