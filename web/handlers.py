@@ -4,8 +4,6 @@ import logging
 
 import tornado.web
 from bson import ObjectId
-from bson import json_util
-from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
 from commons import constants
@@ -21,11 +19,15 @@ class BaseHandler(RequestHandler, JSendMixin):
 
     @property
     def db(self):
-        return self.application.settings['db']
+        return self.application.settings[constants.APPLICATION_DB]
 
     @property
     def config(self):
-        return self.application.settings['config']
+        return self.application.settings[constants.APPLICATION_CONFIG]
+
+    @property
+    def aes(self):
+        return self.application.settings[constants.APPLICATION_AES]
 
     def get_config(self):
         return {
@@ -36,14 +38,21 @@ class BaseHandler(RequestHandler, JSendMixin):
         }
 
     async def set_current_user(self):
-        cookie = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
-        if cookie:
-            cookie = json_decode(cookie)
-            response = json_util.loads(cookie)
+        cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
+        if cookie_encrypted:
+            cookie_decrypted = self.aes.decrypt(cookie_encrypted)
+            response = await self.db[constants.COLLECTION_USERS].find_one(
+                {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+
             if constants.USER_NAME not in response and constants.USER_EMAIL in response:
                 response[constants.USER_NAME] = response[constants.USER_EMAIL]
             if constants.PICTURE not in response:
-                response[constants.PICTURE] = None
+                if constants.GOOGLE in response:
+                    response[constants.PICTURE] = response[constants.GOOGLE][constants.GOOGLE_PICTURE]
+                elif constants.FACEBOOK in response:
+                    response[constants.PICTURE] = response[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+                else:
+                    response[constants.PICTURE] = None
 
             return response
         return None
@@ -51,8 +60,7 @@ class BaseHandler(RequestHandler, JSendMixin):
     async def get_usoses(self):
         usoses = []
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-        while (await cursor.fetch_next):
-            usos = cursor.next_object()
+        async for usos in cursor:
             usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
             usoses.append(usos)
 

@@ -22,11 +22,15 @@ class MainHandler(RequestHandler, JSendMixin, DaoMixin):
 
     @property
     def db(self):
-        return self.application.settings['db']
+        return self.application.settings[constants.APPLICATION_DB]
 
     @property
     def config(self):
-        return self.application.settings['config']
+        return self.application.settings[constants.APPLICATION_CONFIG]
+
+    @property
+    def aes(self):
+        return self.application.settings[constants.APPLICATION_AES]
 
     async def user_exists(self, user_id):
         if isinstance(user_id, str):

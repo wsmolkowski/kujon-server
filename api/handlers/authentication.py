@@ -3,8 +3,8 @@
 import logging
 from datetime import datetime, timedelta
 
-from bson import ObjectId, json_util
-from tornado import auth, gen, web, escape
+from bson import ObjectId
+from tornado import auth, gen, web
 
 from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants
@@ -53,16 +53,10 @@ class ArchiveHandler(ApiHandler):
 class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
-    @gen.coroutine
-    def reset_user_cookie(self, user_doc):
-        if constants.USER_NAME not in user_doc and constants.USER_EMAIL in user_doc:
-            user_doc[constants.USER_NAME] = user_doc[constants.USER_EMAIL]
-
+    def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
-                               domain=self.config.SITE_DOMAIN)
-
-        raise gen.Return()
+        encoded = self.aes.encrypt(str(user_id))
+        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
 
 
 class LogoutHandler(AuthenticationHandler):
@@ -116,7 +110,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
 
             user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
-            yield self.reset_user_cookie(user_doc)
+            self.reset_user_cookie(user_doc[constants.MONGO_ID])
 
             self.redirect(self.config.DEPLOY_WEB)
         else:
@@ -166,9 +160,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc[constants.GOOGLE][constants.GOOGLE_TOKEN_TYPE] = access[constants.GOOGLE_TOKEN_TYPE]
 
                 user_doc = yield self.db_insert_user(user_doc)
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: user_doc}, constants.COOKIE_FIELDS)
-                user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
+                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc})
 
             else:
                 user_doc[constants.GOOGLE] = dict()
@@ -186,7 +178,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
                 user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
 
-            yield self.reset_user_cookie(user_doc)
+            self.reset_user_cookie(user_doc[constants.MONGO_ID])
             self.redirect(self.config.DEPLOY_WEB)
 
         else:
@@ -336,7 +328,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
-                yield self.reset_user_cookie(user_doc)
+                self.reset_user_cookie(user_doc[constants.MONGO_ID])
                 self.redirect(self.config.DEPLOY_WEB)
 
             if user_doc:
@@ -348,7 +340,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
 
-                yield self.reset_user_cookie(user_doc)
+                self.reset_user_cookie(user_doc[constants.MONGO_ID])
 
                 yield self._create_jobs(user_doc)
 
