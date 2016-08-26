@@ -22,15 +22,15 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "^3.3.6",
+    "bootstrap": "^3.3.7",
     "crossroads": "^0.12.2",
     "hasher": "^1.2.0",
     "requirejs": "^2.2.0",
-    "text": "requirejs-text#^2.0.15",
+    "text": "^2.0.15",
     "handlebars": "^4.0.5",
-    "fullcalendar": "^2.7.3",
+    "fullcalendar": "^2.9.1",
     "datatables": "^1.10.12",
-    "font-awesome": "fontawesome#^4.6.3",
+    "font-awesome": "^4.6.3",
     "respond": "^1.4.2",
     "html5shiv": "^3.7.3",
     "jquery.cookiebar": "^1.2.1"
