@@ -6,6 +6,7 @@ from datetime import date, time, datetime
 from bson import ObjectId
 
 from commons import constants
+from commons.enumerators import Environment
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -28,7 +29,10 @@ class JSendMixin(object):
         if not cache_age:
             self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         else:
-            self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
+            if self.config.ENVIRONMENT.lower() == Environment.PRODUCTION.value:
+                self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
+            else:
+                self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'success', 'data': data})
 
     def fail(self, message, code=501):

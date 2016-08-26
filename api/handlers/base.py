@@ -9,7 +9,7 @@ from tornado.web import RequestHandler
 
 from commons import constants, utils
 from commons.UsosCaller import AsyncCaller
-from commons.enumerators import ExceptionTypes
+from commons.enumerators import ExceptionTypes, Environment
 from commons.errors import AuthenticationError
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
@@ -160,6 +160,9 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMi
     def do_refresh(self):  # overwrite from DaoMixin
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             return True
+        if self.config.ENVIRONMENT.lower() == Environment.DEMO.value:
+            return True
+
         return False
 
 

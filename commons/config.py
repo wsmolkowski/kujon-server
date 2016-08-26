@@ -33,6 +33,7 @@ class Config(object):
             config_environment = str(config_environment)
 
         self.config = config_parser(config_environment)
+        self.ENVIRONMENT = config_environment
 
         # database
         self.MONGODB_URI = self.config.get('database', 'MONGODB_URI')
