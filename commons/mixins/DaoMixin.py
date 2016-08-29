@@ -270,8 +270,7 @@ class DaoMixin(object):
         return user_doc
 
     async def db_cookie_user_id(self, user_id):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
-                                                                      constants.COOKIE_FIELDS)
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
         if constants.GOOGLE in user_doc:
             user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]

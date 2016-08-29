@@ -4,13 +4,12 @@ import logging
 
 from bson import json_util, ObjectId
 from tornado import web, escape
-from tornado.escape import json_decode
 from tornado.util import ObjectDict
 from tornado.web import RequestHandler
 
 from commons import constants, utils
 from commons.UsosCaller import AsyncCaller
-from commons.enumerators import ExceptionTypes
+from commons.enumerators import ExceptionTypes, Environment
 from commons.errors import AuthenticationError
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
@@ -27,11 +26,15 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
 
     @property
     def db(self):
-        return self.application.settings['db']
+        return self.application.settings[constants.APPLICATION_DB]
 
     @property
     def config(self):
-        return self.application.settings['config']
+        return self.application.settings[constants.APPLICATION_CONFIG]
+
+    @property
+    def aes(self):
+        return self.application.settings[constants.APPLICATION_AES]
 
     def get_remote_ip(self):
         return self.request.headers.get('X-Forwarded-For',
@@ -41,10 +44,11 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
         user = None
 
         if not user:
-            cookie = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
-            if cookie:
-                cookie = json_decode(cookie)
-                user = json_util.loads(cookie)
+            cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
+            if cookie_encrypted:
+                cookie_decrypted = self.aes.decrypt(cookie_encrypted)
+                user = await self.db[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
 
         if not user:
             header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
@@ -156,6 +160,9 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMi
     def do_refresh(self):  # overwrite from DaoMixin
         if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
             return True
+        if self.config.ENVIRONMENT.lower() == Environment.DEMO.value:
+            return True
+
         return False
 
 
