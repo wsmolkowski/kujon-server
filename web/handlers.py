@@ -35,6 +35,7 @@ class BaseHandler(RequestHandler, JSendMixin):
             'KUJON_SECURE_COOKIE': self.config.COOKIE_SECRET,
             'API_URL': self.config.DEPLOY_API,
             'WEB_VERSION': self.config.WEB_VERSION,
+            'DEPLOY_WEB': self.config.DEPLOY_WEB,
         }
 
     async def set_current_user(self):
