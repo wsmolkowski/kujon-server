@@ -84,7 +84,6 @@ class TTApi(ApiHandler):
                     tt_data['lecturers'] = await self._lecturers_info(tt_data['lecturer_ids'])
                 else:
                     tt_data['lecturers'] = len(tt_data['lecturer_ids'])
-                del (tt_data['lecturer_ids'])
             else:
                 tt_data['lecturers'] = list()
 
