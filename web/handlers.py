@@ -47,13 +47,18 @@ class BaseHandler(RequestHandler, JSendMixin):
 
             if constants.USER_NAME not in response and constants.USER_EMAIL in response:
                 response[constants.USER_NAME] = response[constants.USER_EMAIL]
-            if constants.PICTURE not in response:
-                if constants.GOOGLE in response:
+
+            response[constants.PICTURE] = None
+
+            if constants.USOS_USER_ID in response:
+                user_info = await self.db[constants.COLLECTION_USERS_INFO].find_one(
+                    {constants.ID: response[constants.USOS_USER_ID], constants.USOS_ID: response[constants.USOS_ID]})
+                if constants.PHOTO_URL in user_info:
+                    response[constants.PICTURE] = user_info[constants.PHOTO_URL]
+                elif constants.GOOGLE in response:
                     response[constants.PICTURE] = response[constants.GOOGLE][constants.GOOGLE_PICTURE]
                 elif constants.FACEBOOK in response:
                     response[constants.PICTURE] = response[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
-                else:
-                    response[constants.PICTURE] = None
 
             return response
         return None
