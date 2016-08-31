@@ -11,7 +11,7 @@ from tornado.ioloop import IOLoop
 from tornado.testing import AsyncHTTPTestCase
 
 from api import server
-from commons import constants
+from commons import constants, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.enumerators import Environment
@@ -87,6 +87,7 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
+        self.http_client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     @classmethod
     def tearDownClass(self):
