@@ -6,6 +6,11 @@ from tests.base import AbstractApplicationTestBase
 
 
 class ApiRestTest(AbstractApplicationTestBase):
+    def setUp(self):
+        super(ApiRestTest, self).setUp()
+        self.prepareDatabase(self.config)
+        self.inser_user(config=self.config)
+
     @gen_test(timeout=30)
     def testConfig(self):
         response = yield self.http_client.fetch(self.get_url('/config'))
@@ -23,20 +28,20 @@ class ApiRestTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=30)
     def termsTheses(self):
-        self.fetch_assert(self.get_url('/theses'))
+        yield self.fetch_assert(self.get_url('/theses'))
 
     @gen_test(timeout=30)
     def termsCrstests(self):
-        self.fetch_assert(self.get_url('/crstests'))
+        yield self.fetch_assert(self.get_url('/crstests'))
 
     @gen_test(timeout=30)
     def termsCrstestsSingle(self):
-        self.fetch_assert(self.get_url('/crstests/123'))
+        yield self.fetch_assert(self.get_url('/crstests/123'))
 
     @gen_test(timeout=30)
     def termsSubscriptions(self):
-        self.fetch_assert(self.get_url('/subscriptions'))
+        yield self.fetch_assert(self.get_url('/subscriptions'))
 
     @gen_test(timeout=30)
     def termsMessages(self):
-        self.fetch_assert(self.get_url('/messages'))
+        yield self.fetch_assert(self.get_url('/messages'))
