@@ -24,7 +24,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
     def __init__(self, config):
         self.config = config
-        self._aes = AESCipher(self._config.AES_SECRET)
+        self._aes = AESCipher(self.config.AES_SECRET)
 
     @property
     def aes(self):
