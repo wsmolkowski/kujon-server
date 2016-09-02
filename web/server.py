@@ -13,7 +13,8 @@ from tornado.options import parse_command_line, define, options
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
-from web.handlers import MainHandler, ContactHandler, DisclaimerHandler, DefaultErrorHandler
+from commons.handlers import DefaultErrorHandler
+from web.handlers import MainHandler, ContactHandler, DisclaimerHandler
 
 define('environment', default='development')
 

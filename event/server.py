@@ -12,7 +12,8 @@ from tornado.options import parse_command_line, define, options
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
-from event.handlers import EventHandler, DefaultErrorHandler
+from commons.handlers import DefaultErrorHandler
+from event.handlers import EventHandler
 
 define('environment', default='development')
 
