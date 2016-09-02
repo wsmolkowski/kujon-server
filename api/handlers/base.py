@@ -3,6 +3,7 @@
 import logging
 
 from bson import json_util, ObjectId
+from cryptography.fernet import InvalidToken
 from tornado import web, escape
 from tornado.util import ObjectDict
 from tornado.web import RequestHandler
@@ -46,9 +47,13 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
         if not user:
             cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
             if cookie_encrypted:
-                cookie_decrypted = self.aes.decrypt(cookie_encrypted)
-                user = await self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+                try:
+                    cookie_decrypted = self.aes.decrypt(cookie_encrypted).decode()
+                    user = await self.db[constants.COLLECTION_USERS].find_one(
+                        {constants.MONGO_ID: ObjectId(cookie_decrypted)})
+                except InvalidToken as ex:
+                    logging.exception(ex)
+                    self.clear_cookie(self.config.KUJON_SECURE_COOKIE)                    
 
         if not user:
             header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
