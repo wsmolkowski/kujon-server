@@ -9,6 +9,7 @@ from tornado import gen
 from tornado.util import ObjectDict
 
 from commons import constants, utils
+from commons.AESCipher import AESCipher
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.enumerators import ExceptionTypes
 from commons.mixins.ApiMixin import ApiMixin
@@ -23,7 +24,11 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
     def __init__(self, config):
         self.config = config
-        # self._aes = AESCipher(self._config.AES_SECRET.encode())
+        self._aes = AESCipher(self._config.AES_SECRET)
+
+    @property
+    def aes(self):
+        return self._aes
 
     async def _setUp(self, user_id, refresh=False):
         if isinstance(user_id, str):
@@ -59,6 +64,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 return self.get_current_user()[constants.MONGO_ID]
             return str(self.get_current_user()[constants.MONGO_ID])
         return None
+
+    def getEncryptedUserId(self):
+        return self.aes.encrypt(self.getUserId(return_object_id=False)).decode()
 
     def getUsosId(self):
         if self.get_current_usos():
@@ -196,8 +204,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                                                                      arguments={
                                                                          'event_type': event_type,
                                                                          'callback_url': callback_url,
-                                                                         'verify_token':
-                                                                             self.getUserId(return_object_id=False)
+                                                                         'verify_token': self.getEncryptedUserId()
                                                                      })
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]

@@ -9,7 +9,6 @@ from bson.objectid import ObjectId
 from tornado.httpclient import HTTPError
 
 from commons import constants
-from commons.AESCipher import AESCipher
 from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError
@@ -35,14 +34,6 @@ class DaoMixin(object):
         if not self._db:
             self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
         return self._db[self.config.MONGODB_NAME]
-
-    _aes = None
-
-    @property
-    def aes(self):
-        if not self._aes:
-            self._aes = AESCipher(self.config.AES_SECRET)
-        return self._aes
 
     async def exc(self, exception, finish=True):
         logging.exception(exception)

@@ -10,11 +10,11 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
-from api.handlers.base import DefaultErrorHandler
 from api.handlers_list import HANDLERS
 from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.handlers import DefaultErrorHandler
 
 define('environment', default='development')
 

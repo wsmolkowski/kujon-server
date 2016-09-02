@@ -2,7 +2,7 @@
 
 from tornado.testing import gen_test
 
-from tests.base import AbstractApplicationTestBase
+from tests.api_tests.base import AbstractApplicationTestBase
 
 
 class ApiRestTest(AbstractApplicationTestBase):

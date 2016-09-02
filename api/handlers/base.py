@@ -2,44 +2,27 @@
 
 import logging
 
-from bson import json_util, ObjectId
+from bson import ObjectId
 from cryptography.fernet import InvalidToken
-from tornado import web, escape
+from tornado import web
 from tornado.util import ObjectDict
-from tornado.web import RequestHandler
 
 from commons import constants, utils
 from commons.UsosCaller import AsyncCaller
 from commons.enumerators import ExceptionTypes, Environment
 from commons.errors import AuthenticationError
+from commons.handlers import AbstractHandler
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
-from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.SocialMixin import SocialMixin
 
 
-class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
+class BaseHandler(AbstractHandler, SocialMixin):
     EXCEPTION_TYPE = ExceptionTypes.DEFAULT.value
-
-    @property
-    def db(self):
-        return self.application.settings[constants.APPLICATION_DB]
-
-    @property
-    def config(self):
-        return self.application.settings[constants.APPLICATION_CONFIG]
-
-    @property
-    def aes(self):
-        return self.application.settings[constants.APPLICATION_AES]
-
-    def get_remote_ip(self):
-        return self.request.headers.get('X-Forwarded-For',
-                                        self.request.headers.get('X-Real-Ip', self.request.remote_ip))
 
     async def _prepare_user(self):
         user = None
@@ -53,7 +36,7 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
                         {constants.MONGO_ID: ObjectId(cookie_decrypted)})
                 except InvalidToken as ex:
                     logging.exception(ex)
-                    self.clear_cookie(self.config.KUJON_SECURE_COOKIE)                    
+                    self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
 
         if not user:
             header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
@@ -153,10 +136,10 @@ class BaseHandler(RequestHandler, DaoMixin, SocialMixin):
     def get_auth_http_client(self):
         return utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
-    def reset_user_cookie(self, user_doc):
-        self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
-        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, escape.json_encode(json_util.dumps(user_doc)),
-                               domain=self.config.SITE_DOMAIN)
+    def reset_user_cookie(self, user_id):
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        encoded = self.aes.encrypt(str(user_id))
+        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
@@ -180,12 +163,6 @@ class UsosesApi(BaseHandler, JSendMixin):
             usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
 
         self.success(usoses, cache_age=constants.SECONDS_HOUR)
-
-
-class DefaultErrorHandler(BaseHandler, JSendMixin):
-    @web.asynchronous
-    async def get(self):
-        self.fail(message='Strona o podanym adresie nie istnieje.', code=404)
 
 
 class ApplicationConfigHandler(BaseHandler, JSendMixin):

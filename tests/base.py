@@ -3,16 +3,12 @@
 import logging
 from datetime import datetime
 
-import motor.motor_tornado
 from pymongo import MongoClient
 from tornado import escape
 from tornado import gen
-from tornado.ioloop import IOLoop
 from tornado.testing import AsyncHTTPTestCase
 
-from api import server
 from commons import constants, utils
-from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
@@ -60,6 +56,9 @@ TOKEN_DOC = {"locale": "pl",
 
 
 class BaseTestClass(AsyncHTTPTestCase):
+    # def get_new_ioloop(self):
+    #     return IOLoop.current()
+
     @staticmethod
     def inser_user(config, user_doc=None, token_doc=None):
 
@@ -71,8 +70,10 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
-        client_db[constants.COLLECTION_USERS].insert(user_doc)
-        client_db[constants.COLLECTION_TOKENS].insert(token_doc)
+        user_id = client_db[constants.COLLECTION_USERS].insert(user_doc)
+        token_id = client_db[constants.COLLECTION_TOKENS].insert(token_doc)
+
+        return user_id, token_id
 
     @staticmethod
     def prepareDatabase(config):
@@ -82,52 +83,26 @@ class BaseTestClass(AsyncHTTPTestCase):
 
     @classmethod
     def setUpClass(self):
-        self.USER_DOC = USER_DOC
-        self.TOKEN_DOC = TOKEN_DOC
+        super(BaseTestClass, self).setUpClass()
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
-        self.http_client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
-
-    @classmethod
-    def tearDownClass(self):
-        super(BaseTestClass, self).tearDown()
-        logging.info("Finishing tests for class: {0}".format(self.__name__))
-
-    def get_new_ioloop(self):
-        return IOLoop.instance()
-
-
-class AbstractApplicationTestBase(BaseTestClass):
-    @classmethod
-    def setUpClass(self):
-        super(AbstractApplicationTestBase, self).setUpClass()
-
-        self.application = server.get_application(self.config)
-        db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
-        logging.info(db)
-        self.application.settings[constants.APPLICATION_DB] = db
-        self.application.settings[constants.APPLICATION_CONFIG] = self.config
-        self.application.settings[constants.APPLICATION_AES] = AESCipher(self.config.AES_SECRET)
-
-    @classmethod
-    def tearDownClass(self):
-        logging.info("Finishing tests for class: {0}".format(self.__name__))
-
-    def get_app(self):
-        return self.application
-
-    def get_new_ioloop(self):
-        return IOLoop.instance()
+        self.client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     @gen.coroutine
-    def fetch_assert(self, url):
-        response = yield self.http_client.fetch(url, headers={
+    def fetch_assert(self, url, assert_response=True):
+        # request = HTTPRequest(url=self.get_url('/'))
+        # with self.assertRaises(tornado.httpclient.HTTPError) as context:
+        #     yield self.http_client.fetch(request)
+
+        response = yield self.client.fetch(url, headers={
             constants.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
             constants.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
             constants.MOBILE_X_HEADER_REFRESH: 'True',
         })
-        self.assertApiResponse(response)
+
+        if assert_response:
+            self.assertApiResponse(response)
 
         return response
 

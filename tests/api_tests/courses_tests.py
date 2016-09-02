@@ -2,7 +2,7 @@
 
 from tornado.testing import gen_test
 
-from tests.base import AbstractApplicationTestBase
+from tests.api_tests.base import AbstractApplicationTestBase
 
 
 class ApiCoursesTest(AbstractApplicationTestBase):
@@ -20,8 +20,8 @@ class ApiCoursesTest(AbstractApplicationTestBase):
         yield self.fetch_assert(self.get_url('/courseseditionsbyterm'))
 
     @gen_test(timeout=30)
-    def testCourseseditions(self):
-        yield self.fetch_assert(self.get_url('/courseseditions/123/456'))
+    def testCourseseditionsCourseIdTermId(self):
+        yield self.fetch_assert(self.get_url('/courseseditions/4018-WYK18E-OG/2014'))
 
     @gen_test(timeout=30)
     def testCourses(self):

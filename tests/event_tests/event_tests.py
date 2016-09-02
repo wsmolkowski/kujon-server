@@ -2,9 +2,12 @@
 
 from datetime import datetime
 
-from tornado.testing import gen_test
+import motor.motor_tornado
 
-from tests.api_tests.base import AbstractApplicationTestBase
+from commons import constants
+from commons.AESCipher import AESCipher
+from event.server import get_application
+from tests.base import BaseTestClass
 
 USER_DOC = {"access_token_secret": "cjFPyKjDk5GNTcqpxeEsfWuhd9bLApbaw7ECfqHv",
             "access_token_key": "VkyGQdtREPCvULQnQ4uF",
@@ -27,45 +30,39 @@ USER_DOC = {"access_token_secret": "cjFPyKjDk5GNTcqpxeEsfWuhd9bLApbaw7ECfqHv",
                 "expires_in": datetime.now()},
             }
 
-TOKEN_DOC = {"locale": "pl",
-             "name": "imie nazwisko",
-             "iat": "1471441024",
-             "picture": "https://lh3.googleusercontent.com/-f7w-r4iF8DM/AAAAAAAAAAI/AAAAAAAALGo/GDUJeUaHtUo/photo.jpg",
-             "email": "testowy@gmail.com",
-             "sub": "101491399228182082844",
-             "created_time": datetime.now(),
-             "update_time": datetime.now(),
-             "login_type": "GOOGLE",
-             "alg": "RS256",
-             "usos_id": "UWR",
-             "given_name": "dzizes451@gmail.com",
-             "iss": "https://accounts.google.com",
-             "family_name": "dzizes451",
-             "email_verified": "true",
-             "kid": "a3c737a7b795026217d05be98f8736bd09a69d0d",
-             "aud": "896765768628-4tb5sl5l115mcjbavsvgjiinovtifm6p.apps.googleusercontent.com",
-             "exp": "1471444624",
-             "azp": "896765768628-e6ja58ug43hacq7usqnmn5uakgvnorvd.apps.googleusercontent.com"}
 
+class EventTest(BaseTestClass):
+    def get_app(self):
+        application = get_application(self.config)
+        db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+        application.settings[constants.APPLICATION_DB] = db
+        application.settings[constants.APPLICATION_CONFIG] = self.config
+        application.settings[constants.APPLICATION_AES] = AESCipher(self.config.AES_SECRET)
 
-class ApiTTTest(AbstractApplicationTestBase):
-    def setUp(self):
-        super(ApiTTTest, self).setUp()
+        return application
+
+    # @gen_test(timeout=50)
+    def testEvent(self):
+        # assume
+        challange = 'BKHeL7VXuPDttqDVzWne'
         self.prepareDatabase(self.config)
-        self.inser_user(config=self.config, user_doc=USER_DOC, token_doc=TOKEN_DOC)
 
-    @gen_test(timeout=30)
-    def testTT(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05'))
+        result = self.inser_user(config=self.config, user_doc=USER_DOC)
+        user_id = str(result[0])
 
-    @gen_test(timeout=30)
-    def testTTLecturersFalse(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05?lecturers_info=False'))
+        aes = AESCipher(self.config.AES_SECRET)
+        verify_token = aes.encrypt(user_id).decode()
 
-    @gen_test(timeout=30)
-    def testTTDays(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05?days=1'))
+        url = '/{0}?hub.mode=subscribe&hub.challenge={1}&hub.verify_token={2}'.format(
+            USER_DOC[constants.USOS_ID], challange, verify_token)
 
-    @gen_test(timeout=30)
-    def testTTFake(self):
-        yield self.fetch_assert(self.get_url('/tt/Fake'))
+        # when
+        # result = yield self.client.fetch(self.get_url(url))
+        result = self.fetch(url, method='GET', headers={
+            constants.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            constants.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
+            constants.MOBILE_X_HEADER_REFRESH: 'True',
+        })
+
+        # then
+        self.assertEquals(challange, result.body)
