@@ -51,7 +51,10 @@ class UserInfoApi(ApiHandler):
             if not user_info or not user_doc:
                 raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
-            user_doc.update(user_info)
+            # upgrade only with values or insert new keys + values
+            for k, v in list(user_info.items()):
+                if k not in user_doc and user_info[k]:
+                    user_doc[k] = user_info[k]
 
             # check if get photo needed
             if constants.PHOTO_URL in user_doc and user_doc[constants.PHOTO_URL]:

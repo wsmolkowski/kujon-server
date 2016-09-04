@@ -4,28 +4,17 @@ import logging
 
 import tornado.web
 from bson import ObjectId
-from bson import json_util
-from tornado.escape import json_decode
-from tornado.web import RequestHandler
 
 from commons import constants
 from commons.enumerators import ExceptionTypes
-from commons.mixins.JSendMixin import JSendMixin
+from commons.handlers import AbstractHandler
 from crawler import email_factory
 
 CONFIG_COOKIE_EXPIRATION = 1
 
 
-class BaseHandler(RequestHandler, JSendMixin):
+class BaseHandler(AbstractHandler):
     SUPPORTED_METHODS = ('GET',)
-
-    @property
-    def db(self):
-        return self.application.settings['db']
-
-    @property
-    def config(self):
-        return self.application.settings['config']
 
     def get_config(self):
         return {
@@ -33,30 +22,33 @@ class BaseHandler(RequestHandler, JSendMixin):
             'KUJON_SECURE_COOKIE': self.config.COOKIE_SECRET,
             'API_URL': self.config.DEPLOY_API,
             'WEB_VERSION': self.config.WEB_VERSION,
+            'DEPLOY_WEB': self.config.DEPLOY_WEB,
         }
 
     async def set_current_user(self):
-        cookie = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
-        if cookie:
-            cookie = json_decode(cookie)
-            response = json_util.loads(cookie)
+        cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
+        if cookie_encrypted:
+            cookie_decrypted = self.aes.decrypt(cookie_encrypted)
+            response = await self.db[constants.COLLECTION_USERS].find_one(
+                {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+
             if constants.USER_NAME not in response and constants.USER_EMAIL in response:
                 response[constants.USER_NAME] = response[constants.USER_EMAIL]
-            if constants.PICTURE not in response:
-                response[constants.PICTURE] = None
+
+            response[constants.PICTURE] = None
+
+            if constants.USOS_USER_ID in response:
+                user_info = await self.db[constants.COLLECTION_USERS_INFO].find_one(
+                    {constants.ID: response[constants.USOS_USER_ID], constants.USOS_ID: response[constants.USOS_ID]})
+                if constants.PHOTO_URL in user_info:
+                    response[constants.PICTURE] = user_info[constants.PHOTO_URL]
+                elif constants.GOOGLE in response:
+                    response[constants.PICTURE] = response[constants.GOOGLE][constants.GOOGLE_PICTURE]
+                elif constants.FACEBOOK in response:
+                    response[constants.PICTURE] = response[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
 
             return response
         return None
-
-    async def get_usoses(self):
-        usoses = []
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-        while (await cursor.fetch_next):
-            usos = cursor.next_object()
-            usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
-            usoses.append(usos)
-
-        return usoses
 
     async def prepare(self):
         self._current_user = await self.set_current_user()
@@ -137,10 +129,3 @@ class DisclaimerHandler(BaseHandler):
     def get(self):
         self.render("disclaimer.html", **self.get_config())
 
-
-class DefaultErrorHandler(BaseHandler):
-    @tornado.web.asynchronous
-    def get(self):
-        data = self.get_config()
-        data['MESSAGE'] = '404 - Strona o podanym adresie nie istnieje.'
-        self.render('error.html', **data)

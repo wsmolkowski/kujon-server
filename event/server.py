@@ -9,8 +9,11 @@ import tornado.web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
+from commons import constants
+from commons.AESCipher import AESCipher
 from commons.config import Config
-from event.handlers import EventHandler, DefaultErrorHandler
+from commons.handlers import DefaultErrorHandler
+from event.handlers import EventHandler
 
 define('environment', default='development')
 
@@ -58,9 +61,9 @@ def main():
 
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
     logging.info(db)
-    application.settings['db'] = db
-    logging.info(config.DEPLOY_EVENT)
-    application.settings['config'] = config
+    application.settings[constants.APPLICATION_DB] = db
+    application.settings[constants.APPLICATION_CONFIG] = config
+    application.settings[constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
     tornado.ioloop.IOLoop.current().start()
 
 

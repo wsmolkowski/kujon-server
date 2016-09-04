@@ -43,7 +43,7 @@
                                                 </div>
                                                 <div class="col-sm-6 col-xs-6">
                                                     <p><span>E-mail</span></p>
-                                                    <p>{{user_email}}</p>
+                                                    <p>{{email}}</p>
                                                 </div>
                                                 <div class="col-sm-6 col-xs-6 status-profil">
                                                     <p><span>Status studenta</span></p>
@@ -84,9 +84,14 @@
                                                     <p><span>E-mail</span></p>
                                                     <p>{{google.email}}</p>
                                                 </div>
+                                                <div class="col-sm-6 col-xs-12">
+                                                    {{#if google.picture}}
+                                                    <img src="{{google.picture}}" alt="{{google.name}}"
+                                                         class="img-responsive profil-img"> {{/if}}
+                                                </div>
                                             </div>
                                         </div>
-                                        {{/if}} {{#if fb}}
+                                        {{/if}} {{#if facebook}}
                                         <div class="col-md-6">
                                             <div class="dane dane-fb">
                                                 <p><span class="fa fa-facebook"></span>Dane z Facebook
@@ -95,11 +100,16 @@
                                             <div class="row">
                                                 <div class="col-sm-6 col-xs-6">
                                                     <p><span>Konto</span></p>
-                                                    <p>Facebook</p>
+                                                    <p>{{facebook.name}}</p>
                                                 </div>
                                                 <div class="col-sm-6 col-xs-12">
                                                     <p><span>E-mail</span></p>
-                                                    <p>{{user_email}}</p>
+                                                    <p>{{email}}</p>
+                                                </div>
+                                                <div class="col-sm-6 col-xs-12">
+                                                    {{#if facebook.picture}}
+                                                    <img src="{{facebook.picture}}" alt="{{facebook.name}}"
+                                                         class="img-responsive profil-img"> {{/if}}
                                                 </div>
                                             </div>
                                         </div>

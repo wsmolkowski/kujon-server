@@ -27,7 +27,17 @@ class TTApi(ApiHandler):
 
         return lecturers_infos
 
-    async def api_tt(self, given_date):
+    async def api_tt(self, given_date, lecturers_info=None, days=None):
+        '''
+
+        :param given_date: A date string, yyyy-mm-dd format
+        :param lecturers_info: if True then extra data will be feched from USUS for each lecturer_id
+        :param days: if None then data for next 7 days will be feched from USUS
+        :return:
+        '''
+
+        if not days:
+            days = '7'
 
         try:
             if isinstance(given_date, str):
@@ -47,7 +57,7 @@ class TTApi(ApiHandler):
                 arguments={
                     'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
                     'start': given_date,
-                    'days': '7'
+                    'days': days
                 })
 
             if not tt_response:
@@ -60,21 +70,22 @@ class TTApi(ApiHandler):
 
             # await self.db_insert(constants.COLLECTION_TT, tt_doc)
 
-        for t in tt_doc['tts']:
-            t['name'] = t['name']['pl']
-            t[constants.COURSE_NAME] = t[constants.COURSE_NAME]['pl']
-            t['building_name'] = t['building_name']['pl']
-            if t['type'] == 'classgroup':
-                t['type'] = 'zajęcia'
-            elif t['type'] == 'exam':
-                t['type'] = 'egzamin'
+        for tt_data in tt_doc['tts']:
+            tt_data['name'] = tt_data['name']['pl']
+            tt_data[constants.COURSE_NAME] = tt_data[constants.COURSE_NAME]['pl']
+            tt_data['building_name'] = tt_data['building_name']['pl']
+            if tt_data['type'] == 'classgroup':
+                tt_data['type'] = 'zajęcia'
+            elif tt_data['type'] == 'exam':
+                tt_data['type'] = 'egzamin'
 
-            if 'lecturer_ids' in t:
-                t['lecturers'] = await self._lecturers_info(t['lecturer_ids'])
-
-                del (t['lecturer_ids'])
+            if 'lecturer_ids' in tt_data:
+                if lecturers_info:
+                    tt_data['lecturers'] = await self._lecturers_info(tt_data['lecturer_ids'])
+                else:
+                    tt_data['lecturers'] = len(tt_data['lecturer_ids'])
             else:
-                t['lecturers'] = list()
+                tt_data['lecturers'] = list()
 
         return tt_doc['tts']
 
@@ -82,8 +93,14 @@ class TTApi(ApiHandler):
     @web.asynchronous
     async def get(self, given_date):
 
+        lecturers_info = self.get_argument('lecturers_info', default=True)
+        if lecturers_info == 'False':
+            lecturers_info = False  # whatever is passed than convert to True
+
+        days = self.get_argument('days', default=None)
+
         try:
-            tt_doc = await self.api_tt(given_date)
+            tt_doc = await self.api_tt(given_date, lecturers_info, days)
             self.success(tt_doc, cache_age=constants.SECONDS_1WEEK)
         except (ApiError, CallerError) as ex:
             logging.debug(ex)

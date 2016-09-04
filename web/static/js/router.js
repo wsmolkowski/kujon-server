@@ -24,7 +24,7 @@ define(['jquery', 'handlebars', 'crossroads', 'hasher', 'text!templates/spinner.
 
         // "_=_" is added on callback from facebook - should be removed
         crossroads.addRoute('_=_', function() {
-            setActiveLink('home');
+            setActiveLink('index');
         });
 
         crossroads.addRoute('user/{id}', function(id) {

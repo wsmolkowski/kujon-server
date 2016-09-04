@@ -9,7 +9,6 @@ from bson.objectid import ObjectId
 from tornado.httpclient import HTTPError
 
 from commons import constants
-from commons.AESCipher import AESCipher
 from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError
@@ -35,14 +34,6 @@ class DaoMixin(object):
         if not self._db:
             self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
         return self._db[self.config.MONGODB_NAME]
-
-    _aes = None
-
-    @property
-    def aes(self):
-        if not self._aes:
-            self._aes = AESCipher(self.config.AES_SECRET)
-        return self._aes
 
     async def exc(self, exception, finish=True):
         logging.exception(exception)
@@ -270,8 +261,7 @@ class DaoMixin(object):
         return user_doc
 
     async def db_cookie_user_id(self, user_id):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id},
-                                                                      constants.COOKIE_FIELDS)
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
         if constants.GOOGLE in user_doc:
             user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]

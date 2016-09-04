@@ -4,39 +4,19 @@ import json
 import logging
 from datetime import datetime
 
-from bson.objectid import ObjectId
 from tornado import web
-from tornado.web import RequestHandler
 
 from commons import constants
 from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import AuthenticationError
-from commons.mixins.DaoMixin import DaoMixin
-from commons.mixins.JSendMixin import JSendMixin
+from commons.handlers import AbstractHandler
 
 
-class MainHandler(RequestHandler, JSendMixin, DaoMixin):
+class EventHandler(AbstractHandler):
     SUPPORTED_METHODS = ('GET', 'POST')
     EXCEPTION_TYPE = ExceptionTypes.EVENT.value
 
-    @property
-    def db(self):
-        return self.application.settings['db']
-
-    @property
-    def config(self):
-        return self.application.settings['config']
-
-    async def user_exists(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
-        return user_doc
-
-
-class EventHandler(MainHandler):
     @web.asynchronous
     async def prepare(self):
         header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
@@ -46,6 +26,8 @@ class EventHandler(MainHandler):
     @web.asynchronous
     async def get(self, usos_id):
         try:
+            self.usos_id = usos_id
+
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
             verify_token = self.get_argument('hub.verify_token', default=None)
@@ -54,10 +36,11 @@ class EventHandler(MainHandler):
                 logging.error('Required parameters not passed.')
                 self.error(code=400, message='Required parameters not passed.')
             else:
-                # enable for production :)
-                # user_exists = await self.user_exists(verify_token)
+                # verify_token = self.aes.decrypt(verify_token.encode()).decode()
+                # user_exists = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(verify_token)})
+                #
                 # if not user_exists:
-                #    logging.error('Token verification failure for verify_token: {0}'.format(self.argument_verify_token))
+                #     logging.error('Token verification failure for verify_token (user_id): {0}'.format(verify_token))
                 #    self.fail(message='Token verification failure.')
 
                 logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
@@ -92,9 +75,3 @@ class EventHandler(MainHandler):
             self.success(data='event consumed')
         except Exception as ex:
             await self.exc(ex)
-
-
-class DefaultErrorHandler(RequestHandler, JSendMixin):
-    @web.asynchronous
-    def get(self):
-        self.error(message='Strona o podanym adresie nie istnieje.', code=401)
