@@ -1,11 +1,9 @@
 # coding=UTF-8
 
 # brakujące:
-# ur.krakow.pl -> brak wystawionego API
 # aps.edu.pl -> brak wystawionego API
-# po.edu.pl -> brak wystawionego API
-# up.wroc.pl -> brak wystaionego API
-# prawowroclaw.edu.pl -> brak wystawionego API
+# po.edu.pl -> brak wystawionego API bardzo stary usos
+# prawowroclaw.edu.pl -> brak wystawionego API bardzo stary usos
 # wsb.net.pl -> brak wystawionego API
 # ajd.czest.pl -> brak wystawionego API
 
@@ -18,7 +16,7 @@ USOSINSTANCES = [
      'consumer_secret': 'Bm7wwuKSekhZKFs77GmP4vxHKgf4B7nFmSzUfWeG',
      'contact': 'dsksysadm@adm.uw.edu.pl',
      'phone': '225520527',
-     'enabled': False,  # MS wylaczam - klucze nie dzialaja
+     'enabled': False,  # Potrzebna umowa
      'validate_ssl_certificate': True,
      },
     {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
@@ -131,12 +129,12 @@ USOSINSTANCES = [
      'enabled': False,
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UP',  # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
+    {'usos_id': 'UPWR',  # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
-     'consumer_key': 'rc3EFkbrSaTKD8fVbTPC',
-     'consumer_secret': 'z8ywNGmCYNdYB9JDHU6EAH2HSGgXebLZkytWGAcN',
+     'consumer_key': 'sA4agLyJL58nrZqTMRAL',
+     'consumer_secret': 'HDjxF7uSEsqZq3v57EruJz8gzgxVRjCYzLhnpmC8',
      'contact': 'usos@up.wroc.pl',
      'enabled': False,
      'validate_ssl_certificate': False
@@ -213,7 +211,7 @@ USOSINSTANCES = [
      },
     {'usos_id': 'UTP',
      'name': 'Uniwersytet Technologiczno-Przyrodniczy w Bydgoszczy',
-     'url': 'https://usosapps.utp.edu.pl/',
+     'url': 'https://usosapps.utpf.edu.pl/',
      'logo': '/static/img/logo/logo-utp-64x64.jpg',
      'consumer_key': 'rBERUVJHqqxuNFzzxzvs',
      'consumer_secret': 'hgY9Z8R3FCzCW2yZK4E53XxdpAzRvLgSnmLuszZN',
@@ -251,6 +249,16 @@ USOSINSTANCES = [
      'enabled': True,
      'validate_ssl_certificate': False
      },
+     {'usos_id': 'URK',
+      'name': 'Uniwersytet Rolniczy w Krakowie',
+      'url': 'https://usosapi.ur.krakow.pl/',
+      'logo': '/static/img/logo/logo-urk-64x64.jpg',
+      'consumer_key': 'ZAKphbWBjcVdtwJD3veP',
+      'consumer_secret': 'eb4sbStDWsZG5U7aSA4Rh5RAMesHu33LCxQuhCEM',
+      'contact': 'wdrozenia@usos.edu.pl',
+      'enabled': True,
+      'validate_ssl_certificate': True,
+      },
     {'usos_id': 'PWSZ-Kalisz',
      'name': 'Państwowa Wyższa Szkoła Zawodowa w Kaliszu',
      'url': 'https://apps.pwsz.kalisz.pl/',
@@ -268,7 +276,7 @@ USOSINSTANCES = [
      'consumer_key': 'kNBmFG6vvEN6kN265qwB',
      'consumer_secret': 'hMrSp9F7cR2HKqc9e8c7zUeEQHVSTCrQwJUExwZZ',
      'contact': 'mateusz.lorenc@pwsz.krosno.pl',
-     'enabled': False,  # [Errno 11002] getaddrinfo failed INTERNAL SERVER ERROR
+     'enabled': True,
      'validate_ssl_certificate': False
      },
     {'usos_id': 'UTH',
