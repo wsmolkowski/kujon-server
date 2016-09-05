@@ -250,14 +250,6 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
             await self._setUp(user_doc[constants.MONGO_ID])
 
-            # usos_doc = await self.db_get_usos(user_doc[constants.USOS_ID])
-            # context = ObjectDict()
-            # context.base_uri = usos_doc[constants.USOS_URL]
-            # context.consumer_token = dict(key=usos_doc[constants.CONSUMER_KEY],
-            #                               secret=usos_doc[constants.CONSUMER_SECRET])
-            # context.access_token = dict(key=user_doc[constants.ACCESS_TOKEN_KEY],
-            #                             secret=user_doc[constants.ACCESS_TOKEN_SECRET])
-
             caller = UsosCaller(self._context)
 
             user_point = await caller.call(path='services/crstests/user_point',
