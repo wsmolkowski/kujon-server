@@ -22,9 +22,12 @@ class EventHandler(AbstractHandler):
         await super(EventHandler, self).prepare()
 
         verify_token = self.get_argument('hub.verify_token', default=None)
-        verify_token = self.aes.decrypt(verify_token.encode()).decode()
-        self._context.user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: ObjectId(verify_token)})
+        if verify_token:
+            verify_token = self.aes.decrypt(verify_token.encode()).decode()
+            self._context.user_doc = await self.db[constants.COLLECTION_USERS].find_one(
+                {constants.MONGO_ID: ObjectId(verify_token)})
+        else:
+            self._context.user_doc = None
 
         header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
