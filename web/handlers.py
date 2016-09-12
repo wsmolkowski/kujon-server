@@ -25,7 +25,7 @@ class BaseHandler(AbstractHandler):
             'DEPLOY_WEB': self.config.DEPLOY_WEB,
         }
 
-    async def set_current_user(self):
+    async def _prepare_user(self):
         cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
         if cookie_encrypted:
             cookie_decrypted = self.aes.decrypt(cookie_encrypted)
@@ -53,12 +53,6 @@ class BaseHandler(AbstractHandler):
 
             return response
         return
-
-    async def prepare(self):
-        self._current_user = await self.set_current_user()
-
-    def get_current_user(self):
-        return self._current_user
 
 
 class MainHandler(BaseHandler):

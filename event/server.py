@@ -64,6 +64,8 @@ def main():
     application.settings[constants.APPLICATION_DB] = db
     application.settings[constants.APPLICATION_CONFIG] = config
     application.settings[constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
+
+    logging.info(config.DEPLOY_EVENT)
     tornado.ioloop.IOLoop.current().start()
 
 
