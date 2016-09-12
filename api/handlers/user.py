@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
 from commons import usosinstances
-from commons.errors import ApiError, CallerError
+from commons.errors import ApiError
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
@@ -47,9 +47,6 @@ class UserInfoApi(ApiHandler):
                 LIMIT_FIELDS_USER)
 
             user_info = await self.api_user_usos_info()
-
-            if not user_info or not user_doc:
-                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             # upgrade only with values or insert new keys + values
             for k, v in list(user_info.items()):

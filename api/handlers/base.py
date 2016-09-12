@@ -5,9 +5,8 @@ import logging
 from bson import ObjectId
 from cryptography.fernet import InvalidToken
 from tornado import web
-from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import constants
 from commons.UsosCaller import AsyncCaller
 from commons.enumerators import ExceptionTypes, Environment
 from commons.errors import AuthenticationError
@@ -58,6 +57,27 @@ class BaseHandler(AbstractHandler, SocialMixin):
 
         return user
 
+    async def prepare(self):
+        await super(BaseHandler, self).prepare()
+
+        if 'usos_doc' in self._context:
+            # before login
+            self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
+            self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
+                                                secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+
+            if self.isRegistered():
+                # before usos registration
+                self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
+                                                  secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
+
+    def getUserId(self, return_object_id=True):
+        if self.get_current_user():
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
+        return
+
     def isRegistered(self):
         if not self._context:
             return False
@@ -74,55 +94,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
 
         return True
 
-    async def prepare(self):
-        self._context = ObjectDict()
-        self._context.proxy_url = self.config.PROXY_URL
-        self._context.proxy_port = self.config.PROXY_PORT
-        self._context.usoses = await self.get_usos_instances()
-        self._context.user_doc = await self._prepare_user()
-        self._context.remote_ip = self.get_remote_ip()
-
-        if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
-            usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated
-        else:
-            usos_id = self.get_argument('usos_id', default=None)  # request authentication/register
-
-        if usos_id:
-            for usos in self._context.usoses:
-                if usos[constants.USOS_ID] == usos_id:
-                    self._context.usos_doc = usos
-
-        if 'usos_doc' in self._context:
-            # before login
-            self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
-            self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
-                                                secret=self._context.usos_doc[constants.CONSUMER_SECRET])
-
-            if self.isRegistered():
-                # before usos registration
-                self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
-                                                  secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
-
-    def get_current_user(self):
-        return self._context.user_doc
-
-    def get_current_usos(self):
-        if hasattr(self._context, 'usos_doc') and self._context.usos_doc:
-            return self._context.usos_doc
-        return False
-
-    def getUserId(self, return_object_id=True):
-        if self.get_current_user():
-            if return_object_id:
-                return ObjectId(self.get_current_user()[constants.MONGO_ID])
-            return self.get_current_user()[constants.MONGO_ID]
-        return None
-
-    def getUsosId(self):
-        if self.get_current_usos() and constants.USOS_ID in self.get_current_usos():
-            return self.get_current_usos()[constants.USOS_ID]
-        return None
-
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
                 and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
@@ -132,9 +103,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
             # web client access
             self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
-
-    def get_auth_http_client(self):
-        return utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)

@@ -25,12 +25,16 @@ class BaseHandler(AbstractHandler):
             'DEPLOY_WEB': self.config.DEPLOY_WEB,
         }
 
-    async def set_current_user(self):
+    async def _prepare_user(self):
         cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
         if cookie_encrypted:
             cookie_decrypted = self.aes.decrypt(cookie_encrypted)
             response = await self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+
+            if not response:
+                self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+                return
 
             if constants.USER_NAME not in response and constants.USER_EMAIL in response:
                 response[constants.USER_NAME] = response[constants.USER_EMAIL]
@@ -48,13 +52,7 @@ class BaseHandler(AbstractHandler):
                     response[constants.PICTURE] = response[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
 
             return response
-        return None
-
-    async def prepare(self):
-        self._current_user = await self.set_current_user()
-
-    def get_current_user(self):
-        return self._current_user
+        return
 
 
 class MainHandler(BaseHandler):
@@ -104,8 +102,7 @@ class ContactHandler(BaseHandler):
                                          message)
         )
 
-        job_id = await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
-        return job_id
+        return await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
 
     @tornado.web.asynchronous
     async def post(self):
@@ -128,4 +125,3 @@ class DisclaimerHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("disclaimer.html", **self.get_config())
-

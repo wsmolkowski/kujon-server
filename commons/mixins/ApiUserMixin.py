@@ -149,18 +149,14 @@ class ApiUserMixin(DaoMixin):
         :return:
         '''
 
-        try:
-            user_info_doc = await self.user_info()
-            if user_info_doc:
-                user_doc = await self.db_find_user()
-                user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
+        user_info_doc = await self.user_info()
+        if user_info_doc:
+            user_doc = await self.db_find_user()
+            user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
 
-                await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+            await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
 
-            return user_info_doc
-        except Exception as ex:
-            await self.exc(ex, finish=False)
-            return
+        return user_info_doc
 
     async def api_user_usos_info(self):
         '''
@@ -168,22 +164,17 @@ class ApiUserMixin(DaoMixin):
         :return:
         '''
 
-        try:
-            user_usos_id = await self.db_user_usos_id()
-            if user_usos_id:
-                user_info_doc = await self.api_user_info(user_usos_id)
+        user_usos_id = await self.db_user_usos_id()
+        if user_usos_id:
+            return await self.api_user_info(user_usos_id)
 
-                if user_info_doc and constants.USOS_USER_ID not in user_info_doc:
-                    ''' update for old users '''
-                    user_info_doc = await self.updated_user_doc()
+            # if user_info_doc and constants.USOS_USER_ID not in user_info_doc:
+            #     ''' update for old users '''
+            #     user_info_doc = await self.updated_user_doc()
+            #
+            # return user_info_doc
 
-                return user_info_doc
-
-            user_info_doc = await self.updated_user_doc()
-            return user_info_doc
-        except Exception as ex:
-            await self.exc(ex, finish=False)
-            return
+        return await self.updated_user_doc()
 
     async def api_user_info(self, user_id):
         '''

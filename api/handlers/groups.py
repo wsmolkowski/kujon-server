@@ -4,7 +4,6 @@ from tornado import web
 
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
-from commons.errors import CallerError
 
 LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
 
@@ -16,9 +15,6 @@ class GroupsApi(ApiHandler):
 
         try:
             user_info = await self.api_user_usos_info()
-
-            if not user_info:
-                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             programmes = []
             for program in user_info['student_programmes']:

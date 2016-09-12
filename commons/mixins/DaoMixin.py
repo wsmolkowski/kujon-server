@@ -115,10 +115,12 @@ class DaoMixin(object):
         return doc
 
     async def db_remove(self, collection, pipeline):
-        pipeline[constants.CREATED_TIME] = {
+        pipeline_remove = pipeline.copy()
+
+        pipeline_remove[constants.CREATED_TIME] = {
             '$lt': datetime.now() - timedelta(seconds=constants.SECONDS_REMOVE_ON_REFRESH)}
 
-        result = await self.db[collection].remove(pipeline)
+        result = await self.db[collection].remove(pipeline_remove)
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         return result
 
@@ -313,4 +315,4 @@ class DaoMixin(object):
         user_doc = await self.db_find_user()
         if user_doc and constants.USOS_USER_ID in user_doc:
             return user_doc[constants.USOS_USER_ID]
-        return None
+        return

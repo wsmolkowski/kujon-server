@@ -8,7 +8,7 @@ from tornado import gen
 from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller, AsyncCaller
-from commons.errors import ApiError, CallerError
+from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 
 LIMIT_FIELDS = (
@@ -437,9 +437,6 @@ class ApiMixin(ApiUserMixin):
     async def api_programmes(self, finish=False):
         user_info = await self.api_user_usos_info()
 
-        if not user_info:
-            raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
-
         programmes = list()
         for program in user_info['student_programmes']:
             result = await self.api_programme(program['programme']['id'], finish=finish)
@@ -542,9 +539,6 @@ class ApiMixin(ApiUserMixin):
 
     async def api_faculties(self):
         user_info = await self.api_user_usos_info()
-
-        if not user_info:
-            raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
         # get programmes for user
         programmes_ids = list()
@@ -657,8 +651,6 @@ class ApiMixin(ApiUserMixin):
 
         if not theses_doc:
             user_info = await self.api_user_usos_info()
-            if not user_info:
-                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',
