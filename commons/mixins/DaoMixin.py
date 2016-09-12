@@ -313,4 +313,4 @@ class DaoMixin(object):
         user_doc = await self.db_find_user()
         if user_doc and constants.USOS_USER_ID in user_doc:
             return user_doc[constants.USOS_USER_ID]
-        return None
+        return

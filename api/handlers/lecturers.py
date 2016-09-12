@@ -37,16 +37,12 @@ class LecturersApi(ApiHandler):
 
 
 class LecturerByIdApi(ApiHandler):
-    async def api_lecturer(self, user_info_id):
-        user_info = await self.api_user_info(user_info_id)
-        return user_info
-
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self, user_info_id):
 
         try:
-            user_info_doc = await self.api_lecturer(user_info_id)
+            user_info_doc = await self.api_user_info(user_info_id)  # lecturer
             if not user_info_doc:
                 self.error("Brak informacji o wykładowcy {0}".format(user_info_id), code=404)
             else:

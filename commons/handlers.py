@@ -31,7 +31,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
         if self.get_current_usos() and constants.USOS_ID in self.get_current_usos():
             return self.get_current_usos()[constants.USOS_ID]
 
-        return None
+        return
 
     async def get_usoses(self):
         usoses = []

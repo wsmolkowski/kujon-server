@@ -53,7 +53,7 @@ class CrsTestsMixin(DaoMixin):
                                                                     arguments={'node_id': node_id})
             except Exception as ex:
                 await self.exc(ex, finish=False)
-                return None
+                return
 
             crstests_doc[constants.NODE_ID] = node_id
             crstests_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]

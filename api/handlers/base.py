@@ -116,12 +116,12 @@ class BaseHandler(AbstractHandler, SocialMixin):
             if return_object_id:
                 return ObjectId(self.get_current_user()[constants.MONGO_ID])
             return self.get_current_user()[constants.MONGO_ID]
-        return None
+        return
 
     def getUsosId(self):
         if self.get_current_usos() and constants.USOS_ID in self.get_current_usos():
             return self.get_current_usos()[constants.USOS_ID]
-        return None
+        return
 
     def set_default_headers(self):
         if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \

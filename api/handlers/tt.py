@@ -23,7 +23,7 @@ class TTApi(ApiHandler):
                 lecturers_infos.append(lecturer_info)
 
             except Exception as ex:
-                logging.debug(ex)  # exception save in self.api_user_info
+                await self.exc(ex, finish=False)
 
         return lecturers_infos
 

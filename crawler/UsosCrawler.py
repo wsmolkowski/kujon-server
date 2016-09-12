@@ -63,7 +63,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             if return_object_id:
                 return self.get_current_user()[constants.MONGO_ID]
             return str(self.get_current_user()[constants.MONGO_ID])
-        return None
+        return
 
     def getEncryptedUserId(self):
         return self.aes.encrypt(self.getUserId(return_object_id=False)).decode()
@@ -71,7 +71,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     def getUsosId(self):
         if self.get_current_usos():
             return self.get_current_user()[constants.USOS_ID]
-        return None
+        return
 
     def get_auth_http_client(self):
         return self._context.http_client
@@ -174,9 +174,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
                 await self.remove_user_data(skip_collections)
 
-            await self.api_user_usos_info()  # info from usos_user_info needed later
-            await self._setUp(user_id)
-
+            await self.api_user_usos_info()
             await self.api_thesis()
             await self.__process_courses_editions()
             await self.api_terms()
