@@ -67,6 +67,11 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
 
         return usoses
 
+    def reset_user_cookie(self, user_id):
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        encoded = self.aes.encrypt(str(user_id))
+        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
+
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous

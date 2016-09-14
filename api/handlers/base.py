@@ -8,7 +8,7 @@ from tornado import web
 
 from commons import constants
 from commons.UsosCaller import AsyncCaller
-from commons.enumerators import ExceptionTypes, Environment
+from commons.enumerators import ExceptionTypes, Environment, UserTypes
 from commons.errors import AuthenticationError
 from commons.handlers import AbstractHandler
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
@@ -24,38 +24,45 @@ class BaseHandler(AbstractHandler, SocialMixin):
     EXCEPTION_TYPE = ExceptionTypes.DEFAULT.value
 
     async def _prepare_user(self):
-        user = None
+        cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
+        if cookie_encrypted:
+            try:
+                cookie_decrypted = self.aes.decrypt(cookie_encrypted).decode()
+                user_doc = await self.db[constants.COLLECTION_USERS].find_one(
+                    {constants.MONGO_ID: ObjectId(cookie_decrypted)})
+                if user_doc:
+                    return user_doc
+            except InvalidToken as ex:
+                logging.exception(ex)
+                self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
 
-        if not user:
-            cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
-            if cookie_encrypted:
-                try:
-                    cookie_decrypted = self.aes.decrypt(cookie_encrypted).decode()
-                    user = await self.db[constants.COLLECTION_USERS].find_one(
-                        {constants.MONGO_ID: ObjectId(cookie_decrypted)})
-                except InvalidToken as ex:
-                    logging.exception(ex)
-                    self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
+        header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
+        header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
-        if not user:
-            header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-            header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+        if header_email and header_token:
+            user_doc = await self.db_find_user_email(header_email)
 
-            if header_email and header_token:
-                token_exists = await self.db_find_token(header_email)
-
-                if not token_exists:
-                    try:
-                        logging.debug('Authentication token does not exists for email: {0}'.format(header_email))
-                        google_token = await self.google_token(header_token)
-                        await self.db_insert_token(google_token)
-                        user = await self.db_find_user_email(header_email)
-                    except AuthenticationError as ex:
-                        logging.exception(ex)
+            if user_doc and user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value.upper():
+                if self.aes.decrypt(header_token.encode()).decode() == str(user_doc[constants.MONGO_ID]):
+                    return user_doc
                 else:
-                    user = await self.db_find_user_email(header_email)
+                    raise AuthenticationError("Bład weryfikacji tokenu dla: {0}".format(user_doc[constants.USER_TYPE]))
 
-        return user
+            token_exists = await self.db_find_token(header_email)
+
+            if not token_exists:
+                logging.debug('Authentication token does not exists for email: {0}'.format(header_email))
+                if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value.upper():
+                    google_token = await self.google_token(header_token)
+                    await self.db_insert_token(google_token)
+                elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value.upper():
+                    facebook_token = await self.facebook_token(header_token)
+                    await self.db_insert_token(facebook_token)
+                else:
+                    logging.error('Unknown {0}: {1}'.format(constants.USER_TYPE, user_doc[constants.USER_TYPE]))
+
+            return user_doc
+        return
 
     async def prepare(self):
         await super(BaseHandler, self).prepare()
@@ -103,11 +110,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
             # web client access
             self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
-
-    def reset_user_cookie(self, user_id):
-        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-        encoded = self.aes.encrypt(str(user_id))
-        self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
 
 
 class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):

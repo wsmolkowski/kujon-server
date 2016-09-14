@@ -39,3 +39,10 @@ class ExceptionTypes(Abstract):
     CRAWLER = 'crawler'
     EVENT = 'event'
     UNKNOWN = 'unknown'
+
+
+class UserTypes(Abstract):
+    GOOGLE = 'google'
+    FACEBOOK = 'facebook'
+    WWW = 'WWW'
+    EMAIL = 'EMAIL'

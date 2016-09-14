@@ -72,6 +72,8 @@ USOS_PAIRED = 'usos_paired'
 USER_NAME = 'name'
 USER_EMAIL = 'email'
 USER_PICTURE = 'picture'
+USER_PASSWORD = 'password'
+USER_EMAIL_CONFIRMED = 'email_confirmed'
 
 USER_PRESENT_KEYS = (MOBILE_ID, USOS_ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
 

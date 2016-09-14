@@ -28,6 +28,10 @@ HANDLERS = [
     (r"/authentication/google", authentication.GoogleOAuth2LoginHandler),
     (r"/authentication/facebook", authentication.FacebookOAuth2LoginHandler),
 
+    (r"/authentication/email_register", authentication.EmailRegisterHandler),
+    (r"/authentication/email_login", authentication.EmailLoginHandler),
+    (r"/authentication/email_confim/([^/]+)", authentication.EmailConfirmHandler),
+
     (r"/usoses", UsosesApi),
 
     (r"/users", UserInfoApi),
