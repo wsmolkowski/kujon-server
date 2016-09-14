@@ -57,7 +57,8 @@ class DaoMixin(object):
                                                                    'EXCEPTION_TYPE') else ExceptionTypes.UNKNOWN.value
         exc_doc[constants.CREATED_TIME] = datetime.now()
 
-        await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
+        if not isinstance(exception, AuthenticationError):
+            await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
 
         if finish:
             if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):

@@ -357,7 +357,18 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             yield self.exc(ex)
 
 
-class EmailRegisterHandler(AuthenticationHandler):
+class AbstractEmailHandler(AuthenticationHandler):
+    def set_default_headers(self):
+        if self.isMobileRequest():
+            self.set_header('Access-Control-Allow-Origin', '*')
+        else:
+            self.set_header('Access-Control-Allow-Origin', self.config.DEPLOY_WEB)
+        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
+        self.set_header('Access-Control-Allow-Headers',
+                        'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+
+
+class EmailRegisterHandler(AbstractEmailHandler):
     async def db_email_confirmation(self, email, user_id):
 
         confirmation_url = '{0}/authentication/email_confim/{1}'.format(self.config.DEPLOY_API,
@@ -384,10 +395,21 @@ class EmailRegisterHandler(AuthenticationHandler):
         try:
             json_data = escape.json_decode(self.request.body.decode())
 
+            if constants.USER_EMAIL not in json_data \
+                    or constants.USER_PASSWORD not in json_data \
+                    or 'password2' not in json_data:
+                raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
+
+            if json_data[constants.USER_PASSWORD] != json_data['password2']:
+                raise AuthenticationError('Podane hasła nie zgadzają się.')
+
+            if len(json_data[constants.USER_PASSWORD]) < 8:
+                raise AuthenticationError('Podane hasło jest zbyt krótkie.')
+
             user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
             if user_doc:
                 raise AuthenticationError(
-                    'Podany adres email: {0} jest już zajęty.'.format(json_data[constants.USER_EMAIL]))
+                    'Podany adres email: {0} jest zajęty.'.format(json_data[constants.USER_EMAIL]))
 
             user_doc = dict()
             user_doc[constants.USER_TYPE] = UserTypes.EMAIL.value
@@ -411,15 +433,7 @@ class EmailRegisterHandler(AuthenticationHandler):
             await self.exc(ex)
 
 
-class EmailLoginHandler(AuthenticationHandler):
-    def set_default_headers(self):
-        if self.isMobileRequest():
-            self.set_header('Access-Control-Allow-Origin', '*')
-        else:
-            self.set_header('Access-Control-Allow-Origin', self.config.DEPLOY_WEB)
-        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
-        self.set_header('Access-Control-Allow-Headers',
-                        'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+class EmailLoginHandler(AbstractEmailHandler):
 
     @web.asynchronous
     async def post(self):
