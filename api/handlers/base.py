@@ -102,9 +102,11 @@ class BaseHandler(AbstractHandler, SocialMixin):
         return True
 
     def set_default_headers(self):
-        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
-                and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
-            # mobile access
+        super(BaseHandler, self).set_default_headers()
+
+        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
+
+        if self.isMobileRequest():
             self.set_header("Access-Control-Allow-Origin", "*")
         else:
             # web client access

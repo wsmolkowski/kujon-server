@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block header_js %}
+<script type="text/javascript" src="/static/require.config.js"></script>
+<script type="text/javascript" data-main="/static/js/startup.js"
+        src="/static/bower_components/requirejs/require.js"></script>
+
+{% end %}
+
+{% block navigation %}
+{% end %}
+
+{% block main %}
+
+{% module xsrf_form_html() %}
+<!-- page content -->
+<div class="container">
+
+    <form class="form-signin" id="formLogin">
+        <h2 class="form-signin-heading">Zaloguj się</h2>
+
+        <label for="inputEmail" class="sr-only">Adres email</label>
+        <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Adres email" required
+               autofocus>
+
+        <label for="inputPassword" class="sr-only">Hasło</label>
+        <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Hasło" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Zaloguj</button>
+
+        </br>
+        <p class="text-info"><a href="{{API_URL}}/authentication/email_register">Zarejestruj się</a> jeśli nie masz
+            konta.</p>
+
+    </form>
+</div>
+<div id="formWarning"></div>
+<input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
+<input type="hidden" name="deploy_web" id="deploy_web" value="{{DEPLOY_WEB}}">
+
+<!-- /container -->
+
+{% end %}
+
+{% block footer_js %}
+<script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+  function showAlert(id) {
+      $(id).focus();
+      $('#formWarning').html(
+          '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<strong>Wypełnij proszę wszystkie pola :)</strong> Potrzebujemy wszystkich danych <strong>:)</strong>' +
+          '</div>'
+      );
+  }
+
+  $('#formLogin').submit(function() {
+      var formData = {
+          'email': $('#inputEmail').val(),
+          'password': $('#inputPassword').val(),
+      };
+
+      event.preventDefault();
+
+      $.ajax({
+          type: 'POST',
+          url: $('#api_url').val() + '/authentication/email_login',
+          crossDomain: true,
+          data: JSON.stringify(formData),
+          dataType: 'json',
+          success: function(response) {
+              debugger;
+              //var data = $.parseJSON(response)
+              if (response.status == 'success') {
+                  var url = $('#deploy_web').val() + '/?token=' + response.data.token;
+                  console.log(url);
+                  window.location.replace(url);
+              } else {
+                  console.log(response.message);
+                  alert(response.message);
+              }
+          },
+          error: function(jqXHR, exception) {
+              var msg = {
+                  'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception
+              };
+              console.log(msg);
+              // alert(msg);
+          }
+      });
+
+      event.preventDefault();
+  });
+
+})
+
+$('#btnDisclaimer').on('click', function(e){
+    e.preventDefault();
+    $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+});
+
+</script>
+
+{% end %}

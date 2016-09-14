@@ -9,6 +9,11 @@ from commons.mixins.JSendMixin import JSendMixin
 
 
 class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
+    SUPPORTED_METHODS = ('POST', 'OPTIONS', 'GET')
+
+    def options(self, *args, **kwargs):
+        pass
+
     @property
     def db(self):
         return self.application.settings[constants.APPLICATION_DB]
@@ -71,6 +76,12 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         encoded = self.aes.encrypt(str(user_id))
         self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
+
+    def isMobileRequest(self):
+        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
+                and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
+            return True
+        return False
 
 
 class DefaultErrorHandler(AbstractHandler):

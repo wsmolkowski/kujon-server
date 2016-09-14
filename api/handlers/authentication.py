@@ -412,12 +412,14 @@ class EmailRegisterHandler(AuthenticationHandler):
 
 
 class EmailLoginHandler(AuthenticationHandler):
-    SUPPORTED_METHODS = ('POST',)
-
     def set_default_headers(self):
-        # self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
-        # self.set_header("Access-Control-Allow-Credentials", "true")
+        if self.isMobileRequest():
+            self.set_header('Access-Control-Allow-Origin', '*')
+        else:
+            self.set_header('Access-Control-Allow-Origin', self.config.DEPLOY_WEB)
+        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
+        self.set_header('Access-Control-Allow-Headers',
+                        'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
 
     @web.asynchronous
     async def post(self):
@@ -433,16 +435,6 @@ class EmailLoginHandler(AuthenticationHandler):
                 raise AuthenticationError('Podano błędne dane.')
 
             self.success(data={'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode()})
-
-            # if self.request.headers.get('Origin') == self.config.DEPLOY_WEB:
-            #     # request from WWW login
-            #     # self.set_header('Access-Control-Allow-Origin', '*')
-            #     self.reset_user_cookie(user_doc[constants.MONGO_ID])
-            #     self.redirect(self.config.DEPLOY_WEB)
-            # else:
-            #     # request from MOBI login
-            #     # self.set_header('Access-Control-Allow-Origin', '*')
-            #     self.success(data={'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode()})
 
         except Exception as ex:
             await self.exc(ex)

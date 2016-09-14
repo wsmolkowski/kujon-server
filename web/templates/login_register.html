@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block header_js %}
+<script type="text/javascript" src="/static/require.config.js"></script>
+<script type="text/javascript" data-main="/static/js/startup.js"
+        src="/static/bower_components/requirejs/require.js"></script>
+
+{% end %}
+
+{% block navigation %}
+{% end %}
+
+{% block main %}
+
+{% module xsrf_form_html() %}
+<!-- page content -->
+<div class="container">
+
+    <form class="form-signin" id="formRegister" action="{{API_URL}}/authentication/email_register" method="post">
+        <h2 class="form-signin-heading">Zarejestruj się</h2>
+
+        <label for="inputEmail" class="sr-only">Adres email</label>
+        <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Adres email" required
+               autofocus>
+
+        <label for="inputPassword" class="sr-only">Hasło</label>
+        <input type="password" name="password" id="inputPassword" class="form-control" minlength="8" placeholder="Hasło"
+               required>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" value="remember-me" id="disclaimerCheck" required>
+                Akceptuję <a href="regulamin" id="btnDisclaimer">Regulamin i polityka prywatności</a>
+            </label>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" id="btnSubmit">Zarejestruj</button>
+
+        </br>
+
+        <p class="text-info"><a href="{{API_URL}}/authentication/email_login">Zaloguj się</a> jeśli posiadasz konto.</p>
+    </form>
+</div>
+<div id="formWarning"></div>
+<input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
+<!-- /container -->
+
+{% end %}
+
+{% block footer_js %}
+<script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+$('#btnDisclaimer').on('click', function(e){
+    e.preventDefault();
+    $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+});
+
+</script>
+
+{% end %}
