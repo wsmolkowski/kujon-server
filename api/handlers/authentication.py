@@ -468,6 +468,8 @@ class EmailConfirmHandler(AuthenticationHandler):
                 self.error(message='Token wykorzystany. Email potwierdzony.', code=403)
             else:
                 user_doc[constants.USER_EMAIL_CONFIRMED] = True
+                user_doc[constants.UPDATE_TIME] = datetime.now()
+
                 await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
                 self.redirect(self.config.DEPLOY_WEB)
         except Exception as ex:

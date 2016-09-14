@@ -76,8 +76,6 @@
                 'password2': $('#inputPassword2').val(),
             };
 
-
-
             $.ajax({
                 type: 'POST',
                 url: $('#api_url').val() + '/authentication/email_register',
@@ -85,7 +83,6 @@
                 data: JSON.stringify(formData),
                 dataType: 'json',
                 success: function(response) {
-                    debugger;
                     if (response.status == 'success') {
                         var url = $('#deploy_web').val() + '/login';
                         window.location.replace(url);
