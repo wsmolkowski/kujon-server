@@ -53,6 +53,17 @@ class ArchiveHandler(ApiHandler):
 class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
+    async def on_finally(self):
+        await self.db_insert(constants.COLLECTION_REMOTE_IP_HISTORY, {
+            constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self._context.remote_ip
+        })
+
 
 class LogoutHandler(AuthenticationHandler):
     def get(self):
@@ -79,6 +90,8 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 user_doc[constants.USER_TYPE] = UserTypes.FACEBOOK.value
                 user_doc[constants.USER_NAME] = access['name']
                 user_doc[constants.USER_EMAIL] = access['email']
+                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[constants.USER_DEVICE_ID] = None
 
                 user_doc[constants.FACEBOOK] = dict()
                 user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
@@ -142,6 +155,8 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc[constants.USER_NAME] = user['name']
                 user_doc[constants.USER_EMAIL] = user['email']
                 user_doc[constants.USOS_PAIRED] = False
+                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[constants.USER_DEVICE_ID] = None
                 user_doc[constants.USER_CREATED] = datetime.now()
 
                 user_doc[constants.GOOGLE] = dict()
@@ -193,6 +208,10 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         token = self.get_argument('token', default=None)
         usos_id = self.get_argument('usos_id', default=None)
         login_type = self.get_argument('type', default=None)
+
+        device_type = self.get_argument('device_type', default=None)
+        device_id = self.get_argument('device_id', default=None)
+
         new_user = False
 
         try:
@@ -240,6 +259,8 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
             if new_user:
                 user_doc['login_type'] = login_type
+                user_doc[constants.USER_DEVICE_TYPE] = device_type
+                user_doc[constants.USER_DEVICE_ID] = device_id
                 user_doc[constants.CREATED_TIME] = datetime.now()
                 new_id = yield self.db_insert_user(user_doc)
 
@@ -397,13 +418,15 @@ class EmailRegisterHandler(AbstractEmailHandler):
 
             if constants.USER_EMAIL not in json_data \
                     or constants.USER_PASSWORD not in json_data \
-                    or 'password2' not in json_data:
+                    or constants.USER_DEVICE_TYPE not in json_data \
+                    or constants.USER_DEVICE_ID not in json_data:
                 raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
 
-            if json_data[constants.USER_PASSWORD] != json_data['password2']:
+            if not self.isMobileRequest() and 'password2' in json_data and \
+                            json_data[constants.USER_PASSWORD] != json_data['password2']:
                 raise AuthenticationError('Podane hasła nie zgadzają się.')
 
-            if len(json_data[constants.USER_PASSWORD]) < 8:
+            if not self.isMobileRequest() and len(json_data[constants.USER_PASSWORD]) < 8:
                 raise AuthenticationError('Podane hasło jest zbyt krótkie.')
 
             user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
@@ -415,6 +438,9 @@ class EmailRegisterHandler(AbstractEmailHandler):
             user_doc[constants.USER_TYPE] = UserTypes.EMAIL.value
             user_doc[constants.USER_NAME] = json_data[constants.USER_EMAIL]
             user_doc[constants.USER_EMAIL] = json_data[constants.USER_EMAIL]
+            user_doc[constants.USER_DEVICE_TYPE] = json_data[constants.USER_DEVICE_TYPE]
+            user_doc[constants.USER_DEVICE_ID] = json_data[constants.USER_DEVICE_ID]
+
             user_doc[constants.USER_PASSWORD] = self.aes.encrypt(json_data[constants.USER_PASSWORD])
             user_doc[constants.USOS_PAIRED] = False
             user_doc[constants.USER_EMAIL_CONFIRMED] = False
@@ -434,7 +460,6 @@ class EmailRegisterHandler(AbstractEmailHandler):
 
 
 class EmailLoginHandler(AbstractEmailHandler):
-
     @web.asynchronous
     async def post(self):
 
