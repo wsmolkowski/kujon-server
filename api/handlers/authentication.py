@@ -422,11 +422,10 @@ class EmailRegisterHandler(AbstractEmailHandler):
                     or constants.USER_DEVICE_ID not in json_data:
                 raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
 
-            if not self.isMobileRequest() and 'password2' in json_data and \
-                            json_data[constants.USER_PASSWORD] != json_data['password2']:
+            if 'password2' in json_data and json_data[constants.USER_PASSWORD] != json_data['password2']:
                 raise AuthenticationError('Podane hasła nie zgadzają się.')
 
-            if not self.isMobileRequest() and len(json_data[constants.USER_PASSWORD]) < 8:
+            if len(json_data[constants.USER_PASSWORD]) < 8:
                 raise AuthenticationError('Podane hasło jest zbyt krótkie.')
 
             user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
