@@ -482,13 +482,17 @@ class ApiMixin(ApiUserMixin):
                 programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
                 del (programme_doc['faculty']['id'])
 
-            ects_used_sum = await UsosCaller(self._context).call(
-                path='services/credits/used_sum',
-                arguments={
-                    'programme_id': programme_id
-                })
+            try:
+                ects_used_sum = await UsosCaller(self._context).call(
+                    path='services/credits/used_sum',
+                    arguments={
+                        'programme_id': programme_id
+                    })
 
-            programme_doc['ects_used_sum'] = ects_used_sum
+                programme_doc['ects_used_sum'] = ects_used_sum
+            except Exception as ex:
+                await self.exc(ex, finish=False)
+                programme_doc['ects_used_sum'] = None
 
             await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             return programme_doc
