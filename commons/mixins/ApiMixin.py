@@ -445,6 +445,7 @@ class ApiMixin(ApiUserMixin):
                 program['programme']['level_of_studies'] = result['level_of_studies']
                 program['programme']['duration'] = result['duration']
                 program['programme']['name'] = result['name']
+                program['programme']['ects_used_sum'] = result['ects_used_sum']
                 programmes.append(program)
 
         return programmes
@@ -481,13 +482,13 @@ class ApiMixin(ApiUserMixin):
                 programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
                 del (programme_doc['faculty']['id'])
 
-            # ects_used_sum = await UsosCaller(self._context).call(
-            #     path='services/credits/used_sum',
-            #     arguments={
-            #         'students_programme_id': programme_id
-            #     })
-            #
-            # programme_doc['ects_used_sum'] = ects_used_sum
+            ects_used_sum = await UsosCaller(self._context).call(
+                path='services/credits/used_sum',
+                arguments={
+                    'programme_id': programme_id
+                })
+
+            programme_doc['ects_used_sum'] = ects_used_sum
 
             await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
             return programme_doc
