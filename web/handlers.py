@@ -50,14 +50,18 @@ class BaseHandler(AbstractHandler):
             if constants.USOS_USER_ID in user_doc:
                 user_info = await self.db[constants.COLLECTION_USERS_INFO].find_one(
                     {constants.ID: user_doc[constants.USOS_USER_ID], constants.USOS_ID: user_doc[constants.USOS_ID]})
-                if constants.PHOTO_URL in user_info:
-                    user_doc[constants.PICTURE] = user_info[constants.PHOTO_URL]
-                elif constants.GOOGLE in user_doc:
-                    user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
-                elif constants.FACEBOOK in user_doc:
-                    user_doc[constants.PICTURE] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
-                else:
+
+                if not user_info:
                     user_doc[constants.PICTURE] = None
+                else:
+                    if constants.PHOTO_URL in user_info:
+                        user_doc[constants.PICTURE] = user_info[constants.PHOTO_URL]
+                    elif constants.GOOGLE in user_doc:
+                        user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
+                    elif constants.FACEBOOK in user_doc:
+                        user_doc[constants.PICTURE] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+                    else:
+                        user_doc[constants.PICTURE] = None
 
             return user_doc
         return
@@ -69,12 +73,13 @@ class MainHandler(BaseHandler):
 
         token = self.get_argument('token', default=None)
         if token:
-            # user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(token)})
             user_id = self.aes.decrypt(token.encode()).decode()
             user_doc = await self.db[constants.COLLECTION_USERS].find_one(
                 {constants.MONGO_ID: ObjectId(user_id)})
 
             self.reset_user_cookie(user_doc[constants.MONGO_ID])
+            self.redirect(self.config.DEPLOY_WEB)
+            return
         else:
             user_doc = self.get_current_user()
 
