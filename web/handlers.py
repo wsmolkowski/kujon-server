@@ -56,6 +56,8 @@ class BaseHandler(AbstractHandler):
                     user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
                 elif constants.FACEBOOK in user_doc:
                     user_doc[constants.PICTURE] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+                else:
+                    user_doc[constants.PICTURE] = None
 
             return user_doc
         return
@@ -132,7 +134,7 @@ class ContactHandler(BaseHandler):
 
 
 class LoginHandler(BaseHandler):
-    SUPPORTED_METHODS = ('POST', 'GET')
+    SUPPORTED_METHODS = ('GET',)
 
     @tornado.web.asynchronous
     async def get(self):
@@ -140,7 +142,7 @@ class LoginHandler(BaseHandler):
 
 
 class RegisterHandler(BaseHandler):
-    SUPPORTED_METHODS = ('POST', 'GET')
+    SUPPORTED_METHODS = ('GET',)
 
     @tornado.web.asynchronous
     async def get(self):
