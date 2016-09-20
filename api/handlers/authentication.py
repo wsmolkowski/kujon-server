@@ -399,7 +399,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
         email_job = email_factory.email_job(
             'Rejestracja w Kujon.mobi',
             self.config.SMTP_EMAIL,
-            email,
+            email if type(email) is list else [email],
             '\nCześć,\n'
             '\nOtrzymaliśmy zgłoszenie rejestracji Twojego konta email.\n'
             '\nAby potwierdzić rejestrację kliknij na poniższy link:\n'
@@ -453,7 +453,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
                 user_id, json_data[constants.USER_EMAIL]))
 
-            self.success(data='Użytkownik utworzony. Wysłano email z instrukcją potwierdzenia rejestracji.')
+            self.success('Użytkownik utworzony. Wysłano email z instrukcją potwierdzenia rejestracji.', cache_age=None)
         except Exception as ex:
             await self.exc(ex)
 
