@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from bson import ObjectId
 from tornado import auth, gen, web, escape
+from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants
@@ -53,8 +54,8 @@ class ArchiveHandler(ApiHandler):
 class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
-    async def on_finally(self):
-        await self.db_insert(constants.COLLECTION_REMOTE_IP_HISTORY, {
+    async def on_finish(self):
+        IOLoop.current().spawn_callback(self.db_insert(constants.COLLECTION_REMOTE_IP_HISTORY, {
             constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
             constants.CREATED_TIME: datetime.now(),
             'host': self.request.host,
@@ -62,7 +63,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
             'path': self.request.path,
             'query': self.request.query,
             'remote_ip': self._context.remote_ip
-        })
+        }))
 
 
 class LogoutHandler(AuthenticationHandler):
