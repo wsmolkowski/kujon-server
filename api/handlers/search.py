@@ -23,7 +23,7 @@ class AbstractSearch(ApiHandler):
                                                                                            self.MAX_SEARCH))
 
     def on_finish(self):
-        IOLoop.current().spawn_callback(self.db_insert(constants.COLLECTION_SEARCH, {
+        IOLoop.current().spawn_callback(self.db_insert, constants.COLLECTION_SEARCH, {
             'type': self.EXCEPTION_TYPE,
             constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
             constants.CREATED_TIME: datetime.now(),
@@ -32,7 +32,7 @@ class AbstractSearch(ApiHandler):
             'path': self.request.path,
             'query': self.request.query,
             'remote_ip': self.get_remote_ip()
-        }))
+        })
 
 
 class SearchUsersApi(AbstractSearch):
