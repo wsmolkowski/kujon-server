@@ -56,7 +56,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
     def on_finish(self):
         IOLoop.current().spawn_callback(self.db_insert(constants.COLLECTION_REMOTE_IP_HISTORY, {
-            constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
+            constants.USER_ID: self.getUserId(return_object_id=True),
             constants.CREATED_TIME: datetime.now(),
             'host': self.request.host,
             'method': self.request.method,
