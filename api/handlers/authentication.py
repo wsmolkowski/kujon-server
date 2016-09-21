@@ -404,16 +404,16 @@ class EmailRegisterHandler(AbstractEmailHandler):
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
         email_job = email_factory.email_job(
-            'Rejestracja w Kujon.mobi',
+            '[{0}] Dokończ rejestrację konta'.format(self.config.PROJECT_TITLE),
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
             '\nCześć,\n'
-            '\nOtrzymaliśmy zgłoszenie rejestracji Twojego konta email.\n'
-            '\nAby potwierdzić rejestrację kliknij na poniższy link:\n'
+            '\nDziękujemy za utworzenie konta.\n'
+            '\nAby zakończyć rejestrację kliknij na poniższy link:\n'
             '\n{0}\n'
             '\nPozdrawiamy,'
-            '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(confirmation_url, self.config.SMTP_EMAIL)
+            '\nzespół {1}'
+            '\nemail: {2}\n'.format(confirmation_url, self.config.PROJECT_TITLE, self.config.SMTP_EMAIL)
         )
 
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -460,7 +460,9 @@ class EmailRegisterHandler(AbstractEmailHandler):
             logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
                 user_id, json_data[constants.USER_EMAIL]))
 
-            self.success('Użytkownik utworzony. Wysłano email z instrukcją potwierdzenia rejestracji.', cache_age=None)
+            self.success(
+                'Dziękujemy za zarejestrowanie konta {0}. Aby aktywować konto należy postępować zgodnie z instrukcją przesłą w emailu weryfikacyjnym.'.format(
+                    self.config.PROJECT_TITLE), cache_age=None)
         except Exception as ex:
             await self.exc(ex)
 
