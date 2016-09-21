@@ -42,26 +42,30 @@ class BaseHandler(AbstractHandler, SocialMixin):
         if header_email and header_token:
             user_doc = await self.db_find_user_email(header_email)
 
-            if user_doc and user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value.upper():
+            if not user_doc:
+                return
+
+            if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value.upper():
+                token_exists = await self.db_find_token(header_email)
+                if not token_exists:
+                    google_token = await self.google_token(header_token)
+                    await self.db_insert_token(google_token)
+                return user_doc
+
+            elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value.upper():
+                token_exists = await self.db_find_token(header_email)
+                if not token_exists:
+                    facebook_token = await self.facebook_token(header_token)
+                    await self.db_insert_token(facebook_token)
+                return user_doc
+
+            elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value.upper():
                 if self.aes.decrypt(header_token.encode()).decode() == str(user_doc[constants.MONGO_ID]):
                     return user_doc
                 else:
                     raise AuthenticationError("Bład weryfikacji tokenu dla: {0}".format(user_doc[constants.USER_TYPE]))
-
-            token_exists = await self.db_find_token(header_email)
-
-            if not token_exists:
-                logging.debug('Authentication token does not exists for email: {0}'.format(header_email))
-                if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value.upper():
-                    google_token = await self.google_token(header_token)
-                    await self.db_insert_token(google_token)
-                elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value.upper():
-                    facebook_token = await self.facebook_token(header_token)
-                    await self.db_insert_token(facebook_token)
-                else:
-                    logging.error('Unknown {0}: {1}'.format(constants.USER_TYPE, user_doc[constants.USER_TYPE]))
-
-            return user_doc
+            else:
+                raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[constants.USER_TYPE]))
         return
 
     async def prepare(self):
