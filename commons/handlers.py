@@ -4,6 +4,7 @@ from tornado import web
 from tornado.util import ObjectDict
 
 from commons import constants, utils
+from commons.errors import AuthenticationError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 
@@ -42,7 +43,12 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
         self._context.proxy_port = self.config.PROXY_PORT
         self._context.remote_ip = self.get_remote_ip()
         self._context.usoses = await self.get_usos_instances()
-        self._context.user_doc = await self._prepare_user()
+
+        try:
+            self._context.user_doc = await self._prepare_user()
+        except AuthenticationError as ex:
+            await self.exc(ex)
+            return
 
         if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
             usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated
