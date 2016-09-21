@@ -60,10 +60,20 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 return user_doc
 
             elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value.upper():
-                if self.aes.decrypt(header_token.encode()).decode() == str(user_doc[constants.MONGO_ID]):
+
+                try:
+                    decrypted_token = self.aes.decrypt(header_token.encode()).decode()
+                except InvalidToken:
+                    raise AuthenticationError(
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(header_email, user_doc[
+                            constants.USER_TYPE]))
+
+                if decrypted_token == str(user_doc[constants.MONGO_ID]):
                     return user_doc
                 else:
-                    raise AuthenticationError("Bład weryfikacji tokenu dla: {0}".format(user_doc[constants.USER_TYPE]))
+                    raise AuthenticationError(
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(header_email, user_doc[
+                            constants.USER_TYPE]))
             else:
                 raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[constants.USER_TYPE]))
         return
