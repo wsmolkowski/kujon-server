@@ -49,7 +49,7 @@ class DaoMixin(object):
                 exc_doc['body'] = str(exception.response.body)
                 exc_doc['effective_url'] = exception.response.effective_url
 
-        if hasattr(self, '_context') and self.get_current_user():
+        if self.get_current_user():
             exc_doc[constants.USER_ID] = self.getUserId()
 
         exc_doc['traceback'] = traceback.format_exc()

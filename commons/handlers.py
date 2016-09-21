@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+from bson import ObjectId
 from tornado import web
 from tornado.util import ObjectDict
 
@@ -61,12 +62,21 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
                     self._context.usos_doc = usos
 
     def get_current_user(self):
-        return self._context.user_doc
+        if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
+            return self._context.user_doc
+        return
 
     def getUsosId(self):
         if hasattr(self._context,
                    'usos_doc') and self._context.usos_doc and constants.USOS_ID in self._context.usos_doc:
             return self._context.usos_doc[constants.USOS_ID]
+        return
+
+    def getUserId(self, return_object_id=True):
+        if self.get_current_user():
+            if return_object_id:
+                return ObjectId(self.get_current_user()[constants.MONGO_ID])
+            return self.get_current_user()[constants.MONGO_ID]
         return
 
     async def get_usoses(self):

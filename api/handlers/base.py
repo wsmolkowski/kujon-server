@@ -92,13 +92,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
                                                   secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
 
-    def getUserId(self, return_object_id=True):
-        if self.get_current_user():
-            if return_object_id:
-                return ObjectId(self.get_current_user()[constants.MONGO_ID])
-            return self.get_current_user()[constants.MONGO_ID]
-        return
-
     def isRegistered(self):
         if not self._context:
             return False
