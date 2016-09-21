@@ -54,7 +54,7 @@ class ArchiveHandler(ApiHandler):
 class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
-    async def on_finish(self):
+    def on_finish(self):
         IOLoop.current().spawn_callback(self.db_insert(constants.COLLECTION_REMOTE_IP_HISTORY, {
             constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
             constants.CREATED_TIME: datetime.now(),
