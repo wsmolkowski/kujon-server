@@ -19,12 +19,6 @@ class DaoMixin(object):
     EXCEPTION_TYPE = ExceptionTypes.DAO.value
 
     def do_refresh(self):
-        try:
-            if hasattr(self, '_context') and hasattr(self._context, 'refresh'):
-                return self._context.refresh
-        except Exception as ex:
-            logging.debug(ex)
-
         return False
 
     _db = None
@@ -85,22 +79,18 @@ class DaoMixin(object):
     async def db_users_info_by_user_id(self, user_id, usos):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
-        user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id,
-                                                                                 constants.USOS_ID: usos})
-
-        return user_info_doc
+        return await self.db[constants.COLLECTION_USERS_INFO].find_one({constants.USER_ID: user_id,
+                                                                        constants.USOS_ID: usos})
 
     async def db_get_user(self, user_id):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
-        return user_doc
+        return await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})
 
     async def db_get_usos(self, usos_id):
-        usos_doc = await self.db[constants.COLLECTION_USOSINSTANCES].find_one({
+        return await self.db[constants.COLLECTION_USOSINSTANCES].find_one({
             'enabled': True, constants.USOS_ID: usos_id
         })
-        return usos_doc
 
     async def db_insert(self, collection, document, update=True):
         create_time = datetime.now()
@@ -135,9 +125,8 @@ class DaoMixin(object):
         return programmes
 
     async def db_programme(self, programme_id, usos_id):
-        programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id,
-                                                                                 constants.USOS_ID: usos_id})
-        return programme_doc
+        return await self.db[constants.COLLECTION_PROGRAMMES].find_one({constants.PROGRAMME_ID: programme_id,
+                                                                        constants.USOS_ID: usos_id})
 
     async def db_courses_editions(self, user_id):
         if isinstance(user_id, str):
@@ -170,15 +159,12 @@ class DaoMixin(object):
         return terms
 
     async def db_term(self, term_id, usos_id):
-        term_doc = await self.db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id,
-                                                                       constants.USOS_ID: usos_id})
-        return term_doc
+        return await self.db[constants.COLLECTION_TERMS].find_one({constants.TERM_ID: term_id,
+                                                                   constants.USOS_ID: usos_id})
 
     async def db_faculty(self, fac_id, usos_id):
-        faculty_doc = await self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
-                                                                              constants.USOS_ID: usos_id})
-
-        return faculty_doc
+        return await self.db[constants.COLLECTION_FACULTIES].find_one({constants.FACULTY_ID: fac_id,
+                                                                       constants.USOS_ID: usos_id})
 
     async def db_users(self):
         cursor = self.db[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True},
@@ -200,15 +186,12 @@ class DaoMixin(object):
         return list()
 
     async def db_users_info(self, user_id, usos_id):
-        user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
-                                                                                 constants.USOS_ID: usos_id})
-        return user_info_doc
+        return await self.db[constants.COLLECTION_USERS_INFO].find_one({constants.ID: user_id,
+                                                                        constants.USOS_ID: usos_id})
 
     async def db_get_archive_user(self, user_id):
-        user_archive_doc = await self.db[constants.COLLECTION_USERS_ARCHIVE].find_one(
+        return await self.db[constants.COLLECTION_USERS_ARCHIVE].find_one(
             {constants.USER_ID: user_id, constants.USOS_PAIRED: True})
-
-        return user_archive_doc
 
     async def db_usoses(self, enabled=True):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
@@ -237,10 +220,7 @@ class DaoMixin(object):
                                   constants.JOB_TYPE: JobType.ARCHIVE_USER.value})
 
     async def db_find_user(self):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.getUserId()})
-
-        return user_doc
+        return await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: self.getUserId()})
 
     async def db_find_user_by_usos_id(self, user_id, usos_id):
         '''
@@ -277,8 +257,7 @@ class DaoMixin(object):
         return user_doc
 
     async def db_find_user_email(self, email):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email})
-        return user_doc
+        return await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email})
 
     async def db_update(self, collection, _id, document):
         updated = await self.db[collection].update({constants.MONGO_ID: _id}, document)
@@ -286,8 +265,7 @@ class DaoMixin(object):
         return updated
 
     async def db_update_user(self, _id, document):
-        update_doc = await self.db_update(constants.COLLECTION_USERS, _id, document)
-        return update_doc
+        return await self.db_update(constants.COLLECTION_USERS, _id, document)
 
     async def db_insert_user(self, document):
         user_doc = await self.db_insert(constants.COLLECTION_USERS, document)
@@ -295,12 +273,10 @@ class DaoMixin(object):
 
     async def db_insert_token(self, token):
         await self.db_remove(constants.COLLECTION_TOKENS, token)
-        token_doc = await self.db_insert(constants.COLLECTION_TOKENS, token)
-        return token_doc
+        return await self.db_insert(constants.COLLECTION_TOKENS, token)
 
     async def db_find_token(self, email):
-        token_doc = await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
-        return token_doc
+        return await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
 
     async def db_subscriptions(self, pipeline):
         cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)
