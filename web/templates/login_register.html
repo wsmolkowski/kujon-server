@@ -84,12 +84,17 @@
 <script type="text/javascript">
     $(document).ready(function() {
 
+        function cleanInput(){
+            $('#inputEmail').val("");
+            $('#inputPassword').val("");
+            $('#inputPassword2').val("");
+        }
+
         $('#formRegister').submit(function() {
             event.preventDefault();
 
             if ($('#inputPassword').val() != $('#inputPassword2').val()){
-              $('#inputPassword').val("");
-              $('#inputPassword2').val("");
+              cleanInput();
 
               $('#formWarning').html(
                   '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
@@ -122,6 +127,9 @@
                         var url = $('#deploy_web').val() + '/login';
                         window.location.replace(url);
                     } else {
+
+                        cleanInput();
+
                         $('#formWarning').html(
                             '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
                             '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
@@ -134,6 +142,9 @@
                     var msg = {
                         'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception
                     };
+
+                    cleanInput();
+
                     $('#formWarning').html(
                         '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
                         '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
