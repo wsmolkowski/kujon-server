@@ -445,7 +445,10 @@ class ApiMixin(ApiUserMixin):
                 program['programme']['level_of_studies'] = result['level_of_studies']
                 program['programme']['duration'] = result['duration']
                 program['programme']['name'] = result['name']
-                program['programme']['ects_used_sum'] = result['ects_used_sum']
+                if 'ects_used_sum' in result:
+                    program['programme']['ects_used_sum'] = result['ects_used_sum']
+                else:
+                    program['programme']['ects_used_sum'] = None
                 programmes.append(program)
 
         return programmes
