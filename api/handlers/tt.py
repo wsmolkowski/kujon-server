@@ -19,8 +19,9 @@ class TTApi(ApiHandler):
         for lecturer_id in lecturer_ids:
             try:
                 lecturer_info = await self.api_user_info(lecturer_id)
-                lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                lecturers_infos.append(lecturer_info)
+                if lecturers_infos:
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    lecturers_infos.append(lecturer_info)
 
             except Exception as ex:
                 await self.exc(ex, finish=False)
