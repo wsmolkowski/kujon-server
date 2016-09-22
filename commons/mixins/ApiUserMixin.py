@@ -196,8 +196,5 @@ class ApiUserMixin(DaoMixin):
                 await self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-                raise ex
 
         return user_info_doc
