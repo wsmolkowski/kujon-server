@@ -161,8 +161,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     @staticmethod
     def __get_monday():
         today = date.today()
-        monday = today - timedelta(days=(today.weekday()) % 7)
-        return monday
+        return today - timedelta(days=(today.weekday()) % 7)
 
     async def initial_user_crawl(self, user_id, refresh=False):
         try:
