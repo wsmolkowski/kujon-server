@@ -198,5 +198,6 @@ class ApiUserMixin(DaoMixin):
                 logging.debug(ex)
             except Exception as ex:
                 await self.exc(ex, finish=False)
+                raise ex
 
         return user_info_doc
