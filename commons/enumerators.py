@@ -42,7 +42,7 @@ class ExceptionTypes(Abstract):
 
 
 class UserTypes(Abstract):
-    GOOGLE = 'google'
-    FACEBOOK = 'facebook'
+    GOOGLE = 'GOOGLE'
+    FACEBOOK = 'FACEBOOK'
     WWW = 'WWW'
     EMAIL = 'EMAIL'
