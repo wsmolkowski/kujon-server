@@ -223,7 +223,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
         try:
 
-            if login_type not in ['FB', 'WWW', 'GOOGLE', 'EMAIL']:
+            if login_type not in ['FB', 'WWW', 'GOOGLE', 'EMAIL', 'FACEBOOK']:
                 raise AuthenticationError('Nieznany typ logowania.')
 
             usos_doc = yield self.db_get_usos(usos_id)
