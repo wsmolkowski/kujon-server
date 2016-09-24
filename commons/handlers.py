@@ -5,7 +5,6 @@ from tornado import web
 from tornado.util import ObjectDict
 
 from commons import constants, utils
-from commons.errors import AuthenticationError
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.JSendMixin import JSendMixin
 
@@ -47,7 +46,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
 
         try:
             self._context.user_doc = await self._prepare_user()
-        except AuthenticationError as ex:
+        except Exception as ex:
             await self.exc(ex)
             return
 

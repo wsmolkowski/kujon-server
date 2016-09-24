@@ -247,13 +247,13 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     raise AuthenticationError(
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if email and token and login_type == 'GOOGLE':
+            if email and token and login_type == UserTypes.GOOGLE.value():
                 google_token = yield self.google_token(token)
-                google_token['login_type'] = login_type
+                google_token[constants.USER_TYPE] = login_type
                 yield self.db_insert_token(google_token)
-            elif email and token and login_type.upper() == 'FB':
+            elif email and token and login_type.upper() in (UserTypes.FACEBOOK.value(), 'FB'):
                 facebook_token = yield self.facebook_token(token)
-                facebook_token['login_type'] = login_type
+                facebook_token[constants.USER_TYPE] = login_type
                 yield self.db_insert_token(facebook_token)
 
             user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
@@ -265,7 +265,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 user_doc[constants.MOBI_TOKEN] = token
 
             if new_user:
-                user_doc['login_type'] = login_type
+                user_doc[constants.USER_TYPE] = login_type
                 user_doc[constants.USER_DEVICE_TYPE] = device_type
                 user_doc[constants.USER_DEVICE_ID] = device_id
                 user_doc[constants.CREATED_TIME] = datetime.now()
