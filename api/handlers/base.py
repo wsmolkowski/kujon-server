@@ -44,24 +44,24 @@ class BaseHandler(AbstractHandler, SocialMixin):
 
             if not user_doc or constants.USER_TYPE not in user_doc:
                 return
-            
+
             logging.debug(user_doc)
 
-            if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value.upper():
+            if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value:
                 token_exists = await self.db_find_token(header_email)
                 if not token_exists:
                     google_token = await self.google_token(header_token)
                     await self.db_insert_token(google_token)
                 return user_doc
 
-            elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value.upper():
+            elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
                 token_exists = await self.db_find_token(header_email)
                 if not token_exists:
                     facebook_token = await self.facebook_token(header_token)
                     await self.db_insert_token(facebook_token)
                 return user_doc
 
-            elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value.upper():
+            elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value:
 
                 try:
                     decrypted_token = self.aes.decrypt(header_token.encode()).decode()
