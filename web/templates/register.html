@@ -4,7 +4,7 @@
 
 {% end %} {% block navigation %}
 <nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
-    <div class="container-fluid">
+    <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
             <button type="button" class="navbar-toggle">
@@ -13,8 +13,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand page-scroll" href="profil.html"><img src="/static/img/logo-app.png"
-                                                                        class="img-responsive"/></a>
+            <a class="pull-left" href="profil.html"><img src="/static/img/logo-landing.png"/></a>
         </div>
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div id="slidemenu">
@@ -35,7 +34,6 @@
     </div>
     <!-- /.container-fluid -->
 </nav>
-
 {% end %} {% block main %}
 <section id="wybor-uczelni" class="college-selection">
     <div class="container">
@@ -49,7 +47,6 @@
 
             {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
-
             {% end %}
 
             <!--

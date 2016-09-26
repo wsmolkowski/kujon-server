@@ -4,11 +4,12 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import ObjectId
-from tornado import auth, gen, web
+from tornado import auth, gen, web, escape
+from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
 from commons import constants
-from commons.enumerators import ExceptionTypes
+from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
@@ -53,11 +54,28 @@ class ArchiveHandler(ApiHandler):
 class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
+    def on_finish(self):
+        IOLoop.current().spawn_callback(self.db_insert, constants.COLLECTION_REMOTE_IP_HISTORY, {
+            constants.USER_ID: self.getUserId(return_object_id=True),
+            constants.CREATED_TIME: datetime.now(),
+            'host': self.request.host,
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self._context.remote_ip
+        })
+
 
 class LogoutHandler(AuthenticationHandler):
+    @web.asynchronous
     def get(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         self.redirect(self.config.DEPLOY_WEB)
+
+    @web.asynchronous
+    def post(self):
+        self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        self.write('logged out')
 
 
 class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin):
@@ -76,9 +94,11 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
             if not user_doc:
                 user_doc = dict()
-                user_doc[constants.USER_TYPE] = 'facebook'
+                user_doc[constants.USER_TYPE] = UserTypes.FACEBOOK.value
                 user_doc[constants.USER_NAME] = access['name']
                 user_doc[constants.USER_EMAIL] = access['email']
+                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[constants.USER_DEVICE_ID] = None
 
                 user_doc[constants.FACEBOOK] = dict()
                 user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
@@ -138,10 +158,12 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
             user_doc = yield self.db_find_user_email(user['email'])
             if not user_doc:
                 user_doc = dict()
-                user_doc[constants.USER_TYPE] = 'google'
+                user_doc[constants.USER_TYPE] = UserTypes.GOOGLE.value
                 user_doc[constants.USER_NAME] = user['name']
                 user_doc[constants.USER_EMAIL] = user['email']
                 user_doc[constants.USOS_PAIRED] = False
+                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[constants.USER_DEVICE_ID] = None
                 user_doc[constants.USER_CREATED] = datetime.now()
 
                 user_doc[constants.GOOGLE] = dict()
@@ -193,11 +215,15 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
         token = self.get_argument('token', default=None)
         usos_id = self.get_argument('usos_id', default=None)
         login_type = self.get_argument('type', default=None)
+
+        device_type = self.get_argument('device_type', default=None)
+        device_id = self.get_argument('device_id', default=None)
+
         new_user = False
 
         try:
 
-            if login_type not in ['FB', 'WWW', 'GOOGLE']:
+            if login_type not in ['FB', 'WWW', 'GOOGLE', 'EMAIL', 'FACEBOOK']:
                 raise AuthenticationError('Nieznany typ logowania.')
 
             usos_doc = yield self.db_get_usos(usos_id)
@@ -221,13 +247,13 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                     raise AuthenticationError(
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
 
-            if email and token and login_type == 'GOOGLE':
+            if email and token and login_type == UserTypes.GOOGLE.value:
                 google_token = yield self.google_token(token)
-                google_token['login_type'] = login_type
+                google_token[constants.USER_TYPE] = login_type
                 yield self.db_insert_token(google_token)
-            elif email and token and login_type.upper() == 'FB':
+            elif email and token and login_type.upper() in (UserTypes.FACEBOOK.value, 'FB'):
                 facebook_token = yield self.facebook_token(token)
-                facebook_token['login_type'] = login_type
+                facebook_token[constants.USER_TYPE] = login_type
                 yield self.db_insert_token(facebook_token)
 
             user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
@@ -239,7 +265,9 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 user_doc[constants.MOBI_TOKEN] = token
 
             if new_user:
-                user_doc['login_type'] = login_type
+                user_doc[constants.USER_TYPE] = login_type
+                user_doc[constants.USER_DEVICE_TYPE] = device_type
+                user_doc[constants.USER_DEVICE_ID] = device_id
                 user_doc[constants.CREATED_TIME] = datetime.now()
                 new_id = yield self.db_insert_user(user_doc)
 
@@ -262,8 +290,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    @gen.coroutine
-    def db_email_registration(self, user_doc, usos_name):
+    async def db_email_registration(self, user_doc, usos_name):
 
         recipient = user_doc[constants.USER_EMAIL]
 
@@ -279,7 +306,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             '\nemail: {1}\n'.format(usos_name, self.config.SMTP_EMAIL)
         )
 
-        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
     @gen.coroutine
     def _create_jobs(self, user_doc):
@@ -345,10 +372,10 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
                 if header_email or header_token:
-                    logging.info('zakonczona rejestracja MOBI')
+                    logging.info('Finish register MOBI OK')
                     self.success('Udało się sparować konto USOS')
                 else:
-                    logging.info('zakonczona rejestracja WWW')
+                    logging.info('Finish register WWW OK')
                     yield self.db_email_registration(user_doc, usos_doc[constants.USOS_NAME])
                     self.redirect(self.config.DEPLOY_WEB)
             else:
@@ -356,3 +383,130 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
         except Exception as ex:
             yield self.exc(ex)
+
+
+class AbstractEmailHandler(AuthenticationHandler):
+    def set_default_headers(self):
+        if self.isMobileRequest():
+            self.set_header('Access-Control-Allow-Origin', '*')
+        else:
+            self.set_header('Access-Control-Allow-Origin', self.config.DEPLOY_WEB)
+        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
+        self.set_header('Access-Control-Allow-Headers',
+                        'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+
+
+class EmailRegisterHandler(AbstractEmailHandler):
+    async def db_email_confirmation(self, email, user_id):
+
+        confirmation_url = '{0}/authentication/email_confim/{1}'.format(self.config.DEPLOY_API,
+                                                                        self.aes.encrypt(str(user_id)).decode())
+        logging.debug('confirmation_url: {0}'.format(confirmation_url))
+
+        email_job = email_factory.email_job(
+            '[{0}] Dokończ rejestrację konta'.format(self.config.PROJECT_TITLE),
+            self.config.SMTP_EMAIL,
+            email if type(email) is list else [email],
+            '\nCześć,\n'
+            '\nDziękujemy za utworzenie konta.\n'
+            '\nAby zakończyć rejestrację kliknij na poniższy link:\n'
+            '\n{0}\n'
+            '\nPozdrawiamy,'
+            '\nzespół {1}'
+            '\nemail: {2}\n'.format(confirmation_url, self.config.PROJECT_TITLE, self.config.SMTP_EMAIL)
+        )
+
+        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+
+    @web.asynchronous
+    async def post(self):
+        try:
+            json_data = escape.json_decode(self.request.body.decode())
+
+            if constants.USER_EMAIL not in json_data \
+                    or constants.USER_PASSWORD not in json_data \
+                    or constants.USER_DEVICE_TYPE not in json_data \
+                    or constants.USER_DEVICE_ID not in json_data:
+                raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
+
+            if 'password2' in json_data and json_data[constants.USER_PASSWORD] != json_data['password2']:
+                raise AuthenticationError('Podane hasła nie zgadzają się.')
+
+            if len(json_data[constants.USER_PASSWORD]) < 8:
+                raise AuthenticationError('Podane hasło jest zbyt krótkie.')
+
+            user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
+            if user_doc:
+                raise AuthenticationError(
+                    'Podany adres email: {0} jest zajęty.'.format(json_data[constants.USER_EMAIL]))
+
+            user_doc = dict()
+            user_doc[constants.USER_TYPE] = UserTypes.EMAIL.value
+            user_doc[constants.USER_NAME] = json_data[constants.USER_EMAIL]
+            user_doc[constants.USER_EMAIL] = json_data[constants.USER_EMAIL]
+            user_doc[constants.USER_DEVICE_TYPE] = json_data[constants.USER_DEVICE_TYPE]
+            user_doc[constants.USER_DEVICE_ID] = json_data[constants.USER_DEVICE_ID]
+
+            user_doc[constants.USER_PASSWORD] = self.aes.encrypt(json_data[constants.USER_PASSWORD])
+            user_doc[constants.USOS_PAIRED] = False
+            user_doc[constants.USER_EMAIL_CONFIRMED] = False
+            user_doc[constants.USER_CREATED] = datetime.now()
+
+            user_id = await self.db_insert_user(user_doc)
+            self.reset_user_cookie(user_id)
+
+            await self.db_email_confirmation(json_data[constants.USER_EMAIL], user_id)
+
+            logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
+                user_id, json_data[constants.USER_EMAIL]))
+
+            self.success(
+                'Dziękujemy za zarejestrowanie konta {0}. Aby aktywować konto należy postępować zgodnie z instrukcją przesłą w emailu weryfikacyjnym.'.format(
+                    self.config.PROJECT_TITLE), cache_age=None)
+        except Exception as ex:
+            await self.exc(ex)
+
+
+class EmailLoginHandler(AbstractEmailHandler):
+    @web.asynchronous
+    async def post(self):
+
+        try:
+            json_data = escape.json_decode(self.request.body)
+
+            user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
+
+            if not user_doc or user_doc[constants.USER_TYPE] != UserTypes.EMAIL.value or \
+                            json_data[constants.USER_PASSWORD] != self.aes.decrypt(
+                        user_doc[constants.USER_PASSWORD]).decode():
+                raise AuthenticationError('Podano błędne dane.')
+
+            if not user_doc[constants.USER_EMAIL_CONFIRMED]:
+                raise AuthenticationError('Adres email nie został potwierdzony.')
+
+            self.success(data={'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode()})
+
+        except Exception as ex:
+            await self.exc(ex)
+
+
+class EmailConfirmHandler(AuthenticationHandler):
+    @web.asynchronous
+    async def get(self, token):
+        try:
+            user_id = self.aes.decrypt(token.encode()).decode()
+            user_doc = await self.db[constants.COLLECTION_USERS].find_one(
+                {constants.MONGO_ID: ObjectId(user_id)})
+
+            if not user_doc:
+                self.error(message='Błędny parametr wywołania.', code=403)
+            elif constants.USER_EMAIL_CONFIRMED in user_doc and user_doc[constants.USER_EMAIL_CONFIRMED]:
+                self.error(message='Token wykorzystany. Email potwierdzony.', code=403)
+            else:
+                user_doc[constants.USER_EMAIL_CONFIRMED] = True
+                user_doc[constants.UPDATE_TIME] = datetime.now()
+
+                await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                self.redirect(self.config.DEPLOY_WEB)
+        except Exception as ex:
+            await self.exc(ex)

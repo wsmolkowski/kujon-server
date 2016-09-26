@@ -30,6 +30,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     def aes(self):
         return self._aes
 
+    def do_refresh(self):
+        return self._context.refresh
+
     async def _setUp(self, user_id, refresh=False):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
@@ -158,8 +161,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     @staticmethod
     def __get_monday():
         today = date.today()
-        monday = today - timedelta(days=(today.weekday()) % 7)
-        return monday
+        return today - timedelta(days=(today.weekday()) % 7)
 
     async def initial_user_crawl(self, user_id, refresh=False):
         try:
@@ -175,6 +177,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 await self.remove_user_data(skip_collections)
 
             await self.api_user_usos_info()
+
+            await self._setUp(user_id)
+
             await self.api_thesis()
             await self.__process_courses_editions()
             await self.api_terms()

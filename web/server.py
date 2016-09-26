@@ -14,7 +14,7 @@ from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.handlers import DefaultErrorHandler
-from web.handlers import MainHandler, ContactHandler, DisclaimerHandler
+from web.handlers import MainHandler, ContactHandler, LoginHandler, RegisterHandler, DisclaimerHandler
 
 define('environment', default='development')
 
@@ -24,6 +24,8 @@ def get_application(config):
         def __init__(self):
             __handlers = [
                 (r"/", MainHandler),
+                (r"/login", LoginHandler),
+                (r"/register", RegisterHandler),
                 (r"/contact", ContactHandler),  # post only
                 (r"/regulamin", DisclaimerHandler),  # mobi and www modals content
             ]

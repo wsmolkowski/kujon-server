@@ -11,7 +11,7 @@ from commons.UsosCaller import AsyncCaller
 from commons.errors import ApiError
 
 LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'name', 'term_id', constants.TERMS_ORDER_KEY)
+TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'term_id', constants.TERMS_ORDER_KEY)
 
 
 class ApiTermMixin(object):
@@ -38,7 +38,8 @@ class ApiTermMixin(object):
         if self.do_refresh():
             await self.db_remove(constants.COLLECTION_TERMS, pipeline)
 
-        cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort("order_key", -1)
+        cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort(
+            constants.TERMS_ORDER_KEY, -1)
         terms_doc = await cursor.to_list(None)
 
         if not terms_doc:
@@ -47,7 +48,9 @@ class ApiTermMixin(object):
                 for term_id in term_ids:
                     terms_task.append(self._api_term_task(term_id))
                 await gen.multi(terms_task)
-                cursor.rewind()
+
+                cursor = self.db[constants.COLLECTION_TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort(
+                    constants.TERMS_ORDER_KEY, -1)
                 terms_doc = await cursor.to_list(None)
             except Exception as ex:
                 await self.exc(ex, finish=False)

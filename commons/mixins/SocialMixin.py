@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-import logging
-
 from tornado import escape
 
 from commons import utils
@@ -22,7 +20,6 @@ class SocialMixin(object):
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
-            logging.exception(ex)
             raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex))
         else:
             return result
@@ -40,7 +37,6 @@ class SocialMixin(object):
                     'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
-            logging.exception(ex)
             raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex))
         else:
             return result

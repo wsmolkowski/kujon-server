@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import tornado.web
+from tornado.ioloop import IOLoop
 
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
@@ -21,8 +22,8 @@ class AbstractSearch(ApiHandler):
             self.error('Wprowadź fragment dłuższy niż {0} znaki i krótszy niż {1}.'.format(self.MIN_SEARCH,
                                                                                            self.MAX_SEARCH))
 
-    async def on_finally(self):
-        await self.db_insert(constants.COLLECTION_SEARCH, {
+    def on_finish(self):
+        IOLoop.current().spawn_callback(self.db_insert, constants.COLLECTION_SEARCH, {
             'type': self.EXCEPTION_TYPE,
             constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
             constants.CREATED_TIME: datetime.now(),
@@ -60,8 +61,6 @@ class SearchCoursesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
-        finally:
-            await self.on_finally()
 
 
 class SearchFacultiesApi(AbstractSearch):
@@ -76,8 +75,6 @@ class SearchFacultiesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
-        finally:
-            await self.on_finally()
 
 
 class SearchProgrammesApi(AbstractSearch):
@@ -92,8 +89,6 @@ class SearchProgrammesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
-        finally:
-            await self.on_finally()
 
 
 class SearchThesesApi(AbstractSearch):
@@ -108,5 +103,3 @@ class SearchThesesApi(AbstractSearch):
                 self.error('Niestety nie znaleźliśmy danych.', code=404)
         except Exception as ex:
             await self.exc(ex)
-        finally:
-            await self.on_finally()

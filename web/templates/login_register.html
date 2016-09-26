@@ -1,0 +1,168 @@
+{% extends "base.html" %} {% block header_js %}
+<script type="text/javascript" src="/static/require.config.js"></script>
+<script type="text/javascript" data-main="/static/js/startup.js"
+        src="/static/bower_components/requirejs/require.js"></script>
+
+{% end %} {% block navigation %}
+<nav class="navbar navbar-default nawigacja-app navbar-fixed-top" role="navigation" id="slide-nav">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="pull-left" href="profil.html"><img src="/static/img/logo-landing.png"
+                                                         class="img-responsive"/></a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="slidemenu">
+            <ul class="nav navbar-nav navbar-right ">
+                <li>
+                    <a class="btn btn-group" href="{{API_URL}}/authentication/archive">
+                        Skasuj konto
+                    </a>
+                </li>
+                <li>
+                    <a class="btn btn-group" href="{{API_URL}}/authentication/logout">
+                        Wyloguj się
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
+{% end %} {% block main %} {% module xsrf_form_html() %}
+<!-- page content -->
+<div class="container">
+
+    <form class="form-signin" id="formRegister">
+        <h2 class="form-signin-heading">Zarejestruj się</h2>
+
+        <label for="inputEmail" class="sr-only">Adres email</label>
+        <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Adres email" required
+               autofocus>
+
+        <label for="inputPassword" class="sr-only">Hasło</label>
+        <input type="password" name="password" id="inputPassword" class="form-control" minlength="8" placeholder="Hasło"
+               required>
+
+        <label for="inputPassword2" class="sr-only">Wprowadź hasło ponownie</label>
+        <input type="password" name="password2" id="inputPassword2" class="form-control" minlength="8"
+               placeholder="Hasło" required>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" value="remember-me" id="disclaimerCheck" required> Akceptuję <a href="regulamin"
+                                                                                                       id="btnDisclaimer">Regulamin
+                i polityka prywatności</a>
+            </label>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" id="btnSubmit">Zarejestruj</button>
+
+        </br>
+
+        <p class="text-info"><a href="{{DEPLOY_WEB}}/login">Zaloguj się</a> jeśli posiadasz konto.</p>
+
+        <div id="formWarning"></div>
+
+    </form>
+
+    <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
+    <input type="hidden" name="deploy_web" id="deploy_web" value="{{DEPLOY_WEB}}">
+</div>
+
+<!-- /container -->
+
+{% end %} {% block footer_js %}
+<script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        function cleanInput(){
+            $('#inputEmail').val("");
+            $('#inputPassword').val("");
+            $('#inputPassword2').val("");
+        }
+
+        $('#formRegister').submit(function() {
+            event.preventDefault();
+
+            if ($('#inputPassword').val() != $('#inputPassword2').val()){
+              cleanInput();
+
+              $('#formWarning').html(
+                  '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                  '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                  '<strong>Wprowadzone hasła nie są identyczne :(</strong>' +
+                  '</div>'
+              );
+
+              $('#inputPassword').focus();
+
+              return;
+            }
+
+            var formData = {
+                "email": $('#inputEmail').val(),
+                "password": $('#inputPassword').val(),
+                "password2": $('#inputPassword2').val(),
+                "device_type": "WWW",
+                "device_id": "WWW"
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: $('#api_url').val() + '/authentication/email_register',
+                crossDomain: true,
+                data: JSON.stringify(formData),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == 'success') {
+                        var url = $('#deploy_web').val() + '/login';
+                        window.location.replace(url);
+                    } else {
+
+                        cleanInput();
+
+                        $('#formWarning').html(
+                            '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                            '<strong>' + response.message + '</strong>' +
+                            '</div>'
+                        );
+                    }
+                },
+                error: function(jqXHR, exception) {
+                    var msg = {
+                        'message': 'Technical Exception: Response status: ' + jqXHR.status + ' responseText: ' + jqXHR.statusText + ' exception: ' + exception
+                    };
+
+                    cleanInput();
+
+                    $('#formWarning').html(
+                        '<div class="alert alert-warning alert-dismissible fade in" role="alert">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                        '<strong>' + msg + '</strong>' +
+                        '</div>'
+                    );
+                }
+            });
+
+            event.preventDefault();
+        });
+
+    })
+
+    $('#btnDisclaimer').on('click', function(e) {
+        e.preventDefault();
+        $('#modalDisclaimer').modal('show').find('.modal-body').load($(this).attr('href'));
+    });
+</script>
+
+{% end %}
