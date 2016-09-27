@@ -75,7 +75,7 @@ class LogoutHandler(AuthenticationHandler):
     @web.asynchronous
     def post(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-        self.write('logged out')
+        self.success('logged out')
 
 
 class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin):
