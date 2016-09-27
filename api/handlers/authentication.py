@@ -8,7 +8,7 @@ from tornado import auth, gen, web, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants
+from commons import constants, decorators
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
@@ -19,36 +19,35 @@ from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
-    @gen.coroutine
-    def db_email_archive_user(self, recipient):
+    async def db_email_archive_user(self, recipient):
         email_job = email_factory.email_job(
             'Usunęliśmy Twoje konto w Kujon.mobi',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
             '\nCześć,'
-            '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas..\n'
+            '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
             '\nemail: {0}\n'.format(self.config.SMTP_EMAIL)
         )
 
-        yield self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
+    @decorators.authenticated
     @web.asynchronous
-    @gen.coroutine
-    def post(self):
+    async def post(self):
         try:
             user_doc = self.get_current_user()
 
-            if user_doc:
-                yield self.db_archive_user(user_doc[constants.MONGO_ID])
+            await self.db_archive_user(user_doc[constants.MONGO_ID])
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-            yield self.db_email_archive_user(user_doc[constants.USER_EMAIL])
 
-            self.success({})
+            await self.db_email_archive_user(user_doc[constants.USER_EMAIL])
+
+            self.success('Dane użytkownika usunięte.')
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class AuthenticationHandler(BaseHandler, JSendMixin):
@@ -75,7 +74,7 @@ class LogoutHandler(AuthenticationHandler):
     @web.asynchronous
     def post(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
-        self.write('logged out')
+        self.success('Użytkownik wylogowany.')
 
 
 class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin):

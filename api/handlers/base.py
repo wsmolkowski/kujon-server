@@ -45,8 +45,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
             if not user_doc or constants.USER_TYPE not in user_doc:
                 return
 
-            logging.debug(user_doc)
-
             if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value:
                 token_exists = await self.db_find_token(header_email)
                 if not token_exists:
