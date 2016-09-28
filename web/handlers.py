@@ -116,7 +116,8 @@ class ContactHandler(BaseHandler):
             '\nNowa wiadomość od użytkownik: email: {0} mongo_id: {1}\n'
             '\nwiadomość:\n{2}\n'.format(self.get_current_user()[constants.USER_EMAIL],
                                          self.get_current_user()[constants.MONGO_ID],
-                                         message)
+                                         message),
+            user_id=self.getUserId(return_object_id=True)
         )
 
         return await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)

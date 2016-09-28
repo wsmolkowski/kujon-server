@@ -28,7 +28,8 @@ class ArchiveHandler(ApiHandler):
             '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {0}\n'.format(self.config.SMTP_EMAIL)
+            '\nemail: {0}\n'.format(self.config.SMTP_EMAIL),
+            user_id=self.getUserId(return_object_id=True)
         )
 
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -302,7 +303,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
             '\nPozdrawiamy,'
             '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_name, self.config.SMTP_EMAIL)
+            '\nemail: {1}\n'.format(usos_name, self.config.SMTP_EMAIL),
+            user_id=self.getUserId(return_object_id=True)
         )
 
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
@@ -415,18 +417,11 @@ class EmailRegisterHandler(AbstractEmailHandler):
             '[{0}] Dokończ rejestrację konta'.format(self.config.PROJECT_TITLE),
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
-            message_text
+            message_text,
+            user_id=self.getUserId(return_object_id=True)
         )
 
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
-
-        await self.db[constants.COLLECTION_MESSAGES].insert({
-            constants.USER_ID: self.getUserId(),
-            constants.CREATED_TIME: datetime.now(),
-            constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
-            constants.FIELD_MESSAGE_TYPE: 'email',
-            constants.FIELD_MESSAGE_TEXT: message_text
-        })
 
     @web.asynchronous
     async def post(self):
