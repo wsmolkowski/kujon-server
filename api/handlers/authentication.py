@@ -421,6 +421,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
         await self.db[constants.COLLECTION_MESSAGES].insert({
+            constants.USER_ID: self.getUserId(),
             constants.CREATED_TIME: datetime.now(),
             constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
             constants.FIELD_MESSAGE_TYPE: 'email',
