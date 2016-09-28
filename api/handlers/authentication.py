@@ -402,20 +402,30 @@ class EmailRegisterHandler(AbstractEmailHandler):
                                                                         self.aes.encrypt(str(user_id)).decode())
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
+        message_text = '''\nCześć
+            \nDziękujemy za utworzenie konta.
+            \nAby zakończyć rejestrację kliknij na poniższy link:\n
+            \n{0}
+            \nPozdrawiamy,
+            \nzespół {1}
+            \nemail: {2}
+        '''.format(confirmation_url, self.config.PROJECT_TITLE, self.config.SMTP_EMAIL)
+
         email_job = email_factory.email_job(
             '[{0}] Dokończ rejestrację konta'.format(self.config.PROJECT_TITLE),
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
-            '\nCześć,\n'
-            '\nDziękujemy za utworzenie konta.\n'
-            '\nAby zakończyć rejestrację kliknij na poniższy link:\n'
-            '\n{0}\n'
-            '\nPozdrawiamy,'
-            '\nzespół {1}'
-            '\nemail: {2}\n'.format(confirmation_url, self.config.PROJECT_TITLE, self.config.SMTP_EMAIL)
+            message_text
         )
 
         await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+
+        await self.db[constants.COLLECTION_MESSAGES].insert({
+            constants.CREATED_TIME: datetime.now(),
+            constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
+            constants.FIELD_MESSAGE_TYPE: 'email',
+            constants.FIELD_MESSAGE_TEXT: message_text
+        })
 
     @web.asynchronous
     async def post(self):
