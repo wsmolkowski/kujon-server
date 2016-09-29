@@ -285,8 +285,7 @@ class DaoMixin(object):
 
     async def db_messages(self, pipeline):
         cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline)
-        messages = await cursor.to_list(None)
-        return messages
+        return await cursor.to_list(None)
 
     async def db_user_usos_id(self):
         user_doc = await self.db_find_user()
