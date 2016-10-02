@@ -27,6 +27,6 @@ def email_archive(project_title, smtp_email, deploy_web):
     return build_email(message, project_title, smtp_email, deploy_web)
 
 
-def email_register(project_title, smtp_email, deploy_web):
+def email_register_info(project_title, smtp_email, deploy_web):
     message = '\nRejestracja Twojego konta zakończona pomyślnie.'
     return build_email(message, project_title, smtp_email, deploy_web)
