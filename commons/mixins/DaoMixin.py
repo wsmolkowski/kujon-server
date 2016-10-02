@@ -278,6 +278,12 @@ class DaoMixin(object):
         await self.db_remove(constants.COLLECTION_TOKENS, token)
         return await self.db_insert(constants.COLLECTION_TOKENS, token)
 
+    async def db_remove_token(self, email):
+        result = await self.db[constants.COLLECTION_TOKENS].remove({constants.USER_EMAIL: email})
+        logging.debug(
+            'removed from collection {0} token for email {1} resulted in {2}'.format(constants.USER_EMAIL, email,
+                                                                                     result))
+
     async def db_find_token(self, email):
         return await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
 

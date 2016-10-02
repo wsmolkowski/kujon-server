@@ -8,7 +8,7 @@ from tornado import auth, gen, web, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants, decorators
+from commons import constants, decorators, email_message_factory
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
@@ -21,14 +21,11 @@ from crawler import job_factory
 class ArchiveHandler(ApiHandler):
     async def db_email_archive_user(self, recipient):
         email_job = email_factory.email_job(
-            'Usunęliśmy Twoje konto w Kujon.mobi',
+            'Usunęliśmy Twoje konto',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            '\nCześć,'
-            '\nTwoje konto w Kujon.mobi zostało skasowane, zastanów się czy nie wrócić do nas.\n'
-            '\nPozdrawiamy,'
-            '\nzespół Kujon.mobi'
-            '\nemail: {0}\n'.format(self.config.SMTP_EMAIL),
+            email_message_factory.email_archive(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
+                                                self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
@@ -67,14 +64,21 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
 
 class LogoutHandler(AuthenticationHandler):
+    async def remove_token(self):
+        user_doc = self.get_current_user()
+        if user_doc and constants.USER_EMAIL in user_doc:
+            await self.db_remove_token(user_doc[constants.USER_EMAIL])
+
     @web.asynchronous
-    def get(self):
+    async def get(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        await self.remove_token()
         self.redirect(self.config.DEPLOY_WEB)
 
     @web.asynchronous
-    def post(self):
+    async def post(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
+        await self.remove_token()
         self.success('Użytkownik wylogowany.')
 
 
@@ -298,12 +302,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             'Rejestracja w Kujon.mobi',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            '\nCześć,\n'
-            '\nRejestracja Twojego konta i połączenie z {0} zakończona pomyślnie.\n'
-            '\nW razie pytań lub pomysłów na zmianę - napisz do nas. dzięki Tobie Kujon będzie lepszy.\n'
-            '\nPozdrawiamy,'
-            '\nzespół Kujon.mobi'
-            '\nemail: {1}\n'.format(usos_name, self.config.SMTP_EMAIL),
+            email_message_factory.email_register(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
+                                                 self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
@@ -404,20 +404,12 @@ class EmailRegisterHandler(AbstractEmailHandler):
                                                                         self.aes.encrypt(str(user_id)).decode())
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
-        message_text = '''\nCześć
-            \nDziękujemy za utworzenie konta.
-            \nAby zakończyć rejestrację kliknij na poniższy link:\n
-            \n{0}
-            \nPozdrawiamy,
-            \nzespół {1}
-            \nemail: {2}
-        '''.format(confirmation_url, self.config.PROJECT_TITLE, self.config.SMTP_EMAIL)
-
-        email_job = email_factory.email_job(
-            '[{0}] Dokończ rejestrację konta'.format(self.config.PROJECT_TITLE),
+        email_job = email_message_factory.email_job(
+            'Dokończ rejestrację konta',
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
-            message_text,
+            email_message_factory.email_register(confirmation_url, self.config.PROJECT_TITLE,
+                                                 self.config.SMTP_EMAIL, self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
