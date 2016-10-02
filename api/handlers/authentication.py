@@ -481,7 +481,14 @@ class EmailLoginHandler(AbstractEmailHandler):
             if not user_doc[constants.USER_EMAIL_CONFIRMED]:
                 raise AuthenticationError('Adres email nie został potwierdzony.')
 
-            self.success(data={'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode()})
+            token = {
+                'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode(),
+                constants.USER_EMAIL: json_data[constants.USER_EMAIL],
+                constants.USER_TYPE: user_doc[constants.USER_TYPE]
+            }
+
+            await self.db_insert_token(token)
+            self.success(data={'token': token['token']})
 
         except Exception as ex:
             await self.exc(ex)

@@ -60,6 +60,12 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 return user_doc
 
             elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value:
+                token_exists = await self.db_find_token(header_email)
+                if not token_exists:
+                    raise AuthenticationError(
+                        "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(header_email,
+                                                                                                        user_doc[
+                                                                                                            constants.USER_TYPE]))
 
                 try:
                     decrypted_token = self.aes.decrypt(header_token.encode()).decode()
@@ -68,7 +74,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
                         "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(header_email, user_doc[
                             constants.USER_TYPE]))
 
-                if decrypted_token == str(user_doc[constants.MONGO_ID]):
+                if decrypted_token == str(token_exists[constants.MONGO_ID]):
                     return user_doc
                 else:
                     raise AuthenticationError(
