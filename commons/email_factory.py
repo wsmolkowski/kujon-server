@@ -2,7 +2,7 @@
 
 HEADER = 'Cześć,'
 FOOTER = '''
-\nW razie pytań lub pomysłów na zmianę - napisz do nas. Dzięki Tobie {0} będzie lepszy.\
+W razie pytań lub pomysłów na zmianę - napisz do nas. Dzięki Tobie {0} będzie lepszy.
 \nPozdrawiamy,
 \nzespół {1}
 \nemail: {2}
@@ -27,6 +27,6 @@ def email_archive(project_title, smtp_email, deploy_web):
     return build_email(message, project_title, smtp_email, deploy_web)
 
 
-def email_register(project_title, smtp_email, deploy_web):
+def email_register_info(project_title, smtp_email, deploy_web):
     message = '\nRejestracja Twojego konta zakończona pomyślnie.'
     return build_email(message, project_title, smtp_email, deploy_web)

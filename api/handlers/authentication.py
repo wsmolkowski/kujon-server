@@ -8,24 +8,23 @@ from tornado import auth, gen, web, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants, decorators, email_message_factory
+from commons import constants, decorators, email_factory
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
 from commons.mixins.SocialMixin import SocialMixin
-from crawler import email_factory
 from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
     async def db_email_archive_user(self, recipient):
-        email_job = email_factory.email_job(
+        email_job = job_factory.email_job(
             'Usunęliśmy Twoje konto',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            email_message_factory.email_archive(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
-                                                self.config.DEPLOY_WEB),
+            email_factory.email_archive(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
+                                        self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
@@ -298,12 +297,12 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
         recipient = user_doc[constants.USER_EMAIL]
 
-        email_job = email_factory.email_job(
+        email_job = job_factory.email_job(
             'Rejestracja w Kujon.mobi',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            email_message_factory.email_register_info(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
-                                                      self.config.DEPLOY_WEB),
+            email_factory.email_register_info(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
+                                              self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
@@ -404,12 +403,12 @@ class EmailRegisterHandler(AbstractEmailHandler):
                                                                         self.aes.encrypt(str(user_id)).decode())
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
-        email_job = email_factory.email_job(
+        email_job = job_factory.email_job(
             'Dokończ rejestrację konta',
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
-            email_message_factory.email_register(confirmation_url, self.config.PROJECT_TITLE,
-                                                 self.config.SMTP_EMAIL, self.config.DEPLOY_WEB),
+            email_factory.email_register(confirmation_url, self.config.PROJECT_TITLE,
+                                         self.config.SMTP_EMAIL, self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
