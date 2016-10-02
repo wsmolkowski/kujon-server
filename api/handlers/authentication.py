@@ -302,8 +302,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
             'Rejestracja w Kujon.mobi',
             self.config.SMTP_EMAIL,
             recipient if type(recipient) is list else [recipient],
-            email_message_factory.email_register(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
-                                                 self.config.DEPLOY_WEB),
+            email_message_factory.email_register_info(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
+                                                      self.config.DEPLOY_WEB),
             user_id=self.getUserId(return_object_id=True)
         )
 
