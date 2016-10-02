@@ -448,7 +448,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             user_doc = dict()
             user_doc[constants.USER_TYPE] = UserTypes.EMAIL.value
             user_doc[constants.USER_NAME] = json_data[constants.USER_EMAIL]
-            user_doc[constants.USER_EMAIL] = json_data[constants.USER_EMAIL]
+            user_doc[constants.USER_EMAIL] = json_data[constants.USER_EMAIL].lower()
             user_doc[constants.USER_DEVICE_TYPE] = json_data[constants.USER_DEVICE_TYPE]
             user_doc[constants.USER_DEVICE_ID] = json_data[constants.USER_DEVICE_ID]
 

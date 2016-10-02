@@ -257,7 +257,10 @@ class DaoMixin(object):
         return user_doc
 
     async def db_find_user_email(self, email):
-        return await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email})
+        if not isinstance(email):
+            email = str(email)
+
+        return await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email.lower()})
 
     async def db_update(self, collection, _id, document):
         updated = await self.db[collection].update({constants.MONGO_ID: _id}, document)
