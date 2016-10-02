@@ -306,7 +306,7 @@ USOSINSTANCES = [
      'consumer_key': 'ydYepCBkkcPRNzFcaEAp',
      'consumer_secret': 'QHw8B3dYYM5fvbXQRK8xQQbNBLGLY3gMrEAG2Z7P',
      'contact': 'mdabrowski@pwsip.edu.pl',
-     'enabled': True,
+     'enabled': False,
      'validate_ssl_certificate': True,
      },
     {'usos_id': 'PWSZ-Elblag',
@@ -336,7 +336,7 @@ USOSINSTANCES = [
      'consumer_key': 'eJJcsMasd5wtUfGWp9pR',
      'consumer_secret': '4gjFFBGjSM4sndwwkUewAEz3XUGapTQ42NYDftbq',
      'contact': 'maksymilian.szpura@adm.uw.edu.pl',
-     'enabled': True,
+     'enabled': False,
      'validate_ssl_certificate': False
      },
     {'usos_id': 'UPH',
