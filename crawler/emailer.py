@@ -79,7 +79,8 @@ class Emailer(object):
                 await self.update_job(job, JobStatus.START.value)
 
                 msg = MIMEText(job[email_factory.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
-                msg['Subject'] = Header(job[email_factory.SMTP_SUBJECT], constants.ENCODING)
+                msg['Subject'] = Header('[{0}] {1}'.format(job[self.config.PROJECT_TITLE, email_factory.SMTP_SUBJECT]),
+                                        constants.ENCODING)
                 msg['From'] = job[email_factory.SMTP_FROM]
                 msg['To'] = ','.join(job[email_factory.SMTP_TO])
 
