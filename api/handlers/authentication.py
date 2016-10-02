@@ -404,7 +404,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
                                                                         self.aes.encrypt(str(user_id)).decode())
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
-        email_job = email_message_factory.email_job(
+        email_job = email_factory.email_job(
             'Dokończ rejestrację konta',
             self.config.SMTP_EMAIL,
             email if type(email) is list else [email],
