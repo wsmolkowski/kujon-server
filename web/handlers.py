@@ -10,8 +10,6 @@ from commons import constants
 from commons.enumerators import ExceptionTypes
 from commons.handlers import AbstractHandler
 
-CONFIG_COOKIE_EXPIRATION = 1
-
 
 class BaseHandler(AbstractHandler):
     SUPPORTED_METHODS = ('GET',)
@@ -87,7 +85,6 @@ class MainHandler(BaseHandler):
         elif user_doc and constants.USOS_PAIRED in user_doc and not user_doc[constants.USOS_PAIRED]:
             data = self.get_config()
 
-            # user_doc = self.get_current_user()
             if user_doc:
                 error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
                     constants.USER_ID: user_doc[constants.MONGO_ID],
