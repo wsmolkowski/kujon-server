@@ -111,13 +111,16 @@ class ContactHandler(BaseHandler):
             subject = self.get_argument('subject', default=None)
             message = self.get_argument('message', default=None)
 
-            logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
-                self.get_current_user()[constants.MONGO_ID], subject, message))
+            if not subject or not message:
+                self.error(message='Nie przekazano wymaganych parametrów.')
+            else:
+                logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
+                    self.get_current_user()[constants.MONGO_ID], subject, message))
 
-            job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
-                                              self.getUserId(return_object_id=True))
+                job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
+                                                  self.getUserId(return_object_id=True))
 
-            self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
+                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)
