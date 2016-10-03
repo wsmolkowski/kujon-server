@@ -136,8 +136,8 @@ USOSINSTANCES = [
      'consumer_key': 'sA4agLyJL58nrZqTMRAL',
      'consumer_secret': 'HDjxF7uSEsqZq3v57EruJz8gzgxVRjCYzLhnpmC8',
      'contact': 'usos@up.wroc.pl',
-     'enabled': False,
-     'validate_ssl_certificate': False
+     'enabled': True,
+     'validate_ssl_certificate': True
      },
     {'usos_id': 'PRZ',
      'name': 'Politechnika Rzeszowska',

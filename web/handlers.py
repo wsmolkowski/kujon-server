@@ -21,6 +21,7 @@ class BaseHandler(AbstractHandler):
             'API_URL': self.config.DEPLOY_API,
             'WEB_VERSION': self.config.WEB_VERSION,
             'DEPLOY_WEB': self.config.DEPLOY_WEB,
+            'MESSAGE': False
         }
 
     async def _prepare_user(self):
@@ -127,7 +128,13 @@ class LoginHandler(BaseHandler):
 
     @tornado.web.asynchronous
     async def get(self):
-        self.render("login.html", **self.get_config())
+        token = self.get_argument('token', default=None)
+        if token:
+            config = self.get_config()
+            config['MESSAGE'] = 'Udało Ci się potwierdzić założenie konta. Teraz możesz logować się przy pomocy email.'
+            self.render("login.html", **config)
+        else:
+            self.render("login.html", **self.get_config())
 
 
 class RegisterHandler(BaseHandler):

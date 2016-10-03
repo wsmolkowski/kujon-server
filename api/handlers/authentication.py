@@ -454,8 +454,7 @@ class EmailConfirmHandler(AuthenticationHandler):
     async def get(self, token):
         try:
             user_id = self.aes.decrypt(token.encode()).decode()
-            user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(user_id)})
+            user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
 
             if not user_doc:
                 self.error(message='Błędny parametr wywołania.', code=403)
@@ -466,6 +465,6 @@ class EmailConfirmHandler(AuthenticationHandler):
                 user_doc[constants.UPDATE_TIME] = datetime.now()
 
                 await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                self.redirect(self.config.DEPLOY_WEB)
+                self.redirect(self.config.DEPLOY_WEB + '/login?token=' + token)
         except Exception as ex:
             await self.exc(ex)

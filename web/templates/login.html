@@ -52,10 +52,18 @@
 
         <div id="formWarning"></div>
 
+        <br>
+
+        {% if MESSAGE %}
+        <div class="alert alert-success alert-dismissible fade in" role="alert">
+            <strong>Brawo!</strong> {{ MESSAGE }
+        </div>
+        {% end %}
     </form>
 
     <input type="hidden" name="api_url" id="api_url" value="{{API_URL}}">
     <input type="hidden" name="deploy_web" id="deploy_web" value="{{DEPLOY_WEB}}">
+
 
 </div>
 
