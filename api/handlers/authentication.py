@@ -8,7 +8,7 @@ from tornado import auth, gen, web, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants, decorators, email_factory
+from commons import constants, decorators
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
@@ -18,18 +18,6 @@ from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
-    async def db_email_archive_user(self, recipient):
-        email_job = job_factory.email_job(
-            'Usunęliśmy Twoje konto',
-            self.config.SMTP_EMAIL,
-            recipient if type(recipient) is list else [recipient],
-            email_factory.email_archive(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
-                                        self.config.DEPLOY_WEB),
-            user_id=self.getUserId(return_object_id=True)
-        )
-
-        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
-
     @decorators.authenticated
     @web.asynchronous
     async def post(self):
@@ -40,7 +28,7 @@ class ArchiveHandler(ApiHandler):
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            await self.db_email_archive_user(user_doc[constants.USER_EMAIL])
+            await self.email_archive_user(user_doc[constants.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')
         except Exception as ex:
@@ -293,21 +281,6 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    async def db_email_registration(self, user_doc, usos_name):
-
-        recipient = user_doc[constants.USER_EMAIL]
-
-        email_job = job_factory.email_job(
-            'Rejestracja w Kujon.mobi',
-            self.config.SMTP_EMAIL,
-            recipient if type(recipient) is list else [recipient],
-            email_factory.email_register_info(self.config.PROJECT_TITLE, self.config.SMTP_EMAIL,
-                                              self.config.DEPLOY_WEB),
-            user_id=self.getUserId(return_object_id=True)
-        )
-
-        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
-
     @gen.coroutine
     def _create_jobs(self, user_doc):
         yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
@@ -376,7 +349,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.info('Finish register WWW OK')
-                    yield self.db_email_registration(user_doc, usos_doc[constants.USOS_NAME])
+                    yield self.email_registration()
                     self.redirect(self.config.DEPLOY_WEB)
             else:
                 self.redirect(self.config.DEPLOY_WEB)
@@ -397,23 +370,6 @@ class AbstractEmailHandler(AuthenticationHandler):
 
 
 class EmailRegisterHandler(AbstractEmailHandler):
-    async def db_email_confirmation(self, email, user_id):
-
-        confirmation_url = '{0}/authentication/email_confim/{1}'.format(self.config.DEPLOY_API,
-                                                                        self.aes.encrypt(str(user_id)).decode())
-        logging.debug('confirmation_url: {0}'.format(confirmation_url))
-
-        email_job = job_factory.email_job(
-            'Dokończ rejestrację konta',
-            self.config.SMTP_EMAIL,
-            email if type(email) is list else [email],
-            email_factory.email_register(confirmation_url, self.config.PROJECT_TITLE,
-                                         self.config.SMTP_EMAIL, self.config.DEPLOY_WEB),
-            user_id=self.getUserId(return_object_id=True)
-        )
-
-        await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
-
     @web.asynchronous
     async def post(self):
         try:
@@ -451,7 +407,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             user_id = await self.db_insert_user(user_doc)
             self.reset_user_cookie(user_id)
 
-            await self.db_email_confirmation(json_data[constants.USER_EMAIL], user_id)
+            await self.email_confirmation(json_data[constants.USER_EMAIL], user_id)
 
             logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
                 user_id, json_data[constants.USER_EMAIL]))

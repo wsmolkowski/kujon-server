@@ -6,10 +6,11 @@ from tornado.util import ObjectDict
 
 from commons import constants, utils
 from commons.mixins.DaoMixin import DaoMixin
+from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin):
+class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
     SUPPORTED_METHODS = ('POST', 'OPTIONS', 'GET')
 
     def options(self, *args, **kwargs):

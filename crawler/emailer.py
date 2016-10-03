@@ -4,7 +4,7 @@ import asyncio
 import logging
 import smtplib
 from datetime import datetime
-from email.header import Header
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import motor.motor_asyncio
@@ -14,10 +14,9 @@ from tornado.options import parse_command_line
 from commons import constants
 from commons.config import Config
 from commons.enumerators import JobStatus
-from crawler import email_factory
+from commons.mixins import EmailMixin
 
 QUEUE_MAXSIZE = 100
-# MAX_WORKERS = 4
 SLEEP = 2
 
 define('environment', default='development')
@@ -78,27 +77,31 @@ class Emailer(object):
                 # process the item
                 await self.update_job(job, JobStatus.START.value)
 
-                msg = MIMEText(job[email_factory.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
-                msg['Subject'] = Header('[{0}] {1}'.format(job[self.config.PROJECT_TITLE, email_factory.SMTP_SUBJECT]),
-                                        constants.ENCODING)
-                msg['From'] = job[email_factory.SMTP_FROM]
-                msg['To'] = ','.join(job[email_factory.SMTP_TO])
+                msg = MIMEMultipart('alternative')
+                # msg = MIMEText(job[email_factory.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
 
-                smtp.sendmail(job[email_factory.SMTP_FROM], job[email_factory.SMTP_TO], msg.as_string())
+                msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, job[EmailMixin.SMTP_SUBJECT])
+                msg['From'] = job[EmailMixin.SMTP_FROM]
+                msg['To'] = ','.join(job[EmailMixin.SMTP_TO])
+
+                msg.attach(MIMEText(job[EmailMixin.SMTP_TEXT], 'plain'))
+                msg.attach(MIMEText(job[EmailMixin.SMTP_HTML], 'html'))
+
+                smtp.sendmail(job[EmailMixin.SMTP_FROM], job[EmailMixin.SMTP_TO], msg.as_string())
 
                 await self.db[constants.COLLECTION_MESSAGES].insert({
                     constants.USER_ID: job[constants.USER_ID],
                     constants.CREATED_TIME: datetime.now(),
                     constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                     constants.FIELD_MESSAGE_TYPE: 'email',
-                    constants.FIELD_MESSAGE_TEXT: job[email_factory.SMTP_TEXT]
+                    constants.FIELD_MESSAGE_TEXT: job[EmailMixin.SMTP_TEXT]
                 })
 
                 await self.update_job(job, JobStatus.FINISH.value)
 
                 smtp.quit()
             except Exception as ex:
-                print(ex)
+                logging.exception(ex)
                 await self.update_job(job, JobStatus.FAIL.value)
 
 

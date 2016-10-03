@@ -9,7 +9,6 @@ from cryptography.fernet import InvalidToken
 from commons import constants
 from commons.enumerators import ExceptionTypes
 from commons.handlers import AbstractHandler
-from crawler import email_factory
 
 CONFIG_COOKIE_EXPIRATION = 1
 
@@ -108,20 +107,6 @@ class MainHandler(BaseHandler):
 class ContactHandler(BaseHandler):
     SUPPORTED_METHODS = ('POST',)
 
-    async def email_contact(self, subject, message):
-        email_job = email_factory.email_job(
-            '[KUJON.MOBI][CONTACT]: {0}'.format(subject),
-            self.config.SMTP_EMAIL,
-            [self.config.SMTP_EMAIL],
-            '\nNowa wiadomość od użytkownik: email: {0} mongo_id: {1}\n'
-            '\nwiadomość:\n{2}\n'.format(self.get_current_user()[constants.USER_EMAIL],
-                                         self.get_current_user()[constants.MONGO_ID],
-                                         message),
-            user_id=self.getUserId(return_object_id=True)
-        )
-
-        return await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
-
     @tornado.web.asynchronous
     async def post(self):
         try:
@@ -131,7 +116,8 @@ class ContactHandler(BaseHandler):
             logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
                 self.get_current_user()[constants.MONGO_ID], subject, message))
 
-            job_id = await self.email_contact(subject, message)
+            job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
+                                              self.getUserId(return_object_id=True))
 
             self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
         except Exception as ex:
