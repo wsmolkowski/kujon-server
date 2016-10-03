@@ -257,7 +257,10 @@ class DaoMixin(object):
         return user_doc
 
     async def db_find_user_email(self, email):
-        return await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email})
+        if not isinstance(email, str):
+            email = str(email)
+
+        return await self.db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: email.lower()})
 
     async def db_update(self, collection, _id, document):
         updated = await self.db[collection].update({constants.MONGO_ID: _id}, document)
@@ -275,8 +278,24 @@ class DaoMixin(object):
         await self.db_remove(constants.COLLECTION_TOKENS, token)
         return await self.db_insert(constants.COLLECTION_TOKENS, token)
 
+    async def db_remove_token(self, email):
+        result = await self.db[constants.COLLECTION_TOKENS].remove({constants.USER_EMAIL: email})
+        logging.debug(
+            'removed from collection {0} token for email {1} resulted in {2}'.format(constants.USER_EMAIL, email,
+                                                                                     result))
+
     async def db_find_token(self, email):
-        return await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
+        '''
+        finds token by email and updates creation time
+        :param email:
+        :return: token_doc
+        '''
+
+        token_doc = await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
+        if token_doc:
+            token_doc[constants.CREATED_TIME] = datetime.now()
+            await self.db_update(constants.COLLECTION_TOKENS, token_doc[constants.MONGO_ID], token_doc)
+        return token_doc
 
     async def db_subscriptions(self, pipeline):
         cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)

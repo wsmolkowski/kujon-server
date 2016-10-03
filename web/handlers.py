@@ -9,9 +9,6 @@ from cryptography.fernet import InvalidToken
 from commons import constants
 from commons.enumerators import ExceptionTypes
 from commons.handlers import AbstractHandler
-from crawler import email_factory
-
-CONFIG_COOKIE_EXPIRATION = 1
 
 
 class BaseHandler(AbstractHandler):
@@ -24,6 +21,7 @@ class BaseHandler(AbstractHandler):
             'API_URL': self.config.DEPLOY_API,
             'WEB_VERSION': self.config.WEB_VERSION,
             'DEPLOY_WEB': self.config.DEPLOY_WEB,
+            'MESSAGE': False
         }
 
     async def _prepare_user(self):
@@ -88,7 +86,6 @@ class MainHandler(BaseHandler):
         elif user_doc and constants.USOS_PAIRED in user_doc and not user_doc[constants.USOS_PAIRED]:
             data = self.get_config()
 
-            # user_doc = self.get_current_user()
             if user_doc:
                 error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
                     constants.USER_ID: user_doc[constants.MONGO_ID],
@@ -108,32 +105,22 @@ class MainHandler(BaseHandler):
 class ContactHandler(BaseHandler):
     SUPPORTED_METHODS = ('POST',)
 
-    async def email_contact(self, subject, message):
-        email_job = email_factory.email_job(
-            '[KUJON.MOBI][CONTACT]: {0}'.format(subject),
-            self.config.SMTP_EMAIL,
-            [self.config.SMTP_EMAIL],
-            '\nNowa wiadomość od użytkownik: email: {0} mongo_id: {1}\n'
-            '\nwiadomość:\n{2}\n'.format(self.get_current_user()[constants.USER_EMAIL],
-                                         self.get_current_user()[constants.MONGO_ID],
-                                         message),
-            user_id=self.getUserId(return_object_id=True)
-        )
-
-        return await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
-
     @tornado.web.asynchronous
     async def post(self):
         try:
             subject = self.get_argument('subject', default=None)
             message = self.get_argument('message', default=None)
 
-            logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
-                self.get_current_user()[constants.MONGO_ID], subject, message))
+            if not subject or not message:
+                self.error(message='Nie przekazano wymaganych parametrów.')
+            else:
+                logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
+                    self.get_current_user()[constants.MONGO_ID], subject, message))
 
-            job_id = await self.email_contact(subject, message)
+                job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
+                                                  self.getUserId(return_object_id=True))
 
-            self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
+                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)
@@ -144,7 +131,13 @@ class LoginHandler(BaseHandler):
 
     @tornado.web.asynchronous
     async def get(self):
-        self.render("login.html", **self.get_config())
+        token = self.get_argument('token', default=None)
+        if token:
+            config = self.get_config()
+            config['MESSAGE'] = 'Udało Ci się potwierdzić założenie konta. Teraz możesz logować się przy pomocy email.'
+            self.render("login.html", **config)
+        else:
+            self.render("login.html", **self.get_config())
 
 
 class RegisterHandler(BaseHandler):
