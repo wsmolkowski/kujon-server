@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+from datetime import datetime
 
 import pymongo
 
@@ -148,9 +149,11 @@ class DbUtils(object):
 
     def recreate_database(self, aes_secret):
         try:
+            now = datetime.now()
             aes = AESCipher(aes_secret)
             self.client.drop_collection(constants.COLLECTION_USOSINSTANCES)
             for usos in usosinstances.USOSINSTANCES:
+                usos[constants.CREATED_TIME] = now
                 logging.debug("adding usos: %r ", usos[constants.USOS_ID])
                 doc = self.client.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
                 if not doc:
