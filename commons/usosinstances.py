@@ -129,12 +129,12 @@ USOSINSTANCES = [
      'enabled': False,
      'validate_ssl_certificate': True,
      },
-    {'usos_id': 'UPWR',  # z palca dodane, przy logowaniu wyświetla błąd Invalid signature
+    {'usos_id': 'UPWR',
      'name': 'Uniwersytet Przyrodniczy we Wrocławiu',
      'url': 'https://usosapps.up.wroc.pl/',
      'logo': '/static/img/logo/logo-up-64x64.jpg',
-     'consumer_key': 'sA4agLyJL58nrZqTMRAL',
-     'consumer_secret': 'HDjxF7uSEsqZq3v57EruJz8gzgxVRjCYzLhnpmC8',
+     'consumer_key': 'uDHBTwzpz6zMp4FP7hbv',
+     'consumer_secret': 'xTGN7aTdELNEvzbQCERpDthzB9PaTsWcsYu995JX',
      'contact': 'usos@up.wroc.pl',
      'enabled': True,
      'validate_ssl_certificate': True
