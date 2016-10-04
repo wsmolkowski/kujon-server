@@ -439,7 +439,8 @@ class EmailLoginHandler(AbstractEmailHandler):
             token = {
                 'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode(),
                 constants.USER_EMAIL: json_data[constants.USER_EMAIL],
-                constants.USER_TYPE: user_doc[constants.USER_TYPE]
+                constants.USER_TYPE: user_doc[constants.USER_TYPE],
+                constants.USER_ID: user_doc[constants.MONGO_ID],
             }
 
             await self.db_insert_token(token)
