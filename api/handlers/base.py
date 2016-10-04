@@ -63,23 +63,22 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 token_exists = await self.db_find_token(header_email)
                 if not token_exists:
                     raise AuthenticationError(
-                        "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(header_email,
-                                                                                                        user_doc[
-                                                                                                            constants.USER_TYPE]))
+                        "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(
+                            header_email, user_doc[constants.USER_TYPE]))
 
                 try:
                     decrypted_token = self.aes.decrypt(header_token.encode()).decode()
                 except InvalidToken:
                     raise AuthenticationError(
-                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(header_email, user_doc[
-                            constants.USER_TYPE]))
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
+                            header_email, user_doc[constants.USER_TYPE]))
 
-                if decrypted_token == str(token_exists[constants.MONGO_ID]):
+                if decrypted_token == str(token_exists[constants.USER_ID]):
                     return user_doc
                 else:
                     raise AuthenticationError(
-                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(header_email, user_doc[
-                            constants.USER_TYPE]))
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
+                            header_email, user_doc[constants.USER_TYPE]))
             else:
                 raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[constants.USER_TYPE]))
         return

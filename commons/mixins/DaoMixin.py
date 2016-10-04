@@ -55,8 +55,10 @@ class DaoMixin(object):
             await self.db_insert(constants.COLLECTION_EXCEPTIONS, exc_doc, update=False)
 
         if finish:
-            if isinstance(exception, ApiError) or isinstance(exception, AuthenticationError):
+            if isinstance(exception, ApiError):
                 self.error(message=str(exception))
+            elif isinstance(exception, AuthenticationError):
+                self.error(message=str(exception), code=401)
             elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
                 self.usos()
             else:
@@ -275,7 +277,7 @@ class DaoMixin(object):
         return user_doc
 
     async def db_insert_token(self, token):
-        await self.db_remove(constants.COLLECTION_TOKENS, token)
+        await self.db[constants.COLLECTION_TOKENS].remove({constants.USER_EMAIL: token[constants.USER_EMAIL]})
         return await self.db_insert(constants.COLLECTION_TOKENS, token)
 
     async def db_remove_token(self, email):
