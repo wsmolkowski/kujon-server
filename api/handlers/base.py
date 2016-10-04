@@ -73,7 +73,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
                         "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
                             header_email, user_doc[constants.USER_TYPE]))
 
-                if decrypted_token == str(token_exists[constants.USER_ID]):
+                if decrypted_token == str(user_doc[constants.MONGO_ID]):
                     return user_doc
                 else:
                     raise AuthenticationError(
