@@ -160,8 +160,6 @@ class DbUtils(object):
                         self.client[constants.COLLECTION_USOSINSTANCES].insert(usos)
         except Exception as ex:
             logging.exception(ex)
-            return False
-        return True
 
     def remove_user_data(self, user_id, client=False):
         if not client:
@@ -270,7 +268,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-c', '--clean', action='store_const', dest='option', const='clean',
                     help="clean all database collection without usosinstances and course_class_types")
 parser.add_argument('-r', '--recreate', action='store_const', dest='option', const='recreate',
-                    help="recreate dictionaries")
+                    help="recreate dictionaries - usosinstances")
 parser.add_argument('-i', '--index', action='store_const', dest='option', const='index',
                     help="creates indexes on collections")
 parser.add_argument('-s', '--statistics', action='store_const', dest='option', const='statistics',
@@ -289,13 +287,9 @@ def main():
     dbutils = DbUtils(config)
 
     if args.option == 'recreate':
-        logging.info('drop_collections start')
-        dbutils.drop_collections()
-        logging.info('drop_collections end')
-
-        logging.info('recreate_database start')
+        logging.info('recreate usosinstances start')
         dbutils.recreate_database(config.AES_SECRET)
-        logging.info('recreate_database end')
+        logging.info('recreate usosinstances end')
 
     elif args.option == 'clean':
         logging.info('clean_database start')
