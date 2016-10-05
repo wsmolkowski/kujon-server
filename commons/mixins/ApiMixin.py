@@ -36,6 +36,15 @@ class ApiMixin(ApiUserMixin):
     def filterNone(array):
         return [i for i in array if i is not None]
 
+    def __translate_currently_conducted(self, course_doc):
+        # translate is_currently_conducted and course_is_currently_conducted number to string
+        if 'is_currently_conducted' in course_doc:
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
+        if 'course_is_currently_conducted' in course_doc:
+            course_doc['course_is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['course_is_currently_conducted'])
+
     async def api_courses_editions(self):
         pipeline = {constants.USER_ID: self.getUserId()}
 
@@ -156,12 +165,8 @@ class ApiMixin(ApiUserMixin):
             logging.debug(ex)
             course_doc['participants'] = participants
 
-        # change int to value
-        if 'is_currently_conducted' in course_doc:
-            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-                course_doc['is_currently_conducted'])
+        self.__translate_currently_conducted(course_doc)
 
-        # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
         course_doc['coordinators'] = course_edition['coordinators']
         course_doc['course_units_ids'] = course_edition['course_units_ids']
@@ -228,10 +233,7 @@ class ApiMixin(ApiUserMixin):
             except DuplicateKeyError as ex:
                 logging.debug(ex)
 
-        # change id to value
-        if 'is_currently_conducted' in course_doc:
-            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-                course_doc['is_currently_conducted'])
+        self.__translate_currently_conducted(course_doc)
 
         # change faculty_id to faculty name
         faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
