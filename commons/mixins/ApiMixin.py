@@ -223,24 +223,23 @@ class ApiMixin(ApiUserMixin):
 
         if not course_doc:
             course_doc = await self.usos_course(course_id)
-
-            # change id to value
-            if 'is_currently_conducted' in course_doc:
-                course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-                    course_doc['is_currently_conducted'])
-
-            # change faculty_id to faculty name
-            faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
-            if not faculty_doc:
-                faculty_doc = await self.usos_faculty(course_doc[constants.FACULTY_ID])
-
-            course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
-                                                constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
-
             try:
                 await self.db_insert(constants.COLLECTION_COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
+
+        # change id to value
+        if 'is_currently_conducted' in course_doc:
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
+
+        # change faculty_id to faculty name
+        faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
+        if not faculty_doc:
+            faculty_doc = await self.usos_faculty(course_doc[constants.FACULTY_ID])
+
+        course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
+                                            constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
         return course_doc
 
