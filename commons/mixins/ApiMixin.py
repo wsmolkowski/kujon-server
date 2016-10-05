@@ -157,8 +157,9 @@ class ApiMixin(ApiUserMixin):
             course_doc['participants'] = participants
 
         # change int to value
-        course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-            course_doc['is_currently_conducted'])
+        if 'is_currently_conducted' in course_doc:
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
 
         # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
@@ -221,21 +222,12 @@ class ApiMixin(ApiUserMixin):
         course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
-            try:
-                course_doc = await self.usos_course(course_id)
-
-                await self.db_insert(constants.COLLECTION_COURSES, course_doc)
-            except DuplicateKeyError as ex:
-                logging.debug(ex)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
-            if not course_doc:
-                return
+            course_doc = await self.usos_course(course_id)
 
             # change id to value
-            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-                course_doc['is_currently_conducted'])
+            if 'is_currently_conducted' in course_doc:
+                course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                    course_doc['is_currently_conducted'])
 
             # change faculty_id to faculty name
             faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
@@ -245,8 +237,10 @@ class ApiMixin(ApiUserMixin):
             course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
                                                 constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
-            if not course_doc:
-                raise ApiError("Nie znaleźliśmy danych kursu {0}".format(course_id))
+            try:
+                await self.db_insert(constants.COLLECTION_COURSES, course_doc)
+            except DuplicateKeyError as ex:
+                logging.debug(ex)
 
         return course_doc
 
