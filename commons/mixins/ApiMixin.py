@@ -182,7 +182,10 @@ class ApiMixin(ApiUserMixin):
                     tasks_groups.append(self.api_group(int(unit)))
 
             groups = await gen.multi(tasks_groups)
-            course_doc['groups'] = self.filterNone(groups)
+            groups_translated = []
+            for group in self.filterNone(groups):
+                groups_translated.append(self.__translate_currently_conducted(group))
+            course_doc['groups'] = self.filterNone(groups_translated)
 
         if extra_fetch:
             term_doc = await self.api_term([term_id])
