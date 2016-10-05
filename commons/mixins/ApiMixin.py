@@ -36,6 +36,15 @@ class ApiMixin(ApiUserMixin):
     def filterNone(array):
         return [i for i in array if i is not None]
 
+    def __translate_currently_conducted(self, course_doc):
+        # translate is_currently_conducted and course_is_currently_conducted number to string
+        if 'is_currently_conducted' in course_doc:
+            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['is_currently_conducted'])
+        if 'course_is_currently_conducted' in course_doc:
+            course_doc['course_is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
+                course_doc['course_is_currently_conducted'])
+
     async def api_courses_editions(self):
         pipeline = {constants.USER_ID: self.getUserId()}
 
@@ -156,11 +165,8 @@ class ApiMixin(ApiUserMixin):
             logging.debug(ex)
             course_doc['participants'] = participants
 
-        # change int to value
-        course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-            course_doc['is_currently_conducted'])
+        self.__translate_currently_conducted(course_doc)
 
-        # make lecturers unique list
         course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
         course_doc['coordinators'] = course_edition['coordinators']
         course_doc['course_units_ids'] = course_edition['course_units_ids']
@@ -176,7 +182,10 @@ class ApiMixin(ApiUserMixin):
                     tasks_groups.append(self.api_group(int(unit)))
 
             groups = await gen.multi(tasks_groups)
-            course_doc['groups'] = self.filterNone(groups)
+            groups_translated = []
+            for group in self.filterNone(groups):
+                groups_translated.append(self.__translate_currently_conducted(group))
+            course_doc['groups'] = self.filterNone(groups_translated)
 
         if extra_fetch:
             term_doc = await self.api_term([term_id])
@@ -221,32 +230,21 @@ class ApiMixin(ApiUserMixin):
         course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
+            course_doc = await self.usos_course(course_id)
             try:
-                course_doc = await self.usos_course(course_id)
-
                 await self.db_insert(constants.COLLECTION_COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-            except Exception as ex:
-                await self.exc(ex, finish=False)
 
-            if not course_doc:
-                return
+        self.__translate_currently_conducted(course_doc)
 
-            # change id to value
-            course_doc['is_currently_conducted'] = usoshelper.dict_value_is_currently_conducted(
-                course_doc['is_currently_conducted'])
+        # change faculty_id to faculty name
+        faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
+        if not faculty_doc:
+            faculty_doc = await self.usos_faculty(course_doc[constants.FACULTY_ID])
 
-            # change faculty_id to faculty name
-            faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
-            if not faculty_doc:
-                faculty_doc = await self.usos_faculty(course_doc[constants.FACULTY_ID])
-
-            course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
-                                                constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
-
-            if not course_doc:
-                raise ApiError("Nie znaleźliśmy danych kursu {0}".format(course_id))
+        course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
+                                            constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
 
         return course_doc
 

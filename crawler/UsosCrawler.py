@@ -172,7 +172,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                                     constants.COLLECTION_JOBS_LOG, constants.COLLECTION_MESSAGES,
                                     constants.COLLECTION_SEARCH, constants.COLLECTION_TOKENS,
                                     constants.COLLECTION_EMAIL_QUEUE, constants.COLLECTION_EMAIL_QUEUE_LOG,
-                                    constants.COLLECTION_EXCEPTIONS, constants.COLLECTION_SUBSCRIPTIONS]
+                                    constants.COLLECTION_EXCEPTIONS, constants.COLLECTION_SUBSCRIPTIONS,
+                                    constants.COLLECTION_REMOTE_IP_HISTORY]
 
                 await self.remove_user_data(skip_collections)
 
