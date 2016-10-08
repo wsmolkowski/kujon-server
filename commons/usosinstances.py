@@ -211,7 +211,7 @@ USOSINSTANCES = [
      },
     {'usos_id': 'UTP',
      'name': 'Uniwersytet Technologiczno-Przyrodniczy w Bydgoszczy',
-     'url': 'https://usosapps.utpf.edu.pl/',
+     'url': 'https://usosapps.utp.edu.pl/',
      'logo': '/static/img/logo/logo-utp-64x64.jpg',
      'consumer_key': 'rBERUVJHqqxuNFzzxzvs',
      'consumer_secret': 'hgY9Z8R3FCzCW2yZK4E53XxdpAzRvLgSnmLuszZN',
