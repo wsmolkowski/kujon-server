@@ -136,7 +136,7 @@ USOSINSTANCES = [
      'consumer_key': 'uDHBTwzpz6zMp4FP7hbv',
      'consumer_secret': 'xTGN7aTdELNEvzbQCERpDthzB9PaTsWcsYu995JX',
      'contact': 'usos@up.wroc.pl',
-     'enabled': True,
+     'enabled': False,
      'validate_ssl_certificate': True
      },
     {'usos_id': 'PRZ',
