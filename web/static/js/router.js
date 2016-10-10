@@ -41,7 +41,7 @@ define(['jquery', 'handlebars', 'crossroads', 'hasher', 'text!templates/spinner.
 
         var routes = ['index', 'user', 'grades', 'crstests', 'courses', 'terms', 'faculties',
             'programmes', 'lecturers', 'friends', 'friendssuggestions', 'tt', 'contact',
-            'search', '404'
+            'search', '404', 'messages'
         ];
 
         $.each(routes, function(index, value) {

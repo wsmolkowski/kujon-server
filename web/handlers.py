@@ -123,11 +123,10 @@ class ContactHandler(BaseHandler):
             if not subject or not message:
                 self.error(message='Nie przekazano wymaganych parametrów.')
             else:
-                logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
+                logging.debug('received contact request from user:{0} subject: {1} message: {2}'.format(
                     self.getUserId(), subject, message))
 
-                message_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
-                                                      self.getUserId())
+                message_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL])
 
                 self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(message_id)))
         except Exception as ex:

@@ -47,7 +47,8 @@ class Emailer(object):
         # change values and update
         job[constants.JOB_STATUS] = status
         job[constants.UPDATE_TIME] = datetime.now()
-        job[constants.JOB_MESSAGE] = message
+        if message:
+            job[constants.JOB_MESSAGE] = message
 
         update = await self.db[constants.COLLECTION_EMAIL_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
@@ -71,14 +72,12 @@ class Emailer(object):
             try:
                 smtp = smtplib.SMTP()
                 smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
-                # smtp.starttls()
                 smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
 
                 # process the item
                 await self.update_job(job, JobStatus.START.value)
 
                 msg = MIMEMultipart('alternative')
-                # msg = MIMEText(job[email_factory.SMTP_TEXT].encode(constants.ENCODING), _charset=constants.ENCODING)
 
                 msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, job[EmailMixin.SMTP_SUBJECT])
                 msg['From'] = job[EmailMixin.SMTP_FROM]
@@ -94,7 +93,7 @@ class Emailer(object):
                     constants.CREATED_TIME: datetime.now(),
                     constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                     constants.FIELD_MESSAGE_TYPE: 'email',
-                    constants.FIELD_MESSAGE_TEXT: job[EmailMixin.SMTP_TEXT]
+                    constants.JOB_MESSAGE: job[EmailMixin.SMTP_TEXT]
                 })
 
                 await self.update_job(job, JobStatus.FINISH.value)

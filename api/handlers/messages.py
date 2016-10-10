@@ -15,7 +15,7 @@ class MessagesHandler(ApiHandler):
     @web.asynchronous
     async def get(self):
         try:
-            messages_doc = await self.db_messages({constants.USER_ID: self.getUserId(), constants.MONGO_ID: False})
+            messages_doc = await self.db_messages({constants.USER_ID: self.getUserId()})
             self.success(messages_doc)
         except Exception as ex:
             await self.exc(ex)

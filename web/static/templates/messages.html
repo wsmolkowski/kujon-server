@@ -1,0 +1,33 @@
+<section id="terms">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 content table-responsive">
+                <div class="heading">
+                    <h2>Wiadomości systemowe</h2>
+                </div>
+                <table id="table-messages" class="table" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th data-sortable="true">Data utworzenia</th>
+                        <th data-sortable="true">Typ wiadomości</th>
+                        <th data-sortable="true">Od kogo</th>
+                        <th data-sortable="true">Treść wiadomości</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{#data}}
+                    <tr>
+                        <td>{{created_time}}</td>
+                        <td>{{typ}}</td>
+                        <td>{{from}}</td>
+                        <td>{{message}}</td>
+                    </tr>
+                    {{/data}}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+</section>

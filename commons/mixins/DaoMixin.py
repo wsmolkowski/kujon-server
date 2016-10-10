@@ -313,7 +313,12 @@ class DaoMixin(object):
         return subscriptions
 
     async def db_messages(self, pipeline):
-        cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline)
+        cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline, {constants.MONGO_ID: 0,
+                                                                        "typ": 1,
+                                                                        "from": 1,
+                                                                        constants.CREATED_TIME: 1,
+                                                                        constants.JOB_MESSAGE: 1}
+                                                             )
         return await cursor.to_list(None)
 
     async def db_user_usos_id(self):
@@ -321,3 +326,21 @@ class DaoMixin(object):
         if user_doc and constants.USOS_USER_ID in user_doc:
             return user_doc[constants.USOS_USER_ID]
         return
+
+    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None):
+        if not message_type:
+            message_type = 'email'
+
+        if not from_whom:
+            from_whom = self.config.PROJECT_TITLE
+
+        if not user_id:
+            user_id = self.getUserId()
+
+        return await self.db[constants.COLLECTION_MESSAGES].insert({
+            constants.USER_ID: user_id,
+            constants.CREATED_TIME: datetime.now(),
+            constants.FIELD_MESSAGE_FROM: from_whom,
+            constants.FIELD_MESSAGE_TYPE: message_type,
+            constants.FIELD_MESSAGE_TEXT: message,
+        })

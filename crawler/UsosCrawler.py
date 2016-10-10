@@ -273,14 +273,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             if user_grade:
                 message_text = 'wiadomosc {0}'.format(user_grade)
                 signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
-
-                await self.db[constants.COLLECTION_MESSAGES].insert({
-                    constants.USER_ID: self.getUserId(),
-                    constants.CREATED_TIME: datetime.now(),
-                    constants.FIELD_MESSAGE_FROM: 'Komunikat z USOS',
-                    constants.FIELD_MESSAGE_TYPE: 'powiadomienie',
-                    constants.FIELD_MESSAGE_TEXT: message_text
-                })
+                await self.db_save_message(message_text, from_whom='Komunikat z USOS', message_type='powiadomienie')
 
                 logging.debug('user_point signal_response: {1}'.format(signal_grade))
 
