@@ -43,7 +43,6 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
         self._context.remote_ip = self.get_remote_ip()
-        self._context.usoses = await self.get_usos_instances()
 
         try:
             self._context.user_doc = await self._prepare_user()
@@ -57,9 +56,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
             usos_id = self.get_argument('usos_id', default=None)  # request authentication/register
 
         if usos_id:
-            for usos in self._context.usoses:
-                if usos[constants.USOS_ID] == usos_id:
-                    self._context.usos_doc = usos
+            self._context.usos_doc = await self.db_get_usos(usos_id)
 
     def get_current_user(self):
         if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
@@ -78,15 +75,6 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
                 return ObjectId(self.get_current_user()[constants.MONGO_ID])
             return self.get_current_user()[constants.MONGO_ID]
         return
-
-    async def get_usoses(self):
-        usoses = []
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-        async for usos in cursor:
-            usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
-            usoses.append(usos)
-
-        return usoses
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)

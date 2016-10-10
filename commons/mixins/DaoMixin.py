@@ -66,8 +66,7 @@ class DaoMixin(object):
 
     async def get_usos_instances(self):
         result = []
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
-        usoses_doc = await cursor.to_list(None)
+        usoses_doc = await self.db_usoses()
         for usos in usoses_doc:
             usos[constants.USOS_LOGO] = self.config.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
@@ -77,6 +76,20 @@ class DaoMixin(object):
             result.append(usos)
 
         return result
+
+    async def db_usoses(self, enabled=True):
+        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
+        return await cursor.to_list(None)
+
+    async def db_all_usoses(self, limit_fields=True):
+        if limit_fields:
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({},
+                                                                      {constants.MONGO_ID: 0, "contact": 1,
+                                                                       "enabled": 1, "logo": 1, "name": 1, "phone": 1,
+                                                                       "url": 1, "usos_id": 1, "comment": 1})
+        else:
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
+        return await cursor.to_list(None)
 
     async def db_users_info_by_user_id(self, user_id, usos):
         if isinstance(user_id, str):
@@ -194,11 +207,6 @@ class DaoMixin(object):
     async def db_get_archive_user(self, user_id):
         return await self.db[constants.COLLECTION_USERS_ARCHIVE].find_one(
             {constants.USER_ID: user_id, constants.USOS_PAIRED: True})
-
-    async def db_usoses(self, enabled=True):
-        cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
-        usoses = await cursor.to_list(None)
-        return usoses
 
     async def db_archive_user(self, user_id):
         user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_id})

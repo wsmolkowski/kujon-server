@@ -138,15 +138,29 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMi
         return False
 
 
+class UsosesAllApi(BaseHandler, JSendMixin):
+    @web.asynchronous
+    async def get(self):
+        try:
+            usoses = await self.db_all_usoses(limit_fields=True)
+            self.success(usoses, cache_age=constants.SECONDS_HOUR)
+        except Exception as ex:
+            await self.exc(ex)
+
+
 class UsosesApi(BaseHandler, JSendMixin):
     @web.asynchronous
     async def get(self):
-        usoses = list()
-        for usos in self._context.usoses:
-            wanted_keys = [constants.USOS_LOGO, constants.USOS_ID, constants.USOS_NAME, constants.USOS_URL]
-            usoses.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
+        try:
+            result = list()
+            usoses = await self.get_usos_instances()
+            for usos in usoses:
+                wanted_keys = [constants.USOS_LOGO, constants.USOS_ID, constants.USOS_NAME, constants.USOS_URL]
+                result.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
 
-        self.success(usoses, cache_age=constants.SECONDS_HOUR)
+            self.success(result, cache_age=constants.SECONDS_HOUR)
+        except Exception as ex:
+            await self.exc(ex)
 
 
 class ApplicationConfigHandler(BaseHandler, JSendMixin):
