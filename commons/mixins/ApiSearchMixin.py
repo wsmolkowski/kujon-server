@@ -90,7 +90,7 @@ class ApiMixinSearch(object):
                                                               'query': query,
                                                               'start': int(start),
                                                               'num': NUMBER_SEARCH_RESULTS,
-                                                              'fields': 'items[match|thesis[type|id|title]]|next_page',
+                                                              'fields': 'items[match|thesis[type|id|title|authors|supervisors|faculty[id|name]]]|next_page',
                                                           })
 
         return search_doc
