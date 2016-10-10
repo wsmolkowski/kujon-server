@@ -69,7 +69,7 @@ class MainHandler(BaseHandler):
     async def get_usoses(self):
         result = []
         cursor = await self.db_usoses(enabled=True)
-        async for usos in cursor:
+        for usos in cursor:
             usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
             result.append(usos)
 
@@ -124,12 +124,12 @@ class ContactHandler(BaseHandler):
                 self.error(message='Nie przekazano wymaganych parametrów.')
             else:
                 logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
-                    self.get_current_user()[constants.MONGO_ID], subject, message))
+                    self.getUserId(), subject, message))
 
-                job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
-                                                  self.getUserId(return_object_id=True))
+                message_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
+                                                      self.getUserId())
 
-                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
+                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(message_id)))
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)
