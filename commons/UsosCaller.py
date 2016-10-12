@@ -10,6 +10,29 @@ from commons import utils
 from commons.errors import CallerError
 
 
+def clean_language(input_dictionary):
+    if not isinstance(input_dictionary, dict):
+        return input_dictionary
+
+    '''
+    recursively changes fields in dictionary
+    from:
+        "name": { "en": "Faculty of Education", "pl": "Wydzia\u0142 Pedagogiczny" }
+
+    to:
+        "name": "Wydzia\u0142 Pedagogiczny"
+
+    :param input_dictionary:
+    :return:
+    '''
+    for key, value in input_dictionary.items():
+        if isinstance(value, dict) and 'pl' in value and 'en' in value:
+            input_dictionary[key] = value['pl']
+        elif isinstance(value, dict):
+            input_dictionary[key] = clean_language(value)
+    return input_dictionary
+
+
 class UsosCaller(OAuthMixin):
     _OAUTH_VERSION = '1.0a'
     _OAUTH_NO_CALLBACKS = False
@@ -45,7 +68,7 @@ class UsosCaller(OAuthMixin):
                                x_forwarded_for=self._context.remote_ip))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
-            return escape.json_decode(response.body)
+            return clean_language(escape.json_decode(response.body))
         elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
             return {'photo': b64encode(response.body)}
         else:
@@ -79,7 +102,7 @@ class AsyncCaller(object):
                                x_forwarded_for=self._context.remote_ip))
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
-            return escape.json_decode(response.body)
+            return clean_language(escape.json_decode(response.body))
         else:
             raise CallerError('Error code: {0} with body: {1} while async fetching: {2}'.format(response.code,
                                                                                                 response.body,

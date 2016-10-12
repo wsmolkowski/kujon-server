@@ -21,7 +21,7 @@ class ApiTermMixin(object):
             term_doc = await AsyncCaller(self._context).call_async(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
-            term_doc['name'] = term_doc['name']['pl']
+            # term_doc['name'] = term_doc['name']['pl']
             term_doc[constants.TERM_ID] = term_doc.pop(constants.ID)
 
             await self.db_insert(constants.COLLECTION_TERMS, term_doc)
