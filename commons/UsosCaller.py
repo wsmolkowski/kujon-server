@@ -11,6 +11,15 @@ from commons.errors import CallerError
 
 
 def clean_language(input_dictionary):
+    def clean_list(array):
+        new_list = []
+        for a in array:
+            if isinstance(a, dict):
+                new_list.append(clean_language(a))
+            else:
+                new_list.append(a)
+        return new_list
+
     if not isinstance(input_dictionary, dict):
         return input_dictionary
 
@@ -30,6 +39,9 @@ def clean_language(input_dictionary):
             input_dictionary[key] = value['pl']
         elif isinstance(value, dict):
             input_dictionary[key] = clean_language(value)
+        elif isinstance(value, list):
+            input_dictionary[key] = clean_list(value)
+
     return input_dictionary
 
 
