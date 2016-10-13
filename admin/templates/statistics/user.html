@@ -1,0 +1,59 @@
+{% extends "statistics_base.html" %}
+
+{% block content %}
+
+<table class="responsive-table">
+    <caption><h4>Sparowani</h4></caption>
+    <thead>
+    <tr>
+        <th data-field="id">Połaczony z USOS</th>
+        <th data-field="name">Liczba</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in users_paired %}
+    <tr>
+        <td>{{ data['_id']['paired'] }}</td>
+        <td>{{ data['count'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+<table class="responsive-table">
+    <caption><h4>Typy</h4></caption>
+    <thead>
+    <tr>
+        <th data-field="id">Typ</th>
+        <th data-field="name">Liczba</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in users_type %}
+    <tr>
+        <td>{{ data['_id']['user_type'] }}</td>
+        <td>{{ data['count'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+<table class="responsive-table">
+    <caption><h4>USOS</h4></caption>
+    <thead>
+    <tr>
+        <th data-field="id">Usos</th>
+        <th data-field="name">Liczba</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in users_usos %}
+    <tr>
+        <td>{{ data['_id']['usos_id'] }}</td>
+        <td>{{ data['count'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+{% end %}
