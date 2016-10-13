@@ -64,9 +64,8 @@ class DaoMixin(object):
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
-    async def get_usos_instances(self):
+    async def _manipulate_usoses(self, usoses_doc):
         result = []
-        usoses_doc = await self.db_usoses()
         for usos in usoses_doc:
             usos[constants.USOS_LOGO] = self.config.DEPLOY_WEB + usos[constants.USOS_LOGO]
 
@@ -74,12 +73,16 @@ class DaoMixin(object):
                 usos = dict(self.aes.decrypt_usos(usos))
 
             result.append(usos)
-
         return result
+    
+    async def get_usos_instances(self):
+        usoses_doc = await self.db_usoses()
+        return await self._manipulate_usoses(usoses_doc)
 
     async def db_usoses(self, enabled=True):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
-        return await cursor.to_list(None)
+        usoses_doc = await cursor.to_list(None)
+        return await self._manipulate_usoses(usoses_doc)
 
     async def db_all_usoses(self, limit_fields=True):
         if limit_fields:
