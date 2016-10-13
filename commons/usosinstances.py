@@ -18,7 +18,7 @@ USOSINSTANCES = [
      'phone': '225520527',
      'enabled': False,  # Potrzebna umowa
      'validate_ssl_certificate': True,
-     'comment': 'Uniwersytet nie udostępnia publicznego USOS API',
+     'comment': 'Uczelnia nie jest jeszcze aktywna. Zapraszamy wkrótce.',
      },
     {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
      'name': 'Uniwersytet Jagieloński w Krakowie',
@@ -29,7 +29,7 @@ USOSINSTANCES = [
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-     'comment': 'Uniwersytet nie udostępnia publicznego USOS API',
+     'comment': 'Uczelnia nie jest jeszcze aktywna. Zapraszamy wkrótce.',
      },
     {'usos_id': 'UAM',
      'name': 'Uniwersytet im Adama Mickiewicza w Poznaniu',
