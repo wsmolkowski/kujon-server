@@ -13,6 +13,7 @@ from tornado.options import parse_command_line, define, options
 from admin.handlers.base import MainHandler, DefaultErrorHandler
 from admin.handlers.statistics.statistics import StatisticsBaseHandler
 from admin.handlers.statistics.user import UsersHandler
+from admin.handlers.statistics.usos import UsosHandler
 from commons import constants
 from commons.config import Config
 
@@ -26,6 +27,7 @@ def get_application(config):
                 (r"/", MainHandler),
                 (r"/statistics", StatisticsBaseHandler),
                 (r"/statistics/users", UsersHandler),
+                (r"/statistics/usos", UsosHandler),
             ]
 
             __settings = dict(

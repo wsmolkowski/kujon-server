@@ -14,12 +14,10 @@ class UsersHandler(StatisticsBaseHandler):
             users_type = await self._stat_users_type()
             users_usos = await self._stat_users_usos()
 
-            data = {
+            self._render_page("statistics/user.html", {
                 'users_paired': users_paired,
                 'users_type': users_type,
                 'users_usos': users_usos
-            }
-
-            self._render_page("statistics/user.html", data)
+            })
         except Exception as ex:
             self._render_error(ex)
