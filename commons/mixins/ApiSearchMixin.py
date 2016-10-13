@@ -29,11 +29,6 @@ class ApiMixinSearch(object):
                 # change staff_status to dictionary
                 user['staff_status'] = dict_value_staff_status(user['staff_status'])
 
-                # # remove english names
-                # for position in user['employment_positions']:
-                #     position['position']['name'] = position['position']['name']['pl']
-                #     position['faculty']['name'] = position['faculty']['name']['pl']
-
         return search_doc
 
     async def api_search_courses(self, query):
@@ -73,12 +68,6 @@ class ApiMixinSearch(object):
                                                               'num': NUMBER_SEARCH_RESULTS,
                                                               'fields': 'items[match|programme[id|name|mode_of_studies|level_of_studies|duration|faculty[id]]]|next_page',
                                                           })
-
-        # for programme in search_doc['items']:
-        #     programme['programme']['name'] = programme['programme']['name']['pl']
-        #     programme['programme']['mode_of_studies'] = programme['programme']['mode_of_studies']['pl']
-        #     programme['programme']['level_of_studies'] = programme['programme']['level_of_studies']['pl']
-        #     programme['programme']['duration'] = programme['programme']['duration']['pl']
 
         return search_doc
 
