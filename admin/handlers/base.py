@@ -45,6 +45,7 @@ class BaseHandler(web.RequestHandler):
 
 
 class MainHandler(BaseHandler):
+    @web.removeslash
     @web.asynchronous
     def get(self):
         self._render_page("index.html")

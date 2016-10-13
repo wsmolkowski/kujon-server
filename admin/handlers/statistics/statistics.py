@@ -29,6 +29,7 @@ class StatisticsBaseHandler(BaseHandler):
                     ]
         return await self._aggreate_users(pipeline)
 
+    @web.removeslash
     @web.asynchronous
     async def get(self):
         try:

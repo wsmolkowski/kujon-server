@@ -6,6 +6,7 @@ from admin.handlers.statistics.statistics import StatisticsBaseHandler
 
 
 class UsersHandler(StatisticsBaseHandler):
+    @web.removeslash
     @web.asynchronous
     async def get(self):
         try:
