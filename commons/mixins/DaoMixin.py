@@ -74,7 +74,7 @@ class DaoMixin(object):
 
             result.append(usos)
         return result
-    
+
     async def get_usos_instances(self):
         usoses_doc = await self.db_usoses()
         return await self._manipulate_usoses(usoses_doc)
@@ -92,7 +92,8 @@ class DaoMixin(object):
                                                                        "url": 1, "usos_id": 1, "comment": 1})
         else:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
-        return await cursor.to_list(None)
+        usoses_doc = await cursor.to_list(None)
+        return await self._manipulate_usoses(usoses_doc)
 
     async def db_users_info_by_user_id(self, user_id, usos):
         if isinstance(user_id, str):
