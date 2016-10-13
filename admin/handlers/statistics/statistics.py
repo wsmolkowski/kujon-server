@@ -32,14 +32,6 @@ class StatisticsBaseHandler(BaseHandler):
     @web.asynchronous
     async def get(self):
         try:
-            users_general = await self._stat_users_count()
-            users_aggregate = await self._stat_users_aggregate_type()
-
-            data = {
-                'users_general': users_general,
-                'users_aggregate': users_aggregate,
-            }
-
-            self._render_page("statistics/statistics.html", data)
+            self._render_page("statistics/statistics.html")
         except Exception as ex:
             self._render_error(ex)
