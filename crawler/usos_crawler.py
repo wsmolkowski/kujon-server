@@ -61,7 +61,7 @@ class MongoDbQueue(object):
         update = yield self.db[constants.COLLECTION_JOBS_QUEUE].update(
             {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
 
-        logging.info(
+        logging.debug(
             "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
 
         raise gen.Return()
@@ -88,7 +88,7 @@ class MongoDbQueue(object):
                 raise Exception("could not process job with unknown job type: {0}".format(job[constants.JOB_TYPE]))
             yield self.update_job(job, JobStatus.FINISH.value)
 
-            logging.info(
+            logging.debug(
                 "processed job: {0} with job type: {1}".format(job[constants.MONGO_ID], job[constants.JOB_TYPE]))
         finally:
             self.processing.remove(job)
@@ -98,7 +98,7 @@ class MongoDbQueue(object):
         while True:
             try:
                 job = yield self.queue.get()
-                logging.info("consuming queue job {0}. current queue size: {1} processing: {2}".format(
+                logging.debug("consuming queue job {0}. current queue size: {1} processing: {2}".format(
                     job, self.queue.qsize(), len(self.processing)))
                 yield self.process_job(job)
             except Exception as ex:

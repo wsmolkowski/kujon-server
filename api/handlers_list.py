@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from api.handlers import authentication
-from api.handlers.base import UsosesApi, ApplicationConfigHandler
+from api.handlers.base import UsosesApi, UsosesAllApi, ApplicationConfigHandler
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi
@@ -33,6 +33,7 @@ HANDLERS = [
     (r"/authentication/email_confim/([^/]+)", authentication.EmailConfirmHandler),
 
     (r"/usoses", UsosesApi),
+    (r"/usosesall", UsosesAllApi),
 
     (r"/users", UserInfoApi),
     (r"/users/([^/]+)", UsersInfoByIdApi),

@@ -72,9 +72,6 @@ class TTApi(ApiHandler):
             # await self.db_insert(constants.COLLECTION_TT, tt_doc)
 
         for tt_data in tt_doc['tts']:
-            tt_data['name'] = tt_data['name']['pl']
-            tt_data[constants.COURSE_NAME] = tt_data[constants.COURSE_NAME]['pl']
-            tt_data['building_name'] = tt_data['building_name']['pl']
             if tt_data['type'] == 'classgroup':
                 tt_data['type'] = 'zajęcia'
             elif tt_data['type'] == 'exam':

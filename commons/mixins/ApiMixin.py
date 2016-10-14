@@ -14,7 +14,6 @@ from commons.mixins.ApiUserMixin import ApiUserMixin
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
     constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
-LIMIT_FIELDS_COURSE_EDITION = ('lecturers', 'coordinators', 'participants', 'course_units_ids', 'grades')
 LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
 LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
                         'path', 'stats')
@@ -87,7 +86,7 @@ class ApiMixin(ApiUserMixin):
                 'term_id': term_id
             })
 
-        result[constants.COURSE_NAME] = result[constants.COURSE_NAME]['pl']
+        result[constants.COURSE_NAME] = result.pop(constants.COURSE_NAME)
         result[constants.COURSE_ID] = course_id
         result[constants.TERM_ID] = term_id
         result[constants.USER_ID] = self.getUserId()
@@ -209,13 +208,7 @@ class ApiMixin(ApiUserMixin):
                 'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
             })
 
-        course_doc[constants.COURSE_NAME] = course_doc['name']['pl']
-        course_doc.pop('name')
-        course_doc['learning_outcomes'] = course_doc['learning_outcomes']['pl']
-        course_doc['description'] = course_doc['description']['pl']
-        course_doc['assessment_criteria'] = course_doc['assessment_criteria']['pl']
-        course_doc['bibliography'] = course_doc['bibliography']['pl']
-        course_doc['practical_placement'] = course_doc['practical_placement']['pl']
+        course_doc[constants.COURSE_NAME] = course_doc.pop('name')
         course_doc[constants.COURSE_ID] = course_id
 
         return course_doc
@@ -274,7 +267,6 @@ class ApiMixin(ApiUserMixin):
                 )
                 groups_doc = await cursor.to_list(None)
                 course['groups'] = groups_doc
-                course[constants.COURSE_NAME] = course[constants.COURSE_NAME]['pl']
                 del course['course_units_ids']
                 courses.append(course)
 
@@ -329,7 +321,10 @@ class ApiMixin(ApiUserMixin):
     def classtype_name(classtypes, key_id):
         for key, name in list(classtypes.items()):
             if str(key_id) == str(key):
-                return name['name']['pl']
+                if 'pl' in name['name']:
+                    return name['name']['pl']
+                else:
+                    return name['name']
         return key_id
 
     async def api_grades(self):
@@ -347,14 +342,14 @@ class ApiMixin(ApiUserMixin):
                         grade = {
                             'exam_session_number': grade_value['exam_session_number'],
                             'exam_id': grade_value['exam_id'],
-                            'value_description': grade_value['value_description']['pl'],
+                            'value_description': grade_value['value_description'],
                             'value_symbol': grade_value['value_symbol'],
                             constants.CLASS_TYPE: constants.GRADE_FINAL,
                         }
                         course_with_grade = {
                             constants.TERM_ID: term,
                             constants.COURSE_ID: course[constants.COURSE_ID],
-                            constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
+                            constants.COURSE_NAME: course[constants.COURSE_NAME],
                             'grades': list()
                         }
                         course_with_grade['grades'].append(grade)
@@ -364,19 +359,15 @@ class ApiMixin(ApiUserMixin):
                     grade = {
                         constants.TERM_ID: term,
                         constants.COURSE_ID: course[constants.COURSE_ID],
-                        constants.COURSE_NAME: course[constants.COURSE_NAME]['pl'],
+                        constants.COURSE_NAME: course[constants.COURSE_NAME],
                         'grades': list()
                     }
 
                     for unit in course['grades']['course_units_grades']:
                         for unit2 in course['grades']['course_units_grades'][unit]:
                             elem = course['grades']['course_units_grades'][unit][unit2]
-                            elem['value_description'] = elem['value_description']['pl']
+                            elem['value_description'] = elem['value_description']
                             elem['unit'] = unit
-
-                            # if constants.CLASS_TYPE not in elem:
-                            #     elem[constants.CLASS_TYPE] = 'TRATATA'
-
                             grade['grades'].append(elem)
 
                     # jeżeli są jakieś oceny
@@ -472,17 +463,6 @@ class ApiMixin(ApiUserMixin):
 
             programme_doc[constants.PROGRAMME_ID] = programme_id
 
-            # strip english names
-            programme_doc['name'] = programme_doc['name']['pl']
-            programme_doc['mode_of_studies'] = programme_doc['mode_of_studies']['pl']
-            programme_doc['level_of_studies'] = programme_doc['level_of_studies']['pl']
-            programme_doc['professional_status'] = programme_doc['professional_status']['pl']
-            programme_doc['duration'] = programme_doc['duration']['pl']
-            if 'faculty' in programme_doc and 'name' in programme_doc['faculty']:
-                programme_doc['faculty']['name'] = programme_doc['faculty']['name']['pl']
-                programme_doc['faculty'][constants.FACULTY_ID] = programme_doc['faculty']['id']
-                del (programme_doc['faculty']['id'])
-
             try:
                 ects_used_sum = await UsosCaller(self._context).call(
                     path='services/credits/used_sum',
@@ -515,10 +495,6 @@ class ApiMixin(ApiUserMixin):
         )
 
         faculty_doc[constants.FACULTY_ID] = faculty_id
-        faculty_doc['name'] = faculty_doc['name']['pl']
-        if 'path' in faculty_doc:
-            for elem in faculty_doc['path']:
-                elem['name'] = elem['name']['pl']
 
         return faculty_doc
 
@@ -664,10 +640,6 @@ class ApiMixin(ApiUserMixin):
                     'user_id': user_info[constants.ID],
                     'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
                 })
-
-            if 'authored_theses' in theses_doc:
-                for these in theses_doc['authored_theses']:
-                    these['faculty']['name'] = these['faculty']['name']['pl']
 
             theses_doc[constants.USER_ID] = self.getUserId()
 

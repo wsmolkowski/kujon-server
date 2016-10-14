@@ -74,6 +74,9 @@ class Config(object):
         self.DEPLOY_EVENT = self.config.get('deployment', 'DEPLOY_EVENT')
         self.LOG_LEVEL = self.config.get('deployment', 'LOG_LEVEL')
 
+        self.ADMIN_PORT = self.config.get('deployment', 'ADMIN_PORT')
+        self.ADMIN_WEB = self.config.get('deployment', 'ADMIN_WEB')
+
         # email
         self.SMTP_HOST = self.config.get('email', 'SMTP_HOST')
         self.SMTP_PORT = self.config.getint('email', 'SMTP_PORT')

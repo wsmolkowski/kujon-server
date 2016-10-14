@@ -96,7 +96,7 @@ class MainHandler(BaseHandler):
                 else:
                     data['error'] = False
 
-            data['usoses'] = await self.get_usoses()
+            data['usoses'] = await self.db_all_usoses()
             self.render("register.html", **data)
         else:
             self.render("index.html", **self.get_config())
@@ -114,13 +114,12 @@ class ContactHandler(BaseHandler):
             if not subject or not message:
                 self.error(message='Nie przekazano wymaganych parametrów.')
             else:
-                logging.info('received contact request from user:{0} subject: {1} message: {2}'.format(
-                    self.get_current_user()[constants.MONGO_ID], subject, message))
+                logging.debug('received contact request from user:{0} subject: {1} message: {2}'.format(
+                    self.getUserId(), subject, message))
 
-                job_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL],
-                                                  self.getUserId(return_object_id=True))
+                message_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL])
 
-                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(job_id)))
+                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(message_id)))
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)

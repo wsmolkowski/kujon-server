@@ -1,0 +1,31 @@
+{% extends "../base.html" %}
+
+{% block navbar %}
+<nav class="light-blue lighten-1" role="navigation">
+    <div class="nav-wrapper container">
+        <a id="logo-container" href="/" class="brand-logo"><img src="{{ static_url("img/logo-landing.png") }}"></img>
+            Statystyki</a>
+        <ul class="right hide-on-med-and-down">
+            <li><a href="/statistics/users">Użytkownicy</a></li>
+            <li><a href="/statistics/usos">USOS</a></li>
+            <li><a href="/statistics/usosuser">Użytkownicy na uczelni</a></li>
+        </ul>
+
+        <ul id="nav-mobile" class="side-nav">
+            <li><a href="/statistics/users">Użytkownicy</a></li>
+            <li><a href="/statistics/usos">USOS</a></li>
+            <li><a href="/statistics/usosuser">Użytkownicy na uczelni</a></li>
+        </ul>
+        <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+
+    </div>
+</nav>
+{% end %}
+
+
+{% block content %}
+{% end %}
+
+{% block footer %}
+
+{% end %}

@@ -54,11 +54,6 @@ class ApiUserMixin(DaoMixin):
         else:
             result = await UsosCaller(self._context).call(path='services/users/user', arguments={'fields': fields})
 
-        # strip english values and if value is empty change to None
-        if 'office_hours' in result and 'pl' in result['office_hours']:
-            result['office_hours'] = result['office_hours']['pl']
-            result['interests'] = result['interests']['pl']
-
         # strip empty values
         if 'homepage_url' in result and result['homepage_url'] == "":
             result['homepage_url'] = None
@@ -66,27 +61,8 @@ class ApiUserMixin(DaoMixin):
         if 'student_status' in result:
             result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
 
-        # strip english names from programmes description
-        if 'student_programmes' in result:
-            for programme in result['student_programmes']:
-                programme['programme']['description'] = programme['programme']['description']['pl']
-
         # change staff_status to dictionary
         result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
-
-        # strip employment_positions from english names
-        for position in result['employment_positions']:
-            position['position']['name'] = position['position']['name']['pl']
-            position['faculty']['name'] = position['faculty']['name']['pl']
-
-        # strip employment_function from english names
-        for position in result['employment_functions']:
-            position['function'] = position['function']['pl']
-            position['faculty']['name'] = position['faculty']['name']['pl']
-
-        # strip english from building name
-        if 'room' in result and result['room'] and 'building_name' in result['room']:
-            result['room']['building_name'] = result['room']['building_name']['pl']
 
         return result
 
