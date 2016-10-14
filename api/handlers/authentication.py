@@ -345,10 +345,10 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
 
                 if header_email or header_token:
-                    logging.info('Finish register MOBI OK')
+                    logging.debug('Finish register MOBI OK')
                     self.success('Udało się sparować konto USOS')
                 else:
-                    logging.info('Finish register WWW OK')
+                    logging.debug('Finish register WWW OK')
                     yield self.email_registration()
                     self.redirect(self.config.DEPLOY_WEB)
             else:
@@ -462,6 +462,7 @@ class EmailConfirmHandler(AuthenticationHandler):
             elif constants.USER_EMAIL_CONFIRMED in user_doc and user_doc[constants.USER_EMAIL_CONFIRMED]:
                 self.error(message='Token wykorzystany. Email potwierdzony.', code=403)
             else:
+                user_doc[constants.USOS_PAIRED] = False
                 user_doc[constants.USER_EMAIL_CONFIRMED] = True
                 user_doc[constants.UPDATE_TIME] = datetime.now()
 
