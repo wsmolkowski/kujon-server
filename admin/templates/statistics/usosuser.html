@@ -1,0 +1,25 @@
+{% extends "statistics_base.html" %}
+
+{% block content %}
+
+<table class="responsive-table">
+    <caption><h4>Użytkownicy na uczelni</h4></caption>
+    <thead>
+    <tr>
+        <th data-field="id">Uczelnia</th>
+        <th data-field="name">Sparowany</th>
+        <th data-field="name">Suma</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in usos_users_paired %}
+    <tr>
+        <td>{{ data['_id']['usos_id'] }}</td>
+        <td>{{ data['_id']['paired'] }}</td>
+        <td>{{ data['count'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+{% end %}

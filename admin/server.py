@@ -14,6 +14,7 @@ from admin.handlers.base import MainHandler, DefaultErrorHandler
 from admin.handlers.statistics.statistics import StatisticsBaseHandler
 from admin.handlers.statistics.user import UsersHandler
 from admin.handlers.statistics.usos import UsosHandler
+from admin.handlers.statistics.usosuser import UsosUserHandler
 from commons import constants
 from commons.config import Config
 
@@ -28,6 +29,7 @@ def get_application(config):
                 (r"/statistics", StatisticsBaseHandler),
                 (r"/statistics/users", UsersHandler),
                 (r"/statistics/usos", UsosHandler),
+                (r"/statistics/usosuser", UsosUserHandler),
             ]
 
             __settings = dict(

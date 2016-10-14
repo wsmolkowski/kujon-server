@@ -13,8 +13,9 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_users_paired(self):
         pipeline = [
-            # {'$match': {'usos_paired': {'$exists': True, '$ne': None}}},
-            {'$group': {'_id': {'user': '$user_id', 'paired': '$usos_paired'}, 'count': {'$sum': 1}}}
+            {'$group': {'_id': {'user': '$user_id',
+                                'paired': {'$ifNull': ["$usos_paired", "Unknown"]}
+                                }, 'count': {'$sum': 1}}}
         ]
         return await self._aggreate_users(pipeline)
 
@@ -38,6 +39,16 @@ class StatisticsBaseHandler(BaseHandler):
                         'count': {'$sum': 1}
                         }
              }]
+
+        return await self._aggreate_users(pipeline)
+
+    async def _stat_usos_users_paired(self):
+        pipeline = [{
+            '$group': {'_id': {'usos_id': '$usos_id',
+                               'paired': {'$ifNull': ["$usos_paired", "Unknown"]}
+                               }, 'count': {'$sum': 1}}
+        }, {'$sort': {'_id': 1}
+            }]
 
         return await self._aggreate_users(pipeline)
 
