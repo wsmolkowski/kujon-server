@@ -27,7 +27,7 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_users_usos(self):
         pipeline = [
-            {'$group': {'_id': {'user': '$user_id', 'usos_id': '$usos_id'}, 'count': {'$sum': 1}}}
+            {'$group': {'_id': {'user': '$user_id', 'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
         ]
         return await self._aggreate_users(pipeline)
 
@@ -35,7 +35,7 @@ class StatisticsBaseHandler(BaseHandler):
         pipeline = [
             {'$match': {constants.USOS_PAIRED: True
                         }},
-            {'$group': {'_id': {'user': '$user_id', 'usos_id': '$usos_id'},
+            {'$group': {'_id': {'user': '$user_id', 'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}},
                         'count': {'$sum': 1}
                         }
              }]
@@ -44,7 +44,7 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_usos_users_paired(self):
         pipeline = [{
-            '$group': {'_id': {'usos_id': '$usos_id',
+            '$group': {'_id': {'usos_id': {'$ifNull': ["$usos_id", "Unknown"]},
                                'paired': {'$ifNull': ["$usos_paired", "Unknown"]}
                                }, 'count': {'$sum': 1}}
         }, {'$sort': {'_id': 1}
@@ -55,7 +55,7 @@ class StatisticsBaseHandler(BaseHandler):
     async def _stat_usos_errors(self):
         pipeline = [
             # {'$match': {'$usos_id': {'$exists': True, '$ne': None}}},
-            {'$group': {'_id': {'usos_id': '$usos_id'}, 'count': {'$sum': 1}}}
+            {'$group': {'_id': {'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
         ]
         cursor = self.db[constants.COLLECTION_EXCEPTIONS].aggregate(pipeline)
         return await cursor.to_list(None)
