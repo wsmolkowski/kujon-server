@@ -12,10 +12,12 @@
     </thead>
     <tbody>
     {% for data in users_paired %}
-    <tr>
-        <td>{{ data['_id']['paired'] }}</td>
-        <td>{{ data['count'] }}</td>
-    </tr>
+        {% if data['_id']['paired'] %}
+        <tr>
+            <td>{{ data['_id']['paired'] }}</td>
+            <td>{{ data['count'] }}</td>
+        </tr>
+        {% end %}
     {% end %}
     </tbody>
 </table>

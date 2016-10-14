@@ -12,26 +12,28 @@ class StatisticsBaseHandler(BaseHandler):
         return await cursor.to_list(None)
 
     async def _stat_users_paired(self):
-        pipeline = [{'$group': {'_id': {'user': '$user_id', 'paired': '$usos_paired'}, 'count': {'$sum': 1}}}]
+        pipeline = [
+            # {'$match': {'usos_paired': {'$exists': True, '$ne': None}}},
+            {'$group': {'_id': {'user': '$user_id', 'paired': '$usos_paired'}, 'count': {'$sum': 1}}}
+        ]
         return await self._aggreate_users(pipeline)
 
     async def _stat_users_type(self):
-        pipeline = [{'$group': {'_id': {'user': '$user_id', 'user_type': '$user_type'}, 'count': {'$sum': 1}
-                                }
-                     }
-                    ]
+        pipeline = [
+            {'$group': {'_id': {'user': '$user_id', 'user_type': '$user_type'}, 'count': {'$sum': 1}}}
+        ]
         return await self._aggreate_users(pipeline)
 
     async def _stat_users_usos(self):
-        pipeline = [{'$group': {'_id': {'user': '$user_id', 'usos_id': '$usos_id'}, 'count': {'$sum': 1}
-                                }
-                     }
-                    ]
+        pipeline = [
+            {'$group': {'_id': {'user': '$user_id', 'usos_id': '$usos_id'}, 'count': {'$sum': 1}}}
+        ]
         return await self._aggreate_users(pipeline)
 
     async def _stat_usos_users(self):
         pipeline = [
-            {'$match': {constants.USOS_PAIRED: True}},
+            {'$match': {constants.USOS_PAIRED: True
+                        }},
             {'$group': {'_id': {'user': '$user_id', 'usos_id': '$usos_id'},
                         'count': {'$sum': 1}
                         }
@@ -40,7 +42,10 @@ class StatisticsBaseHandler(BaseHandler):
         return await self._aggreate_users(pipeline)
 
     async def _stat_usos_errors(self):
-        pipeline = [{'$group': {'_id': { 'usos_id': '$usos_id'}, 'count': {'$sum': 1}}}]
+        pipeline = [
+            # {'$match': {'$usos_id': {'$exists': True, '$ne': None}}},
+            {'$group': {'_id': {'usos_id': '$usos_id'}, 'count': {'$sum': 1}}}
+        ]
         cursor = self.db[constants.COLLECTION_EXCEPTIONS].aggregate(pipeline)
         return await cursor.to_list(None)
 
