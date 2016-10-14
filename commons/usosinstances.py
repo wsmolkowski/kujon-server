@@ -367,7 +367,7 @@ USOSINSTANCES = [
      'consumer_key': 'eJJcsMasd5wtUfGWp9pR',
      'consumer_secret': '4gjFFBGjSM4sndwwkUewAEz3XUGapTQ42NYDftbq',
      'contact': 'maksymilian.szpura@adm.uw.edu.pl',
-     'enabled': False,
+     'enabled': True,
      'validate_ssl_certificate': False,
      'comment': 'OK',
      },
