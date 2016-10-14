@@ -49,24 +49,22 @@
             <div class="alert alert-danger" role="alert">{{ error }}</div>
             {% end %}
 
-            <!--
-			<div class="col-sm-12">
-				<div class="form-group col-sm-4 search">
-					<input type="text" class="form-control" placeholder="Szukaj według nazwy uczelni">
-				</div>
-				<div class="col-sm-8 text-right brak-uczelni">
-					<a href="#" data-toggle="modal" data-target="#niemauczelni"><span>Nie ma Twojej uczelni?</span></a>
-				</div>
-			</div>
-			-->
 
             {% for usos in usoses %}
             <div class="col-md-2 col-sm-4 col-xs-6">
                 <div class="border-logo-cykle col-sm-12 text-center">
                     <img src="{{ usos['logo'] }}" class="img-responsive logo-uczelni">
-                    <p><a href="{{API_URL}}/authentication/register?usos_id={{ usos['usos_id'] }}&type=WWW">
-                        {{ usos['name'] }}
-                    </a></p>
+                    <br>
+                        {% if usos['enabled'] %}
+                            <a href="{{API_URL}}/authentication/register?usos_id={{ usos['usos_id'] }}&type=WWW">
+                            {{ usos['name'] }}
+                            </a>
+                        {% else %}
+                            <!--<a data-toggle="tooltip" data-placement="top" title="{{ usos['comment'] }}">{{ usos['name'] }}</a>-->
+                            <a>{{ usos['name'] }}</a></br>
+                            <small>{{ usos['comment'] }}</small>
+                        {% end %}
+                    </p>
                 </div>
             </div>
 

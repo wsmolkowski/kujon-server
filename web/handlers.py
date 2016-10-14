@@ -66,15 +66,6 @@ class BaseHandler(AbstractHandler):
 
 
 class MainHandler(BaseHandler):
-    async def get_usoses(self):
-        result = []
-        cursor = await self.db_usoses(enabled=True)
-        for usos in cursor:
-            usos['logo'] = self.config.DEPLOY_WEB + usos['logo']
-            result.append(usos)
-
-        return result
-
     @tornado.web.asynchronous
     async def get(self):
 
@@ -105,7 +96,7 @@ class MainHandler(BaseHandler):
                 else:
                     data['error'] = False
 
-            data['usoses'] = await self.get_usoses()
+            data['usoses'] = await self.db_all_usoses()
             self.render("register.html", **data)
         else:
             self.render("index.html", **self.get_config())
