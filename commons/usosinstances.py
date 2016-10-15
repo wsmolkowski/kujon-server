@@ -393,7 +393,7 @@ USOSINSTANCES = [
     {'usos_id': 'APS',
      'name': 'Akademia Pedagogiki Specjalnej',
      'url': '',
-     'logo': '/static/img/logo/logo-aps-64x64.png',
+     'logo': '/static/img/logo/logo-aps-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
      'contact': 'usosweb@aps.edu.pl',
@@ -404,7 +404,7 @@ USOSINSTANCES = [
     {'usos_id': 'PO',  # brak wystawionego API bardzo stary usos
      'name': 'Politechnika Opolska',
      'url': '',
-     'logo': '/static/img/logo/logo-po-64x64.png',
+     'logo': '/static/img/logo/logo-po-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
      'contact': 'pomoc@student.po.edu.pl',
@@ -413,9 +413,9 @@ USOSINSTANCES = [
      'comment': 'Czekamy aż PO da dostęp do USOSa dla Kujona.'
      },
     {'usos_id': 'WSP',  # brak wystawionego API bardzo stary usos
-     'name': 'Wyższa Szkołą Prawa we Wrocławiu',
+     'name': 'Wyższa Szkoła Prawa we Wrocławiu',
      'url': '',
-     'logo': '/static/img/logo/logo-wsp-64x64.png',
+     'logo': '/static/img/logo/logo-wsp-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
      'contact': 'it@uth.edu.pl',
@@ -426,7 +426,7 @@ USOSINSTANCES = [
     {'usos_id': 'AJD',  # brak wystawionego API
      'name': 'Akademia im. Jana Długosza w Częstochowie',
      'url': '',
-     'logo': '/static/img/logo/logo-ajd-64x64.png',
+     'logo': '/static/img/logo/logo-ajd-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
      'contact': 'it@uth.edu.pl',
