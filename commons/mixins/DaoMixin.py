@@ -77,7 +77,7 @@ class DaoMixin(object):
 
     async def get_usos_instances(self):
         usoses_doc = await self.db_usoses()
-        return await self._manipulate_usoses(usoses_doc)
+        return usoses_doc
 
     async def db_usoses(self, enabled=True):
         cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': enabled})
