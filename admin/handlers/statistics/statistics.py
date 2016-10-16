@@ -21,13 +21,15 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_users_type(self):
         pipeline = [
-            {'$group': {'_id': {'user': '$user_id', 'user_type': '$user_type'}, 'count': {'$sum': 1}}}
+            {'$group': {'_id': {'user': '$user_id', 'user_type': {'$ifNull': ["user_type", "Unknown"]}},
+                        'count': {'$sum': 1}}}
         ]
         return await self._aggreate_users(pipeline)
 
     async def _stat_users_usos(self):
         pipeline = [
-            {'$group': {'_id': {'user': '$user_id', 'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
+            {'$group': {'_id': {'user': '$user_id', 'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}},
+                        'count': {'$sum': 1}}}
         ]
         return await self._aggreate_users(pipeline)
 
