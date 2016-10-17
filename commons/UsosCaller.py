@@ -10,7 +10,7 @@ from commons import utils
 from commons.errors import CallerError
 
 
-def clean_language(input_dictionary):
+def clean_language(data):
     def clean_list(array):
         new_list = []
         for a in array:
@@ -20,8 +20,11 @@ def clean_language(input_dictionary):
                 new_list.append(a)
         return new_list
 
-    if not isinstance(input_dictionary, dict):
-        return input_dictionary
+    if isinstance(data, list):
+        return clean_list(data)
+
+    if not isinstance(data, dict):
+        return data
 
     '''
     recursively changes fields in dictionary
@@ -34,15 +37,15 @@ def clean_language(input_dictionary):
     :param input_dictionary:
     :return:
     '''
-    for key, value in input_dictionary.items():
+    for key, value in data.items():
         if isinstance(value, dict) and 'pl' in value and 'en' in value:
-            input_dictionary[key] = value['pl']
+            data[key] = value['pl']
         elif isinstance(value, dict):
-            input_dictionary[key] = clean_language(value)
+            data[key] = clean_language(value)
         elif isinstance(value, list):
-            input_dictionary[key] = clean_list(value)
+            data[key] = clean_list(value)
 
-    return input_dictionary
+    return data
 
 
 class UsosCaller(OAuthMixin):
