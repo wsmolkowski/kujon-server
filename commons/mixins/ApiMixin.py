@@ -321,10 +321,10 @@ class ApiMixin(ApiUserMixin):
     def classtype_name(classtypes, key_id):
         for key, name in list(classtypes.items()):
             if str(key_id) == str(key):
-                if 'pl' in name['name']:
-                    return name['name']['pl']
-                else:
+                if isinstance(name, dict) and 'name' in name:
                     return name['name']
+                else:
+                    return str(name)
         return key_id
 
     async def api_grades(self):

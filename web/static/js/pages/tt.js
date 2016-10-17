@@ -50,7 +50,10 @@ $, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
                     description += "budynek: " + event.building_name + "<br>"
                     description += "grupa: " + event.group_number + "<br>"
                     description += "typ: " + event.type + "<br>"
-                    description += "prowadzący: " + event.lecturer[0].first_name + " " + event.lecturer[0].last_name
+
+                    if (event.lecturer.length > 0){
+                        description += "prowadzący: " + event.lecturer[0].first_name + " " + event.lecturer[0].last_name
+                    }
                     element.tooltip({title: description, html: true, container: "body", placement: 'right'});
                 }
             });
