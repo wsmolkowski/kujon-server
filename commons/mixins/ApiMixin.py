@@ -321,7 +321,7 @@ class ApiMixin(ApiUserMixin):
     def classtype_name(classtypes, key_id):
         for key, name in list(classtypes.items()):
             if str(key_id) == str(key):
-                if 'pl' in name['name']:
+                if 'pl' == name['name']:
                     return name['name']['pl']
                 else:
                     return name['name']
@@ -541,8 +541,8 @@ class ApiMixin(ApiUserMixin):
         # get faculties
         faculties_ids = list()
         for programme_doc in programmes:
-            if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
-                faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
+            if 'faculty' in programme_doc and programme_doc['faculty'][constants.ID] not in faculties_ids:
+                faculties_ids.append(programme_doc['faculty'][constants.ID])
 
         faculties = list()
         tasks_faculties = list()
