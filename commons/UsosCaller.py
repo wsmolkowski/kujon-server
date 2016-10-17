@@ -16,6 +16,8 @@ def clean_language(data):
         for a in array:
             if isinstance(a, dict):
                 new_list.append(clean_language(a))
+            elif isinstance(a, list):
+                new_list.append(clean_list(a))
             else:
                 new_list.append(a)
         return new_list
