@@ -541,7 +541,8 @@ class ApiMixin(ApiUserMixin):
         # get faculties
         faculties_ids = list()
         for programme_doc in programmes:
-            if 'faculty' in programme_doc and programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
+            if 'faculty' in programme_doc and constants.FACULTY_ID in programme_doc['faculty'] and \
+                            programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
                 faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
 
         faculties = list()
