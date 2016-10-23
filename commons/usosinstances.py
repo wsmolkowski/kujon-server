@@ -377,7 +377,7 @@ USOSINSTANCES = [
      'contact': 'usos@up.wroc.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-     'comment': 'Występują problemy w konfiguracji USOSa po stronie UP Wroc, czekamy na poprawki informatyków UP Wroc.',
+     'comment': 'Występują problemy w konfiguracji USOSa po stronie UP Wroc, czekamy na poprawki informatyków UP Wroc..',
      },
     {'usos_id': 'PWSIP',
      'name': 'PWSIP w Łomży',
@@ -388,7 +388,7 @@ USOSINSTANCES = [
      'contact': 'mdabrowski@pwsip.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-     'comment': 'Uczelnia nie posiada aktualnego certyfikatu SSL, zapraszamy wkrótce.',
+     'comment': 'Uczelnia nie posiada aktualnego certyfikatu SSL, czekamy aż administratorzy poprawią...',
      },
     {'usos_id': 'APS',
      'name': 'Akademia Pedagogiki Specjalnej',
@@ -399,7 +399,7 @@ USOSINSTANCES = [
      'contact': 'usosweb@aps.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż APS da dostęp do USOSa dla Kujona.'
+     'comment': 'Czekamy aż APS udostępni USOSa dla Kujona..'
      },
     {'usos_id': 'PO',  # brak wystawionego API bardzo stary usos
      'name': 'Politechnika Opolska',
@@ -410,7 +410,7 @@ USOSINSTANCES = [
      'contact': 'pomoc@student.po.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż PO da dostęp do USOSa dla Kujona.'
+     'comment': 'Czekamy aż Politechnika Opolska udostępni USOSa dla Kujona..'
      },
     {'usos_id': 'WSP',  # brak wystawionego API bardzo stary usos
      'name': 'Wyższa Szkoła Prawa we Wrocławiu',
@@ -421,7 +421,7 @@ USOSINSTANCES = [
      'contact': 'it@uth.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż WSP da dostęp do USOSa dla Kujona.'
+     'comment': 'Czekamy aż WSP we Wrocławiu udostępni USOSa dla Kujona..'
      },
     {'usos_id': 'AJD',  # brak wystawionego API
      'name': 'Akademia im. Jana Długosza w Częstochowie',
@@ -432,6 +432,6 @@ USOSINSTANCES = [
      'contact': 'it@uth.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż AJD w Częstochowie da dostęp do USOSa dla Kujona.'
+     'comment': 'Czekamy aż AJD w Częstochowie udostępni USOSa dla Kujona..'
      },
 ]
