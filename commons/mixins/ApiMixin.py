@@ -494,6 +494,17 @@ class ApiMixin(ApiUserMixin):
             }
         )
 
+        # obejście wystepowania null w polach stats i homepage_url
+
+        if not faculty_doc['homepage_url']:
+            faculty_doc['homepage_url'] = ""
+        if not faculty_doc['stats']['course_count']:
+            faculty_doc['stats']['course_count'] = 0
+        if not faculty_doc['stats']['programme_count']:
+            faculty_doc['stats']['programme_count'] = 0
+        if not faculty_doc['stats']['staff_count']:
+            faculty_doc['stats']['staff_count'] = 0
+
         faculty_doc[constants.FACULTY_ID] = faculty_id
 
         return faculty_doc
