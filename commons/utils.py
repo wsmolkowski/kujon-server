@@ -88,7 +88,8 @@ def http_client(proxy_url=None, proxy_port=None):
     return httpclient.AsyncHTTPClient()
 
 
-def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None):
+def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None,
+                 prepare_curl_callback=None):
     if not headers:
         headers = HTTPHeaders({})
 
@@ -99,6 +100,7 @@ def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True,
     return HTTPRequest(url=url,
                        decompress_response=decompress_response,
                        headers=headers,
+                       prepare_curl_callback=prepare_curl_callback,
                        proxy_host=proxy_url,
                        proxy_port=proxy_port,
                        connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
