@@ -40,6 +40,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def prepare(self):
         self._context = ObjectDict()
+        self._context.prepare_curl_callback = self.config.PREPARE_CURL_CALLBACK
         self._context.proxy_url = self.config.PROXY_URL
         self._context.proxy_port = self.config.PROXY_PORT
         self._context.remote_ip = self.get_remote_ip()
