@@ -50,7 +50,7 @@ class UserInfoApi(ApiHandler):
 
             # upgrade only with values or insert new keys + values
             for k, v in list(user_info.items()):
-                if k not in user_doc and user_info[k]:
+                if k not in user_doc:
                     user_doc[k] = user_info[k]
 
             # check if get photo needed
