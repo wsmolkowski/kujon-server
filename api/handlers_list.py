@@ -17,7 +17,7 @@ from api.handlers.subscriptions import SubscriptionsHandler
 from api.handlers.terms import TermsApi, TermApi
 from api.handlers.theses import ThesesApi
 from api.handlers.tt import TTApi
-from api.handlers.user import UserInfoApi, UsersInfoByIdApi, UserInfoPhotoApi
+from api.handlers.user import UsersInfoApi, UsersInfoAllApi, UsersInfoByIdApi, UsersInfoPhotoApi
 
 HANDLERS = [
     (r"/config", ApplicationConfigHandler),
@@ -35,9 +35,10 @@ HANDLERS = [
     (r"/usoses", UsosesApi),
     (r"/usosesall", UsosesAllApi),
 
-    (r"/users", UserInfoApi),
+    (r"/usersinfoall", UsersInfoAllApi),
+    (r"/users", UsersInfoApi),
     (r"/users/([^/]+)", UsersInfoByIdApi),
-    (r"/users_info_photos/([^/]+)", UserInfoPhotoApi),
+    (r"/users_info_photos/([^/]+)", UsersInfoPhotoApi),
 
     (r"/courseseditions", CoursesEditionsApi),
     (r"/courseseditionsbyterm", CoursesEditionsByTermApi),

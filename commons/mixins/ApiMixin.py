@@ -530,8 +530,9 @@ class ApiMixin(ApiUserMixin):
 
         return faculty_doc
 
-    async def api_faculties(self):
-        user_info = await self.api_user_usos_info()
+    async def api_faculties(self, user_info=None):
+        if not user_info:
+            user_info = await self.api_user_usos_info()
 
         # get programmes for user
         programmes_ids = list()
@@ -635,10 +636,10 @@ class ApiMixin(ApiUserMixin):
 
         return group_doc
 
-    async def api_thesis(self):
+    async def api_thesis(self, refresh=False):
 
         pipeline = {constants.USER_ID: self.getUserId()}
-        if self.do_refresh():
+        if self.do_refresh() and refresh:
             await self.db_remove(constants.COLLECTION_THESES, pipeline)
 
         theses_doc = await self.db[constants.COLLECTION_THESES].find_one(pipeline)
