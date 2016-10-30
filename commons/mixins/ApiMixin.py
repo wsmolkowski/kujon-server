@@ -423,8 +423,9 @@ class ApiMixin(ApiUserMixin):
                                           'courses': grades_by_term[term[constants.TERM_ID]]})
         return grades_sorted_by_term
 
-    async def api_programmes(self, finish=False):
-        user_info = await self.api_user_usos_info()
+    async def api_programmes(self, finish=False, user_info=None):
+        if not user_info:
+            user_info = await self.api_user_usos_info()
 
         programmes = list()
         for program in user_info['student_programmes']:
@@ -636,7 +637,7 @@ class ApiMixin(ApiUserMixin):
 
         return group_doc
 
-    async def api_thesis(self, refresh=False):
+    async def api_thesis(self, refresh=False, user_info=None):
 
         pipeline = {constants.USER_ID: self.getUserId()}
         if self.do_refresh() and refresh:
@@ -645,7 +646,8 @@ class ApiMixin(ApiUserMixin):
         theses_doc = await self.db[constants.COLLECTION_THESES].find_one(pipeline)
 
         if not theses_doc:
-            user_info = await self.api_user_usos_info()
+            if not user_info:
+                user_info = await self.api_user_usos_info()
 
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',

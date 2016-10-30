@@ -177,15 +177,15 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
                 await self.remove_user_data(skip_collections)
 
-            await self.api_user_usos_info()
+            user_doc = await self.api_user_usos_info()
 
             await self._setUp(user_id)
 
-            await self.api_thesis()
+            await self.api_thesis(user_info=user_doc)
             await self.__process_courses_editions()
             await self.api_terms()
-            await self.api_programmes()
-            await self.api_faculties()
+            await self.api_programmes(user_info=user_doc)
+            await self.api_faculties(user_info=user_doc)
             await self.__process_crstests()
 
         except Exception as ex:
