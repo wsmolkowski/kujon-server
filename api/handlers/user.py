@@ -57,7 +57,7 @@ class AbstractUserInfo(ApiHandler):
         user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
                                       usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
 
-        user_doc['theses'] = await self.api_thesis(refresh=True)
+        user_doc['theses'] = await self.api_thesis(refresh=True, user_info=user_doc)
 
         del (user_doc[constants.UPDATE_TIME])
         del (user_doc[constants.MONGO_ID])
@@ -77,7 +77,7 @@ class UsersInfoAllApi(AbstractUserInfo):
             user_doc = await self._users_info()
             user_doc['faculties'] = await self.api_faculties(user_doc)
             user_doc['terms'] = await self.api_terms()
-            user_doc['programmes'] = await self.api_programmes(finish=False)
+            user_doc['programmes'] = await self.api_programmes(finish=False, user_info=user_doc)
 
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
