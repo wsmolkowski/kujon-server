@@ -473,7 +473,7 @@ class ApiMixin(ApiUserMixin):
 
                 programme_doc['ects_used_sum'] = ects_used_sum
             except Exception as ex:
-                await self.exc(ex, finish=False)
+                logging.debug(ex)
                 programme_doc['ects_used_sum'] = None
 
             await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
