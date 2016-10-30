@@ -32,7 +32,59 @@ class UsersInfoByIdApi(ApiHandler):
             await self.exc(ex)
 
 
-class UserInfoApi(ApiHandler):
+class AbstractUserInfo(ApiHandler):
+    async def _users_info(self):
+        user_doc = await self.db[constants.COLLECTION_USERS].find_one(
+            {constants.MONGO_ID: self.getUserId()},
+            LIMIT_FIELDS_USER)
+
+        user_info = await self.api_user_usos_info()
+
+        # upgrade only with values or insert new keys + values
+        for k, v in list(user_info.items()):
+            if k not in user_doc:
+                user_doc[k] = user_info[k]
+
+        # check if get photo needed
+        if constants.PHOTO_URL in user_doc and user_doc[constants.PHOTO_URL]:
+            user_doc[constants.PHOTO_URL] = user_info[constants.PHOTO_URL]
+        else:
+            if constants.GOOGLE in user_doc and constants.GOOGLE_PICTURE in user_doc[constants.GOOGLE]:
+                user_doc[constants.PHOTO_URL] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
+            if constants.FACEBOOK in user_doc and constants.FACEBOOK_PICTURE in user_doc[constants.FACEBOOK]:
+                user_doc[constants.PHOTO_URL] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+
+        user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
+                                      usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
+
+        user_doc['theses'] = await self.api_thesis(refresh=True)
+
+        del (user_doc[constants.UPDATE_TIME])
+        del (user_doc[constants.MONGO_ID])
+
+        return user_doc
+
+
+class UsersInfoAllApi(AbstractUserInfo):
+    @decorators.authenticated
+    @tornado.web.asynchronous
+    async def get(self):
+        """
+        for mobi use only
+        :return: combined data from api: user_info, faculties, terms, programmes
+        """
+        try:
+            user_doc = await self._users_info()
+            user_doc['faculties'] = await self.api_faculties(user_doc)
+            user_doc['terms'] = await self.api_terms()
+            user_doc['programmes'] = await self.api_programmes(finish=False)
+
+            self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
+        except Exception as ex:
+            await self.exc(ex)
+
+
+class UsersInfoApi(AbstractUserInfo):
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self):
@@ -42,40 +94,13 @@ class UserInfoApi(ApiHandler):
         """
 
         try:
-            user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: self.getUserId()},
-                LIMIT_FIELDS_USER)
-
-            user_info = await self.api_user_usos_info()
-
-            # upgrade only with values or insert new keys + values
-            for k, v in list(user_info.items()):
-                if k not in user_doc and user_info[k]:
-                    user_doc[k] = user_info[k]
-
-            # check if get photo needed
-            if constants.PHOTO_URL in user_doc and user_doc[constants.PHOTO_URL]:
-                user_doc[constants.PHOTO_URL] = user_info[constants.PHOTO_URL]
-            else:
-                if constants.GOOGLE in user_doc and constants.GOOGLE_PICTURE in user_doc[constants.GOOGLE]:
-                    user_doc[constants.PHOTO_URL] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
-                if constants.FACEBOOK in user_doc and constants.FACEBOOK_PICTURE in user_doc[constants.FACEBOOK]:
-                    user_doc[constants.PHOTO_URL] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
-
-            user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
-                                          usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
-
-            user_doc['theses'] = await self.api_thesis()
-
-            del (user_doc[constants.UPDATE_TIME])
-            del (user_doc[constants.MONGO_ID])
-
+            user_doc = await self._users_info()
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)
 
 
-class UserInfoPhotoApi(ApiHandler):
+class UsersInfoPhotoApi(ApiHandler):
     @decorators.authenticated
     @tornado.web.asynchronous
     async def get(self, photo_id):

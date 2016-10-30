@@ -49,6 +49,9 @@ class Config(object):
         self.COMPRESS_RESPONSE = self.config.getboolean('application', 'COMPRESS_RESPONSE')
         self.UNICODE = self.config.get('application', 'UNICODE')
 
+        # pycurl
+        self.PREPARE_CURL_CALLBACK = self.config.getboolean('application', 'PREPARE_CURL_CALLBACK')
+
         # proxy
         self.PROXY_URL = self.config.get('proxy', 'PROXY_URL') if self.config.get('proxy', 'PROXY_URL') else None
         self.PROXY_PORT = self.config.getint('proxy', 'PROXY_PORT') if self.config.get('proxy', 'PROXY_PORT') else None

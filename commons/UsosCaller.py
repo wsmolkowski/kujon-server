@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import pycurl
 import urllib.parse as urllib_parse
 from base64 import b64encode
 
@@ -50,7 +51,27 @@ def clean_language(data):
     return data
 
 
-class UsosCaller(OAuthMixin):
+class AbstractCaller(object):
+    def _prepare_curl_callback(self, curl):
+        curl.setopt(pycurl.FRESH_CONNECT, pycurl.FRESH_CONNECT)
+
+    async def request_fetch(self, url):
+        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
+
+        if self._context.prepare_curl_callback:
+            prepare_curl_callback = self._prepare_curl_callback
+        else:
+            prepare_curl_callback = None
+
+        return await client.fetch(
+            utils.http_request(url=url,
+                               proxy_url=self._context.proxy_url,
+                               proxy_port=self._context.proxy_port,
+                               x_forwarded_for=self._context.remote_ip,
+                               prepare_curl_callback=prepare_curl_callback))
+
+
+class UsosCaller(AbstractCaller, OAuthMixin):
     _OAUTH_VERSION = '1.0a'
     _OAUTH_NO_CALLBACKS = False
 
@@ -79,10 +100,7 @@ class UsosCaller(OAuthMixin):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
-        response = await client.fetch(
-            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port,
-                               x_forwarded_for=self._context.remote_ip))
+        response = await self.request_fetch(url)
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return clean_language(escape.json_decode(response.body))
@@ -94,7 +112,7 @@ class UsosCaller(OAuthMixin):
                                                                                                url))
 
 
-class AsyncCaller(object):
+class AsyncCaller(AbstractCaller):
     def __init__(self, context=None):
         self._context = context
 
@@ -113,10 +131,7 @@ class AsyncCaller(object):
         if arguments:
             url += "?" + urllib_parse.urlencode(arguments)
 
-        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
-        response = await client.fetch(
-            utils.http_request(url=url, proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port,
-                               x_forwarded_for=self._context.remote_ip))
+        response = await self.request_fetch(url)
 
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
             return clean_language(escape.json_decode(response.body))

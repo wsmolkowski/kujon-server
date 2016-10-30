@@ -21,7 +21,7 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_users_type(self):
         pipeline = [
-            {'$group': {'_id': {'user': '$user_id', 'user_type': {'$ifNull': ["user_type", "Unknown"]}},
+            {'$group': {'_id': {'user': '$user_id', 'user_type': {'$ifNull': ["$user_type", "Unknown"]}},
                         'count': {'$sum': 1}}}
         ]
         return await self._aggreate_users(pipeline)

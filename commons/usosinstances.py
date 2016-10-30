@@ -4,7 +4,7 @@
 
 USOSINSTANCES = [
 
- {'usos_id': 'UAM',
+    {'usos_id': 'UAM',
      'name': 'Uniwersytet im Adama Mickiewicza w Poznaniu',
      'url': 'https://usosapps.amu.edu.pl/',
      'logo': '/static/img/logo/logo-uam-64x64.jpg',
@@ -323,6 +323,17 @@ USOSINSTANCES = [
      'validate_ssl_certificate': True,
      'comment': 'OK',
      },
+     {'usos_id': 'PWSIP',
+      'name': 'PWSIP w Łomży',
+      'url': 'https://api.pwsip.edu.pl/usosapps/',
+      'logo': '/static/img/logo/logo-pwsip-64x64.jpg',
+      'consumer_key': 'ydYepCBkkcPRNzFcaEAp',
+      'consumer_secret': 'QHw8B3dYYM5fvbXQRK8xQQbNBLGLY3gMrEAG2Z7P',
+      'contact': 'mdabrowski@pwsip.edu.pl',
+      'enabled': True,
+      'validate_ssl_certificate': True,
+      'comment': '',
+      },
     {'usos_id': 'DEMO',
      'name': 'Uniwersytet DEMO w Nibylandi',
      'url': 'https://usosapps.demo.usos.edu.pl/',
@@ -344,7 +355,7 @@ USOSINSTANCES = [
      'phone': '225520527',
      'enabled': False,  # Potrzebna umowa
      'validate_ssl_certificate': True,
-     'comment': 'Czekamy na zgodę władz UW aby móc korzystać z Kujona..',
+     'comment': 'Czekamy na zgodę władz UW aby móc korzystać z Kujona.',
      },
     {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
      'name': 'Uniwersytet Jagieloński w Krakowie',
@@ -355,7 +366,7 @@ USOSINSTANCES = [
      'contact': 'michal.pysz@uj.edu.pl, michal.zabicki@uj.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-     'comment': 'Czekamy na zgodę władz UJ aby móc korzystać z Kujona..',
+     'comment': 'Czekamy na zgodę władz UJ aby móc korzystać z Kujona.',
      },
     {'usos_id': 'SGH',  # z palca dodane, brak danych!
      'name': 'Szkoła Głowna Handlowa w Warszawie',
@@ -377,18 +388,7 @@ USOSINSTANCES = [
      'contact': 'usos@up.wroc.pl',
      'enabled': False,
      'validate_ssl_certificate': True,
-     'comment': 'Występują problemy w konfiguracji USOSa po stronie UP Wroc, czekamy na poprawki informatyków UP Wroc..',
-     },
-    {'usos_id': 'PWSIP',
-     'name': 'PWSIP w Łomży',
-     'url': 'https://api.pwsip.edu.pl/usosapps/',
-     'logo': '/static/img/logo/logo-pwsip-64x64.jpg',
-     'consumer_key': 'ydYepCBkkcPRNzFcaEAp',
-     'consumer_secret': 'QHw8B3dYYM5fvbXQRK8xQQbNBLGLY3gMrEAG2Z7P',
-     'contact': 'mdabrowski@pwsip.edu.pl',
-     'enabled': True,
-     'validate_ssl_certificate': True,
-     'comment': '',
+     'comment': 'Występują problemy w konfiguracji USOSa po stronie UP Wroc, czekamy na poprawki informatyków UP Wroc.',
      },
     {'usos_id': 'APS',
      'name': 'Akademia Pedagogiki Specjalnej',
@@ -399,7 +399,7 @@ USOSINSTANCES = [
      'contact': 'usosweb@aps.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż APS udostępni USOSa dla Kujona..'
+     'comment': 'Czekamy aż APS udostępni USOSa dla Kujona.'
      },
     {'usos_id': 'PO',  # brak wystawionego API bardzo stary usos
      'name': 'Politechnika Opolska',
@@ -410,7 +410,7 @@ USOSINSTANCES = [
      'contact': 'pomoc@student.po.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż Politechnika Opolska udostępni USOSa dla Kujona..'
+     'comment': 'Czekamy aż Politechnika Opolska udostępni USOSa dla Kujona.'
      },
     {'usos_id': 'WSP',  # brak wystawionego API bardzo stary usos
      'name': 'Wyższa Szkoła Prawa we Wrocławiu',
@@ -421,7 +421,7 @@ USOSINSTANCES = [
      'contact': 'it@uth.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż WSP we Wrocławiu udostępni USOSa dla Kujona..'
+     'comment': 'Czekamy aż WSP we Wrocławiu udostępni USOSa dla Kujona.'
      },
     {'usos_id': 'AJD',  # brak wystawionego API
      'name': 'Akademia im. Jana Długosza w Częstochowie',
@@ -432,6 +432,6 @@ USOSINSTANCES = [
      'contact': 'it@uth.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
-     'comment': 'Czekamy aż AJD w Częstochowie udostępni USOSa dla Kujona..'
+     'comment': 'Czekamy aż AJD w Częstochowie udostępni USOSa dla Kujona.'
      },
 ]
