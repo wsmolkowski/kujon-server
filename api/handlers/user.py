@@ -75,9 +75,14 @@ class UsersInfoAllApi(AbstractUserInfo):
         """
         try:
             user_doc = await self._users_info()
-            user_doc['faculties'] = await self.api_faculties(user_doc)
-            user_doc['terms'] = await self.api_terms()
-            user_doc['programmes'] = await self.api_programmes(finish=False, user_info=user_doc)
+
+            faculties, terms, programmes = await self.api_faculties(user_doc),\
+                                           await self.api_terms(), \
+                                           await self.api_programmes(finish=False, user_info=user_doc)
+
+            user_doc['faculties'] = faculties
+            user_doc['terms'] = terms
+            user_doc['programmes'] = programmes
 
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
