@@ -55,13 +55,6 @@ class StatisticsBaseHandler(BaseHandler):
 
         return await self._aggreate_users(pipeline)
 
-    async def _stat_usos_errors(self):
-        pipeline = [
-            # {'$match': {'$usos_id': {'$exists': True, '$ne': None}}},
-            {'$group': {'_id': {'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
-        ]
-        cursor = self.db[constants.COLLECTION_EXCEPTIONS].aggregate(pipeline)
-        return await cursor.to_list(None)
 
     @web.removeslash
     @web.asynchronous

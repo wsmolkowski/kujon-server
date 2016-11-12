@@ -1,0 +1,47 @@
+{% extends "statistics_base.html" %}
+
+{% block content %}
+
+<table class="responsive-table">
+    <caption><h4>Suma błędów</h4></caption>
+    <thead>
+    <tr>
+        <th data-field="id">Uczelnia</th>
+        <th data-field="name">Suma</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in usos_errors %}
+    <tr>
+        <td>{{ data['_id']['usos_id'] }}</td>
+        <td>{{ data['count'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+<table class="responsive-table">
+    <caption><h4>Błędy dziś</h4></caption>
+    <thead>
+    <tr>
+        <th>USOS</th>
+        <th>Typ</th>
+        <th>Wiadomość</th>
+        <th>Wyjątek</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in daily_exceptions %}
+    <tr>
+        <td>{{ data['_id']['usos_id'] }}</td>
+        <td>{{ data['_id']['exception_type'] }}</td>
+        <td>{{ data['_id']['message'] }}</td>
+        <td>{{ data['_id']['exception'] }}</td>
+        <th data-field="name">Suma</th>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+{% end %}
+

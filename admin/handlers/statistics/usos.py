@@ -11,10 +11,9 @@ class UsosHandler(StatisticsBaseHandler):
     async def get(self):
         try:
             usos_users = await self._stat_usos_users()
-            usos_errors = await self._stat_usos_errors()
+
             self._render_page("statistics/usos.html", {
                 'usos_users': usos_users,
-                'usos_errors': usos_errors
             })
         except Exception as ex:
             self._render_error(ex)
