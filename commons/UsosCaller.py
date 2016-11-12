@@ -59,7 +59,7 @@ class AbstractCaller(object):
         client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
 
         if self._context.prepare_curl_callback:
-            prepare_curl_callback = self._prepare_curl_callback
+            prepare_curl_callback = self._context.prepare_curl_callback
         else:
             prepare_curl_callback = None
 
