@@ -87,14 +87,18 @@ class Emailer(object):
                 msg.attach(MIMEText(job[EmailMixin.SMTP_HTML], 'html'))
 
                 smtp.sendmail(job[EmailMixin.SMTP_FROM], job[EmailMixin.SMTP_TO], msg.as_string())
+                
+                logging.debug('email sent to {0}'.format(job[EmailMixin.SMTP_TO]))
 
-                await self.db[constants.COLLECTION_MESSAGES].insert({
+                msg_doc = await self.db[constants.COLLECTION_MESSAGES].insert({
                     constants.USER_ID: job[constants.USER_ID],
                     constants.CREATED_TIME: datetime.now(),
                     constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                     constants.FIELD_MESSAGE_TYPE: 'email',
                     constants.JOB_MESSAGE: job[EmailMixin.SMTP_TEXT]
                 })
+
+                logging.debug(msg_doc)
 
                 await self.update_job(job, JobStatus.FINISH.value)
 
