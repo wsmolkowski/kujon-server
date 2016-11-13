@@ -179,18 +179,16 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
 
     @web.asynchronous
     async def get(self):
+        usos_works = False
+        usos_paired = False
 
         try:
             user = self.get_current_user()
             if user and constants.USOS_PAIRED in user.keys():
                 usos_paired = user[constants.USOS_PAIRED]
-            else:
-                usos_paired = False
 
             if usos_paired:
                 usos_works = await self.usos_works()
-            else:
-                usos_works = False
 
             config = {
                 'PROJECT_TITLE': self.config.PROJECT_TITLE,
@@ -204,10 +202,11 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
 
         except Exception as ex:
             logging.exception(ex)
-            self.success(data={
+            config = {
                 'PROJECT_TITLE': self.config.PROJECT_TITLE,
                 'API_URL': self.config.DEPLOY_API,
-                'USOS_PAIRED': False,
+                'USOS_PAIRED': usos_paired,
                 'USER_LOGGED': False,
-                'USOS_WORKS': False
-            })
+                'USOS_WORKS': usos_works
+            }
+            self.success(data=config)
