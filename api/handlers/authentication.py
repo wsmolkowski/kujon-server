@@ -222,7 +222,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
             if not usos_doc:
                 raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
 
-            self.set_up(usos_doc)
+            self.oauth_set_up(usos_doc)
 
             if email:
                 user_doc = yield self.db_find_user_email(email)
@@ -308,7 +308,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
 
-            self.set_up(usos_doc)
+            self.oauth_set_up(usos_doc)
 
             if self.get_argument('error', False):
                 updated_user = user_doc
@@ -346,6 +346,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
+                    yield self.email_registration()
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.debug('Finish register WWW OK')

@@ -21,7 +21,7 @@ class OAuth2Mixin(OAuthMixin):
     def _oauth_consumer_token(self):
         return self._CONSUMER_TOKEN
 
-    def set_up(self, usos_doc):
+    def oauth_set_up(self, usos_doc):
         """
 
         :param usos_doc:
