@@ -354,11 +354,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
-                    yield self.email_registration()
+                    yield self.email_registration(user_doc)
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.debug('Finish register WWW OK')
-                    yield self.email_registration()
+                    yield self.email_registration(user_doc)
                     self.redirect(self.config.DEPLOY_WEB)
             else:
                 self.redirect(self.config.DEPLOY_WEB)
