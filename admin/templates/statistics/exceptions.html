@@ -28,6 +28,7 @@
         <th>Typ</th>
         <th>Wiadomość</th>
         <th>Wyjątek</th>
+        <th>Suma</th>
     </tr>
     </thead>
     <tbody>
@@ -37,7 +38,7 @@
         <td>{{ data['_id']['exception_type'] }}</td>
         <td>{{ data['_id']['message'] }}</td>
         <td>{{ data['_id']['exception'] }}</td>
-        <th data-field="name">Suma</th>
+        <td>{{ data['count'] }}</td>
     </tr>
     {% end %}
     </tbody>
