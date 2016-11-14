@@ -299,10 +299,18 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 raise AuthenticationError('Jeden z podanych parametrów jest niepoprawny.')
 
             user_id = self.get_cookie(self.config.KUJON_MOBI_REGISTER)
-            logging.info('verifying user: {0} for oauth_token: {1} and oauth_verifier: {2}'.format(
+
+            if not user_id:
+                raise AuthenticationError('Nie przekazano odpowiedniego ciasteczka.')
+
+            logging.debug('verifying user: {0} for oauth_token: {1} and oauth_verifier: {2}'.format(
                 user_id, oauth_token_key, oauth_token_key
             ))
+
             user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
+
+            if not user_doc:
+                raise AuthenticationError('Nie znaleziono użytkownika.')
 
             self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
