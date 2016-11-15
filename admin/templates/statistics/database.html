@@ -1,0 +1,28 @@
+{% extends "statistics_base.html" %}
+
+{% block content %}
+
+<table class="responsive-table">
+    <caption><h4>Stan zajętości bazy danych</h4></caption>
+    <thead>
+    <tr>
+        <th>Kolekcja</th>
+        <th>Liczba dokumentów</th>
+        <th>Wielkość indeków</th>
+        <th>Rozmiar</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data in database_statistics %}
+    <tr>
+        <td>{{ data['collection_name'] }}</td>
+        <td>{{ data['count'] }}</td>
+        <td>{{ data['totalIndexSize'] }}</td>
+        <td>{{ data['size'] }}</td>
+    </tr>
+    {% end %}
+    </tbody>
+</table>
+
+{% end %}
+

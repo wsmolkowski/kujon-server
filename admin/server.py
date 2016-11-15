@@ -11,6 +11,7 @@ from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line, define, options
 
 from admin.handlers.base import MainHandler, DefaultErrorHandler
+from admin.handlers.statistics.database import DatabaseHandler
 from admin.handlers.statistics.exceptions import ExceptionsHandler
 from admin.handlers.statistics.statistics import StatisticsBaseHandler
 from admin.handlers.statistics.user import UsersHandler
@@ -32,6 +33,7 @@ def get_application(config):
                 (r"/statistics/usos", UsosHandler),
                 (r"/statistics/usosuser", UsosUserHandler),
                 (r"/statistics/exceptions", ExceptionsHandler),
+                (r"/statistics/database", DatabaseHandler),
             ]
 
             __settings = dict(
