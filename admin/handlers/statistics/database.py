@@ -36,7 +36,7 @@ class DatabaseHandler(StatisticsBaseHandler):
 
             result.append({
                 'collection_name': collection_name,
-                'count': self._convert_bytes(collstats['count']),
+                'count': collstats['count'],
                 'size': self._convert_bytes(collstats['size']),
                 'totalIndexSize': self._convert_bytes(collstats['totalIndexSize'])
             })
