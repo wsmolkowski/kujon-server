@@ -33,7 +33,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     def do_refresh(self):
         return self._context.refresh
 
-    async def _setUp(self, user_id, refresh=False):
+    async def _setUp(self, user_id, setup_usos=True, refresh=False):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
@@ -45,16 +45,18 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self._context.remote_ip = None
         self._context.http_client = utils.http_client()
         self._context.user_doc = await self.db_get_user(user_id)
+
         if not self._context.user_doc:
             self._context.user_doc = await self.db_get_archive_user(user_id)
 
-        self._context.usos_doc = await self.db_get_usos(self._context.user_doc[constants.USOS_ID])
-        self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
-        self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
-                                            secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+        if setup_usos:
+            self._context.usos_doc = await self.db_get_usos(self._context.user_doc[constants.USOS_ID])
+            self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
+            self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
+                                                secret=self._context.usos_doc[constants.CONSUMER_SECRET])
 
-        self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
-                                          secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
+            self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
+                                              secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
 
     def get_current_user(self):
         return self._context.user_doc
@@ -219,7 +221,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 await self.exc(ex, finish=False)
 
     async def archive_user(self, user_id):
-        await self._setUp(user_id)
+        await self._setUp(user_id, setup_usos=False)
 
         try:
             await UsosCaller(self._context).call(path='services/events/unsubscribe')
