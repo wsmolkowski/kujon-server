@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import logging
 import sys
 
 from scripts.dbutils import DbUtils
@@ -15,10 +16,13 @@ def main(arguments):
         email_from, environment_from, email_to, environment_to
     ))
 
-    DbUtils(None).copy_user_credentials(email_from=email_from, email_to=email_to, environment_to=environment_to,
+    try:
+        DbUtils(None).copy_user_credentials(email_from=email_from, email_to=email_to, environment_to=environment_to,
                                         environment_from=environment_from)
 
-    print('copying ok')
+        print('copying ok')
+    except Exception as ex:
+        logging.exception(ex)
 
 
 if __name__ == '__main__':

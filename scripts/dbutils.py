@@ -26,7 +26,7 @@ class DbUtils(object):
         if config:
             self.config = config
             self.encrypt_usoses_keys = encrypt_usoses_keys
-            self.client = pymongo.Connection(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+            self.client = pymongo.MongoClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
             logging.info(self.client)
 
     def _ttl_index(self, collection, field, after_seconds):
@@ -131,9 +131,9 @@ class DbUtils(object):
             self.config_from = Config(environment_from)
             self.config_to = Config(environment_to)
 
-            self.client_from = pymongo.Connection(self.config_from.MONGODB_URI)
+            self.client_from = pymongo.MongoClient(self.config_from.MONGODB_URI)
             self.db_from = self.client_from[self.config_from.MONGODB_NAME]
-            self.client_to = pymongo.Connection(self.config_to.MONGODB_URI)
+            self.client_to = pymongo.MongoClient(self.config_to.MONGODB_URI)
             self.db_to = self.client_to[self.config_to.MONGODB_NAME]
 
             user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({
