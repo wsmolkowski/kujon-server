@@ -6,10 +6,12 @@ from datetime import datetime
 
 import pymongo
 
-from commons import constants
+from commons import constants, utils
 from commons.config import Config
 from commons.enumerators import JobStatus
 from commons.enumerators import JobType
+
+utils.initialize_logging('delete_user')
 
 
 def main(arguments):
