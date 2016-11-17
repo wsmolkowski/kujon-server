@@ -24,10 +24,10 @@ def main(arguments):
 
         config = Config(environment)
         client = pymongo.MongoClient(config.MONGODB_URI)
+
         db = client[config.MONGODB_NAME]
 
-        user_doc = db[constants.COLLECTION_USERS].find_one(
-            {constants.USER_EMAIL: user_email, constants.USOS_PAIRED: True})
+        user_doc = db[constants.COLLECTION_USERS].find_one({constants.USER_EMAIL: user_email})
 
         if not user_doc:
             raise Exception("user by email {0} not found.".format(user_email))
