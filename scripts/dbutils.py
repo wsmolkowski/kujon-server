@@ -168,8 +168,6 @@ class DbUtils(object):
 
             logging.info('created refresh task for updated user')
 
-        except Exception as ex:
-            logging.exception(ex)
         finally:
             if self.client_from:
                 self.client_from.close()
@@ -204,6 +202,9 @@ class DbUtils(object):
 
         except Exception as ex:
             logging.exception(ex)
+
+
+
 
 
 ##################################################################
