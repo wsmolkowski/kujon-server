@@ -35,7 +35,7 @@ def main(arguments):
         result = db[constants.COLLECTION_USERS].delete_many({constants.USER_EMAIL: user_email})
         logging.info('removed user data by email: {0} resulted in {1}'.format(user_email, result))
 
-        if user_doc[constants.USOS_PAIRED]:
+        if constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
             result = db[constants.COLLECTION_JOBS_QUEUE].insert_one({
                 constants.USER_ID: user_doc[constants.MONGO_ID],
                 constants.CREATED_TIME: datetime.now(),
