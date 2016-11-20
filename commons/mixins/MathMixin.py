@@ -43,6 +43,10 @@ class MathMixin(object):
                 try:
                     if "," in grade[constants.VALUE_SYMBOL]:
                         grade[constants.VALUE_SYMBOL] = grade[constants.VALUE_SYMBOL].replace(",", ".")
+                    if "NZAL" in grade[constants.VALUE_SYMBOL]:
+                        grade[constants.VALUE_SYMBOL] = "2.0"
+                    if "NK" in grade[constants.VALUE_SYMBOL]:
+                        grade[constants.VALUE_SYMBOL] = "2.0"
                     value_symbol = float(grade[constants.VALUE_SYMBOL])
                     value_symbols.append(value_symbol)
                 except ValueError:
