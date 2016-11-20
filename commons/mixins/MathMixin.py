@@ -6,6 +6,22 @@ AVERAGE_GRADE_ROUND = 2
 
 
 class MathMixin(object):
+    def _last_exam_session_number(self, grades):
+        max_exam_session_number = None
+
+        for grade in grades:
+            if 'exam_session_number' not in grade:
+                continue
+
+            if not max_exam_session_number:
+                max_exam_session_number = grade
+                continue
+
+            if int(grade['exam_session_number']) > max_exam_session_number['exam_session_number']:
+                max_exam_session_number = grade
+
+        return max_exam_session_number
+
     def _math_average_grades(self, courses_lists):
         value_symbols = list()
 
@@ -13,14 +29,15 @@ class MathMixin(object):
             if 'grades' not in course:
                 continue
 
-            for grade in course['grades']:
-                if 'value_symbol' not in grade:
-                    continue
-                try:
-                    value_symbol = float(grade['value_symbol'])
-                    value_symbols.append(value_symbol)
-                except ValueError:
-                    continue
+            grade = self._last_exam_session_number(course['grades'])
+
+            if 'value_symbol' not in grade:
+                continue
+            try:
+                value_symbol = float(grade['value_symbol'])
+                value_symbols.append(value_symbol)
+            except ValueError:
+                continue
 
         if not value_symbols:
             return
