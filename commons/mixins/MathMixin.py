@@ -6,21 +6,26 @@ AVERAGE_GRADE_ROUND = 2
 
 
 class MathMixin(object):
-    def _last_exam_session_number(self, grades):
-        max_exam_session_number = None
+    def _get_only_final_grades(self, grades):
+        final_grades = list()
+        found = int()
 
         for grade in grades:
-            if 'exam_session_number' not in grade:
+            if not final_grades:
+                final_grades.append(grade)
                 continue
 
-            if not max_exam_session_number:
-                max_exam_session_number = grade
-                continue
+            found = 0
+            for final_grade in final_grades:
+                if grade['class_type'] is final_grade['class_type']:
+                    if int(grade['exam_session_number']) > int(final_grade['exam_session_number']):
+                        final_grades.remove(final_grade)
+                        final_grades.append(grade)
+                        found = 1
+            if found == 0:
+                final_grades.append(grade)
 
-            if int(grade['exam_session_number']) > max_exam_session_number['exam_session_number']:
-                max_exam_session_number = grade
-
-        return max_exam_session_number
+        return final_grades
 
     def _math_average_grades(self, courses_lists):
         value_symbols = list()
@@ -29,15 +34,15 @@ class MathMixin(object):
             if 'grades' not in course:
                 continue
 
-            grade = self._last_exam_session_number(course['grades'])
-
-            if 'value_symbol' not in grade:
-                continue
-            try:
-                value_symbol = float(grade['value_symbol'])
-                value_symbols.append(value_symbol)
-            except ValueError:
-                continue
+            grades = self._get_only_final_grades(course['grades'])
+            for grade in grades:
+                if 'value_symbol' not in grade:
+                    continue
+                try:
+                    value_symbol = float(grade['value_symbol'].replace(",", "."))
+                    value_symbols.append(value_symbol)
+                except ValueError:
+                    continue
 
         if not value_symbols:
             return
