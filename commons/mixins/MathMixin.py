@@ -50,7 +50,8 @@ class MathMixin(object):
             return
 
         try:
-            return round(sum(value_symbols)/len(value_symbols), AVERAGE_GRADE_ROUND)
+            avg = float(round(sum(value_symbols)/len(value_symbols), AVERAGE_GRADE_ROUND))
+            return str(avg).replace(".", ",")
         except Exception as ex:
             logging.exception(ex)
             return
