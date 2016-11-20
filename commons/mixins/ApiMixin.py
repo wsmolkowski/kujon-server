@@ -10,6 +10,7 @@ from commons import usoshelper
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
+from commons.mixins.MathMixin import MathMixin
 
 LIMIT_FIELDS = (
     'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
@@ -30,7 +31,7 @@ USER_INFO_LIMIT_FIELDS = (
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
 
-class ApiMixin(ApiUserMixin):
+class ApiMixin(ApiUserMixin, MathMixin):
     @staticmethod
     def filterNone(array):
         return [i for i in array if i is not None]
@@ -420,8 +421,14 @@ class ApiMixin(ApiUserMixin):
         grades_sorted_by_term = list()
         for term in terms_by_order:
             grades_sorted_by_term.append({constants.TERM_ID: term[constants.TERM_ID],
+                                          'avr_grades': self._math_average_grades(
+                                              grades_by_term[term[constants.TERM_ID]]),
                                           'courses': grades_by_term[term[constants.TERM_ID]]})
         return grades_sorted_by_term
+
+    async def api_average_grades(self):
+        grades = await self.api_grades()
+        return self._math_average_grades(grades)
 
     async def api_programmes(self, finish=False, user_info=None):
         if not user_info:

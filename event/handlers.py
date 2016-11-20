@@ -81,4 +81,5 @@ class EventHandler(AbstractHandler):
 
             self.success(data='event consumed')
         except Exception as ex:
+            logging.exception(self.request.body)
             await self.exc(ex)

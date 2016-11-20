@@ -26,7 +26,7 @@ class DbUtils(object):
         if config:
             self.config = config
             self.encrypt_usoses_keys = encrypt_usoses_keys
-            self.client = pymongo.Connection(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+            self.client = pymongo.MongoClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
             logging.info(self.client)
 
     def _ttl_index(self, collection, field, after_seconds):
@@ -82,60 +82,6 @@ class DbUtils(object):
             ri = self.client[collection].reindex()
             logging.info('collection {0} reindexed: {1}'.format(collection, ri))
 
-    def _convert_bytes(self, bytes):
-        bytes = float(bytes)
-        magnitude = abs(bytes)
-        if magnitude >= 1099511627776:
-            terabytes = bytes / 1099511627776
-            size = '%.2fT' % terabytes
-        elif magnitude >= 1073741824:
-            gigabytes = bytes / 1073741824
-            size = '%.2fG' % gigabytes
-        elif magnitude >= 1048576:
-            megabytes = bytes / 1048576
-            size = '%.2fM' % megabytes
-        elif magnitude >= 1024:
-            kilobytes = bytes / 1024
-            size = '%.2fK' % kilobytes
-        else:
-            size = '%.2fb' % bytes
-        return size
-
-    def print_statistics(self):
-        db = self.client
-
-        print('#' * 25 + ' gathering statistics ' + '#' * 25)
-
-        summary = {
-            "count": 0,
-            "size": 0,
-            "indexSize": 0,
-            "storageSize": 0
-        }
-
-        for collection in db.collection_names(include_system_collections=False):
-            stats = db.command('collstats', collection)
-
-            summary["count"] += stats["count"]
-            summary["size"] += stats["size"]
-            summary["indexSize"] += stats.get("totalIndexSize", 0)
-            summary["storageSize"] += stats.get("storageSize", 0)
-
-            print("Collection {0} count: {1} size: {2} index_size: {3} storage_size: {4}".format(
-                collection,
-                stats["count"],
-                self._convert_bytes(stats["size"]),
-                self._convert_bytes(stats["totalIndexSize"]),
-                self._convert_bytes(stats["storageSize"])))
-
-        print('#' * 25 + ' Total statistics ' + '#' * 25)
-        print("Total Documents:", summary["count"])
-        print("Total Data Size:", self._convert_bytes(summary["size"]))
-        print("Total Index Size:", self._convert_bytes(summary["indexSize"]))
-        print("Total Storage Size:", self._convert_bytes(summary["storageSize"]))
-
-        print('#' * 25 + '#' * 25)
-
     def drop_collections(self, skip_collections=None):
         if not skip_collections:
             skip_collections = list()
@@ -185,9 +131,9 @@ class DbUtils(object):
             self.config_from = Config(environment_from)
             self.config_to = Config(environment_to)
 
-            self.client_from = pymongo.Connection(self.config_from.MONGODB_URI)
+            self.client_from = pymongo.MongoClient(self.config_from.MONGODB_URI)
             self.db_from = self.client_from[self.config_from.MONGODB_NAME]
-            self.client_to = pymongo.Connection(self.config_to.MONGODB_URI)
+            self.client_to = pymongo.MongoClient(self.config_to.MONGODB_URI)
             self.db_to = self.client_to[self.config_to.MONGODB_NAME]
 
             user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({
@@ -222,8 +168,6 @@ class DbUtils(object):
 
             logging.info('created refresh task for updated user')
 
-        except Exception as ex:
-            logging.exception(ex)
         finally:
             if self.client_from:
                 self.client_from.close()
@@ -260,6 +204,9 @@ class DbUtils(object):
             logging.exception(ex)
 
 
+
+
+
 ##################################################################
 
 parser = argparse.ArgumentParser(
@@ -273,8 +220,6 @@ parser.add_argument('-c', '--clean', action='store_const', dest='option', const=
 parser.add_argument('-r', '--recreate', action='store_const', dest='option', const='recreate',
                     help="recreate dictionaries - usosinstances")
 parser.add_argument('-i', '--index', action='store_const', dest='option', const='index',
-                    help="creates indexes on collections")
-parser.add_argument('-s', '--statistics', action='store_const', dest='option', const='statistics',
                     help="creates indexes on collections")
 parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
@@ -303,9 +248,6 @@ def main():
         logging.info('create_indexes start')
         dbutils.create_indexes()
         logging.info('create_indexes end')
-
-    elif args.option == 'statistics':
-        dbutils.print_statistics()
 
     elif args.option == 'refresh_failures':
         dbutils.refresh_failures()

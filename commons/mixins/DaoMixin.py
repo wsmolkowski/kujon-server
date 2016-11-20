@@ -47,6 +47,11 @@ class DaoMixin(object):
             exc_doc[constants.USER_ID] = self.getUserId()
 
         exc_doc['traceback'] = traceback.format_exc()
+        stack = traceback.extract_stack()
+        filename, codeline, function_name, text = stack[-2]
+
+        exc_doc['codeline'] = codeline
+        exc_doc['function_name'] = function_name
         exc_doc['exception_type'] = self.EXCEPTION_TYPE if hasattr(self,
                                                                    'EXCEPTION_TYPE') else ExceptionTypes.UNKNOWN.value
         exc_doc[constants.CREATED_TIME] = datetime.now()

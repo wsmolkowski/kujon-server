@@ -84,6 +84,8 @@ class UsersInfoAllApi(AbstractUserInfo):
             user_doc['terms'] = terms
             user_doc['programmes'] = programmes
 
+            user_doc['avr_grades'] = await self.api_average_grades()
+
             self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)

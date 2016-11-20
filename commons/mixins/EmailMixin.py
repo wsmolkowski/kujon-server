@@ -122,8 +122,11 @@ class EmailMixin(object):
 
         return await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
 
-    async def email_registration(self):
-        recipient = self.get_current_user()[constants.USER_EMAIL]
+    async def email_registration(self, user_doc=None):
+        if not user_doc:
+            user_doc = self.get_current_user()
+
+        recipient = user_doc[constants.USER_EMAIL]
 
         email_job = self.__email_job(
             subject='Rejestracja w Kujon.mobi',
