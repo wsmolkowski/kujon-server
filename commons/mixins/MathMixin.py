@@ -53,8 +53,6 @@ class MathMixin(object):
 
         try:
             avg = str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
-            if '.' in avg:
-                avg = avg.replace('.', ',')
             return avg
         except Exception as ex:
             logging.exception(ex)
