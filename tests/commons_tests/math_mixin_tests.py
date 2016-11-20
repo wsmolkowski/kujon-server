@@ -670,7 +670,7 @@ class MathMixinTest(unittest.TestCase):
         mm = MathMixin()
 
         # when
-        result = mm._last_exam_session_number(GRADES)
+        result = mm._get_only_final_grades(GRADES)
 
         # then
         self.assertEqual(result['exam_session_number'], 2)

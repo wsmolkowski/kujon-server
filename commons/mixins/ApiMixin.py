@@ -367,7 +367,6 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     for unit in course['grades']['course_units_grades']:
                         for unit2 in course['grades']['course_units_grades'][unit]:
                             elem = course['grades']['course_units_grades'][unit][unit2]
-                            elem['value_description'] = elem['value_description']
                             elem['unit'] = unit
                             grade['grades'].append(elem)
 
@@ -393,12 +392,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 for grade in course['grades']:
                     if 'unit' in grade:
                         unit = grade['unit']
+                        grade[constants.CLASS_TYPE] = 'Brak danych'
                         for unit_doc in units_doc:
                             if int(unit) == unit_doc[constants.UNIT_ID]:
                                 grade[constants.CLASS_TYPE] = unit_doc[constants.CLASS_TYPE_ID]
                                 del (grade['unit'])
-                            else:
-                                grade[constants.CLASS_TYPE] = 'Brak danych'
 
         return result
 
