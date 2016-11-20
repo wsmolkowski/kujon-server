@@ -2,7 +2,7 @@
 
 import logging
 
-AVERAGE_GRADE_ROUND = 1
+AVERAGE_GRADE_ROUND = 2
 
 
 class MathMixin(object):
