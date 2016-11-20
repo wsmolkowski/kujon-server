@@ -23,7 +23,7 @@ class MathMixin(object):
                     if int(grade[constants.EXAM_SESSION_NUMBER]) > int(final_grade[constants.EXAM_SESSION_NUMBER]):
                         final_grades.remove(final_grade)
                         final_grades.append(grade)
-                        found = 1
+                    found = 1
             if found == 0:
                 final_grades.append(grade)
 
@@ -51,7 +51,8 @@ class MathMixin(object):
 
         try:
             avg = round(sum(value_symbols)/len(value_symbols), AVERAGE_GRADE_ROUND)
-            return str(avg).replace(".", ",")
+            avg = str(avg).replace(".", ",")
+            return avg
         except Exception as ex:
             logging.exception(ex)
             return
