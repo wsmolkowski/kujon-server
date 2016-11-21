@@ -41,7 +41,13 @@ class MathMixin(object):
                 if constants.VALUE_SYMBOL not in grade:
                     continue
                 try:
-                    value_symbol = float(grade[constants.VALUE_SYMBOL].replace(",", "."))
+                    if "," in grade[constants.VALUE_SYMBOL]:
+                        grade[constants.VALUE_SYMBOL] = grade[constants.VALUE_SYMBOL].replace(",", ".")
+                    if "NZAL" in grade[constants.VALUE_SYMBOL]:
+                        grade[constants.VALUE_SYMBOL] = "2.0"
+                    if "NK" in grade[constants.VALUE_SYMBOL]:
+                        grade[constants.VALUE_SYMBOL] = "2.0"
+                    value_symbol = float(grade[constants.VALUE_SYMBOL])
                     value_symbols.append(value_symbol)
                 except ValueError:
                     continue
@@ -50,9 +56,9 @@ class MathMixin(object):
             return
 
         try:
-            avg = round(sum(value_symbols)/len(value_symbols), AVERAGE_GRADE_ROUND)
-            avg = str(avg).replace(".", ",")
+            avg = str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
             return avg
         except Exception as ex:
             logging.exception(ex)
             return
+
