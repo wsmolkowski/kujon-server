@@ -15,7 +15,7 @@ from commons.enumerators import JobStatus, JobType
 from crawler.UsosCrawler import UsosCrawler
 
 QUEUE_MAXSIZE = 100
-MAX_WORKERS = 8
+MAX_WORKERS = 4
 SLEEP = 2
 
 define('environment', default='development')
