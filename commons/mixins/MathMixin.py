@@ -57,7 +57,7 @@ class MathMixin(object):
 
         try:
             avg = str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
-            return avg
+            return avg.replace(".", ",")
         except Exception as ex:
             logging.exception(ex)
             return
