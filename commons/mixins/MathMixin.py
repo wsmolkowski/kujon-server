@@ -47,7 +47,7 @@ class MathMixin(object):
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
                     value_symbols.append(float(grade_value))
-                except ValueError:
+                except (ValueError, TypeError):
                     continue
 
         if not value_symbols:
