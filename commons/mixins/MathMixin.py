@@ -39,7 +39,7 @@ class MathMixin(object):
 
             grades = self._get_only_final_grades(course[constants.GRADES])
             for grade in grades:
-                if constants.VALUE_SYMBOL not in grade:
+                if constants.VALUE_SYMBOL not in grade or not grade[constants.VALUE_SYMBOL]:
                     continue
                 try:
                     grade_value = grade[constants.VALUE_SYMBOL].replace(',', '.')
