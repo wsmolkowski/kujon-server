@@ -128,6 +128,10 @@ class ApiUserMixin(DaoMixin):
         user_info_doc = await self.user_info()
         if user_info_doc:
             user_doc = await self.db_find_user()
+
+            if not user_doc:
+                return user_info_doc    # TypeError: 'NoneType' object does not support item assignment
+
             user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
 
             await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)

@@ -5,6 +5,7 @@ import logging
 from commons import constants
 
 AVERAGE_GRADE_ROUND = 2
+DEFAULT_NEGATIVE_GRADE = 2
 
 
 class MathMixin(object):
@@ -38,26 +39,23 @@ class MathMixin(object):
 
             grades = self._get_only_final_grades(course[constants.GRADES])
             for grade in grades:
-                if constants.VALUE_SYMBOL not in grade:
+                if constants.VALUE_SYMBOL not in grade or not grade[constants.VALUE_SYMBOL]:
                     continue
                 try:
-                    if "," in grade[constants.VALUE_SYMBOL]:
-                        grade[constants.VALUE_SYMBOL] = grade[constants.VALUE_SYMBOL].replace(",", ".")
-                    if "NZAL" in grade[constants.VALUE_SYMBOL]:
-                        grade[constants.VALUE_SYMBOL] = "2.0"
-                    if "NK" in grade[constants.VALUE_SYMBOL]:
-                        grade[constants.VALUE_SYMBOL] = "2.0"
-                    value_symbol = float(grade[constants.VALUE_SYMBOL])
-                    value_symbols.append(value_symbol)
-                except ValueError:
+                    grade_value = grade[constants.VALUE_SYMBOL].replace(',', '.')
+                    if 'NZAL' in grade_value or 'NK' in grade_value:
+                        grade_value = DEFAULT_NEGATIVE_GRADE
+
+                    value_symbols.append(float(grade_value))
+                except (ValueError, TypeError):
                     continue
 
         if not value_symbols:
             return
 
         try:
-            avg = str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
-            return avg
+            logging.debug(value_symbols)
+            return str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
         except Exception as ex:
             logging.exception(ex)
             return
