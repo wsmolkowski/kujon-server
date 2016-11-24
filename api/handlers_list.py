@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from api.handlers import authentication
+from api.handlers import settings
 from api.handlers.base import UsosesApi, UsosesAllApi, ApplicationConfigHandler
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
@@ -31,6 +32,12 @@ HANDLERS = [
     (r"/authentication/email_register", authentication.EmailRegisterHandler),
     (r"/authentication/email_login", authentication.EmailLoginHandler),
     (r"/authentication/email_confim/([^/]+)", authentication.EmailConfirmHandler),
+
+    (r"/settings", settings.SettingsHandler),
+    (r"/settings/event/enable", settings.EventEnableHandler),
+    (r"/settings/event/disable", settings.EventDisableHandler),
+    (r"/settings/googlecalendar/enable", settings.GoogleCallendarEnableHandler),
+    (r"/settings/googlecalendar/disable", settings.GoogleCallendarDisableHandler),
 
     (r"/usoses", UsosesApi),
     (r"/usosesall", UsosesAllApi),
