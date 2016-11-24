@@ -370,6 +370,7 @@ class DaoMixin(object):
                 constants.USER_ID: user_id,
                 key: value
             })
-        else:
-            settings[key] = value
-            return await self.db[constants.COLLECTION_SETTINGS].update_one({constants.USER_ID: user_id}, {'$set': {key: value}})
+        
+        settings[key] = value
+        return await self.db[constants.COLLECTION_SETTINGS].update_one({constants.USER_ID: user_id},
+                                                                       {'$set': {key: value}})
