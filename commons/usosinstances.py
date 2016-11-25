@@ -325,7 +325,7 @@ USOSINSTANCES = [
      },
     {'usos_id': 'UPH',
      'name': 'Uniwersytet Przyrodniczo-Humanistyczny w Siedlcach',
-     'url': 'https://usosapps.uph.edu.pl/',
+     'url': 'https://apps.uph.edu.pl/',
      'logo': '/static/img/logo/logo-uph-64x64.jpg',
      'consumer_key': 'QmeQednVWmpYgSrAYWYc',
      'consumer_secret': '29YshXKxtAjPyz2UGkEa5XJ7DWDkqw5dESeWu92Y',

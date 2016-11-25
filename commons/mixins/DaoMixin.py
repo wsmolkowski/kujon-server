@@ -353,3 +353,24 @@ class DaoMixin(object):
             constants.FIELD_MESSAGE_TYPE: message_type,
             constants.FIELD_MESSAGE_TEXT: message,
         })
+
+    async def db_settings(self, user_id):
+        settings = await self.db[constants.COLLECTION_SETTINGS].find_one({constants.USER_ID: user_id})
+        if settings:
+            del settings[constants.USER_ID]
+            del settings[constants.MONGO_ID]
+            return settings
+
+        return dict()
+
+    async def db_settings_update(self, user_id, key, value):
+        settings = await self.db[constants.COLLECTION_SETTINGS].find_one({constants.USER_ID: user_id})
+        if not settings:
+            return await self.db[constants.COLLECTION_SETTINGS].insert({
+                constants.USER_ID: user_id,
+                key: value
+            })
+        
+        settings[key] = value
+        return await self.db[constants.COLLECTION_SETTINGS].update_one({constants.USER_ID: user_id},
+                                                                       {'$set': {key: value}})
