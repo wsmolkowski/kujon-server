@@ -46,21 +46,23 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 return
 
             if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value:
-                token_exists = await self.db_find_token(header_email)
+                token_exists = await self.db_find_token(header_email, UserTypes.GOOGLE.value)
                 if not token_exists:
                     google_token = await self.google_token(header_token)
+                    google_token[constants.USER_TYPE] = UserTypes.GOOGLE.value
                     await self.db_insert_token(google_token)
                 return user_doc
 
             elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
-                token_exists = await self.db_find_token(header_email)
+                token_exists = await self.db_find_token(header_email, UserTypes.FACEBOOK.value)
                 if not token_exists:
                     facebook_token = await self.facebook_token(header_token)
+                    facebook_token[constants.USER_TYPE] = UserTypes.FACEBOOK.value
                     await self.db_insert_token(facebook_token)
                 return user_doc
 
             elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value:
-                token_exists = await self.db_find_token(header_email)
+                token_exists = await self.db_find_token(header_email, UserTypes.EMAIL.value)
                 if not token_exists:
                     raise AuthenticationError(
                         "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(

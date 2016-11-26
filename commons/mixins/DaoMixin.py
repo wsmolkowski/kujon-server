@@ -294,23 +294,26 @@ class DaoMixin(object):
         return user_doc
 
     async def db_insert_token(self, token):
-        await self.db[constants.COLLECTION_TOKENS].remove({constants.USER_EMAIL: token[constants.USER_EMAIL]})
+        await self.db[constants.COLLECTION_TOKENS].remove(
+            {constants.USER_EMAIL: token[constants.USER_EMAIL], constants.USER_TYPE: token[constants.USER_TYPE]})
         return await self.db_insert(constants.COLLECTION_TOKENS, token)
 
-    async def db_remove_token(self, email):
-        result = await self.db[constants.COLLECTION_TOKENS].remove({constants.USER_EMAIL: email})
+    async def db_remove_token(self, email, user_type):
+        result = await self.db[constants.COLLECTION_TOKENS].remove({
+            constants.USER_EMAIL: email, constants.USER_TYPE: user_type})
         logging.debug(
             'removed from collection {0} token for email {1} resulted in {2}'.format(constants.USER_EMAIL, email,
                                                                                      result))
 
-    async def db_find_token(self, email):
+    async def db_find_token(self, email, user_type):
         '''
         finds token by email and updates creation time
         :param email:
         :return: token_doc
         '''
 
-        token_doc = await self.db[constants.COLLECTION_TOKENS].find_one({constants.USER_EMAIL: email})
+        token_doc = await self.db[constants.COLLECTION_TOKENS].find_one(
+            {constants.USER_EMAIL: email, constants.USER_TYPE: user_type})
         if token_doc:
             token_doc[constants.CREATED_TIME] = datetime.now()
             await self.db_update(constants.COLLECTION_TOKENS, token_doc[constants.MONGO_ID], token_doc)
