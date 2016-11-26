@@ -156,7 +156,9 @@ class DbUtils(object):
             user_to_doc[constants.ACCESS_TOKEN_KEY] = user_from_doc[constants.ACCESS_TOKEN_KEY]
             user_to_doc[constants.ACCESS_TOKEN_SECRET] = user_from_doc[constants.ACCESS_TOKEN_SECRET]
             user_to_doc[constants.USOS_ID] = user_from_doc[constants.USOS_ID]
-            user_to_doc[constants.USOS_USER_ID] = user_from_doc[constants.USOS_USER_ID]
+
+            if constants.USOS_USER_ID in user_from_doc:
+                user_to_doc[constants.USOS_USER_ID] = user_from_doc[constants.USOS_USER_ID]
 
             updated = self.db_to[constants.COLLECTION_USERS].update(
                 {constants.MONGO_ID: user_to_doc[constants.MONGO_ID]}, user_to_doc)
