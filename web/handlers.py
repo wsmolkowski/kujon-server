@@ -2,7 +2,6 @@
 
 import logging
 
-import tornado.web
 from bson import ObjectId
 from cryptography.fernet import InvalidToken
 
@@ -66,7 +65,6 @@ class BaseHandler(AbstractHandler):
 
 
 class MainHandler(BaseHandler):
-    @tornado.web.asynchronous
     async def get(self):
 
         token = self.get_argument('token', default=None)
@@ -105,7 +103,6 @@ class MainHandler(BaseHandler):
 class ContactHandler(BaseHandler):
     SUPPORTED_METHODS = ('POST',)
 
-    @tornado.web.asynchronous
     async def post(self):
         try:
             subject = self.get_argument('subject', default=None)
@@ -128,7 +125,6 @@ class ContactHandler(BaseHandler):
 class LoginHandler(BaseHandler):
     SUPPORTED_METHODS = ('GET',)
 
-    @tornado.web.asynchronous
     async def get(self):
         token = self.get_argument('token', default=None)
         if token:
@@ -142,12 +138,10 @@ class LoginHandler(BaseHandler):
 class RegisterHandler(BaseHandler):
     SUPPORTED_METHODS = ('GET',)
 
-    @tornado.web.asynchronous
     async def get(self):
         self.render("login_register.html", **self.get_config())
 
 
 class DisclaimerHandler(BaseHandler):
-    @tornado.web.asynchronous
     def get(self):
         self.render("disclaimer.html", **self.get_config())

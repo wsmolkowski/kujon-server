@@ -2,7 +2,6 @@
 
 from base64 import b64decode
 
-import tornado.web
 from bson.objectid import ObjectId
 
 from api.handlers.base import ApiHandler
@@ -22,7 +21,6 @@ LIMIT_FIELDS_USER = (
 
 class UsersInfoByIdApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, user_info_id):
 
         try:
@@ -67,7 +65,6 @@ class AbstractUserInfo(ApiHandler):
 
 class UsersInfoAllApi(AbstractUserInfo):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
         """
         for mobi use only
@@ -76,7 +73,7 @@ class UsersInfoAllApi(AbstractUserInfo):
         try:
             user_doc = await self._users_info()
 
-            faculties, terms, programmes = await self.api_faculties(user_doc),\
+            faculties, terms, programmes = await self.api_faculties(user_doc), \
                                            await self.api_terms(), \
                                            await self.api_programmes(finish=False, user_info=user_doc)
 
@@ -93,7 +90,6 @@ class UsersInfoAllApi(AbstractUserInfo):
 
 class UsersInfoApi(AbstractUserInfo):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
         """
         :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO and
@@ -109,7 +105,6 @@ class UsersInfoApi(AbstractUserInfo):
 
 class UsersInfoPhotoApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, photo_id):
 
         try:
