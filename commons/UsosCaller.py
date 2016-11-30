@@ -70,6 +70,28 @@ class AbstractCaller(object):
                                x_forwarded_for=self._context.remote_ip,
                                prepare_curl_callback=prepare_curl_callback))
 
+    async def _usos_response(self, response, url):
+        # logging.debug('$' * 50)
+        # logging.debug(response.code)
+        # logging.debug(response.headers)
+        # logging.debug(response.body)
+        # logging.debug(response.body == b'null')
+        # logging.debug('$' * 50)
+
+        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            if response.body == b'null':
+                raise CallerError(
+                    'Null USOS response: {0} with body: {1} while USOS fetching: {2}'.format(response.code,
+                                                                                             response.body,
+                                                                                             url))
+            return clean_language(escape.json_decode(response.body))
+        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
+            return {'photo': b64encode(response.body)}
+        else:
+            raise CallerError('Error code: {0} with body: {1} while USOS fetching: {2}'.format(response.code,
+                                                                                               response.body,
+                                                                                               url))
+
 
 class UsosCaller(AbstractCaller, OAuthMixin):
     _OAUTH_VERSION = '1.0a'
@@ -102,14 +124,7 @@ class UsosCaller(AbstractCaller, OAuthMixin):
 
         response = await self.request_fetch(url)
 
-        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
-            return clean_language(escape.json_decode(response.body))
-        elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
-            return {'photo': b64encode(response.body)}
-        else:
-            raise CallerError('Error code: {0} with body: {1} while USOS fetching: {2}'.format(response.code,
-                                                                                               response.body,
-                                                                                               url))
+        return await self._usos_response(response, url)
 
 
 class AsyncCaller(AbstractCaller):
@@ -133,9 +148,4 @@ class AsyncCaller(AbstractCaller):
 
         response = await self.request_fetch(url)
 
-        if response.code == 200 and 'application/json' in response.headers['Content-Type']:
-            return clean_language(escape.json_decode(response.body))
-        else:
-            raise CallerError('Error code: {0} with body: {1} while async fetching: {2}'.format(response.code,
-                                                                                                response.body,
-                                                                                                url))
+        return await self._usos_response(response, url)

@@ -9,6 +9,7 @@ from tornado import gen
 from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
+from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 
 USER_INFO_SKIP_FIELDS = {'email_access': False, 'interests': False,
@@ -53,6 +54,9 @@ class ApiUserMixin(DaoMixin):
                                                           arguments={'fields': fields, 'user_id': user_id})
         else:
             result = await UsosCaller(self._context).call(path='services/users/user', arguments={'fields': fields})
+
+        if not result:
+            raise ApiError('Problem z pobraniem danych z USOS na temat użytkownika.')
 
         # strip empty values
         if 'homepage_url' in result and result['homepage_url'] == "":

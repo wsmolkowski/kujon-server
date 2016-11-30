@@ -1,14 +1,11 @@
 # coding=UTF-8
 
-import tornado.web
-
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
 class GradesForUserApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
         try:
             grades_doc = await self.api_grades()
@@ -19,7 +16,6 @@ class GradesForUserApi(ApiHandler):
 
 class GradesForUserByTermApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
         try:
             grades_doc = await self.api_grades_byterm()

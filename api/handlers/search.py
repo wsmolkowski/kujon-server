@@ -2,7 +2,6 @@
 
 from datetime import datetime
 
-import tornado.web
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import ApiHandler
@@ -37,7 +36,6 @@ class AbstractSearch(ApiHandler):
 
 class SearchUsersApi(AbstractSearch):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, query):
         try:
             result_doc = await self.api_search_users(query)
@@ -51,7 +49,6 @@ class SearchUsersApi(AbstractSearch):
 
 class SearchCoursesApi(AbstractSearch):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, query):
         try:
             result_doc = await self.api_search_courses(query)
@@ -65,7 +62,6 @@ class SearchCoursesApi(AbstractSearch):
 
 class SearchFacultiesApi(AbstractSearch):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, query):
         try:
             result_doc = await self.api_search_faculties(query)
@@ -79,7 +75,6 @@ class SearchFacultiesApi(AbstractSearch):
 
 class SearchProgrammesApi(AbstractSearch):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, query):
         try:
             result_doc = await self.api_search_programmes(query)
@@ -93,7 +88,6 @@ class SearchProgrammesApi(AbstractSearch):
 
 class SearchThesesApi(AbstractSearch):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, query):
         try:
             result_doc = await self.api_search_theses(query)

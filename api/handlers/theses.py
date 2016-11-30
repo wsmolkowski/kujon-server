@@ -1,14 +1,11 @@
 # coding=UTF-8
 
-import tornado.web
-
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
 
 class ThesesApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
         try:
             theses_doc = await self.api_thesis()

@@ -54,7 +54,7 @@ class LogoutHandler(AuthenticationHandler):
     async def remove_token(self):
         user_doc = self.get_current_user()
         if user_doc and constants.USER_EMAIL in user_doc:
-            await self.db_remove_token(user_doc[constants.USER_EMAIL])
+            await self.db_remove_token(user_doc[constants.USER_EMAIL], user_doc[constants.USER_TYPE])
 
     @web.asynchronous
     async def get(self):

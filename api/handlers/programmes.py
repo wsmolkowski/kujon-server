@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-import tornado.web
-
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
 
@@ -10,7 +8,6 @@ LIMIT_FIELDS_PROGRAMMES = ('programme_id', 'description', 'name', 'mode_of_studi
 
 class ProgrammesByIdApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, programme_id):
 
         try:
@@ -25,7 +22,6 @@ class ProgrammesByIdApi(ApiHandler):
 
 class ProgrammesApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
 
         try:
