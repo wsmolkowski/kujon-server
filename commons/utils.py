@@ -93,7 +93,7 @@ def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True,
     if not headers:
         headers = HTTPHeaders({})
 
-    headers.add('application/json', 'application/json')
+    headers.add('Content-type', 'application/json')
     if x_forwarded_for:
         headers.add('X-Forwarded-For', x_forwarded_for)
 
