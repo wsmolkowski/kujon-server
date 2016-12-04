@@ -73,10 +73,7 @@ class ApiTermMixin(object):
 
         terms_ids = list()
         for term_id in courses_editions[constants.COURSE_EDITIONS]:
-            if term_id in terms_ids:
-                continue
-            terms_ids.append(term_id)
+            if term_id not in terms_ids:
+                terms_ids.append(term_id)
 
-        result = await self.api_term(terms_ids)
-
-        return result
+        return await self.api_term(terms_ids)

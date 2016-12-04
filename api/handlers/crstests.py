@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-import tornado.web
-
 from api.handlers.base import ApiHandler
 from commons import constants, decorators
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
@@ -9,7 +7,6 @@ from commons.mixins.CrsTestsMixin import CrsTestsMixin
 
 class CrsTestsApi(ApiHandler, CrsTestsMixin):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
 
         try:
@@ -24,7 +21,6 @@ class CrsTestsApi(ApiHandler, CrsTestsMixin):
 
 class CrsTestsNodeApi(ApiHandler, CrsTestsMixin):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, node_id):
 
         try:

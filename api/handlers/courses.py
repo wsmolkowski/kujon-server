@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import tornado.web
 
 from api.handlers.base import ApiHandler
 from commons import decorators, constants
@@ -8,7 +7,6 @@ from commons import decorators, constants
 
 class CourseEditionApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, course_id, term_id):
 
         try:
@@ -23,7 +21,6 @@ class CourseEditionApi(ApiHandler):
 
 class CoursesApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self, course_id):
 
         try:
@@ -38,7 +35,6 @@ class CoursesApi(ApiHandler):
 
 class CoursesEditionsApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
 
         try:
@@ -50,7 +46,6 @@ class CoursesEditionsApi(ApiHandler):
 
 class CoursesEditionsByTermApi(ApiHandler):
     @decorators.authenticated
-    @tornado.web.asynchronous
     async def get(self):
 
         try:
