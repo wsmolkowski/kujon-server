@@ -67,7 +67,11 @@ class EventHandler(AbstractHandler):
             if not self.getUsosId():
                 raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
 
-            event_data = json.loads(self.request.body)
+            body = self.request.body
+            if isinstance(body, bytes):
+                body = str(body, constants.ENCODING)
+
+            event_data = json.loads(body)
             event_data[constants.USOS_ID] = self.getUsosId()
 
             await self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
