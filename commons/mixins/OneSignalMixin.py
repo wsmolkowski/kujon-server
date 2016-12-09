@@ -41,7 +41,7 @@ class OneSignalMixin(object):
 
         headers = HTTPHeaders({
             'Content-Type': 'application/json',
-            'Authorization': self.config.SIGNAL_AUTHORIZATION
+            'Authorization': self.config.AUTHORIZATION
         })
 
         body = json.dumps({
