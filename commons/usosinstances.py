@@ -399,7 +399,7 @@ USOSINSTANCES = [
      'validate_ssl_certificate': True,
      'comment': 'Czekamy na zgodę władz UW aby móc korzystać z Kujona.',
      },
-    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji!!!!
+    {'usos_id': 'UJ',  # zablokowali dostep dla zewnetrznych aplikacji podczas autoryzacji
      'name': 'Uniwersytet Jagieloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
