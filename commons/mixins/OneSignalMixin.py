@@ -57,7 +57,7 @@ class OneSignalMixin(object):
                                                                        user_agent=self.config.PROJECT_TITLE,
                                                                        connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
                                                                        request_timeout=constants.HTTP_REQUEST_TIMEOUT,
-                                                                       proxy_url=self.config.PROXY_URL,
+                                                                       proxy_host=self.config.PROXY_URL,
                                                                        proxy_port=self.config.PROXY_PORT
                                                                        ))
 
