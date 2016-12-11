@@ -345,7 +345,7 @@ USOSINSTANCES = [
       },
       {'usos_id': 'AT',
        'name': 'Akademia Teatralna w Warszawie',
-       'url': 'https://usosapps.at.edu.pl',
+       'url': 'https://usosapps.at.edu.pl/',
        'logo': '/static/img/logo/logo-at-64x64.jpg',
        'consumer_key': 'QgZHBQjSMXLVKcCKnPhT',
        'consumer_secret': 'h46pXTWJ7mW25JkAbgY42n7QvtgcVZRyNpcmx8HW',
@@ -469,7 +469,7 @@ USOSINSTANCES = [
     {'usos_id': 'DSW',  # usosweb.dsw.edu.pl -> brak wystawionego API
      'name': 'Dolnośląska Szkoła Wyższa',
      'url': '',
-     'logo': '/static/img/logo/logo-ajd-64x64.jpg',
+     'logo': '/static/img/logo/logo-dsw-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
      'contact': 'grazyna.fajfer-mlotek@dsw.edu.pl',
@@ -478,7 +478,7 @@ USOSINSTANCES = [
      'comment': 'Czekamy aż DSW udostępni USOSa dla Kujona.'
      },
     {'usos_id': 'WSB',  # dziekanat.wsb.net.pl -> brak wystawionego API
-     'name': 'Dolnośląska Szkoła Wyższa',
+     'name': 'Wyższa Szkoła Bezpieczeństwa',
      'url': '',
      'logo': '/static/img/logo/logo-wsb-64x64.jpg',
      'consumer_key': '',
