@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-# ajd.czest.pl -> brak wystawionego API
-
 USOSINSTANCES = [
 
     {'usos_id': 'UAM',
@@ -345,6 +343,39 @@ USOSINSTANCES = [
       'validate_ssl_certificate': True,
       'comment': '',
       },
+      {'usos_id': 'AT',
+       'name': 'Akademia Teatralna w Warszawie',
+       'url': 'https://usosapps.at.edu.pl',
+       'logo': '/static/img/logo/logo-at-64x64.jpg',
+       'consumer_key': 'QgZHBQjSMXLVKcCKnPhT',
+       'consumer_secret': 'h46pXTWJ7mW25JkAbgY42n7QvtgcVZRyNpcmx8HW',
+       'contact': 'dskadmin@adm.uw.edu.pl',
+       'enabled': True,
+       'validate_ssl_certificate': True,
+       'comment': '',
+       },
+     {'usos_id': 'PWSTE',
+      'name': 'PWSTE w Jarosławiu',
+      'url': 'https://apps.pwste.edu.pl/',
+      'logo': '/static/img/logo/logo-pwste-64x64.jpg',
+      'consumer_key': 'SkUFUUpWsLcBV7qZWw3M',
+      'consumer_secret': 'WgJHKvHrja9wXuVHdDnaBPujM6RxTnFpR4RrdMDf',
+      'contact': 'dskadmin@adm.uw.edu.pl',
+      'enabled': True,
+      'validate_ssl_certificate': True,
+      'comment': '',
+      },
+      {'usos_id': 'ASPKAT',
+      'name': 'Akademia Sztuk Pięknych w Katowicach',
+      'url': 'https://apps.asp.katowice.pl/',
+      'logo': '/static/img/logo/logo-aspkat-64x64.jpg',
+      'consumer_key': '5F39kCAYHq6qTpugmLLF',
+      'consumer_secret': 'mysrvBs3MnUs5fCYuuJsRjQJFZZdLPNsUkWThPZW',
+      'contact': 'admin@asp.katowice.pl',
+      'enabled': True,
+      'validate_ssl_certificate': True,
+      'comment': '',
+      },
     {'usos_id': 'DEMO',
      'name': 'Uniwersytet DEMO w Nibylandi',
      'url': 'https://usosapps.demo.usos.edu.pl/',
@@ -435,4 +466,49 @@ USOSINSTANCES = [
      'validate_ssl_certificate': False,
      'comment': 'Czekamy aż AJD w Częstochowie udostępni USOSa dla Kujona.'
      },
+    {'usos_id': 'DSW',  # usosweb.dsw.edu.pl -> brak wystawionego API
+     'name': 'Dolnośląska Szkoła Wyższa',
+     'url': '',
+     'logo': '/static/img/logo/logo-ajd-64x64.jpg',
+     'consumer_key': '',
+     'consumer_secret': '',
+     'contact': 'grazyna.fajfer-mlotek@dsw.edu.pl',
+     'enabled': False,
+     'validate_ssl_certificate': False,
+     'comment': 'Czekamy aż DSW udostępni USOSa dla Kujona.'
+     },
+    {'usos_id': 'WSB',  # dziekanat.wsb.net.pl -> brak wystawionego API
+     'name': 'Dolnośląska Szkoła Wyższa',
+     'url': '',
+     'logo': '/static/img/logo/logo-wsb-64x64.jpg',
+     'consumer_key': '',
+     'consumer_secret': '',
+     'contact': 'webmaster@wsb.net.pl',
+     'enabled': False,
+     'validate_ssl_certificate': False,
+     'comment': 'Czekamy aż WSB udostępni USOSa dla Kujona.'
+     },
+    {'usos_id': 'PK', # usosweb.tu.koszalin.pl -> brak wystawionego API
+     'name': 'Politechnika Koszalińska',
+     'url': '',
+     'logo': '/static/img/logo/logo-pk-64x64.jpg',
+     'consumer_key': '',
+     'consumer_secret': '',
+     'contact': 'usos-admin@tu.koszalin.pl',
+     'enabled': False,
+     'validate_ssl_certificate': False,
+     'comment': 'Czekamy aż Politechnika udostępni USOSa dla Kujona.'
+     },
+    {'usos_id': 'PCZ',  # usosweb.pcz.pl -> brak wystawionego API
+     'name': 'Politechnika Częstochowska',
+     'url': '',
+     'logo': '/static/img/logo/logo-pcz-64x64.jpg',
+     'consumer_key': '',
+     'consumer_secret': '',
+     'contact': 'usosweb@adm.pcz.czest.pl',
+     'enabled': False,
+     'validate_ssl_certificate': False,
+     'comment': 'Czekamy aż Politechnika udostępni USOSa dla Kujona.'
+     },
+
 ]
