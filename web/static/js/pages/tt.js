@@ -20,7 +20,7 @@ $, Handlebars, main, fullcalendar, tpl, tplError, fullcalendarpl) {
                 'maxTime': '21:00',
                 events: function(start, end, timezone, callback) {
 
-                    main.ajaxGet('/tt/' + start.format()).then(function(data){
+                    main.ajaxGet('/tt/' + start.format() + '?lecturers_info=False').then(function(data){
                         if (data.status == 'success'){
                                 var events = [];
                                 $(data.data).each(function() {
