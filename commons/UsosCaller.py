@@ -59,16 +59,17 @@ class AbstractCaller(object):
         client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
 
         if self._context.prepare_curl_callback:
-            prepare_curl_callback = self._context.prepare_curl_callback
+            prepare_curl_callback = self._prepare_curl_callback
         else:
             prepare_curl_callback = None
 
         return await client.fetch(
-            # prepare_curl_callback=prepare_curl_callback # raises
+
             utils.http_request(url=url,
                                proxy_url=self._context.proxy_url,
                                proxy_port=self._context.proxy_port,
-                               x_forwarded_for=self._context.remote_ip))
+                               x_forwarded_for=self._context.remote_ip,
+                               prepare_curl_callback=prepare_curl_callback))
 
     async def _usos_response(self, response, url):
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
