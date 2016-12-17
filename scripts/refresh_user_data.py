@@ -10,13 +10,12 @@ from commons import constants, utils
 from commons.config import Config
 from crawler import job_factory
 
-utils.initialize_logging('refresh_user_data')
-
 define('environment', default='development')
 
 
 async def main():
     config = Config(options.environment)
+    utils.initialize_logging('refresh_user_data', log_dir=config.LOG_DIR)
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
     cursor = db[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True})

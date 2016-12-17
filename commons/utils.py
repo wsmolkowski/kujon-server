@@ -38,7 +38,7 @@ def mkdir(newdir):
             os.mkdir(newdir)
 
 
-def initialize_logging(logger_name, log_level='DEBUG', log_dir=None, ):
+def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
     log_format = DEFAULT_FORMAT % logger_name
 
     try:

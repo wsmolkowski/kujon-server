@@ -11,8 +11,6 @@ from commons.config import Config
 from commons.enumerators import JobStatus
 from commons.enumerators import JobType
 
-utils.initialize_logging('delete_user')
-
 
 def main(arguments):
     user_email = arguments[0]
@@ -23,6 +21,7 @@ def main(arguments):
         logging.info('deleting user by email: {0} in environment: {1}'.format(user_email, environment))
 
         config = Config(environment)
+        utils.initialize_logging('delete_user', log_dir=config.LOG_DIR)
         client = pymongo.MongoClient(config.MONGODB_URI)
 
         db = client[config.MONGODB_NAME]
