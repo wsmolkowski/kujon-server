@@ -321,8 +321,7 @@ class DaoMixin(object):
 
     async def db_subscriptions(self, pipeline):
         cursor = self.db[constants.COLLECTION_SUBSCRIPTIONS].find(pipeline)
-        subscriptions = await cursor.to_list(None)
-        return subscriptions
+        return await cursor.to_list(None)
 
     async def db_messages(self, pipeline):
         cursor = self.db[constants.COLLECTION_MESSAGES].find(pipeline, {constants.MONGO_ID: 0,
