@@ -194,14 +194,21 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         except Exception as ex:
             await self.exc(ex, finish=False)
 
+    async def unsubscribe(self, user_id=None):
+        if user_id:
+            await self._setUp(user_id)
+
+        try:
+            await UsosCaller(self._context).call(path='services/events/unsubscribe')
+            self.db_remove(constants.COLLECTION_SUBSCRIPTIONS, {constants.USER_ID: self.getUserId()})
+        except Exception as ex:
+            logging.warning(ex)
+
     async def subscribe(self, user_id):
 
         await self._setUp(user_id)
 
-        try:
-            await UsosCaller(self._context).call(path='services/events/unsubscribe')
-        except Exception as ex:
-            logging.warning(ex)
+        await self.unsubscribe()
 
         callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getUsosId())
 
@@ -214,7 +221,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                                                                          'verify_token': self.getEncryptedUserId()
                                                                      })
                 subscribe_doc['event_type'] = event_type
-                subscribe_doc[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
+                subscribe_doc[constants.USER_ID] = self.getUserId()
 
                 await self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
@@ -223,10 +230,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     async def archive_user(self, user_id):
         await self._setUp(user_id, setup_usos=False)
 
-        try:
-            await UsosCaller(self._context).call(path='services/events/unsubscribe')
-        except Exception as ex:
-            logging.warning(ex)
+        await self.unsubscribe()
 
         await self.remove_user_data([constants.COLLECTION_USERS_ARCHIVE, ])
 

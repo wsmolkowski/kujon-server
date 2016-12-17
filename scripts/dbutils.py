@@ -200,13 +200,37 @@ class DbUtils(object):
                 logging.info('removed exception data for user_id {0}'.format(user_id))
 
                 self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
-                logging.info('created refresh task created for user_id {0}'.format(user_id))
+                logging.info('created refresh task for user_id {0}'.format(user_id))
 
         except Exception as ex:
             logging.exception(ex)
 
+    def recall_subscribe(self):
+        '''
+            for each paired user check if subscription collection is filled otherwise subscribe job is created
+        :return:
+        '''
 
+        try:
+            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True}).distinct(constants.USER_ID)
 
+            for user_id in user_ids:
+                if not user_id:
+                    continue
+
+                logging.info('processing: {0}'.format(user_id))
+
+                subsctiption_count = self.client[constants.COLLECTION_SUBSCRIPTIONS].find(
+                    {constants.USER_ID: user_id}).count()
+
+                if subsctiption_count == 3:     #   'crstests/user_grade', 'grades/grade', 'crstests/user_point'
+                    continue
+
+                self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.subscribe_user_job(user_id))
+                logging.info('created subscribe task for user_id {0}'.format(user_id))
+
+        except Exception as ex:
+            logging.exception(ex)
 
 
 ##################################################################
@@ -227,6 +251,8 @@ parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
 parser.add_argument('-f', '--refresh_failures', action='store_const', dest='option', const='refresh_failures',
                     help="create refresh jobs for users with failure USOS API calls", default='development')
+parser.add_argument('-s', '--subscribe', action='store_const', dest='option', const='subscribe',
+                    help="create subscribe jobs for all paired users", default='development')
 
 
 def main():
@@ -253,6 +279,9 @@ def main():
 
     elif args.option == 'refresh_failures':
         dbutils.refresh_failures()
+
+    elif args.option == 'subscribe':
+        dbutils.recall_subscribe()
     else:
         parser.print_help()
         sys.exit(1)
