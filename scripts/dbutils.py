@@ -14,8 +14,6 @@ from commons.enumerators import Environment
 from commons.enumerators import ExceptionTypes
 from crawler import job_factory
 
-utils.initialize_logging('dbutils')
-
 
 class DbUtils(object):
     INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
@@ -27,6 +25,8 @@ class DbUtils(object):
             self.config = config
             self.encrypt_usoses_keys = encrypt_usoses_keys
             self.client = pymongo.MongoClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+
+            utils.initialize_logging('dbutils', log_dir=self.config.LOG_DIR)
             logging.info(self.client)
 
     def _ttl_index(self, collection, field, after_seconds):
@@ -212,7 +212,8 @@ class DbUtils(object):
         '''
 
         try:
-            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True}).distinct(constants.USER_ID)
+            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True}).distinct(
+                constants.USER_ID)
 
             for user_id in user_ids:
                 if not user_id:
@@ -223,7 +224,7 @@ class DbUtils(object):
                 subsctiption_count = self.client[constants.COLLECTION_SUBSCRIPTIONS].find(
                     {constants.USER_ID: user_id}).count()
 
-                if subsctiption_count == 3:     #   'crstests/user_grade', 'grades/grade', 'crstests/user_point'
+                if subsctiption_count == 3:  # 'crstests/user_grade', 'grades/grade', 'crstests/user_point'
                     continue
 
                 self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.subscribe_user_job(user_id))
