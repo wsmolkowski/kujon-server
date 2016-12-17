@@ -212,23 +212,23 @@ class DbUtils(object):
         '''
 
         try:
-            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True}).distinct(
-                constants.USER_ID)
+            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True})
 
             for user_id in user_ids:
                 if not user_id:
                     continue
 
-                logging.info('processing: {0}'.format(user_id))
+                logging.info('processing: {0}'.format(user_id[constants.MONGO_ID]))
 
                 subsctiption_count = self.client[constants.COLLECTION_SUBSCRIPTIONS].find(
-                    {constants.USER_ID: user_id}).count()
+                    {constants.USER_ID: user_id[constants.MONGO_ID]}).count()
 
                 if subsctiption_count == 3:  # 'crstests/user_grade', 'grades/grade', 'crstests/user_point'
                     continue
 
-                self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.subscribe_user_job(user_id))
-                logging.info('created subscribe task for user_id {0}'.format(user_id))
+                self.client[constants.COLLECTION_JOBS_QUEUE].insert(
+                    job_factory.subscribe_user_job(user_id[constants.MONGO_ID]))
+                logging.info('created subscribe task for user_id {0}'.format(user_id[constants.MONGO_ID]))
 
         except Exception as ex:
             logging.exception(ex)
