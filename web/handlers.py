@@ -69,7 +69,7 @@ class MainHandler(BaseHandler):
 
         self.set_header('X-Frame-Options', 'DENY')
         self.set_header('X-XSS-Protection', '1')
-        self.set_header('Content-Security-Policy', 'default-src \'src\'; script-src \'self\'; connect-src \'self\'; ')
+        self.set_header('Content-Security-Policy', 'default-src \'self\'; script-src \'self\'; connect-src \'self\'; ')
 
         token = self.get_argument('token', default=None)
         if token:
