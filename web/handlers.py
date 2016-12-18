@@ -69,7 +69,7 @@ class MainHandler(BaseHandler):
 
         self.set_header('X-Frame-Options', 'DENY')
         self.set_header('X-XSS-Protection', '1')
-        self.set_header('Content-Security-Policy', 'default-src \'self\'; script-src \'self\'; connect-src \'self\'; ')
+        self.set_header('Content-Security-Policy', 'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' ; connect-src \'self\' api-demo.kujon.mobi api.kujon.mobi; style-src \'self\' \'unsafe-inline\' *.googleapis.com; font-src \'self\' \'unsafe-inline\' *.gstatic.com; ')
 
         token = self.get_argument('token', default=None)
         if token:
