@@ -121,6 +121,8 @@ class BaseHandler(AbstractHandler, SocialMixin):
         self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
         self.set_header('X-Frame-Options', 'DENY')
         self.set_header('X-XSS-Protection', '1')
+        self.set_header('Content-Security-Policy', 'default-src \'none\'; script-src \'self\'; connect-src \'self\'; '
+                                                   'img-src \'self\'; style-src \'self\';')
 
         if self.isMobileRequest():
             self.set_header("Access-Control-Allow-Origin", "*")
