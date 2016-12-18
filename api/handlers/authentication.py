@@ -376,6 +376,9 @@ class AbstractEmailHandler(AuthenticationHandler):
         self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
         self.set_header('Access-Control-Allow-Headers',
                         'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+        self.set_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+
+
 
 
 class EmailRegisterHandler(AbstractEmailHandler):
