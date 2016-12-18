@@ -67,6 +67,11 @@ class BaseHandler(AbstractHandler):
 class MainHandler(BaseHandler):
     async def get(self):
 
+        self.set_header('X-Frame-Options', 'DENY')
+        self.set_header('X-XSS-Protection', '1')
+        self.set_header('Content-Security-Policy', 'default-src \'none\'; script-src \'self\'; connect-src \'self\'; '
+                                                   'img-src \'self\'; style-src \'self\';')
+
         token = self.get_argument('token', default=None)
         if token:
             user_id = self.aes.decrypt(token.encode()).decode()
