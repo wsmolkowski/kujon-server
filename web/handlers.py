@@ -67,11 +67,6 @@ class BaseHandler(AbstractHandler):
 class MainHandler(BaseHandler):
     async def get(self):
 
-        self.set_header('X-Frame-Options', 'DENY')
-        self.set_header('X-XSS-Protection', '1')
-        self.set_header('Content-Security-Policy', 'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' ; connect-src \'self\' api-demo.kujon.mobi api.kujon.mobi; style-src \'self\' \'unsafe-inline\' *.googleapis.com; font-src \'self\' \'unsafe-inline\' *.gstatic.com; ')
-        self.set_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-
         token = self.get_argument('token', default=None)
         if token:
             user_id = self.aes.decrypt(token.encode()).decode()
