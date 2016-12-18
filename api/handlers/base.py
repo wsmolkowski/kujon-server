@@ -119,9 +119,6 @@ class BaseHandler(AbstractHandler, SocialMixin):
         super(BaseHandler, self).set_default_headers()
 
         self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
-        self.set_header('X-Frame-Options', 'DENY')
-        self.set_header('X-XSS-Protection', '1')
-        self.set_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
 
         if self.isMobileRequest():
             self.set_header("Access-Control-Allow-Origin", "*")
