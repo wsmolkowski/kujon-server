@@ -446,10 +446,10 @@ USOSINSTANCES = [
      },
     {'usos_id': 'WSP',  # brak wystawionego API bardzo stary usos
      'name': 'Wyższa Szkoła Prawa we Wrocławiu',
-     'url': '',
+     'url': 'https://usosapps.uth.edu.pl/',
      'logo': '/static/img/logo/logo-wsp-64x64.jpg',
-     'consumer_key': '',
-     'consumer_secret': '',
+     'consumer_key': 'W4tRcJzT6HFcHAeC7vfc',
+     'consumer_secret': 'd8sv6ASBDYbJwqvADSadRHKpAzads6vhxecAGpTn',
      'contact': 'it@uth.edu.pl',
      'enabled': False,
      'validate_ssl_certificate': False,
@@ -461,7 +461,7 @@ USOSINSTANCES = [
      'logo': '/static/img/logo/logo-ajd-64x64.jpg',
      'consumer_key': '',
      'consumer_secret': '',
-     'contact': 'it@uth.edu.pl',
+     'contact': '',
      'enabled': False,
      'validate_ssl_certificate': False,
      'comment': 'Czekamy aż AJD w Częstochowie udostępni USOSa dla Kujona.'
