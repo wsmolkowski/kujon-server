@@ -12,8 +12,9 @@ from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 
-USER_INFO_SKIP_FIELDS = {'email_access': False, 'interests': False,
-                         'employment_functions': False, constants.CREATED_TIME: False, 'email': False}
+USER_INFO_SKIP_FIELDS = {'email_access': False,
+                         'employment_functions': False, constants.CREATED_TIME: False, 'email': False,
+                         'usos_id': False, constants.UPDATE_TIME: False, constants.MONGO_ID: False}
 
 
 class ApiUserMixin(DaoMixin):
@@ -178,6 +179,11 @@ class ApiUserMixin(DaoMixin):
             try:
                 user_info_doc = await self.user_info(user_id)
                 await self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+
+                # TODO: to można przy okazji przerobić żeby nie było dodatkowego zapytania do bazy
+                #       tylko żeby ze słownika user_info_doc usuwał pola USER_INFO_SKIP_FIELDS
+                user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
+
             except DuplicateKeyError as ex:
                 logging.debug(ex)
 
