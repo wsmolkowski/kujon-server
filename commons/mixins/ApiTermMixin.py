@@ -21,7 +21,7 @@ class ApiTermMixin(object):
             term_doc = await AsyncCaller(self._context).call_async(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
-            term_doc[fields.TERM_ID] = term_doc.pop(constants.ID)
+            term_doc[fields.TERM_ID] = term_doc.pop(fields.ID)
 
             await self.db_insert(collections.TERMS, term_doc)
         except DuplicateKeyError as ex:

@@ -590,7 +590,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         'unit_id': unit_id,
                     })
 
-                unit_doc[fields.UNIT_ID] = unit_doc.pop(constants.ID)
+                unit_doc[fields.UNIT_ID] = unit_doc.pop(fields.ID)
                 unit_doc = await self.db_insert(collections.COURSES_UNITS, unit_doc)
             except Exception as ex:
                 await self.exc(ex, finish=finish)

@@ -133,7 +133,7 @@ class DaoMixin(object):
         pipeline_remove = pipeline.copy()
 
         pipeline_remove[fields.CREATED_TIME] = {
-            '$lt': datetime.now() - timedelta(seconds=constants.SECONDS_REMOVE_ON_REFRESH)}
+            '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
 
         result = await self.db[collection].remove(pipeline_remove)
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
