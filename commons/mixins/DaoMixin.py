@@ -91,10 +91,10 @@ class DaoMixin(object):
 
     async def db_all_usoses(self, limit_fields=True):
         if limit_fields:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({},
-                                                                      {constants.MONGO_ID: 0, "contact": 1,
-                                                                       "enabled": 1, "logo": 1, "name": 1, "phone": 1,
-                                                                       "url": 1, "usos_id": 1, "comment": 1})
+            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find(
+                {},
+                {constants.MONGO_ID: 0, "contact": 1, "enabled": 1, "logo": 1, "name": 1, "phone": 1,
+                 "url": 1, "usos_id": 1, "comment": 1, "comment": 1})
         else:
             cursor = self.db[constants.COLLECTION_USOSINSTANCES].find()
         usoses_doc = await cursor.to_list(None)
