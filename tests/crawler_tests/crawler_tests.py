@@ -5,8 +5,8 @@ import logging
 from pymongo import MongoClient
 from tornado.testing import AsyncTestCase, gen_test
 
-from commons import constants
 from commons.config import Config
+from commons.constants import collections
 from crawler.UsosCrawler import UsosCrawler
 from scripts.dbutils import DbUtils
 from tests.base import USER_DOC
@@ -24,9 +24,9 @@ class CrawlerTest(AsyncTestCase):
         self.dbu.drop_collections()
         self.dbu.recreate_database(self.config.AES_SECRET)
 
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_USOSINSTANCES].count())
+        self.assertNotEqual(0, self.client_db[collections.USOSINSTANCES].count())
 
-        self.user_id = self.client_db[constants.COLLECTION_USERS].insert(USER_DOC)
+        self.user_id = self.client_db[collections.USERS].insert(USER_DOC)
         logging.info(self.user_id)
 
     def tearDown(self):
@@ -39,13 +39,13 @@ class CrawlerTest(AsyncTestCase):
         yield UsosCrawler(self.config).initial_user_crawl(self.user_id)
 
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_USERS_INFO].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_EDITIONS].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_THESES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_TERMS].count())
-        # self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
+        self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
+        self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
+        self.assertNotEqual(0, self.client_db[collections.THESES].count())
+        self.assertNotEqual(0, self.client_db[collections.TERMS].count())
+        # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
+        self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
+        self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
 
     @gen_test(timeout=300)
     def testInitialUserCrawlRefresh(self):
@@ -53,13 +53,13 @@ class CrawlerTest(AsyncTestCase):
         yield UsosCrawler(self.config).initial_user_crawl(self.user_id, refresh=True)
 
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_USERS_INFO].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_EDITIONS].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_THESES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_TERMS].count())
-        # self.assertNotEqual(0, self.client_db[constants.COLLECTION_COURSES_CLASSTYPES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_FACULTIES].count())
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_PROGRAMMES].count())
+        self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
+        self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
+        self.assertNotEqual(0, self.client_db[collections.THESES].count())
+        self.assertNotEqual(0, self.client_db[collections.TERMS].count())
+        # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
+        self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
+        self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
 
     @gen_test(timeout=30)
     def testArchiveUser(self):
@@ -68,7 +68,7 @@ class CrawlerTest(AsyncTestCase):
 
         # then - check if tables are filled
         # this is not the best - better test DaoMixin
-        self.assertEqual(0, self.client_db[constants.COLLECTION_USERS_ARCHIVE].count())
+        self.assertEqual(0, self.client_db[collections.USERS_ARCHIVE].count())
 
     @gen_test(timeout=30)
     def testSubscribe(self):
@@ -76,7 +76,7 @@ class CrawlerTest(AsyncTestCase):
         yield UsosCrawler(self.config).subscribe(self.user_id)
 
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_SUBSCRIPTIONS].count())
+        self.assertNotEqual(0, self.client_db[collections.SUBSCRIPTIONS].count())
 
     @gen_test(timeout=30)
     def testProcessEvent(self):
@@ -92,4 +92,4 @@ class CrawlerTest(AsyncTestCase):
         yield UsosCrawler(self.config).process_event(event)
 
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[constants.COLLECTION_MESSAGES].count())
+        self.assertNotEqual(0, self.client_db[collections.MESSAGES].count())

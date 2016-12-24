@@ -7,8 +7,8 @@ import aiohttp
 import motor.motor_asyncio
 from tornado.options import parse_command_line, define, options
 
-from commons import constants
 from commons.config import Config
+from commons.constants import fields, collections
 
 define('environment', default='development')
 
@@ -30,10 +30,10 @@ class UsosChecker(object):
         session = aiohttp.ClientSession(connector=self.conector)
 
         while True:
-            cursor = self.db[constants.COLLECTION_USOSINSTANCES].find({'enabled': True})
+            cursor = self.db[collections.USOSINSTANCES].find({'enabled': True})
             async for usos_doc in cursor:
                 url = usos_doc[
-                          constants.USOS_URL] + 'services/events/notifier_status'  # 'services/courses/classtypes_index'
+                          fields.USOS_URL] + 'services/events/notifier_status'  # 'services/courses/classtypes_index'
                 try:
                     async with session.get(url) as response:
                         if response.status != 200 and 'application/json' not in response.headers['Content-Type']:
@@ -41,7 +41,7 @@ class UsosChecker(object):
                             logging.error(response)
                         else:
                             json = await response.json()
-                            logging.debug('USOS {0} response ok: {1}'.format(usos_doc[constants.USOS_ID], json))
+                            logging.debug('USOS {0} response ok: {1}'.format(usos_doc[fields.USOS_ID], json))
                 except Exception as ex:
                     logging.exceptio(url)
                     logging.exception(ex)

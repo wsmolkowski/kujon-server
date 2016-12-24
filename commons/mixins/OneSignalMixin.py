@@ -7,7 +7,8 @@ from tornado import escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons import constants, utils
+from commons import utils
+from commons.constants import config as application_config
 from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
@@ -55,8 +56,8 @@ class OneSignalMixin(object):
                                                                        headers=headers,
                                                                        body=body,
                                                                        user_agent=self.config.PROJECT_TITLE,
-                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT,
+                                                                       connect_timeout=application_config.HTTP_CONNECT_TIMEOUT,
+                                                                       request_timeout=application_config.HTTP_REQUEST_TIMEOUT,
                                                                        proxy_host=self.config.PROXY_URL,
                                                                        proxy_port=self.config.PROXY_PORT
                                                                        ))

@@ -12,12 +12,12 @@ from tornado import httpclient
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
+from commons.constants import fields, config
+
 try:
     import socks
 except ImportError:
     from httplib2 import socks
-
-from commons import constants
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
@@ -59,7 +59,7 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
         file_handler = handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
-        formatter = logging.Formatter(log_format, constants.DEFAULT_DATE_FORMAT)
+        formatter = logging.Formatter(log_format, fields.DEFAULT_DATE_FORMAT)
         file_handler.setFormatter(formatter)
 
         root_log = logging.getLogger()
@@ -81,9 +81,9 @@ def http_client(proxy_url=None, proxy_port=None):
     httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                          defaults=dict(proxy_host=proxy_url,
                                                        proxy_port=proxy_port,
-                                                       validate_cert=constants.HTTP_VALIDATE_CERT,
+                                                       validate_cert=config.HTTP_VALIDATE_CERT,
                                                        ca_certs=certifi.where()),
-                                         max_clients=constants.MAX_HTTP_CLIENTS)
+                                         max_clients=config.MAX_HTTP_CLIENTS)
 
     return httpclient.AsyncHTTPClient()
 
@@ -103,5 +103,5 @@ def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True,
                        prepare_curl_callback=prepare_curl_callback,
                        proxy_host=proxy_url,
                        proxy_port=proxy_port,
-                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                       request_timeout=constants.HTTP_REQUEST_TIMEOUT)
+                       connect_timeout=config.HTTP_CONNECT_TIMEOUT,
+                       request_timeout=config.HTTP_REQUEST_TIMEOUT)

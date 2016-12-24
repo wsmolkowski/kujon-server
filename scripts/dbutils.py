@@ -7,18 +7,19 @@ from datetime import datetime
 
 import pymongo
 
-from commons import constants, usosinstances, utils
+from commons import usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.constants import fields, collections
 from commons.enumerators import Environment
 from commons.enumerators import ExceptionTypes
 from crawler import job_factory
 
 
 class DbUtils(object):
-    INDEXED_FIELDS = (constants.USOS_ID, constants.USER_ID, constants.COURSE_ID, constants.TERM_ID, constants.ID,
-                      constants.UNIT_ID, constants.GROUP_ID, constants.PROGRAMME_ID, constants.FACULTY_ID,
-                      constants.USOS_PAIRED, constants.USER_EMAIL, constants.NODE_ID)
+    INDEXED_FIELDS = (fields.USOS_ID, fields.USER_ID, fields.COURSE_ID, fields.TERM_ID, fields.ID,
+                      fields.UNIT_ID, fields.GROUP_ID, fields.PROGRAMME_ID, fields.FACULTY_ID,
+                      fields.USOS_PAIRED, fields.USER_EMAIL, fields.NODE_ID)
 
     def __init__(self, config, encrypt_usoses_keys=False):
         if config:
@@ -31,7 +32,7 @@ class DbUtils(object):
 
     def _ttl_index(self, collection, field, after_seconds):
         try:
-            ttl_index = self.client[constants.COLLECTION_TOKENS].create_index(field, expireAfterSeconds=after_seconds)
+            ttl_index = self.client[collections.TOKENS].create_index(field, expireAfterSeconds=after_seconds)
             logging.info('created ttl index {0} on collection {1} and field {2} after_seconds {3}'.format(
                 ttl_index, collection, field, after_seconds))
         except Exception as ex:
@@ -47,19 +48,19 @@ class DbUtils(object):
             logging.exception(ex)
 
     def _unique_indexes(self):
-        self._unique_index(constants.COLLECTION_USERS_INFO,
-                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.ID, pymongo.ASCENDING)])
-        self._unique_index(constants.COLLECTION_TERMS,
-                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.TERM_ID, pymongo.ASCENDING)])
-        self._unique_index(constants.COLLECTION_FACULTIES,
-                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.FACULTY_ID, pymongo.ASCENDING)])
-        self._unique_index(constants.COLLECTION_PROGRAMMES,
-                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.PROGRAMME_ID, pymongo.ASCENDING)])
-        self._unique_index(constants.COLLECTION_COURSES,
-                           [(constants.USOS_ID, pymongo.ASCENDING), (constants.COURSE_ID, pymongo.ASCENDING)])
-        self._unique_index(constants.COLLECTION_COURSES_EDITIONS, [(constants.USER_ID, pymongo.ASCENDING)])
+        self._unique_index(collections.USERS_INFO,
+                           [(fields.USOS_ID, pymongo.ASCENDING), (fields.ID, pymongo.ASCENDING)])
+        self._unique_index(collections.TERMS,
+                           [(fields.USOS_ID, pymongo.ASCENDING), (fields.TERM_ID, pymongo.ASCENDING)])
+        self._unique_index(collections.FACULTIES,
+                           [(fields.USOS_ID, pymongo.ASCENDING), (fields.FACULTY_ID, pymongo.ASCENDING)])
+        self._unique_index(collections.PROGRAMMES,
+                           [(fields.USOS_ID, pymongo.ASCENDING), (fields.PROGRAMME_ID, pymongo.ASCENDING)])
+        self._unique_index(collections.COURSES,
+                           [(fields.USOS_ID, pymongo.ASCENDING), (fields.COURSE_ID, pymongo.ASCENDING)])
+        self._unique_index(collections.COURSES_EDITIONS, [(fields.USER_ID, pymongo.ASCENDING)])
 
-        self.client[constants.COLLECTION_COURSES_CLASSTYPES].create_index(constants.USOS_ID, unique=True)
+        self.client[collections.COURSES_CLASSTYPES].create_index(fields.USOS_ID, unique=True)
 
     def create_indexes(self):
         for collection in self.client.collection_names(include_system_collections=False):
@@ -72,8 +73,8 @@ class DbUtils(object):
                     except Exception as ex:
                         logging.exception(ex)
 
-        self._ttl_index(constants.COLLECTION_TOKENS, constants.CREATED_TIME, constants.SECONDS_HOUR)
-        self._ttl_index(constants.COLLECTION_COURSES_CLASSTYPES, constants.CREATED_TIME, constants.SECONDS_DAY)
+        self._ttl_index(collections.TOKENS, fields.CREATED_TIME, fields.SECONDS_HOUR)
+        self._ttl_index(collections.COURSES_CLASSTYPES, fields.CREATED_TIME, fields.SECONDS_DAY)
 
         self._unique_indexes()
 
@@ -97,16 +98,16 @@ class DbUtils(object):
         try:
             now = datetime.now()
             aes = AESCipher(aes_secret)
-            self.client.drop_collection(constants.COLLECTION_USOSINSTANCES)
+            self.client.drop_collection(collections.USOSINSTANCES)
             for usos in usosinstances.USOSINSTANCES:
-                usos[constants.CREATED_TIME] = now
-                logging.debug("adding usos: %r ", usos[constants.USOS_ID])
-                doc = self.client.usosinstances.find_one({constants.USOS_ID: usos[constants.USOS_ID]})
+                usos[fields.CREATED_TIME] = now
+                logging.debug("adding usos: %r ", usos[fields.USOS_ID])
+                doc = self.client.usosinstances.find_one({fields.USOS_ID: usos[fields.USOS_ID]})
                 if not doc:
                     if self.encrypt_usoses_keys:
-                        self.client[constants.COLLECTION_USOSINSTANCES].insert(aes.encrypt_usos(usos))
+                        self.client[collections.USOSINSTANCES].insert(aes.encrypt_usos(usos))
                     else:
-                        self.client[constants.COLLECTION_USOSINSTANCES].insert(usos)
+                        self.client[collections.USOSINSTANCES].insert(usos)
         except Exception as ex:
             logging.exception(ex)
 
@@ -115,12 +116,12 @@ class DbUtils(object):
             client = self.db
 
         for collection in client.collection_names(include_system_collections=False):
-            if collection in (constants.COLLECTION_USERS,):
+            if collection in (collections.USERS,):
                 continue
 
-            exists = client[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+            exists = client[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
             if exists:
-                client[collection].remove({constants.USER_ID: user_id})
+                client[collection].remove({fields.USER_ID: user_id})
 
     def copy_user_credentials(self, email_from, email_to, environment_from, environment_to='demo'):
 
@@ -136,37 +137,37 @@ class DbUtils(object):
             self.client_to = pymongo.MongoClient(self.config_to.MONGODB_URI)
             self.db_to = self.client_to[self.config_to.MONGODB_NAME]
 
-            user_from_doc = self.db_from[constants.COLLECTION_USERS].find_one({
-                constants.USER_EMAIL: email_from, constants.USOS_PAIRED: True})
+            user_from_doc = self.db_from[collections.USERS].find_one({
+                fields.USER_EMAIL: email_from, fields.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user from {0} not found.".format(email_from))
 
             logging.info('user_from_doc: {0}'.format(user_from_doc))
 
-            user_to_doc = self.db_to[constants.COLLECTION_USERS].find_one({
-                constants.USER_EMAIL: email_to, constants.USOS_PAIRED: True})
+            user_to_doc = self.db_to[collections.USERS].find_one({
+                fields.USER_EMAIL: email_to, fields.USOS_PAIRED: True})
             if not user_from_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
             logging.info('user_to_doc: {0}'.format(user_to_doc))
 
-            self.remove_user_data(user_to_doc[constants.MONGO_ID], self.db_to)
+            self.remove_user_data(user_to_doc[fields.MONGO_ID], self.db_to)
             logging.info('removed user to data')
 
-            user_to_doc[constants.ACCESS_TOKEN_KEY] = user_from_doc[constants.ACCESS_TOKEN_KEY]
-            user_to_doc[constants.ACCESS_TOKEN_SECRET] = user_from_doc[constants.ACCESS_TOKEN_SECRET]
-            user_to_doc[constants.USOS_ID] = user_from_doc[constants.USOS_ID]
+            user_to_doc[fields.ACCESS_TOKEN_KEY] = user_from_doc[fields.ACCESS_TOKEN_KEY]
+            user_to_doc[fields.ACCESS_TOKEN_SECRET] = user_from_doc[fields.ACCESS_TOKEN_SECRET]
+            user_to_doc[fields.USOS_ID] = user_from_doc[fields.USOS_ID]
 
-            if constants.USOS_USER_ID in user_from_doc:
-                user_to_doc[constants.USOS_USER_ID] = user_from_doc[constants.USOS_USER_ID]
+            if fields.USOS_USER_ID in user_from_doc:
+                user_to_doc[fields.USOS_USER_ID] = user_from_doc[fields.USOS_USER_ID]
 
-            updated = self.db_to[constants.COLLECTION_USERS].update(
-                {constants.MONGO_ID: user_to_doc[constants.MONGO_ID]}, user_to_doc)
+            updated = self.db_to[collections.USERS].update(
+                {fields.MONGO_ID: user_to_doc[fields.MONGO_ID]}, user_to_doc)
 
-            logging.info('collection: {0} updated: {1}'.format(constants.COLLECTION_USERS, updated))
+            logging.info('collection: {0} updated: {1}'.format(collections.USERS, updated))
 
-            self.db_to[constants.COLLECTION_JOBS_QUEUE].insert(
-                job_factory.refresh_user_job(user_to_doc[constants.MONGO_ID]))
+            self.db_to[collections.JOBS_QUEUE].insert(
+                job_factory.refresh_user_job(user_to_doc[fields.MONGO_ID]))
 
             logging.info('created refresh task for updated user')
 
@@ -184,22 +185,22 @@ class DbUtils(object):
         '''
 
         try:
-            user_ids = self.client[constants.COLLECTION_EXCEPTIONS].find({'exception_type': ExceptionTypes.API.value}) \
-                .distinct(constants.USER_ID)
+            user_ids = self.client[collections.EXCEPTIONS].find({'exception_type': ExceptionTypes.API.value}) \
+                .distinct(fields.USER_ID)
 
             for user_id in user_ids:
                 if not user_id:
                     continue
 
-                user_doc = self.client[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: user_id, constants.USOS_PAIRED: True})
+                user_doc = self.client[collections.USERS].find_one(
+                    {fields.MONGO_ID: user_id, fields.USOS_PAIRED: True})
                 if not user_doc:
                     continue
 
-                self.client[constants.COLLECTION_EXCEPTIONS].remove({constants.USER_ID: user_id})
+                self.client[collections.EXCEPTIONS].remove({fields.USER_ID: user_id})
                 logging.info('removed exception data for user_id {0}'.format(user_id))
 
-                self.client[constants.COLLECTION_JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
+                self.client[collections.JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
                 logging.info('created refresh task for user_id {0}'.format(user_id))
 
         except Exception as ex:
@@ -212,23 +213,23 @@ class DbUtils(object):
         '''
 
         try:
-            user_ids = self.client[constants.COLLECTION_USERS].find({constants.USOS_PAIRED: True})
+            user_ids = self.client[collections.USERS].find({fields.USOS_PAIRED: True})
 
             for user_id in user_ids:
                 if not user_id:
                     continue
 
-                logging.info('processing: {0}'.format(user_id[constants.MONGO_ID]))
+                logging.info('processing: {0}'.format(user_id[fields.MONGO_ID]))
 
-                subsctiption_count = self.client[constants.COLLECTION_SUBSCRIPTIONS].find(
-                    {constants.USER_ID: user_id[constants.MONGO_ID]}).count()
+                subsctiption_count = self.client[collections.SUBSCRIPTIONS].find(
+                    {fields.USER_ID: user_id[fields.MONGO_ID]}).count()
 
                 if subsctiption_count == 3:  # 'crstests/user_grade', 'grades/grade', 'crstests/user_point'
                     continue
 
-                self.client[constants.COLLECTION_JOBS_QUEUE].insert(
-                    job_factory.subscribe_user_job(user_id[constants.MONGO_ID]))
-                logging.info('created subscribe task for user_id {0}'.format(user_id[constants.MONGO_ID]))
+                self.client[collections.JOBS_QUEUE].insert(
+                    job_factory.subscribe_user_job(user_id[fields.MONGO_ID]))
+                logging.info('created subscribe task for user_id {0}'.format(user_id[fields.MONGO_ID]))
 
         except Exception as ex:
             logging.exception(ex)
@@ -270,7 +271,7 @@ def main():
 
     elif args.option == 'clean':
         logging.info('clean_database start')
-        dbutils.drop_collections([constants.COLLECTION_USOSINSTANCES, constants.COLLECTION_COURSES_CLASSTYPES])
+        dbutils.drop_collections([collections.USOSINSTANCES, collections.COURSES_CLASSTYPES])
         logging.info('clean_database end')
 
     elif args.option == 'index':

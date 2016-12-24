@@ -4,8 +4,8 @@ from datetime import datetime
 
 import motor.motor_tornado
 
-from commons import constants
 from commons.AESCipher import AESCipher
+from commons.constants import fields
 from event.server import get_application
 from tests.base import BaseTestClass
 
@@ -35,9 +35,9 @@ class EventTest(BaseTestClass):
     def get_app(self):
         application = get_application(self.config)
         db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
-        application.settings[constants.APPLICATION_DB] = db
-        application.settings[constants.APPLICATION_CONFIG] = self.config
-        application.settings[constants.APPLICATION_AES] = AESCipher(self.config.AES_SECRET)
+        application.settings[fields.APPLICATION_DB] = db
+        application.settings[fields.APPLICATION_CONFIG] = self.config
+        application.settings[fields.APPLICATION_AES] = AESCipher(self.config.AES_SECRET)
 
         return application
 
@@ -54,14 +54,14 @@ class EventTest(BaseTestClass):
         verify_token = aes.encrypt(user_id).decode()
 
         url = '/{0}?hub.mode=subscribe&hub.challenge={1}&hub.verify_token={2}'.format(
-            USER_DOC[constants.USOS_ID], challange, verify_token)
+            USER_DOC[fields.USOS_ID], challange, verify_token)
 
         # when
         # result = yield self.client.fetch(self.get_url(url))
         result = self.fetch(url, method='GET', headers={
-            constants.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
-            constants.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
-            constants.MOBILE_X_HEADER_REFRESH: 'True',
+            fields.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            fields.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
+            fields.MOBILE_X_HEADER_REFRESH: 'True',
         })
 
         # then

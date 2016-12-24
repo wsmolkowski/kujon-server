@@ -1,7 +1,8 @@
 # coding=UTF-8
 
 from api.handlers.base import ApiHandler
-from commons import decorators, constants
+from commons import decorators
+from commons.constants import config
 
 
 class ThesesApi(ApiHandler):
@@ -9,6 +10,6 @@ class ThesesApi(ApiHandler):
     async def get(self):
         try:
             theses_doc = await self.api_thesis()
-            self.success(theses_doc, cache_age=constants.SECONDS_1MONTH)
+            self.success(theses_doc, cache_age=config.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex, finish=True)

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from tornado import web
 
 from admin.handlers.statistics.statistics import StatisticsBaseHandler
-from commons import constants
+from commons.constants import fields, collections
 
 
 class ExceptionsHandler(StatisticsBaseHandler):
@@ -13,7 +13,7 @@ class ExceptionsHandler(StatisticsBaseHandler):
         yesterday = datetime.now() - timedelta(days=1)
 
         pipeline = [
-            {"$match": {constants.CREATED_TIME: {"$gt": yesterday}}},
+            {"$match": {fields.CREATED_TIME: {"$gt": yesterday}}},
             {
                 "$group": {
                     "_id": {
@@ -25,7 +25,7 @@ class ExceptionsHandler(StatisticsBaseHandler):
                     "count": {"$sum": 1}
                 }
             }]
-        cursor = self.db[constants.COLLECTION_EXCEPTIONS].aggregate(pipeline)
+        cursor = self.db[collections.COLLECTION_EXCEPTIONS].aggregate(pipeline)
         return await cursor.to_list(None)
 
     async def _stat_usos_errors(self):
@@ -33,7 +33,7 @@ class ExceptionsHandler(StatisticsBaseHandler):
             # {'$match': {'$usos_id': {'$exists': True, '$ne': None}}},
             {'$group': {'_id': {'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
         ]
-        cursor = self.db[constants.COLLECTION_EXCEPTIONS].aggregate(pipeline)
+        cursor = self.db[fields.COLLECTION_EXCEPTIONS].aggregate(pipeline)
         return await cursor.to_list(None)
 
     @web.removeslash

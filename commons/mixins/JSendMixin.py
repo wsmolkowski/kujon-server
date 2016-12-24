@@ -5,18 +5,18 @@ from datetime import date, time, datetime
 
 from bson import ObjectId
 
-from commons import constants
+from commons.constants import config
 from commons.enumerators import Environment
 
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
-            return obj.strftime(constants.DEFAULT_DATETIME_FORMAT)
+            return obj.strftime(config.DEFAULT_DATETIME_FORMAT)
         elif isinstance(obj, date):
-            return obj.strftime(constants.DEFAULT_DATE_FORMAT)
+            return obj.strftime(config.DEFAULT_DATE_FORMAT)
         elif isinstance(obj, time):
-            return obj.strftime(constants.DEFAULT_DATE_FORMAT)
+            return obj.strftime(config.DEFAULT_DATE_FORMAT)
         elif isinstance(obj, ObjectId):
             return str(obj)
         elif hasattr(obj, 'to_json'):
@@ -63,6 +63,6 @@ class JSendMixin(object):
         self.__write_json(result)
 
     def __write_json(self, data):
-        self.set_header('Content-Type', 'application/json; charset={0}'.format(constants.ENCODING))
+        self.set_header('Content-Type', 'application/json; charset={0}'.format(config.ENCODING))
         self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder))
         self.finish()

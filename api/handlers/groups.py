@@ -3,9 +3,10 @@
 from tornado import web
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
+from commons.constants import fields, config
 
-LIMIT_FIELDS = ('class_type_id', 'course_unit_id', constants.TERM_ID, 'lecturers')
+LIMIT_FIELDS = ('class_type_id', 'course_unit_id', fields.TERM_ID, 'lecturers')
 
 
 class GroupsApi(ApiHandler):
@@ -25,7 +26,7 @@ class GroupsApi(ApiHandler):
             if not programmes:
                 self.error("Poczekaj szukamy danych o Twoich grupach.")
             else:
-                self.success(programmes, cache_age=constants.SECONDS_1MONTH)
+                self.success(programmes, cache_age=config.SECONDS_1MONTH)
 
         except Exception as ex:
             await self.exc(ex)

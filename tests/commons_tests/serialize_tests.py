@@ -33,17 +33,17 @@ class SerializationTest(unittest.TestCase):
             u'update_time': '2016-02-17 18:55:02', u'last_name': u'Smo\u0142kowski', u'student_status': 1,
             u'name': u'dzizes dzizes', u'locale': u'en', u'first_name': u'Wojciech', u'email': u'dzizes451@gmail.com',
             u'user_created': '2016-02-17 18:54:36', u'given_name': u'dzizes', u'student_programmes': [{u'id': u'1264',
-                                                                                                        u'programme': {
-                                                                                                            u'description': {
-                                                                                                                u'en': u'Vocational Studies in Computer Science',
-                                                                                                                u'pl': u'Zawodowe Studia Informatyki, niestacjonarne (wieczorowe), pierwszego stopnia'},
-                                                                                                            u'id': u'WZ-ZSI'}},
-                                                                                                       {u'id': u'50932',
-                                                                                                        u'programme': {
-                                                                                                            u'description': {
-                                                                                                                u'en': u'Computer Science, part-time evening studies, second cycle programme',
-                                                                                                                u'pl': u'Magisterskie Studia Uzupe\u0142niaj\u0105ce z Informatyki, niestacjonarne (wieczorowe), drugiego stopnia'},
-                                                                                                            u'id': u'WU-MSUI'}}],
+                                                                                                       u'programme': {
+                                                                                                           u'description': {
+                                                                                                               u'en': u'Vocational Studies in Computer Science',
+                                                                                                               u'pl': u'Zawodowe Studia Informatyki, niestacjonarne (wieczorowe), pierwszego stopnia'},
+                                                                                                           u'id': u'WZ-ZSI'}},
+                                                                                                      {u'id': u'50932',
+                                                                                                       u'programme': {
+                                                                                                           u'description': {
+                                                                                                               u'en': u'Computer Science, part-time evening studies, second cycle programme',
+                                                                                                               u'pl': u'Magisterskie Studia Uzupe\u0142niaj\u0105ce z Informatyki, niestacjonarne (wieczorowe), drugiego stopnia'},
+                                                                                                           u'id': u'WU-MSUI'}}],
             u'has_photo': False, u'student_number': u'2085', u'id': u'1613',
             'user_email': u'ws2085@students.mimuw.edu.pl'}
 

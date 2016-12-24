@@ -8,9 +8,10 @@ from bson.objectid import ObjectId
 from tornado import gen
 from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import utils
 from commons.AESCipher import AESCipher
 from commons.UsosCaller import UsosCaller, AsyncCaller
+from commons.constants import fields, collections
 from commons.enumerators import ExceptionTypes
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiTermMixin import ApiTermMixin
@@ -50,13 +51,13 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             self._context.user_doc = await self.db_get_archive_user(user_id)
 
         if setup_usos:
-            self._context.usos_doc = await self.db_get_usos(self._context.user_doc[constants.USOS_ID])
-            self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
-            self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
-                                                secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+            self._context.usos_doc = await self.db_get_usos(self._context.user_doc[fields.USOS_ID])
+            self._context.base_uri = self._context.usos_doc[fields.USOS_URL]
+            self._context.consumer_token = dict(key=self._context.usos_doc[fields.CONSUMER_KEY],
+                                                secret=self._context.usos_doc[fields.CONSUMER_SECRET])
 
-            self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
-                                              secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
+            self._context.access_token = dict(key=self._context.user_doc[fields.ACCESS_TOKEN_KEY],
+                                              secret=self._context.user_doc[fields.ACCESS_TOKEN_SECRET])
 
     def get_current_user(self):
         return self._context.user_doc
@@ -67,8 +68,8 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
     def getUserId(self, return_object_id=True):
         if self.get_current_user():
             if return_object_id:
-                return self.get_current_user()[constants.MONGO_ID]
-            return str(self.get_current_user()[constants.MONGO_ID])
+                return self.get_current_user()[fields.MONGO_ID]
+            return str(self.get_current_user()[fields.MONGO_ID])
         return
 
     def getEncryptedUserId(self):
@@ -76,7 +77,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
     def getUsosId(self):
         if self.get_current_usos():
-            return self.get_current_user()[constants.USOS_ID]
+            return self.get_current_user()[fields.USOS_ID]
         return
 
     def get_auth_http_client(self):
@@ -92,32 +93,32 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         courses_terms = list()
         # course_units_ids = list()
 
-        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
+        for term, courses in list(courses_editions[fields.COURSE_EDITIONS].items()):
             for course in courses:
 
                 try:
-                    courses_terms.append(self.api_course_term(course[constants.COURSE_ID],
-                                                              course[constants.TERM_ID],
+                    courses_terms.append(self.api_course_term(course[fields.COURSE_ID],
+                                                              course[fields.TERM_ID],
                                                               extra_fetch=False))
                 except Exception as ex:
                     logging.exception(ex)
                     continue
 
-                    # for lecturer in course[constants.LECTURERS]:
-                    #     if constants.USER_ID in lecturer and lecturer[constants.USER_ID] not in users_ids:
-                    #         users_ids.append(lecturer[constants.USER_ID])
-                    #     if constants.ID in lecturer and lecturer[constants.ID] not in users_ids:
-                    #         users_ids.append(lecturer[constants.ID])
-                    # for participant in course[constants.PARTICIPANTS]:
-                    #     if constants.USER_ID in participant and participant[constants.USER_ID] not in users_ids:
-                    #         users_ids.append(participant[constants.USER_ID])
-                    #     if constants.ID in participant and participant[constants.ID] not in users_ids:
-                    #         users_ids.append(participant[constants.ID])
-                    # for coordinator in course[constants.COORDINATORS]:
-                    #     if constants.USER_ID in coordinator and coordinator[constants.USER_ID] not in users_ids:
-                    #         users_ids.append(coordinator[constants.USER_ID])
-                    #     if constants.ID in coordinator and coordinator[constants.ID] not in users_ids:
-                    #         users_ids.append(coordinator[constants.ID])
+                    # for lecturer in course[fields.LECTURERS]:
+                    #     if fields.USER_ID in lecturer and lecturer[fields.USER_ID] not in users_ids:
+                    #         users_ids.append(lecturer[fields.USER_ID])
+                    #     if fields.ID in lecturer and lecturer[fields.ID] not in users_ids:
+                    #         users_ids.append(lecturer[fields.ID])
+                    # for participant in course[fields.PARTICIPANTS]:
+                    #     if fields.USER_ID in participant and participant[fields.USER_ID] not in users_ids:
+                    #         users_ids.append(participant[fields.USER_ID])
+                    #     if fields.ID in participant and participant[fields.ID] not in users_ids:
+                    #         users_ids.append(participant[fields.ID])
+                    # for coordinator in course[fields.COORDINATORS]:
+                    #     if fields.USER_ID in coordinator and coordinator[fields.USER_ID] not in users_ids:
+                    #         users_ids.append(coordinator[fields.USER_ID])
+                    #     if fields.ID in coordinator and coordinator[fields.ID] not in users_ids:
+                    #         users_ids.append(coordinator[fields.ID])
                     #
                     # for course_unit in course['course_units_ids']:
                     #     if course_unit not in course_units_ids:
@@ -171,12 +172,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             await self._setUp(user_id)
 
             if refresh:
-                skip_collections = [constants.COLLECTION_USERS, constants.COLLECTION_JOBS_QUEUE,
-                                    constants.COLLECTION_JOBS_LOG, constants.COLLECTION_MESSAGES,
-                                    constants.COLLECTION_SEARCH, constants.COLLECTION_TOKENS,
-                                    constants.COLLECTION_EMAIL_QUEUE, constants.COLLECTION_EMAIL_QUEUE_LOG,
-                                    constants.COLLECTION_EXCEPTIONS, constants.COLLECTION_SUBSCRIPTIONS,
-                                    constants.COLLECTION_REMOTE_IP_HISTORY]
+                skip_collections = [collections.USERS, collections.JOBS_QUEUE,
+                                    collections.JOBS_LOG, collections.MESSAGES,
+                                    collections.SEARCH, collections.TOKENS,
+                                    collections.EMAIL_QUEUE, collections.EMAIL_QUEUE_LOG,
+                                    collections.EXCEPTIONS, collections.SUBSCRIPTIONS,
+                                    collections.REMOTE_IP_HISTORY]
 
                 await self.remove_user_data(skip_collections)
 
@@ -200,7 +201,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
         try:
             await UsosCaller(self._context).call(path='services/events/unsubscribe')
-            self.db_remove(constants.COLLECTION_SUBSCRIPTIONS, {constants.USER_ID: self.getUserId()})
+            self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
         except Exception as ex:
             logging.warning(ex)
 
@@ -221,9 +222,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                                                                          'verify_token': self.getEncryptedUserId()
                                                                      })
                 subscribe_doc['event_type'] = event_type
-                subscribe_doc[constants.USER_ID] = self.getUserId()
+                subscribe_doc[fields.USER_ID] = self.getUserId()
 
-                await self.db_insert(constants.COLLECTION_SUBSCRIPTIONS, subscribe_doc)
+                await self.db_insert(collections.SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
@@ -232,7 +233,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
         await self.unsubscribe()
 
-        await self.remove_user_data([constants.COLLECTION_USERS_ARCHIVE, ])
+        await self.remove_user_data([collections.USERS_ARCHIVE, ])
 
     async def remove_user_data(self, skip_collections=None):
         if not skip_collections:
@@ -246,9 +247,9 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
                 if collection in skip_collections:
                     continue
 
-                exists = await self.db[collection].find_one({constants.USER_ID: {'$exists': True, '$ne': False}})
+                exists = await self.db[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
                 if exists:
-                    remove_tasks.append(self.db[collection].remove({constants.USER_ID: self.getUserId()}))
+                    remove_tasks.append(self.db[collection].remove({fields.USER_ID: self.getUserId()}))
 
             result = await gen.multi(remove_tasks)
             logging.info('removed user data for user_id: {0} resulted in: {1}'.format(self.getUserId(), result))
@@ -259,7 +260,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         try:
             user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
 
-            await self._setUp(user_doc[constants.MONGO_ID])
+            await self._setUp(user_doc[fields.MONGO_ID])
 
             caller = UsosCaller(self._context)
 
@@ -270,7 +271,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
             if user_point:
                 signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
-                                                         user_doc[constants.USER_EMAIL])
+                                                         user_doc[fields.USER_EMAIL])
                 logging.debug('user_point signal_response: {1}'.format(signal_point))
 
             user_grade = await caller.call(path='services/crstests/user_grade',
@@ -279,7 +280,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
             if user_grade:
                 message_text = 'wiadomosc {0}'.format(user_grade)
-                signal_grade = await self.signal_message(message_text, user_doc[constants.USER_EMAIL])
+                signal_grade = await self.signal_message(message_text, user_doc[fields.USER_EMAIL])
                 await self.db_save_message(message_text, from_whom='Komunikat z USOS', message_type='powiadomienie')
 
                 logging.debug('user_point signal_response: {1}'.format(signal_grade))
@@ -295,7 +296,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         user_events = list()
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
-                user_events.append(self.__user_event(user_id, entry['node_id'], event[constants.USOS_ID]))
+                user_events.append(self.__user_event(user_id, entry['node_id'], event[fields.USOS_ID]))
 
         result = await gen.multi(user_events)
         logging.debug('process_event results: {0}'.format(result))
@@ -309,12 +310,12 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             for usos_doc in usoses:
                 try:
                     data = await AsyncCaller().call_async(path='services/events/notifier_status',
-                                                          base_url=usos_doc[constants.USOS_URL])
+                                                          base_url=usos_doc[fields.USOS_URL])
 
-                    data[constants.CREATED_TIME] = timestamp
-                    data[constants.USOS_ID] = usos_doc[constants.USOS_ID]
+                    data[fields.CREATED_TIME] = timestamp
+                    data[fields.USOS_ID] = usos_doc[fields.USOS_ID]
 
-                    await self.db_insert(constants.COLLECTION_NOTIFIER_STATUS, data)
+                    await self.db_insert(collections.NOTIFIER_STATUS, data)
                 except Exception as ex:
                     await self.exc(ex, finish=False)
 

@@ -1,7 +1,8 @@
 # coding=UTF-8
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
+from commons.constants import config
 
 
 class FriendsApi(ApiHandler):
@@ -9,7 +10,7 @@ class FriendsApi(ApiHandler):
     async def get(self):
         try:
             friends = await self.api_friends()
-            self.success(friends, cache_age=constants.SECONDS_1WEEK)
+            self.success(friends, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
 
@@ -39,6 +40,6 @@ class FriendsSuggestionsApi(ApiHandler):
             if not friends_suggestions:
                 self.error("Poczekaj szukamy sugerowanych przyjaciół.")
             else:
-                self.success(friends_suggestions, cache_age=constants.SECONDS_1WEEK)
+                self.success(friends_suggestions, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)

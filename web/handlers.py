@@ -5,7 +5,7 @@ import logging
 from bson import ObjectId
 from cryptography.fernet import InvalidToken
 
-from commons import constants
+from commons.constants import fields, collections
 from commons.enumerators import ExceptionTypes
 from commons.handlers import AbstractHandler
 
@@ -29,8 +29,8 @@ class BaseHandler(AbstractHandler):
         if cookie_encrypted:
             try:
                 cookie_decrypted = self.aes.decrypt(cookie_encrypted)
-                user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+                user_doc = await self.db[collections.USERS].find_one(
+                    {fields.MONGO_ID: ObjectId(cookie_decrypted.decode())})
             except InvalidToken as ex:
                 logging.exception(ex)
                 self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
@@ -39,26 +39,26 @@ class BaseHandler(AbstractHandler):
                 self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
                 return
 
-            if constants.USER_NAME not in user_doc and constants.USER_EMAIL in user_doc:
-                user_doc[constants.USER_NAME] = user_doc[constants.USER_EMAIL]
+            if fields.USER_NAME not in user_doc and fields.USER_EMAIL in user_doc:
+                user_doc[fields.USER_NAME] = user_doc[fields.USER_EMAIL]
 
-            user_doc[constants.PICTURE] = None
+            user_doc[fields.PICTURE] = None
 
-            if constants.USOS_USER_ID in user_doc:
-                user_info = await self.db[constants.COLLECTION_USERS_INFO].find_one(
-                    {constants.ID: user_doc[constants.USOS_USER_ID], constants.USOS_ID: user_doc[constants.USOS_ID]})
+            if fields.USOS_USER_ID in user_doc:
+                user_info = await self.db[collections.USERS_INFO].find_one(
+                    {fields.ID: user_doc[fields.USOS_USER_ID], fields.USOS_ID: user_doc[fields.USOS_ID]})
 
                 if not user_info:
-                    user_doc[constants.PICTURE] = None
+                    user_doc[fields.PICTURE] = None
                 else:
-                    if constants.PHOTO_URL in user_info:
-                        user_doc[constants.PICTURE] = user_info[constants.PHOTO_URL]
-                    elif constants.GOOGLE in user_doc:
-                        user_doc[constants.PICTURE] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
-                    elif constants.FACEBOOK in user_doc:
-                        user_doc[constants.PICTURE] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+                    if fields.PHOTO_URL in user_info:
+                        user_doc[fields.PICTURE] = user_info[fields.PHOTO_URL]
+                    elif fields.GOOGLE in user_doc:
+                        user_doc[fields.PICTURE] = user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE]
+                    elif fields.FACEBOOK in user_doc:
+                        user_doc[fields.PICTURE] = user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE]
                     else:
-                        user_doc[constants.PICTURE] = None
+                        user_doc[fields.PICTURE] = None
 
             return user_doc
         return
@@ -70,23 +70,23 @@ class MainHandler(BaseHandler):
         token = self.get_argument('token', default=None)
         if token:
             user_id = self.aes.decrypt(token.encode()).decode()
-            user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(user_id)})
+            user_doc = await self.db[collections.USERS].find_one(
+                {fields.MONGO_ID: ObjectId(user_id)})
 
-            self.reset_user_cookie(user_doc[constants.MONGO_ID])
+            self.reset_user_cookie(user_doc[fields.MONGO_ID])
             self.redirect(self.config.DEPLOY_WEB)
             return
         else:
             user_doc = self.get_current_user()
 
-        if user_doc and constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
+        if user_doc and fields.USOS_PAIRED in user_doc and user_doc[fields.USOS_PAIRED]:
             self.render("app.html", **self.get_config())
-        elif user_doc and constants.USOS_PAIRED in user_doc and not user_doc[constants.USOS_PAIRED]:
+        elif user_doc and fields.USOS_PAIRED in user_doc and not user_doc[fields.USOS_PAIRED]:
             data = self.get_config()
 
             if user_doc:
-                error = await self.db[constants.COLLECTION_EXCEPTIONS].find_one({
-                    constants.USER_ID: user_doc[constants.MONGO_ID],
+                error = await self.db[collections.EXCEPTIONS].find_one({
+                    fields.USER_ID: user_doc[fields.MONGO_ID],
                     'exception_type': ExceptionTypes.AUTHENTICATION.value
                 })
                 if error:
@@ -114,7 +114,7 @@ class ContactHandler(BaseHandler):
                 logging.debug('received contact request from user:{0} subject: {1} message: {2}'.format(
                     self.getUserId(), subject, message))
 
-                message_id = await self.email_contact(subject, message, self.get_current_user()[constants.USER_EMAIL])
+                message_id = await self.email_contact(subject, message, self.get_current_user()[fields.USER_EMAIL])
 
                 self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(message_id)))
         except Exception as ex:

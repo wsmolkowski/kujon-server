@@ -2,8 +2,6 @@
 
 import logging
 
-from commons import constants
-
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = 2
 
@@ -20,8 +18,8 @@ class MathMixin(object):
 
             found = 0
             for final_grade in final_grades:
-                if grade[constants.CLASS_TYPE] is final_grade[constants.CLASS_TYPE]:
-                    if int(grade[constants.EXAM_SESSION_NUMBER]) > int(final_grade[constants.EXAM_SESSION_NUMBER]):
+                if grade[fields.CLASS_TYPE] is final_grade[fields.CLASS_TYPE]:
+                    if int(grade[fields.EXAM_SESSION_NUMBER]) > int(final_grade[fields.EXAM_SESSION_NUMBER]):
                         final_grades.remove(final_grade)
                         final_grades.append(grade)
                     found = 1
@@ -34,15 +32,15 @@ class MathMixin(object):
         value_symbols = list()
 
         for course in courses_lists:
-            if constants.GRADES not in course:
+            if fields.GRADES not in course:
                 continue
 
-            grades = self._get_only_final_grades(course[constants.GRADES])
+            grades = self._get_only_final_grades(course[fields.GRADES])
             for grade in grades:
-                if constants.VALUE_SYMBOL not in grade or not grade[constants.VALUE_SYMBOL]:
+                if fields.VALUE_SYMBOL not in grade or not grade[fields.VALUE_SYMBOL]:
                     continue
                 try:
-                    grade_value = grade[constants.VALUE_SYMBOL].replace(',', '.')
+                    grade_value = grade[fields.VALUE_SYMBOL].replace(',', '.')
                     if 'NZAL' in grade_value or 'NK' in grade_value:
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
@@ -59,4 +57,3 @@ class MathMixin(object):
         except Exception as ex:
             logging.exception(ex)
             return
-

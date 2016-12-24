@@ -6,8 +6,8 @@ from bson import ObjectId
 from cryptography.fernet import InvalidToken
 from tornado import web
 
-from commons import constants
 from commons.UsosCaller import AsyncCaller
+from commons.constants import fields, collections, config
 from commons.enumerators import ExceptionTypes, Environment, UserTypes
 from commons.errors import AuthenticationError
 from commons.handlers import AbstractHandler
@@ -28,61 +28,61 @@ class BaseHandler(AbstractHandler, SocialMixin):
         if cookie_encrypted:
             try:
                 cookie_decrypted = self.aes.decrypt(cookie_encrypted).decode()
-                user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                    {constants.MONGO_ID: ObjectId(cookie_decrypted)})
+                user_doc = await self.db[collections.USERS].find_one(
+                    {fields.MONGO_ID: ObjectId(cookie_decrypted)})
                 if user_doc:
                     return user_doc
             except InvalidToken as ex:
                 logging.exception(ex)
                 self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
 
-        header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-        header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+        header_email = self.request.headers.get(config.MOBILE_X_HEADER_EMAIL, False)
+        header_token = self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False)
 
         if header_email and header_token:
             user_doc = await self.db_find_user_email(header_email)
 
-            if not user_doc or constants.USER_TYPE not in user_doc:
+            if not user_doc or fields.USER_TYPE not in user_doc:
                 return
 
-            if user_doc[constants.USER_TYPE].upper() == UserTypes.GOOGLE.value:
+            if user_doc[fields.USER_TYPE].upper() == UserTypes.GOOGLE.value:
                 token_exists = await self.db_find_token(header_email, UserTypes.GOOGLE.value)
                 if not token_exists:
                     google_token = await self.google_token(header_token)
-                    google_token[constants.USER_TYPE] = UserTypes.GOOGLE.value
+                    google_token[fields.USER_TYPE] = UserTypes.GOOGLE.value
                     await self.db_insert_token(google_token)
                 return user_doc
 
-            elif user_doc[constants.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
+            elif user_doc[fields.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
                 token_exists = await self.db_find_token(header_email, UserTypes.FACEBOOK.value)
                 if not token_exists:
                     facebook_token = await self.facebook_token(header_token)
-                    facebook_token[constants.USER_TYPE] = UserTypes.FACEBOOK.value
+                    facebook_token[fields.USER_TYPE] = UserTypes.FACEBOOK.value
                     await self.db_insert_token(facebook_token)
                 return user_doc
 
-            elif user_doc[constants.USER_TYPE].upper() == UserTypes.EMAIL.value:
+            elif user_doc[fields.USER_TYPE].upper() == UserTypes.EMAIL.value:
                 token_exists = await self.db_find_token(header_email, UserTypes.EMAIL.value)
                 if not token_exists:
                     raise AuthenticationError(
                         "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(
-                            header_email, user_doc[constants.USER_TYPE]))
+                            header_email, user_doc[fields.USER_TYPE]))
 
                 try:
                     decrypted_token = self.aes.decrypt(header_token.encode()).decode()
                 except InvalidToken:
                     raise AuthenticationError(
                         "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
-                            header_email, user_doc[constants.USER_TYPE]))
+                            header_email, user_doc[fields.USER_TYPE]))
 
-                if decrypted_token == str(user_doc[constants.MONGO_ID]):
+                if decrypted_token == str(user_doc[fields.MONGO_ID]):
                     return user_doc
                 else:
                     raise AuthenticationError(
                         "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
-                            header_email, user_doc[constants.USER_TYPE]))
+                            header_email, user_doc[fields.USER_TYPE]))
             else:
-                raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[constants.USER_TYPE]))
+                raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[fields.USER_TYPE]))
         return
 
     async def prepare(self):
@@ -90,14 +90,14 @@ class BaseHandler(AbstractHandler, SocialMixin):
 
         if 'usos_doc' in self._context:
             # before login
-            self._context.base_uri = self._context.usos_doc[constants.USOS_URL]
-            self._context.consumer_token = dict(key=self._context.usos_doc[constants.CONSUMER_KEY],
-                                                secret=self._context.usos_doc[constants.CONSUMER_SECRET])
+            self._context.base_uri = self._context.usos_doc[fields.USOS_URL]
+            self._context.consumer_token = dict(key=self._context.usos_doc[fields.CONSUMER_KEY],
+                                                secret=self._context.usos_doc[fields.CONSUMER_SECRET])
 
             if self.isRegistered():
                 # before usos registration
-                self._context.access_token = dict(key=self._context.user_doc[constants.ACCESS_TOKEN_KEY],
-                                                  secret=self._context.user_doc[constants.ACCESS_TOKEN_SECRET])
+                self._context.access_token = dict(key=self._context.user_doc[fields.ACCESS_TOKEN_KEY],
+                                                  secret=self._context.user_doc[fields.ACCESS_TOKEN_SECRET])
 
     def isRegistered(self):
         if not self._context:
@@ -109,8 +109,8 @@ class BaseHandler(AbstractHandler, SocialMixin):
         if not self._context.user_doc:
             return False
 
-        if constants.ACCESS_TOKEN_KEY not in self._context.user_doc and \
-                        constants.ACCESS_TOKEN_SECRET not in self._context.user_doc:
+        if fields.ACCESS_TOKEN_KEY not in self._context.user_doc and \
+                        fields.ACCESS_TOKEN_SECRET not in self._context.user_doc:
             return False
 
         return True
@@ -132,7 +132,7 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMi
     EXCEPTION_TYPE = ExceptionTypes.API.value
 
     def do_refresh(self):  # overwrite from DaoMixin
-        if self.request.headers.get(constants.MOBILE_X_HEADER_REFRESH, False):
+        if self.request.headers.get(config.MOBILE_X_HEADER_REFRESH, False):
             return True
         if self.config.ENVIRONMENT.lower() == Environment.DEMO.value:
             return True
@@ -145,7 +145,7 @@ class UsosesAllApi(BaseHandler, JSendMixin):
     async def get(self):
         try:
             usoses = await self.db_all_usoses(limit_fields=True)
-            self.success(usoses, cache_age=constants.SECONDS_HOUR)
+            self.success(usoses, cache_age=config.SECONDS_HOUR)
         except Exception as ex:
             await self.exc(ex)
 
@@ -157,10 +157,10 @@ class UsosesApi(BaseHandler, JSendMixin):
             result = list()
             usoses = await self.get_usos_instances()
             for usos in usoses:
-                wanted_keys = [constants.USOS_LOGO, constants.USOS_ID, constants.USOS_NAME, constants.USOS_URL]
+                wanted_keys = [fields.USOS_LOGO, fields.USOS_ID, fields.USOS_NAME, fields.USOS_URL]
                 result.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
 
-            self.success(result, cache_age=constants.SECONDS_HOUR)
+            self.success(result, cache_age=config.SECONDS_HOUR)
         except Exception as ex:
             await self.exc(ex)
 
@@ -186,8 +186,8 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
 
         try:
             user = self.get_current_user()
-            if user and constants.USOS_PAIRED in user.keys():
-                usos_paired = user[constants.USOS_PAIRED]
+            if user and fields.USOS_PAIRED in user.keys():
+                usos_paired = user[fields.USOS_PAIRED]
 
             if usos_paired:
                 usos_works = await self.usos_works()

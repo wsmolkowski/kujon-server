@@ -11,8 +11,8 @@ import motor.motor_asyncio
 from tornado.options import define, options
 from tornado.options import parse_command_line
 
-from commons import constants
 from commons.config import Config
+from commons.constants import fields, collections
 from commons.enumerators import JobStatus
 from commons.mixins import EmailMixin
 
@@ -41,24 +41,24 @@ class Emailer(object):
     async def update_job(self, job, status, message=None):
         # insert current job to history collection
         old = job.copy()
-        old.pop(constants.MONGO_ID)
-        await self.db[constants.COLLECTION_EMAIL_QUEUE_LOG].insert(old)
+        old.pop(fields.MONGO_ID)
+        await self.db[collections.EMAIL_QUEUE_LOG].insert(old)
 
         # change values and update
-        job[constants.JOB_STATUS] = status
-        job[constants.UPDATE_TIME] = datetime.now()
+        job[fields.JOB_STATUS] = status
+        job[fields.UPDATE_TIME] = datetime.now()
         if message:
-            job[constants.JOB_MESSAGE] = message
+            job[fields.JOB_MESSAGE] = message
 
-        update = await self.db[constants.COLLECTION_EMAIL_QUEUE].update(
-            {constants.MONGO_ID: job[constants.MONGO_ID]}, job)
+        update = await self.db[collections.EMAIL_QUEUE].update(
+            {fields.MONGO_ID: job[fields.MONGO_ID]}, job)
 
         logging.debug(
-            "updated job: {0} with status: {1} resulted in: {2}".format(job[constants.MONGO_ID], status, update))
+            "updated job: {0} with status: {1} resulted in: {2}".format(job[fields.MONGO_ID], status, update))
 
     async def produce(self):
         while self.running:
-            cursor = self.db[constants.COLLECTION_EMAIL_QUEUE].find({constants.JOB_STATUS: JobStatus.PENDING.value})
+            cursor = self.db[collections.EMAIL_QUEUE].find({fields.JOB_STATUS: JobStatus.PENDING.value})
 
             async for job in cursor:
                 await self.queue.put(job)
@@ -87,15 +87,15 @@ class Emailer(object):
                 msg.attach(MIMEText(job[EmailMixin.SMTP_HTML], 'html'))
 
                 smtp.sendmail(job[EmailMixin.SMTP_FROM], job[EmailMixin.SMTP_TO], msg.as_string())
-                
+
                 logging.debug('email sent to {0}'.format(job[EmailMixin.SMTP_TO]))
 
-                msg_doc = await self.db[constants.COLLECTION_MESSAGES].insert({
-                    constants.USER_ID: job[constants.USER_ID],
-                    constants.CREATED_TIME: datetime.now(),
-                    constants.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
-                    constants.FIELD_MESSAGE_TYPE: 'email',
-                    constants.JOB_MESSAGE: job[EmailMixin.SMTP_TEXT]
+                msg_doc = await self.db[collections.MESSAGES].insert({
+                    fields.USER_ID: job[fields.USER_ID],
+                    fields.CREATED_TIME: datetime.now(),
+                    fields.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
+                    fields.FIELD_MESSAGE_TYPE: 'email',
+                    fields.JOB_MESSAGE: job[EmailMixin.SMTP_TEXT]
                 })
 
                 logging.debug(msg_doc)

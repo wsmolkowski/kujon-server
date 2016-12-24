@@ -8,8 +8,9 @@ from tornado import escape
 from tornado import gen
 from tornado.testing import AsyncHTTPTestCase
 
-from commons import constants, utils
+from commons import utils
 from commons.config import Config
+from commons.constants import fields, collections
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
@@ -70,8 +71,8 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
-        user_id = client_db[constants.COLLECTION_USERS].insert(user_doc)
-        token_id = client_db[constants.COLLECTION_TOKENS].insert(token_doc)
+        user_id = client_db[collections.USERS].insert(user_doc)
+        token_id = client_db[collections.TOKENS].insert(token_doc)
 
         return user_id, token_id
 
@@ -96,9 +97,9 @@ class BaseTestClass(AsyncHTTPTestCase):
         #     yield self.http_client.fetch(request)
 
         response = yield self.client.fetch(url, headers={
-            constants.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
-            constants.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
-            constants.MOBILE_X_HEADER_REFRESH: 'True',
+            fields.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            fields.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
+            fields.MOBILE_X_HEADER_REFRESH: 'True',
         })
 
         if assert_response:

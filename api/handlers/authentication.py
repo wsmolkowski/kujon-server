@@ -8,7 +8,8 @@ from tornado import auth, gen, web, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
-from commons import constants, decorators
+from commons import decorators
+from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
@@ -24,11 +25,11 @@ class ArchiveHandler(ApiHandler):
         try:
             user_doc = self.get_current_user()
 
-            await self.db_archive_user(user_doc[constants.MONGO_ID])
+            await self.db_archive_user(user_doc[fields.MONGO_ID])
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            await self.email_archive_user(user_doc[constants.USER_EMAIL])
+            await self.email_archive_user(user_doc[fields.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')
         except Exception as ex:
@@ -39,9 +40,9 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
     def on_finish(self):
-        IOLoop.current().spawn_callback(self.db_insert, constants.COLLECTION_REMOTE_IP_HISTORY, {
-            constants.USER_ID: self.getUserId(return_object_id=True),
-            constants.CREATED_TIME: datetime.now(),
+        IOLoop.current().spawn_callback(self.db_insert, collections.REMOTE_IP_HISTORY, {
+            fields.USER_ID: self.getUserId(return_object_id=True),
+            fields.CREATED_TIME: datetime.now(),
             'host': self.request.host,
             'method': self.request.method,
             'path': self.request.path,
@@ -53,8 +54,8 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 class LogoutHandler(AuthenticationHandler):
     async def remove_token(self):
         user_doc = self.get_current_user()
-        if user_doc and constants.USER_EMAIL in user_doc:
-            await self.db_remove_token(user_doc[constants.USER_EMAIL], user_doc[constants.USER_TYPE])
+        if user_doc and fields.USER_EMAIL in user_doc:
+            await self.db_remove_token(user_doc[fields.USER_EMAIL], user_doc[fields.USER_TYPE])
 
     @web.asynchronous
     async def get(self):
@@ -85,38 +86,38 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
             if not user_doc:
                 user_doc = dict()
-                user_doc[constants.USER_TYPE] = UserTypes.FACEBOOK.value
-                user_doc[constants.USER_NAME] = access['name']
-                user_doc[constants.USER_EMAIL] = access['email']
-                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
-                user_doc[constants.USER_DEVICE_ID] = None
+                user_doc[fields.USER_TYPE] = UserTypes.FACEBOOK.value
+                user_doc[fields.USER_NAME] = access['name']
+                user_doc[fields.USER_EMAIL] = access['email']
+                user_doc[fields.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[fields.USER_DEVICE_ID] = None
 
-                user_doc[constants.FACEBOOK] = dict()
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_EMAIL] = access[constants.FACEBOOK_EMAIL]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE] = access['picture']['data']['url']
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN] = access[constants.FACEBOOK_ACCESS_TOKEN]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_ID] = access[constants.FACEBOOK_ID]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
-                    seconds=int(access[constants.FACEBOOK_SESSION_EXPIRES][0]))
+                user_doc[fields.FACEBOOK] = dict()
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_NAME] = access[fields.FACEBOOK_NAME]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_EMAIL] = access[fields.FACEBOOK_EMAIL]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE] = access['picture']['data']['url']
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_ACCESS_TOKEN] = access[fields.FACEBOOK_ACCESS_TOKEN]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_ID] = access[fields.FACEBOOK_ID]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
+                    seconds=int(access[fields.FACEBOOK_SESSION_EXPIRES][0]))
 
-                user_doc[constants.USOS_PAIRED] = False
-                user_doc[constants.USER_CREATED] = datetime.now()
+                user_doc[fields.USOS_PAIRED] = False
+                user_doc[fields.USER_CREATED] = datetime.now()
                 yield self.db_insert_user(user_doc)
             else:
-                user_doc[constants.FACEBOOK] = dict()
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_NAME] = access[constants.FACEBOOK_NAME]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_EMAIL] = access[constants.FACEBOOK_EMAIL]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE] = access['picture']['data']['url']
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN] = access[constants.FACEBOOK_ACCESS_TOKEN]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_ID] = access[constants.FACEBOOK_ID]
-                user_doc[constants.FACEBOOK][constants.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
-                    seconds=int(access[constants.FACEBOOK_SESSION_EXPIRES][0]))
-                user_doc[constants.UPDATE_TIME] = datetime.now()
-                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                user_doc[fields.FACEBOOK] = dict()
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_NAME] = access[fields.FACEBOOK_NAME]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_EMAIL] = access[fields.FACEBOOK_EMAIL]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE] = access['picture']['data']['url']
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_ACCESS_TOKEN] = access[fields.FACEBOOK_ACCESS_TOKEN]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_ID] = access[fields.FACEBOOK_ID]
+                user_doc[fields.FACEBOOK][fields.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
+                    seconds=int(access[fields.FACEBOOK_SESSION_EXPIRES][0]))
+                user_doc[fields.UPDATE_TIME] = datetime.now()
+                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
 
-            user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
-            self.reset_user_cookie(user_doc[constants.MONGO_ID])
+            user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
+            self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
             self.redirect(self.config.DEPLOY_WEB)
         else:
@@ -149,44 +150,44 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
             user_doc = yield self.db_find_user_email(user['email'])
             if not user_doc:
                 user_doc = dict()
-                user_doc[constants.USER_TYPE] = UserTypes.GOOGLE.value
-                user_doc[constants.USER_NAME] = user['name']
-                user_doc[constants.USER_EMAIL] = user['email']
-                user_doc[constants.USOS_PAIRED] = False
-                user_doc[constants.USER_DEVICE_TYPE] = 'WWW'
-                user_doc[constants.USER_DEVICE_ID] = None
-                user_doc[constants.USER_CREATED] = datetime.now()
+                user_doc[fields.USER_TYPE] = UserTypes.GOOGLE.value
+                user_doc[fields.USER_NAME] = user['name']
+                user_doc[fields.USER_EMAIL] = user['email']
+                user_doc[fields.USOS_PAIRED] = False
+                user_doc[fields.USER_DEVICE_TYPE] = 'WWW'
+                user_doc[fields.USER_DEVICE_ID] = None
+                user_doc[fields.USER_CREATED] = datetime.now()
 
-                user_doc[constants.GOOGLE] = dict()
-                user_doc[constants.GOOGLE][constants.GOOGLE_NAME] = user[constants.GOOGLE_NAME]
-                user_doc[constants.GOOGLE][constants.GOOGLE_EMAIL] = user[constants.GOOGLE_EMAIL]
-                user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE] = user[constants.GOOGLE_PICTURE]
-                user_doc[constants.GOOGLE][constants.GOOGLE_ACCESS_TOKEN] = access[constants.GOOGLE_ACCESS_TOKEN]
-                user_doc[constants.GOOGLE][constants.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
-                    seconds=access[constants.GOOGLE_EXPIRES_IN])
-                user_doc[constants.GOOGLE][constants.GOOGLE_ID_TOKEN] = access[constants.GOOGLE_ID_TOKEN]
-                user_doc[constants.GOOGLE][constants.GOOGLE_TOKEN_TYPE] = access[constants.GOOGLE_TOKEN_TYPE]
+                user_doc[fields.GOOGLE] = dict()
+                user_doc[fields.GOOGLE][fields.GOOGLE_NAME] = user[fields.GOOGLE_NAME]
+                user_doc[fields.GOOGLE][fields.GOOGLE_EMAIL] = user[fields.GOOGLE_EMAIL]
+                user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE] = user[fields.GOOGLE_PICTURE]
+                user_doc[fields.GOOGLE][fields.GOOGLE_ACCESS_TOKEN] = access[fields.GOOGLE_ACCESS_TOKEN]
+                user_doc[fields.GOOGLE][fields.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
+                    seconds=access[fields.GOOGLE_EXPIRES_IN])
+                user_doc[fields.GOOGLE][fields.GOOGLE_ID_TOKEN] = access[fields.GOOGLE_ID_TOKEN]
+                user_doc[fields.GOOGLE][fields.GOOGLE_TOKEN_TYPE] = access[fields.GOOGLE_TOKEN_TYPE]
 
                 user_doc = yield self.db_insert_user(user_doc)
-                user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: user_doc})
+                user_doc = yield self.db[collections.USERS].find_one({fields.MONGO_ID: user_doc})
 
             else:
-                user_doc[constants.GOOGLE] = dict()
-                user_doc[constants.GOOGLE][constants.GOOGLE_NAME] = user[constants.GOOGLE_NAME]
-                user_doc[constants.GOOGLE][constants.GOOGLE_EMAIL] = user[constants.GOOGLE_EMAIL]
-                user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE] = user[constants.GOOGLE_PICTURE]
-                user_doc[constants.GOOGLE][constants.GOOGLE_ACCESS_TOKEN] = access[constants.GOOGLE_ACCESS_TOKEN]
-                user_doc[constants.GOOGLE][constants.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
-                    seconds=access[constants.GOOGLE_EXPIRES_IN])
-                user_doc[constants.GOOGLE][constants.GOOGLE_ID_TOKEN] = access[constants.GOOGLE_ID_TOKEN]
-                user_doc[constants.GOOGLE][constants.GOOGLE_TOKEN_TYPE] = access[constants.GOOGLE_TOKEN_TYPE]
+                user_doc[fields.GOOGLE] = dict()
+                user_doc[fields.GOOGLE][fields.GOOGLE_NAME] = user[fields.GOOGLE_NAME]
+                user_doc[fields.GOOGLE][fields.GOOGLE_EMAIL] = user[fields.GOOGLE_EMAIL]
+                user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE] = user[fields.GOOGLE_PICTURE]
+                user_doc[fields.GOOGLE][fields.GOOGLE_ACCESS_TOKEN] = access[fields.GOOGLE_ACCESS_TOKEN]
+                user_doc[fields.GOOGLE][fields.GOOGLE_EXPIRES_IN] = datetime.now() + timedelta(
+                    seconds=access[fields.GOOGLE_EXPIRES_IN])
+                user_doc[fields.GOOGLE][fields.GOOGLE_ID_TOKEN] = access[fields.GOOGLE_ID_TOKEN]
+                user_doc[fields.GOOGLE][fields.GOOGLE_TOKEN_TYPE] = access[fields.GOOGLE_TOKEN_TYPE]
 
-                user_doc[constants.UPDATE_TIME] = datetime.now()
+                user_doc[fields.UPDATE_TIME] = datetime.now()
 
-                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
+                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
-            self.reset_user_cookie(user_doc[constants.MONGO_ID])
+            self.reset_user_cookie(user_doc[fields.MONGO_ID])
             self.redirect(self.config.DEPLOY_WEB)
 
         else:
@@ -234,38 +235,38 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 if not user_doc:
                     raise AuthenticationError('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
 
-                if constants.USOS_PAIRED in user_doc and user_doc[constants.USOS_PAIRED]:
+                if fields.USOS_PAIRED in user_doc and user_doc[fields.USOS_PAIRED]:
                     raise AuthenticationError(
-                        'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[constants.USOS_ID]))
+                        'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[fields.USOS_ID]))
 
             if email and token and login_type == UserTypes.GOOGLE.value:
                 google_token = yield self.google_token(token)
-                google_token[constants.USER_TYPE] = login_type
+                google_token[fields.USER_TYPE] = login_type
                 yield self.db_insert_token(google_token)
             elif email and token and login_type.upper() in (UserTypes.FACEBOOK.value, 'FB'):
                 facebook_token = yield self.facebook_token(token)
-                facebook_token[constants.USER_TYPE] = login_type
+                facebook_token[fields.USER_TYPE] = login_type
                 yield self.db_insert_token(facebook_token)
 
-            user_doc[constants.USOS_ID] = usos_doc[constants.USOS_ID]
-            user_doc[constants.UPDATE_TIME] = datetime.now()
+            user_doc[fields.USOS_ID] = usos_doc[fields.USOS_ID]
+            user_doc[fields.UPDATE_TIME] = datetime.now()
 
             if email:
-                user_doc[constants.USER_EMAIL] = email
+                user_doc[fields.USER_EMAIL] = email
             if token:
-                user_doc[constants.MOBI_TOKEN] = token
+                user_doc[fields.MOBI_TOKEN] = token
 
             if new_user:
-                user_doc[constants.USER_TYPE] = login_type
-                user_doc[constants.USER_DEVICE_TYPE] = device_type
-                user_doc[constants.USER_DEVICE_ID] = device_id
-                user_doc[constants.CREATED_TIME] = datetime.now()
+                user_doc[fields.USER_TYPE] = login_type
+                user_doc[fields.USER_DEVICE_TYPE] = device_type
+                user_doc[fields.USER_DEVICE_ID] = device_id
+                user_doc[fields.CREATED_TIME] = datetime.now()
                 new_id = yield self.db_insert_user(user_doc)
 
                 self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(new_id))
             else:
-                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
-                self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(user_doc[constants.MONGO_ID]))
+                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(user_doc[fields.MONGO_ID]))
 
             yield self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades|crstests',
@@ -283,10 +284,10 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
     @gen.coroutine
     def _create_jobs(self, user_doc):
-        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                             job_factory.subscribe_user_job(user_doc[constants.MONGO_ID]))
-        yield self.db_insert(constants.COLLECTION_JOBS_QUEUE,
-                             job_factory.initial_user_job(user_doc[constants.MONGO_ID]))
+        yield self.db_insert(collections.JOBS_QUEUE,
+                             job_factory.subscribe_user_job(user_doc[fields.MONGO_ID]))
+        yield self.db_insert(collections.JOBS_QUEUE,
+                             job_factory.initial_user_job(user_doc[fields.MONGO_ID]))
 
     @web.asynchronous
     @gen.coroutine
@@ -307,31 +308,31 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 user_id, oauth_token_key, oauth_token_key
             ))
 
-            user_doc = yield self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
+            user_doc = yield self.db[collections.USERS].find_one({fields.MONGO_ID: ObjectId(user_id)})
 
             if not user_doc:
                 raise AuthenticationError('Nie znaleziono użytkownika.')
 
             self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
-            usos_doc = yield self.db_get_usos(user_doc[constants.USOS_ID])
+            usos_doc = yield self.db_get_usos(user_doc[fields.USOS_ID])
 
             self.oauth_set_up(usos_doc)
 
             if self.get_argument('error', False):
                 updated_user = user_doc
-                updated_user[constants.USOS_PAIRED] = False
-                updated_user[constants.ACCESS_TOKEN_SECRET] = None
-                updated_user[constants.ACCESS_TOKEN_KEY] = None
-                updated_user[constants.UPDATE_TIME] = datetime.now()
-                updated_user[constants.OAUTH_VERIFIER] = None
+                updated_user[fields.USOS_PAIRED] = False
+                updated_user[fields.ACCESS_TOKEN_SECRET] = None
+                updated_user[fields.ACCESS_TOKEN_KEY] = None
+                updated_user[fields.UPDATE_TIME] = datetime.now()
+                updated_user[fields.OAUTH_VERIFIER] = None
 
-                yield self.db_update_user(user_doc[constants.MONGO_ID], updated_user)
+                yield self.db_update_user(user_doc[fields.MONGO_ID], updated_user)
 
-                user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
+                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
-                self.reset_user_cookie(user_doc[constants.MONGO_ID])
+                self.reset_user_cookie(user_doc[fields.MONGO_ID])
                 self.redirect(self.config.DEPLOY_WEB)
 
             if user_doc:
@@ -339,18 +340,18 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 auth_user = yield self.get_authenticated_user()  # dict with access_token key/secret
                 user_doc.update(auth_user)
                 del (user_doc['access_token'])
-                yield self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
 
-                user_doc = yield self.db_cookie_user_id(user_doc[constants.MONGO_ID])
+                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
-                self.reset_user_cookie(user_doc[constants.MONGO_ID])
+                self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
                 yield self._create_jobs(user_doc)
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
-                header_email = self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False)
-                header_token = self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False)
+                header_email = self.request.headers.get(config.MOBILE_X_HEADER_EMAIL, False)
+                header_token = self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False)
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
@@ -384,42 +385,42 @@ class EmailRegisterHandler(AbstractEmailHandler):
         try:
             json_data = escape.json_decode(self.request.body.decode())
 
-            if constants.USER_EMAIL not in json_data \
-                    or constants.USER_PASSWORD not in json_data \
-                    or constants.USER_DEVICE_TYPE not in json_data \
-                    or constants.USER_DEVICE_ID not in json_data:
+            if fields.USER_EMAIL not in json_data \
+                    or fields.USER_PASSWORD not in json_data \
+                    or fields.USER_DEVICE_TYPE not in json_data \
+                    or fields.USER_DEVICE_ID not in json_data:
                 raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
 
-            if 'password2' in json_data and json_data[constants.USER_PASSWORD] != json_data['password2']:
+            if 'password2' in json_data and json_data[fields.USER_PASSWORD] != json_data['password2']:
                 raise AuthenticationError('Podane hasła nie zgadzają się.')
 
-            if len(json_data[constants.USER_PASSWORD]) < 8:
+            if len(json_data[fields.USER_PASSWORD]) < 8:
                 raise AuthenticationError('Podane hasło jest zbyt krótkie.')
 
-            user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
+            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
             if user_doc:
                 raise AuthenticationError(
-                    'Podany adres email: {0} jest zajęty.'.format(json_data[constants.USER_EMAIL]))
+                    'Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
 
             user_doc = dict()
-            user_doc[constants.USER_TYPE] = UserTypes.EMAIL.value
-            user_doc[constants.USER_NAME] = json_data[constants.USER_EMAIL]
-            user_doc[constants.USER_EMAIL] = json_data[constants.USER_EMAIL].lower()
-            user_doc[constants.USER_DEVICE_TYPE] = json_data[constants.USER_DEVICE_TYPE]
-            user_doc[constants.USER_DEVICE_ID] = json_data[constants.USER_DEVICE_ID]
+            user_doc[fields.USER_TYPE] = UserTypes.EMAIL.value
+            user_doc[fields.USER_NAME] = json_data[fields.USER_EMAIL]
+            user_doc[fields.USER_EMAIL] = json_data[fields.USER_EMAIL].lower()
+            user_doc[fields.USER_DEVICE_TYPE] = json_data[fields.USER_DEVICE_TYPE]
+            user_doc[fields.USER_DEVICE_ID] = json_data[fields.USER_DEVICE_ID]
 
-            user_doc[constants.USER_PASSWORD] = self.aes.encrypt(json_data[constants.USER_PASSWORD])
-            user_doc[constants.USOS_PAIRED] = False
-            user_doc[constants.USER_EMAIL_CONFIRMED] = False
-            user_doc[constants.USER_CREATED] = datetime.now()
+            user_doc[fields.USER_PASSWORD] = self.aes.encrypt(json_data[fields.USER_PASSWORD])
+            user_doc[fields.USOS_PAIRED] = False
+            user_doc[fields.USER_EMAIL_CONFIRMED] = False
+            user_doc[fields.USER_CREATED] = datetime.now()
 
             user_id = await self.db_insert_user(user_doc)
             self.reset_user_cookie(user_id)
 
-            await self.email_confirmation(json_data[constants.USER_EMAIL], user_id)
+            await self.email_confirmation(json_data[fields.USER_EMAIL], user_id)
 
             logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
-                user_id, json_data[constants.USER_EMAIL]))
+                user_id, json_data[fields.USER_EMAIL]))
 
             self.success(
                 'Dziękujemy za zarejestrowanie konta {0}. Aby aktywować konto należy postępować zgodnie z instrukcją przesłą w emailu weryfikacyjnym.'.format(
@@ -435,21 +436,21 @@ class EmailLoginHandler(AbstractEmailHandler):
         try:
             json_data = escape.json_decode(self.request.body)
 
-            user_doc = await self.db_find_user_email(json_data[constants.USER_EMAIL])
+            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
 
-            if not user_doc or user_doc[constants.USER_TYPE] != UserTypes.EMAIL.value or \
-                            json_data[constants.USER_PASSWORD] != self.aes.decrypt(
-                        user_doc[constants.USER_PASSWORD]).decode():
+            if not user_doc or user_doc[fields.USER_TYPE] != UserTypes.EMAIL.value or \
+                            json_data[fields.USER_PASSWORD] != self.aes.decrypt(
+                        user_doc[fields.USER_PASSWORD]).decode():
                 raise AuthenticationError('Podano błędne dane.')
 
-            if not user_doc[constants.USER_EMAIL_CONFIRMED]:
+            if not user_doc[fields.USER_EMAIL_CONFIRMED]:
                 raise AuthenticationError('Adres email nie został potwierdzony.')
 
             token = {
-                'token': self.aes.encrypt(str(user_doc[constants.MONGO_ID])).decode(),
-                constants.USER_EMAIL: json_data[constants.USER_EMAIL],
-                constants.USER_TYPE: user_doc[constants.USER_TYPE],
-                constants.USER_ID: user_doc[constants.MONGO_ID],
+                'token': self.aes.encrypt(str(user_doc[fields.MONGO_ID])).decode(),
+                fields.USER_EMAIL: json_data[fields.USER_EMAIL],
+                fields.USER_TYPE: user_doc[fields.USER_TYPE],
+                fields.USER_ID: user_doc[fields.MONGO_ID],
             }
 
             await self.db_insert_token(token)
@@ -464,18 +465,18 @@ class EmailConfirmHandler(AuthenticationHandler):
     async def get(self, token):
         try:
             user_id = self.aes.decrypt(token.encode()).decode()
-            user_doc = await self.db[constants.COLLECTION_USERS].find_one({constants.MONGO_ID: ObjectId(user_id)})
+            user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: ObjectId(user_id)})
 
             if not user_doc:
                 self.error(message='Błędny parametr wywołania.', code=403)
-            elif constants.USER_EMAIL_CONFIRMED in user_doc and user_doc[constants.USER_EMAIL_CONFIRMED]:
+            elif fields.USER_EMAIL_CONFIRMED in user_doc and user_doc[fields.USER_EMAIL_CONFIRMED]:
                 self.error(message='Token wykorzystany. Email potwierdzony.', code=403)
             else:
-                user_doc[constants.USOS_PAIRED] = False
-                user_doc[constants.USER_EMAIL_CONFIRMED] = True
-                user_doc[constants.UPDATE_TIME] = datetime.now()
+                user_doc[fields.USOS_PAIRED] = False
+                user_doc[fields.USER_EMAIL_CONFIRMED] = True
+                user_doc[fields.UPDATE_TIME] = datetime.now()
 
-                await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+                await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
                 self.redirect(self.config.DEPLOY_WEB + '/login?token=' + token)
         except Exception as ex:
             await self.exc(ex)

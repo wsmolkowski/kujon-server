@@ -1,7 +1,8 @@
 # coding=UTF-8
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
+from commons.constants import config
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
 
 
@@ -14,7 +15,7 @@ class CrsTestsApi(ApiHandler, CrsTestsMixin):
             if not crstests_doc:
                 self.error("Brak inforamcji o Twoich sprawdzianach.", code=404)
             else:
-                self.success(crstests_doc, cache_age=constants.SECONDS_1WEEK)
+                self.success(crstests_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
 
@@ -29,6 +30,6 @@ class CrsTestsNodeApi(ApiHandler, CrsTestsMixin):
             if not crstest_node_doc:
                 self.error("Brak informacji o danym sprawdzianie.", code=404)
             else:
-                self.success(crstest_node_doc, cache_age=constants.SECONDS_1WEEK)
+                self.success(crstest_node_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)

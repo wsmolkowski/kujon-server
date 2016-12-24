@@ -3,7 +3,6 @@
 import logging
 from datetime import datetime
 
-from commons import constants
 from commons.enumerators import JobStatus
 
 HEADER = 'Cześć,'
@@ -26,10 +25,10 @@ SMTP_CHARSET = 'charset'
 class EmailMixin(object):
     def __email_job(self, subject, from_addr, to_addrs, text, html, mime_type='plain', charset='utf-8', user_id=None):
         return {
-            constants.CREATED_TIME: datetime.now(),
-            constants.UPDATE_TIME: None,
-            constants.JOB_STATUS: JobStatus.PENDING.value,
-            constants.USER_ID: user_id,
+            fields.CREATED_TIME: datetime.now(),
+            fields.UPDATE_TIME: None,
+            fields.JOB_STATUS: JobStatus.PENDING.value,
+            fields.USER_ID: user_id,
             SMTP_SUBJECT: subject,
             SMTP_FROM: from_addr,
             SMTP_TO: to_addrs,
@@ -108,7 +107,7 @@ class EmailMixin(object):
             user_id=self.getUserId(return_object_id=True)
         )
 
-        return await self.db[constants.COLLECTION_EMAIL_QUEUE].insert(email_job)
+        return await self.db[collections.EMAIL_QUEUE].insert(email_job)
 
     async def email_archive_user(self, recipient):
         email_job = self.__email_job(
@@ -120,13 +119,13 @@ class EmailMixin(object):
             user_id=self.getUserId(return_object_id=True)
         )
 
-        return await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        return await self.db_insert(collections.EMAIL_QUEUE, email_job)
 
     async def email_registration(self, user_doc=None):
         if not user_doc:
             user_doc = self.get_current_user()
 
-        recipient = user_doc[constants.USER_EMAIL]
+        recipient = user_doc[fields.USER_EMAIL]
 
         email_job = self.__email_job(
             subject='Rejestracja w Kujon.mobi',
@@ -137,7 +136,7 @@ class EmailMixin(object):
             user_id=self.getUserId(return_object_id=True)
         )
 
-        return await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        return await self.db_insert(collections.EMAIL_QUEUE, email_job)
 
     async def email_confirmation(self, email, user_id):
         confirmation_url = '{0}/authentication/email_confim/{1}'.format(self.config.DEPLOY_API,
@@ -153,4 +152,4 @@ class EmailMixin(object):
             user_id=self.getUserId(return_object_id=True)
         )
 
-        return await self.db_insert(constants.COLLECTION_EMAIL_QUEUE, email_job)
+        return await self.db_insert(collections.EMAIL_QUEUE, email_job)

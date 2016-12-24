@@ -2,13 +2,13 @@
 
 from cryptography.fernet import Fernet
 
-from commons import constants
+from commons.constants import fields, config
 
 
 class AESCipher(object):
     def __init__(self, aes_secret):
-        self.usos_keys = [constants.CONSUMER_KEY, constants.CONSUMER_SECRET]
-        self.encoding = constants.ENCODING
+        self.usos_keys = [fields.CONSUMER_KEY, fields.CONSUMER_SECRET]
+        self.encoding = config.ENCODING
         # print(Fernet.generate_key())
         self.fernet = Fernet(aes_secret)
 

@@ -6,24 +6,24 @@ from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller
+from commons.constants import fields, collections
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 
 USER_INFO_SKIP_FIELDS = {'email_access': False,
-                         'employment_functions': False, constants.CREATED_TIME: False, 'email': False,
-                         'usos_id': False, constants.UPDATE_TIME: False, constants.MONGO_ID: False}
+                         'employment_functions': False, fields.CREATED_TIME: False, 'email': False,
+                         'usos_id': False, fields.UPDATE_TIME: False, fields.MONGO_ID: False}
 
 
 class ApiUserMixin(DaoMixin):
     async def api_photo(self, user_info_id):
-        pipeline = {constants.ID: user_info_id}
+        pipeline = {fields.ID: user_info_id}
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_PHOTOS, pipeline)
+            await self.db_remove(collections.PHOTOS, pipeline)
 
-        photo_doc = await self.db[constants.COLLECTION_PHOTOS].find_one(pipeline)
+        photo_doc = await self.db[collections.PHOTOS].find_one(pipeline)
 
         if not photo_doc:
             try:
@@ -33,11 +33,11 @@ class ApiUserMixin(DaoMixin):
                         'user_id': user_info_id,
                     })
 
-                photo_doc[constants.ID] = user_info_id
+                photo_doc[fields.ID] = user_info_id
 
-                photo_id = await self.db_insert(constants.COLLECTION_PHOTOS, photo_doc)
-                photo_doc = await self.db[constants.COLLECTION_PHOTOS].find_one(
-                    {constants.MONGO_ID: ObjectId(photo_id)})
+                photo_id = await self.db_insert(collections.PHOTOS, photo_doc)
+                photo_doc = await self.db[collections.PHOTOS].find_one(
+                    {fields.MONGO_ID: ObjectId(photo_id)})
             except Exception as ex:
                 logging.exception(ex)
         return photo_doc
@@ -107,9 +107,9 @@ class ApiUserMixin(DaoMixin):
             for course_doc in tasks_results:
                 if not course_doc:
                     continue
-                courses_conducted.append({constants.COURSE_NAME: course_doc[constants.COURSE_NAME],
-                                          constants.COURSE_ID: course_doc[constants.COURSE_ID],
-                                          constants.TERM_ID: course_doc[constants.TERM_ID]})
+                courses_conducted.append({fields.COURSE_NAME: course_doc[fields.COURSE_NAME],
+                                          fields.COURSE_ID: course_doc[fields.COURSE_ID],
+                                          fields.TERM_ID: course_doc[fields.TERM_ID]})
         except Exception as ex:
             await self.exc(ex, finish=False)
 
@@ -117,10 +117,10 @@ class ApiUserMixin(DaoMixin):
 
         # if user has photo
         if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
-            photo_doc = await self.api_photo(user_info_doc[constants.ID])
+            photo_doc = await self.api_photo(user_info_doc[fields.ID])
             if photo_doc:
-                user_info_doc[constants.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
-                    photo_doc[constants.MONGO_ID])
+                user_info_doc[fields.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
+                    photo_doc[fields.MONGO_ID])
 
         return user_info_doc
 
@@ -135,11 +135,11 @@ class ApiUserMixin(DaoMixin):
             user_doc = await self.db_find_user()
 
             if not user_doc:
-                return user_info_doc    # TypeError: 'NoneType' object does not support item assignment
+                return user_info_doc  # TypeError: 'NoneType' object does not support item assignment
 
-            user_doc[constants.USOS_USER_ID] = user_info_doc[constants.ID]
+            user_doc[fields.USOS_USER_ID] = user_info_doc[fields.ID]
 
-            await self.db_update_user(user_doc[constants.MONGO_ID], user_doc)
+            await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
 
         return user_info_doc
 
@@ -153,7 +153,7 @@ class ApiUserMixin(DaoMixin):
         if user_usos_id:
             return await self.api_user_info(user_usos_id)
 
-            # if user_info_doc and constants.USOS_USER_ID not in user_info_doc:
+            # if user_info_doc and fields.USOS_USER_ID not in user_info_doc:
             #     ''' update for old users '''
             #     user_info_doc = await self.updated_user_doc()
             #
@@ -168,19 +168,19 @@ class ApiUserMixin(DaoMixin):
         :return:
         '''
 
-        pipeline = {constants.ID: user_id, constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.ID: user_id, fields.USOS_ID: self.getUsosId()}
 
         if self.do_refresh() and user_id:
-            await self.db_remove(constants.COLLECTION_USERS_INFO, pipeline)
+            await self.db_remove(collections.USERS_INFO, pipeline)
 
-        user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
+        user_info_doc = await self.db[collections.USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
 
         if not user_info_doc:
             try:
                 user_info_doc = await self.user_info(user_id)
-                await self.db_insert(constants.COLLECTION_USERS_INFO, user_info_doc)
+                await self.db_insert(collections.USERS_INFO, user_info_doc)
 
-                user_info_doc = await self.db[constants.COLLECTION_USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
+                user_info_doc = await self.db[collections.USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
 
             except DuplicateKeyError as ex:
                 logging.debug(ex)
