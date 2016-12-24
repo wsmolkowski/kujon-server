@@ -1,7 +1,7 @@
 # coding=UTF-8
 import logging
 
-import facebook
+# import facebook
 from tornado import auth
 from tornado import web
 
@@ -32,7 +32,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
             try:
                 for friend in friends['data']:
                     all_friends.append(friend['name'])
-                friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
+                # friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
             except Exception as ex:
                 logging.error("Key Error" + ex.message)
 
