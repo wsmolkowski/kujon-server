@@ -367,7 +367,7 @@ class DaoMixin(object):
             await self.db_settings_update(self.getUserId(), fields.EVENT_ENABLE, False)
             await self.db_settings_update(self.getUserId(), fields.GOOGLE_CALLENDAR_ENABLE, False)
 
-            await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
+            settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
 
         if fields.USER_ID in settings: del settings[fields.USER_ID]
         if fields.MONGO_ID in settings: del settings[fields.MONGO_ID]
