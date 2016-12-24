@@ -12,7 +12,7 @@ from commons.UsosCaller import UsosCaller
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
 
-USER_INFO_SKIP_FIELDS = {'email_access': False, 'interests': False,
+USER_INFO_SKIP_FIELDS = {'email_access': False,
                          'employment_functions': False, constants.CREATED_TIME: False, 'email': False,
                          'usos_id': False, constants.UPDATE_TIME: False, constants.MONGO_ID: False}
 
