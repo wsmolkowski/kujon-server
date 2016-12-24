@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 from commons.enumerators import JobStatus
-
+from commons.constants import fields, collections
 HEADER = 'Cześć,'
 FOOTER = '''
 W razie pytań lub pomysłów na zmianę - napisz do nas. Dzięki Tobie {0} będzie lepszy.
