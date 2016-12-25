@@ -8,3 +8,5 @@ git+https://github.com/mobolic/facebook-sdk.git#egg=facebook-sdk
 certifi
 google-api-python-client
 aiohttp
+pyclamd
+# install on dev machine https://www.clamav.net/downloads#otherversions
