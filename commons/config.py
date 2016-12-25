@@ -104,6 +104,5 @@ class Config(object):
         self.AUTHORIZATION = self.config.get('notification', 'AUTHORIZATION')
 
         #clamav
-        self.CLAM_SOCKET_FILE = self.config.get('clamav', 'CLAM_SOCKET_FILE')
         self.CLAM_EICAR_SIGNATURE = self.config.get('clamav', 'CLAM_EICAR_SIGNATURE')
         self.CLAM_EICAR_FALSE_SIGNATURE = self.config.get('clamav', 'CLAM_EICAR_FALSE_SIGNATURE')

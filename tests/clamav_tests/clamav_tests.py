@@ -13,7 +13,6 @@ class ClamAvTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.config = Config(Environment.TESTS.value)
-
         pass
 
     def setUp(self):
@@ -26,7 +25,7 @@ class ClamAvTest(unittest.TestCase):
         # assume
         self.config = Config(Environment.TESTS.value)
 
-        cd = pyclamd.ClamdUnixSocket(self.config.CLAM_SOCKET_FILE)
+        cd = pyclamd.ClamdNetworkSocket()
 
         # when
         result = cd.version().split()[0]
@@ -36,7 +35,7 @@ class ClamAvTest(unittest.TestCase):
 
     def testContainsEicar(self):
         # assume
-        cd = pyclamd.ClamdUnixSocket(self.config.CLAM_SOCKET_FILE)
+        cd = pyclamd.ClamdNetworkSocket()
 
         # when
         result = cd.scan_stream(bytes(self.config.CLAM_EICAR_SIGNATURE, 'utf-8'))
@@ -47,7 +46,7 @@ class ClamAvTest(unittest.TestCase):
 
     def testNotContainsEicar(self):
         # assume
-        cd = pyclamd.ClamdUnixSocket(self.config.CLAM_SOCKET_FILE)
+        cd = pyclamd.ClamdNetworkSocket()
 
         # when
         result = cd.scan_stream(bytes(self.config.CLAM_EICAR_FALSE_SIGNATURE, 'utf-8'))
