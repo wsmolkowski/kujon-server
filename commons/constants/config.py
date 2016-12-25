@@ -27,3 +27,4 @@ SECONDS_REMOVE_ON_REFRESH = 15
 APPLICATION_DB = 'application_db'
 APPLICATION_CONFIG = 'application_config'
 APPLICATION_AES = 'application_aes'
+APPLICATION_FS = 'application_fs'

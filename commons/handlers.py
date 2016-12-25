@@ -29,6 +29,10 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
     def aes(self):
         return self.application.settings[config.APPLICATION_AES]
 
+    @property
+    def fs(self):
+        return self.application.settings[config.APPLICATION_FS]
+
     def get_remote_ip(self):
         return self.request.headers.get('X-Forwarded-For',
                                         self.request.headers.get('X-Real-Ip', self.request.remote_ip))
