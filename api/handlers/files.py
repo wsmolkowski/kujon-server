@@ -94,7 +94,7 @@ class FilesHandler(AbstractFilesHandler):
             await self.exc(ex)
 
 
-class FilesDeleteHandler(AbstractFilesHandler):
+class FileHandler(AbstractFilesHandler):
     SUPPORTED_METHODS = ('DELETE', 'OPTIONS', 'GET')
 
     @decorators.authenticated
