@@ -104,4 +104,5 @@ FILE_TYPE = 'file_type'
 FILE_STATUS = 'file_status'
 FILE_CONTENT = 'file_content'
 FILE_ID = 'file_id'
+FILE_UPLOAD_ID = 'file_upload_id'
 

@@ -4,6 +4,7 @@ import logging
 import ssl
 
 import motor
+from motor import MotorGridFSBucket
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -63,6 +64,7 @@ def main():
     application.settings[config_constants.APPLICATION_DB] = db
     application.settings[config_constants.APPLICATION_CONFIG] = config
     application.settings[config_constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
+    application.settings[config_constants.APPLICATION_FS] = MotorGridFSBucket(db)
     logging.info(config.DEPLOY_API)
     IOLoop.instance().start()
 
