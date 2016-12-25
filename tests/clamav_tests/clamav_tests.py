@@ -36,7 +36,6 @@ class ClamAvTest(unittest.TestCase):
 
     def testContainsEicar(self):
         # assume
-
         cd = pyclamd.ClamdUnixSocket(self.config.CLAM_SOCKET_FILE)
 
         # when
@@ -46,16 +45,14 @@ class ClamAvTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result['stream'], ('FOUND', 'Eicar-Test-Signature'))
 
-
     def testNotContainsEicar(self):
         # assume
-
         cd = pyclamd.ClamdUnixSocket(self.config.CLAM_SOCKET_FILE)
 
         # when
         result = cd.scan_stream(bytes(self.config.CLAM_EICAR_FALSE_SIGNATURE, 'utf-8'))
 
         # then
-        self.assertIsNotNone(result)
+        self.assertIsNone(result)
 
 
