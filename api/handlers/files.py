@@ -22,26 +22,24 @@ class AbstractFilesHandler(ApiHandler):
         # TODO: convert USER_ID to name
         return await cursor.to_list(None)
 
-    async def api_validate_file(self):
+    async def api_validate_file(self, file_content):
+        # base64.b64encode(file_content)
         return True
 
     async def api_files_scan(self, file_id, file_content):
-        file_upload_id = None
-        if self.config.ENVIRONMENT in (Environment.DEVELOPMENT, ):
+
+        file_ok = await self.api_validate_file(file_content) #TODO: virus scan
+        if file_ok:
+            file_upload_id = await self.fs.upload_from_stream()
             status = UploadFileStatus.STORED
         else:
-            # UploadFileStatus.DELETED
-            file_ok = await self.api_validate_file(file_content) #TODO: virus scan
-            if file_ok:
-                file_upload_id = await self.fs.upload_from_stream()
-            status = UploadFileStatus.STORED
+            status = UploadFileStatus.INVALID
+            file_upload_id = None
 
         file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
         file_doc[fields.FILE_UPLOAD_ID] = file_upload_id
         file_doc[fields.FILE_STATUS] = status
-        # file_doc[fields.FILE_CONTENT] = file_content    # base64.b64encode(json_data[fields.FILE_CONTENT])
         file_doc[fields.UPDATE_TIME] = datetime.now()
-        file_doc[fields.FILE_UPLOAD_ID] = None
 
         file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
         logging.debug('Updated file_id: {0} with status: {1}'.format(file_id, status))
