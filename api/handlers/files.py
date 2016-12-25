@@ -12,7 +12,7 @@ import pyclamd
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
-from commons.enumerators import UploadFileStatus, Environment
+from commons.enumerators import UploadFileStatus
 from commons.errors import FilesError
 
 
@@ -31,9 +31,9 @@ class AbstractFilesHandler(ApiHandler):
         file_ok = await self.api_validate_file(file_content) #TODO: virus scan
         if file_ok:
             file_upload_id = await self.fs.upload_from_stream()
-            status = UploadFileStatus.STORED
+            status = UploadFileStatus.STORED.value
         else:
-            status = UploadFileStatus.INVALID
+            status = UploadFileStatus.INVALID.value
             file_upload_id = None
 
         file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
@@ -79,7 +79,7 @@ class FilesHandler(AbstractFilesHandler):
             json_data[fields.USER_ID] = self.getUserId()
             json_data[fields.USOS_ID] = self.getUsosId()
             json_data[fields.FILE_SIZE] = -1
-            json_data[fields.FILE_STATUS] = UploadFileStatus.NEW
+            json_data[fields.FILE_STATUS] = UploadFileStatus.NEW.value
             json_data[fields.FILE_TYPE] = 'type'
 
             json_data[fields.CREATED_TIME] = datetime.now()
@@ -117,11 +117,15 @@ class FileHandler(AbstractFilesHandler):
             if file_doc[fields.USER_ID] != self.getUserId():
                 raise FilesError('Cannot delete differenet user file.')
 
-            await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
-            logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
+            # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
+            # logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
 
-            await self.db_remove(collections.FILES, {fields.MONGO_ID: file_doc[fields.MONGO_ID]})
-            logging.debug('deleted file: {0}'.format(file_doc[fields.MONGO_ID]))
+            file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
+            file_doc[fields.UPDATE_TIME] = datetime.now()
+
+            file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
+
+            logging.debug('changed file status: {0} to: {1}'.format(file_id, UploadFileStatus.DELETED.value))
 
             self.success('file deleted.')
         except Exception as ex:
