@@ -7,6 +7,7 @@ from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionAp
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi
 from api.handlers.fb_handler import FacebookApi
+from api.handlers.files import FilesHandler
 from api.handlers.friends import FriendsSuggestionsApi, FriendsApi
 from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from api.handlers.lecturers import LecturersApi, LecturerByIdApi
@@ -85,4 +86,5 @@ HANDLERS = [
     (r"/crstests/([^/]+)", CrsTestsNodeApi),
     (r"/subscriptions", SubscriptionsHandler),
     (r"/messages", MessagesHandler),
+    (r"/files", FilesHandler),
 ]

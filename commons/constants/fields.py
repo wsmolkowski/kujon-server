@@ -97,3 +97,11 @@ FIELD_MESSAGE_TEXT = 'text'
 
 COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME, USER_PICTURE,
                  GOOGLE, FACEBOOK, USOS_USER_ID)
+
+FILE_NAME = 'file_name'
+FILE_SIZE = 'file_size'
+FILE_TYPE = 'file_type'
+FILE_STATUS = 'file_status'
+FILE_CONTENT = 'file_content'
+FILE_ID = 'file_id'
+
