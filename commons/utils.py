@@ -12,7 +12,7 @@ from tornado import httpclient
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons.constants import fields, config
+from commons.constants import config
 
 try:
     import socks
@@ -59,7 +59,7 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
         file_handler = handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
-        formatter = logging.Formatter(log_format, fields.DEFAULT_DATE_FORMAT)
+        formatter = logging.Formatter(log_format, config.DEFAULT_DATE_FORMAT)
         file_handler.setFormatter(formatter)
 
         root_log = logging.getLogger()
