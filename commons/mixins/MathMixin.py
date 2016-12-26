@@ -6,7 +6,7 @@ import re
 from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
-DEFAULT_NEGATIVE_GRADE = 2
+DEFAULT_NEGATIVE_GRADE = "2.0"
 
 
 class MathMixin(object):
