@@ -5,6 +5,7 @@ import unittest
 from pymongo import MongoClient
 
 from commons.config import Config
+from commons.constants import collections, fields
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 

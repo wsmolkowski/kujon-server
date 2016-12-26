@@ -33,7 +33,7 @@ class ClamAvTest(unittest.TestCase):
         # then
         self.assertEqual(result, "ClamAV")
 
-    def testContainsEicar(self):
+    def testClamAVContainsEicar(self):
         # assume
         cd = pyclamd.ClamdNetworkSocket()
 
@@ -44,7 +44,7 @@ class ClamAvTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result['stream'], ('FOUND', 'Eicar-Test-Signature'))
 
-    def testNotContainsEicar(self):
+    def testClamAVNotContainsEicar(self):
         # assume
         cd = pyclamd.ClamdNetworkSocket()
 
