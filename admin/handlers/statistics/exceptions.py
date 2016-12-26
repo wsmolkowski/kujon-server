@@ -33,7 +33,7 @@ class ExceptionsHandler(StatisticsBaseHandler):
             # {'$match': {'$usos_id': {'$exists': True, '$ne': None}}},
             {'$group': {'_id': {'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}}, 'count': {'$sum': 1}}}
         ]
-        cursor = self.db[fields.EXCEPTIONS].aggregate(pipeline)
+        cursor = self.db[collections.EXCEPTIONS].aggregate(pipeline)
         return await cursor.to_list(None)
 
     @web.removeslash
