@@ -1,8 +1,9 @@
 # coding=UTF-8
 
 import logging
+import re
 
-from commons import constants
+from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = 2
@@ -20,8 +21,8 @@ class MathMixin(object):
 
             found = 0
             for final_grade in final_grades:
-                if grade[constants.CLASS_TYPE] is final_grade[constants.CLASS_TYPE]:
-                    if int(grade[constants.EXAM_SESSION_NUMBER]) > int(final_grade[constants.EXAM_SESSION_NUMBER]):
+                if grade[fields.CLASS_TYPE] is final_grade[fields.CLASS_TYPE]:
+                    if int(grade[fields.EXAM_SESSION_NUMBER]) > int(final_grade[fields.EXAM_SESSION_NUMBER]):
                         final_grades.remove(final_grade)
                         final_grades.append(grade)
                     found = 1
@@ -34,20 +35,27 @@ class MathMixin(object):
         value_symbols = list()
 
         for course in courses_lists:
-            if constants.GRADES not in course:
+            if fields.GRADES not in course:
                 continue
 
-            grades = self._get_only_final_grades(course[constants.GRADES])
+            grades = self._get_only_final_grades(course[fields.GRADES])
             for grade in grades:
-                if constants.VALUE_SYMBOL not in grade or not grade[constants.VALUE_SYMBOL]:
+                grade_value = None
+                if fields.VALUE_SYMBOL not in grade or not grade[fields.VALUE_SYMBOL]:
                     continue
                 try:
-                    grade_value = grade[constants.VALUE_SYMBOL].replace(',', '.')
+
+                    grade_value = grade[fields.VALUE_SYMBOL].replace(',', '.')
+
+                    # get only integer &decimal numbers somtimes grdes are in such format "5,0 (bdb)"
+                    grade_value = re.search('(?:\d*\.)?\d+', grade_value).group(0)
+
                     if 'NZAL' in grade_value or 'NK' in grade_value:
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
                     value_symbols.append(float(grade_value))
                 except (ValueError, TypeError):
+                    logging.error("Nieprawidłowa ocena %s ", grade_value)
                     continue
 
         if not value_symbols:
@@ -59,4 +67,3 @@ class MathMixin(object):
         except Exception as ex:
             logging.exception(ex)
             return
-

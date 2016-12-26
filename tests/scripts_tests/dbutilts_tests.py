@@ -4,8 +4,8 @@ import unittest
 
 from pymongo import MongoClient
 
-from commons import constants
 from commons.config import Config
+from commons.constants import collections, fields
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
@@ -40,20 +40,20 @@ class DbUtilsTest(unittest.TestCase):
 
     def testCopyUuserCrediteltials(self):
         # assume
-        self.db_from[constants.COLLECTION_USERS].insert(USER_DOC_1)
-        self.db_to[constants.COLLECTION_USERS].insert(USER_DOC_2)
+        self.db_from[collections.USERS].insert(USER_DOC_1)
+        self.db_to[collections.USERS].insert(USER_DOC_2)
 
         # when
-        self.dbu_from.copy_user_credentials(USER_DOC_1[constants.USER_EMAIL],
-                                            USER_DOC_2[constants.USER_EMAIL],
+        self.dbu_from.copy_user_credentials(USER_DOC_1[fields.USER_EMAIL],
+                                            USER_DOC_2[fields.USER_EMAIL],
                                             Environment.TESTS.value,
                                             Environment.DEVELOPMENT.value)
         # then
-        updated = self.db_to[constants.COLLECTION_USERS].find_one(
-            {constants.USER_EMAIL: USER_DOC_2[constants.USER_EMAIL]})
+        updated = self.db_to[collections.USERS].find_one(
+            {fields.USER_EMAIL: USER_DOC_2[fields.USER_EMAIL]})
 
         self.assertIsNotNone(updated)
-        self.assertEqual(updated[constants.ACCESS_TOKEN_KEY], USER_DOC_1[constants.ACCESS_TOKEN_KEY])
-        self.assertEqual(updated[constants.ACCESS_TOKEN_SECRET], USER_DOC_1[constants.ACCESS_TOKEN_SECRET])
-        self.assertEqual(updated[constants.USOS_ID], USER_DOC_1[constants.USOS_ID])
-        self.assertEqual(updated[constants.USOS_USER_ID], USER_DOC_1[constants.USOS_USER_ID])
+        self.assertEqual(updated[fields.ACCESS_TOKEN_KEY], USER_DOC_1[fields.ACCESS_TOKEN_KEY])
+        self.assertEqual(updated[fields.ACCESS_TOKEN_SECRET], USER_DOC_1[fields.ACCESS_TOKEN_SECRET])
+        self.assertEqual(updated[fields.USOS_ID], USER_DOC_1[fields.USOS_ID])
+        self.assertEqual(updated[fields.USOS_USER_ID], USER_DOC_1[fields.USOS_USER_ID])

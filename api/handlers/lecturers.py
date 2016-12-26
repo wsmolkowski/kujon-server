@@ -1,8 +1,9 @@
 # coding=UTF-8
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
 from commons.errors import ApiError
+from commons.constants import fields, config
 
 
 class LecturersApi(ApiHandler):
@@ -12,9 +13,9 @@ class LecturersApi(ApiHandler):
             raise ApiError("Poczekaj szukamy nauczycieli.")
 
         result = list()
-        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
+        for term, courses in list(courses_editions[fields.COURSE_EDITIONS].items()):
             for course in courses:
-                for lecturer in course[constants.LECTURERS]:
+                for lecturer in course[fields.LECTURERS]:
                     if lecturer not in result:
                         result.append(lecturer)
         result = sorted(result, key=lambda k: k['last_name'])
@@ -28,7 +29,7 @@ class LecturersApi(ApiHandler):
             if not lecturers_doc:
                 self.error("Brak informacji o Twoich wykładowcach.")
             else:
-                self.success(lecturers_doc, cache_age=constants.SECONDS_1MONTH)
+                self.success(lecturers_doc, cache_age=config.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)
 
@@ -42,6 +43,6 @@ class LecturerByIdApi(ApiHandler):
             if not user_info_doc:
                 self.error("Brak informacji o wykładowcy {0}".format(user_info_id), code=404)
             else:
-                self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
+                self.success(user_info_doc, cache_age=config.SECONDS_2MONTHS)
         except Exception as ex:
             await self.exc(ex)

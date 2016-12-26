@@ -4,8 +4,8 @@ import logging
 
 from tornado import web
 
-from admin.handlers import constants as admin_constants
-from commons import constants
+from admin.handlers import admin_constants
+from commons.constants import config
 
 
 class BaseHandler(web.RequestHandler):
@@ -13,15 +13,15 @@ class BaseHandler(web.RequestHandler):
 
     @property
     def db(self):
-        return self.application.settings[constants.APPLICATION_DB]
+        return self.application.settings[config.APPLICATION_DB]
 
     @property
     def config(self):
-        return self.application.settings[constants.APPLICATION_CONFIG]
+        return self.application.settings[config.APPLICATION_CONFIG]
 
     @property
     def aes(self):
-        return self.application.settings[constants.APPLICATION_AES]
+        return self.application.settings[config.APPLICATION_AES]
 
     def _base_config(self):
         return dict(PROJECT_TITLE=self.config.PROJECT_TITLE, DEPLOY_WEB=self.config.DEPLOY_WEB)

@@ -47,3 +47,10 @@ class UserTypes(Abstract):
     FACEBOOK = 'FACEBOOK'
     WWW = 'WWW'
     EMAIL = 'EMAIL'
+
+
+class UploadFileStatus(Abstract):
+    NEW = 'PENDING'
+    DELETED = 'DELETED'
+    INVALID = 'INVALID'
+    STORED = 'STORED'

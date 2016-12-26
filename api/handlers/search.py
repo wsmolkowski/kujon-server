@@ -5,7 +5,8 @@ from datetime import datetime
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import ApiHandler
-from commons import decorators, constants
+from commons import decorators
+from commons.constants import fields, collections
 
 
 class AbstractSearch(ApiHandler):
@@ -22,10 +23,10 @@ class AbstractSearch(ApiHandler):
                                                                                            self.MAX_SEARCH))
 
     def on_finish(self):
-        IOLoop.current().spawn_callback(self.db_insert, constants.COLLECTION_SEARCH, {
+        IOLoop.current().spawn_callback(self.db_insert, collections.SEARCH, {
             'type': self.EXCEPTION_TYPE,
-            constants.USER_ID: self.get_current_user()[constants.MONGO_ID],
-            constants.CREATED_TIME: datetime.now(),
+            fields.USER_ID: self.get_current_user()[fields.MONGO_ID],
+            fields.CREATED_TIME: datetime.now(),
             'host': self.request.host,
             'method': self.request.method,
             'path': self.request.path,

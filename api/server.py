@@ -4,6 +4,7 @@ import logging
 import ssl
 
 import motor
+from motor import MotorGridFSBucket
 import tornado.ioloop
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -11,9 +12,9 @@ from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options
 
 from api.handlers_list import HANDLERS
-from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.constants import config as config_constants
 from commons.handlers import DefaultErrorHandler
 
 define('environment', default='development')
@@ -60,9 +61,10 @@ def main():
 
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
     logging.info(db)
-    application.settings[constants.APPLICATION_DB] = db
-    application.settings[constants.APPLICATION_CONFIG] = config
-    application.settings[constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
+    application.settings[config_constants.APPLICATION_DB] = db
+    application.settings[config_constants.APPLICATION_CONFIG] = config
+    application.settings[config_constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
+    application.settings[config_constants.APPLICATION_FS] = MotorGridFSBucket(db)
     logging.info(config.DEPLOY_API)
     IOLoop.instance().start()
 

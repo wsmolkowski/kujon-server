@@ -2,18 +2,18 @@
 
 from datetime import datetime
 
-from commons import constants
+from commons.constants import fields
 from commons.enumerators import JobStatus, JobType
 
 
 def user_job(user_id, job_type):
     return {
-        constants.USER_ID: user_id,
-        constants.CREATED_TIME: datetime.now(),
-        constants.UPDATE_TIME: None,
-        constants.JOB_MESSAGE: None,
-        constants.JOB_STATUS: JobStatus.PENDING.value,
-        constants.JOB_TYPE: job_type
+        fields.USER_ID: user_id,
+        fields.CREATED_TIME: datetime.now(),
+        fields.UPDATE_TIME: None,
+        fields.JOB_MESSAGE: None,
+        fields.JOB_STATUS: JobStatus.PENDING.value,
+        fields.JOB_TYPE: job_type
     }
 
 

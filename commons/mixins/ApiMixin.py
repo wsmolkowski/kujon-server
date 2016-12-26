@@ -5,28 +5,28 @@ import logging
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons import constants
 from commons import usoshelper
 from commons.UsosCaller import UsosCaller, AsyncCaller
+from commons.constants import fields, collections
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.MathMixin import MathMixin
 
 LIMIT_FIELDS = (
-    'is_currently_conducted', 'bibliography', constants.COURSE_NAME, constants.FACULTY_ID, 'assessment_criteria',
-    constants.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
+    'is_currently_conducted', 'bibliography', fields.COURSE_NAME, fields.FACULTY_ID, 'assessment_criteria',
+    fields.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
 LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
-LIMIT_FIELDS_FACULTY = (constants.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
+LIMIT_FIELDS_FACULTY = (fields.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
                         'path', 'stats')
 LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', constants.ID, constants.PHOTO_URL, 'staff_status', 'room',
+    'first_name', 'last_name', 'titles', 'email_url', fields.ID, fields.PHOTO_URL, 'staff_status', 'room',
     'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
 LIMIT_FIELDS_PROGRAMMES = (
     'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
 USER_INFO_LIMIT_FIELDS = (
-    'first_name', 'last_name', constants.ID, 'student_number', 'student_status', constants.PHOTO_URL,
+    'first_name', 'last_name', fields.ID, 'student_number', 'student_status', fields.PHOTO_URL,
     'student_programmes',
-    'user_type', constants.PHOTO_URL, 'has_photo', 'staff_status', 'employment_positions', 'room',
+    'user_type', fields.PHOTO_URL, 'has_photo', 'staff_status', 'employment_positions', 'room',
     'course_editions_conducted',
     'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
 
@@ -46,13 +46,13 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 course_doc['course_is_currently_conducted'])
 
     async def api_courses_editions(self):
-        pipeline = {constants.USER_ID: self.getUserId()}
+        pipeline = {fields.USER_ID: self.getUserId()}
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_COURSES_EDITIONS, pipeline)
+            await self.db_remove(collections.COURSES_EDITIONS, pipeline)
 
-        courses_editions_doc = await self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-            pipeline, (constants.COURSE_EDITIONS,))
+        courses_editions_doc = await self.db[collections.COURSES_EDITIONS].find_one(
+            pipeline, (fields.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
             courses_editions_doc = await UsosCaller(self._context).call(
@@ -62,14 +62,14 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     'active_terms_only': 'false',
                 })
 
-            courses_editions_doc[constants.USER_ID] = self.getUserId()
+            courses_editions_doc[fields.USER_ID] = self.getUserId()
 
             try:
-                await self.db_insert(constants.COLLECTION_COURSES_EDITIONS, courses_editions_doc)
+                await self.db_insert(collections.COURSES_EDITIONS, courses_editions_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-                courses_editions_doc = await self.db[constants.COLLECTION_COURSES_EDITIONS].find_one(
-                    pipeline, (constants.COURSE_EDITIONS,))
+                courses_editions_doc = await self.db[collections.COURSES_EDITIONS].find_one(
+                    pipeline, (fields.COURSE_EDITIONS,))
 
         return courses_editions_doc
 
@@ -87,10 +87,10 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 'term_id': term_id
             })
 
-        result[constants.COURSE_NAME] = result.pop(constants.COURSE_NAME)
-        result[constants.COURSE_ID] = course_id
-        result[constants.TERM_ID] = term_id
-        result[constants.USER_ID] = self.getUserId()
+        result[fields.COURSE_NAME] = result.pop(fields.COURSE_NAME)
+        result[fields.COURSE_ID] = course_id
+        result[fields.TERM_ID] = term_id
+        result[fields.USER_ID] = self.getUserId()
 
         return result
 
@@ -101,17 +101,17 @@ class ApiMixin(ApiUserMixin, MathMixin):
         if not courses_editions:
             raise ApiError("Poczekaj szukamy kursów.")
 
-        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
+        for term, courses in list(courses_editions[fields.COURSE_EDITIONS].items()):
             if term != term_id:
                 continue
 
             for course in courses:
-                if course[constants.COURSE_ID] == course_id:
+                if course[fields.COURSE_ID] == course_id:
                     return course
 
         try:
             result = await self.usos_course_edition(course_id, term_id, False)
-            result[constants.USOS_ID] = self.getUsosId()
+            result[fields.USOS_ID] = self.getUsosId()
             logging.warning('found extra course_edition for : {0} {1} not saving'.format(course_id, term_id))
             return result
         # except DuplicateKeyError as ex:
@@ -122,26 +122,26 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
     async def api_course_term(self, course_id, term_id, extra_fetch=True, log_exception=True, courses_editions=False):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_COURSES, pipeline)
+            await self.db_remove(collections.COURSES, pipeline)
 
-        course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
+        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
             try:
                 course_doc = await self.usos_course(course_id)
-                await self.db_insert(constants.COLLECTION_COURSES, course_doc)
+                await self.db_insert(collections.COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-                course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
+                course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
             except Exception as ex:
                 if log_exception:
                     await self.exc(ex, finish=False)
                 return
 
-        course_doc[constants.TERM_ID] = term_id
+        course_doc[fields.TERM_ID] = term_id
 
         course_edition = await self.api_course_edition(course_id, term_id, courses_editions)
 
@@ -156,7 +156,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
                 participants = course_doc['participants']
                 for participant in course_doc['participants']:
-                    if participant[constants.USER_ID] == self._context.user_doc[constants.USOS_USER_ID]:
+                    if participant[fields.USER_ID] == self._context.user_doc[fields.USOS_USER_ID]:
                         participants.remove(participant)
                         break
 
@@ -194,11 +194,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 course_doc['term'].append(term)
 
         if extra_fetch:
-            faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
-            course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
-                                                constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
+            faculty_doc = await self.api_faculty(course_doc[fields.FACULTY_ID])
+            course_doc[fields.FACULTY_ID] = {fields.FACULTY_ID: faculty_doc[fields.FACULTY_ID],
+                                             fields.FACULTY_NAME: faculty_doc[fields.FACULTY_NAME]}
 
-        course_doc.pop(constants.MONGO_ID)
+        course_doc.pop(fields.MONGO_ID)
         return course_doc
 
     async def usos_course(self, course_id):
@@ -209,50 +209,50 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 'fields': 'name|homepage_url|profile_url|is_currently_conducted|fac_id|lang_id|description|bibliography|learning_outcomes|assessment_criteria|practical_placement'
             })
 
-        course_doc[constants.COURSE_NAME] = course_doc.pop('name')
-        course_doc[constants.COURSE_ID] = course_id
+        course_doc[fields.COURSE_NAME] = course_doc.pop('name')
+        course_doc[fields.COURSE_ID] = course_id
 
         return course_doc
 
     async def api_course(self, course_id):
 
-        pipeline = {constants.COURSE_ID: course_id, constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_COURSES, pipeline)
+            await self.db_remove(collections.COURSES, pipeline)
 
-        course_doc = await self.db[constants.COLLECTION_COURSES].find_one(pipeline, LIMIT_FIELDS)
+        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
 
         if not course_doc:
             course_doc = await self.usos_course(course_id)
             try:
-                await self.db_insert(constants.COLLECTION_COURSES, course_doc)
+                await self.db_insert(collections.COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
 
         self.__translate_currently_conducted(course_doc)
 
         # change faculty_id to faculty name
-        faculty_doc = await self.api_faculty(course_doc[constants.FACULTY_ID])
+        faculty_doc = await self.api_faculty(course_doc[fields.FACULTY_ID])
         if not faculty_doc:
-            faculty_doc = await self.usos_faculty(course_doc[constants.FACULTY_ID])
+            faculty_doc = await self.usos_faculty(course_doc[fields.FACULTY_ID])
 
-        course_doc[constants.FACULTY_ID] = {constants.FACULTY_ID: faculty_doc[constants.FACULTY_ID],
-                                            constants.FACULTY_NAME: faculty_doc[constants.FACULTY_NAME]}
+        course_doc[fields.FACULTY_ID] = {fields.FACULTY_ID: faculty_doc[fields.FACULTY_ID],
+                                         fields.FACULTY_NAME: faculty_doc[fields.FACULTY_NAME]}
 
         return course_doc
 
-    async def api_courses(self, fields=None):
+    async def api_courses(self, course_fields=None):
         courses_editions = await self.api_courses_editions()
         if not courses_editions:
             raise ApiError("Poczekaj szukamy przedmiotów")
 
         # get terms
         terms = list()
-        for term in courses_editions[constants.COURSE_EDITIONS]:
+        for term in courses_editions[fields.COURSE_EDITIONS]:
             term_with_courses = {
                 'term': term,
-                'term_data': courses_editions[constants.COURSE_EDITIONS][term]
+                'term_data': courses_editions[fields.COURSE_EDITIONS][term]
             }
             terms.append(term_with_courses)
 
@@ -260,10 +260,10 @@ class ApiMixin(ApiUserMixin, MathMixin):
         courses = list()
         for term in terms:
             for course in term['term_data']:
-                cursor = self.db[constants.COLLECTION_GROUPS].find(
-                    {constants.COURSE_ID: course[constants.COURSE_ID],
-                     constants.TERM_ID: course[constants.TERM_ID],
-                     constants.USOS_ID: self.getUsosId()},
+                cursor = self.db[collections.GROUPS].find(
+                    {fields.COURSE_ID: course[fields.COURSE_ID],
+                     fields.TERM_ID: course[fields.TERM_ID],
+                     fields.USOS_ID: self.getUsosId()},
                     LIMIT_FIELDS_GROUPS
                 )
                 groups_doc = await cursor.to_list(None)
@@ -272,47 +272,47 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 courses.append(course)
 
         # limit to fields
-        if fields:
+        if course_fields:
             selected_courses = list()
             for course in courses:
-                filtered_course = {k: course[k] for k in set(fields) & set(course.keys())}
+                filtered_course = {k: course[k] for k in set(course_fields) & set(course.keys())}
                 selected_courses.append(filtered_course)
         else:
             selected_courses = courses
 
         return selected_courses
 
-    async def api_courses_by_term(self, fields=None):
+    async def api_courses_by_term(self, course_fields=None):
 
-        courses_edition = await self.api_courses(fields)
+        courses_edition = await self.api_courses(course_fields)
 
         # grouping grades by term
         courses = dict()
         terms = list()
         for course in courses_edition:
-            if course[constants.TERM_ID] not in courses:
-                courses[course[constants.TERM_ID]] = list()
-                terms.append(course[constants.TERM_ID])
-            courses[course[constants.TERM_ID]].append(course)
+            if course[fields.TERM_ID] not in courses:
+                courses[course[fields.TERM_ID]] = list()
+                terms.append(course[fields.TERM_ID])
+            courses[course[fields.TERM_ID]].append(course)
 
         # get course in order by terms order_keys
         terms_by_order = await self.api_term(terms)
         courses_sorted_by_term = list()
         for term in terms_by_order:
-            courses_sorted_by_term.append({term[constants.TERM_ID]: courses[term[constants.TERM_ID]]})
+            courses_sorted_by_term.append({term[fields.TERM_ID]: courses[term[fields.TERM_ID]]})
 
         return courses_sorted_by_term
 
     async def get_classtypes(self):
-        classtypes = await self.db[constants.COLLECTION_COURSES_CLASSTYPES].find_one(
-            {constants.USOS_ID: self.getUsosId()},
-            {constants.MONGO_ID: False, constants.CREATED_TIME: False})
+        classtypes = await self.db[collections.COURSES_CLASSTYPES].find_one(
+            {fields.USOS_ID: self.getUsosId()},
+            {fields.MONGO_ID: False, fields.CREATED_TIME: False})
 
         if not classtypes:
             classtypes = await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index',
                                                                      lang=False)
             try:
-                await self.db_insert(constants.COLLECTION_COURSES_CLASSTYPES, classtypes)
+                await self.db_insert(collections.COURSES_CLASSTYPES, classtypes)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
 
@@ -336,7 +336,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             raise ApiError("Poczekaj szukamy ocen.")
 
         result = list()
-        for term, courses in list(courses_editions[constants.COURSE_EDITIONS].items()):
+        for term, courses in list(courses_editions[fields.COURSE_EDITIONS].items()):
             for course in courses:
                 if len(course['grades']['course_grades']) > 0:
                     for grade_key, grade_value in list(course['grades']['course_grades'].items()):
@@ -345,12 +345,12 @@ class ApiMixin(ApiUserMixin, MathMixin):
                             'exam_id': grade_value['exam_id'],
                             'value_description': grade_value['value_description'],
                             'value_symbol': grade_value['value_symbol'],
-                            constants.CLASS_TYPE: constants.GRADE_FINAL,
+                            fields.CLASS_TYPE: fields.GRADE_FINAL,
                         }
                         course_with_grade = {
-                            constants.TERM_ID: term,
-                            constants.COURSE_ID: course[constants.COURSE_ID],
-                            constants.COURSE_NAME: course[constants.COURSE_NAME],
+                            fields.TERM_ID: term,
+                            fields.COURSE_ID: course[fields.COURSE_ID],
+                            fields.COURSE_NAME: course[fields.COURSE_NAME],
                             'grades': list()
                         }
                         course_with_grade['grades'].append(grade)
@@ -358,9 +358,9 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
                 if len(course['grades']['course_units_grades']) > 0:
                     grade = {
-                        constants.TERM_ID: term,
-                        constants.COURSE_ID: course[constants.COURSE_ID],
-                        constants.COURSE_NAME: course[constants.COURSE_NAME],
+                        fields.TERM_ID: term,
+                        fields.COURSE_ID: course[fields.COURSE_ID],
+                        fields.COURSE_NAME: course[fields.COURSE_NAME],
                         'grades': list()
                     }
 
@@ -385,17 +385,17 @@ class ApiMixin(ApiUserMixin, MathMixin):
         units_doc = await self.api_units(units)
 
         for unit in units_doc:
-            unit[constants.CLASS_TYPE_ID] = self.classtype_name(classtypes, (unit[constants.CLASS_TYPE_ID]))
+            unit[fields.CLASS_TYPE_ID] = self.classtype_name(classtypes, (unit[fields.CLASS_TYPE_ID]))
 
         for course in result:
             if 'grades' in course:
                 for grade in course['grades']:
                     if 'unit' in grade:
                         unit = grade['unit']
-                        grade[constants.CLASS_TYPE] = 'Brak danych'
+                        grade[fields.CLASS_TYPE] = 'Brak danych'
                         for unit_doc in units_doc:
-                            if int(unit) == unit_doc[constants.UNIT_ID]:
-                                grade[constants.CLASS_TYPE] = unit_doc[constants.CLASS_TYPE_ID]
+                            if int(unit) == unit_doc[fields.UNIT_ID]:
+                                grade[fields.CLASS_TYPE] = unit_doc[fields.CLASS_TYPE_ID]
                                 del (grade['unit'])
 
         return result
@@ -409,19 +409,19 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         # grouping grades by term
         for grade in grades:
-            if grade[constants.TERM_ID] not in grades_by_term:
-                grades_by_term[grade[constants.TERM_ID]] = list()
-                terms.append(grade[constants.TERM_ID])
-            grades_by_term[grade[constants.TERM_ID]].append(grade)
+            if grade[fields.TERM_ID] not in grades_by_term:
+                grades_by_term[grade[fields.TERM_ID]] = list()
+                terms.append(grade[fields.TERM_ID])
+            grades_by_term[grade[fields.TERM_ID]].append(grade)
 
         # order grades by terms in order_keys as dictionary and reverse sort
         terms_by_order = await self.api_term(terms)
         grades_sorted_by_term = list()
         for term in terms_by_order:
-            grades_sorted_by_term.append({constants.TERM_ID: term[constants.TERM_ID],
+            grades_sorted_by_term.append({fields.TERM_ID: term[fields.TERM_ID],
                                           'avr_grades': self._math_average_grades(
-                                              grades_by_term[term[constants.TERM_ID]]),
-                                          'courses': grades_by_term[term[constants.TERM_ID]]})
+                                              grades_by_term[term[fields.TERM_ID]]),
+                                          'courses': grades_by_term[term[fields.TERM_ID]]})
         return grades_sorted_by_term
 
     async def api_average_grades(self):
@@ -449,12 +449,12 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return programmes
 
     async def api_programme(self, programme_id, finish=True):
-        pipeline = {constants.PROGRAMME_ID: programme_id}
+        pipeline = {fields.PROGRAMME_ID: programme_id}
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_PROGRAMMES, pipeline)
+            await self.db_remove(collections.PROGRAMMES, pipeline)
 
-        programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
+        programme_doc = await self.db[collections.PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
         if programme_doc:
             return programme_doc
 
@@ -467,7 +467,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 }
             )
 
-            programme_doc[constants.PROGRAMME_ID] = programme_id
+            programme_doc[fields.PROGRAMME_ID] = programme_id
 
             try:
                 ects_used_sum = await UsosCaller(self._context).call(
@@ -481,11 +481,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 logging.debug(ex)
                 programme_doc['ects_used_sum'] = None
 
-            await self.db_insert(constants.COLLECTION_PROGRAMMES, programme_doc)
+            await self.db_insert(collections.PROGRAMMES, programme_doc)
             return programme_doc
         except DuplicateKeyError as ex:
             logging.debug(ex)
-            programme_doc = await self.db[constants.COLLECTION_PROGRAMMES].find_one(
+            programme_doc = await self.db[collections.PROGRAMMES].find_one(
                 pipeline, LIMIT_FIELDS_PROGRAMMES)
             return programme_doc
         except Exception as ex:
@@ -511,26 +511,26 @@ class ApiMixin(ApiUserMixin, MathMixin):
         if not faculty_doc['stats']['staff_count']:
             faculty_doc['stats']['staff_count'] = 0
 
-        faculty_doc[constants.FACULTY_ID] = faculty_id
+        faculty_doc[fields.FACULTY_ID] = faculty_id
 
         return faculty_doc
 
     async def api_faculty(self, faculty_id):
-        pipeline = {constants.FACULTY_ID: faculty_id, constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.FACULTY_ID: faculty_id, fields.USOS_ID: self.getUsosId()}
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_FACULTIES, pipeline)
+            await self.db_remove(collections.FACULTIES, pipeline)
 
-        faculty_doc = await self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
+        faculty_doc = await self.db[collections.FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
 
         if not faculty_doc:
             try:
                 faculty_doc = await self.usos_faculty(faculty_id)
 
-                await self.db_insert(constants.COLLECTION_FACULTIES, faculty_doc)
+                await self.db_insert(collections.FACULTIES, faculty_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-                faculty_doc = await self.db[constants.COLLECTION_FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
+                faculty_doc = await self.db[collections.FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
@@ -559,9 +559,9 @@ class ApiMixin(ApiUserMixin, MathMixin):
         # get faculties
         faculties_ids = list()
         for programme_doc in programmes:
-            if 'faculty' in programme_doc and constants.FACULTY_ID in programme_doc['faculty'] and \
-                            programme_doc['faculty'][constants.FACULTY_ID] not in faculties_ids:
-                faculties_ids.append(programme_doc['faculty'][constants.FACULTY_ID])
+            if 'faculty' in programme_doc and fields.FACULTY_ID in programme_doc['faculty'] and \
+                            programme_doc['faculty'][fields.FACULTY_ID] not in faculties_ids:
+                faculties_ids.append(programme_doc['faculty'][fields.FACULTY_ID])
 
         faculties = list()
         tasks_faculties = list()
@@ -575,11 +575,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return self.filterNone(faculties)
 
     async def api_unit(self, unit_id, finish=False):
-        pipeline = {constants.UNIT_ID: int(unit_id), constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.UNIT_ID: int(unit_id), fields.USOS_ID: self.getUsosId()}
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_COURSES_UNITS, pipeline)
+            await self.db_remove(collections.COURSES_UNITS, pipeline)
 
-        unit_doc = await self.db[constants.COLLECTION_COURSES_UNITS].find_one(pipeline)
+        unit_doc = await self.db[collections.COURSES_UNITS].find_one(pipeline)
 
         if not unit_doc:
             try:
@@ -590,16 +590,16 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         'unit_id': unit_id,
                     })
 
-                unit_doc[constants.UNIT_ID] = unit_doc.pop(constants.ID)
-                unit_doc = await self.db_insert(constants.COLLECTION_COURSES_UNITS, unit_doc)
+                unit_doc[fields.UNIT_ID] = unit_doc.pop(fields.ID)
+                unit_doc = await self.db_insert(collections.COURSES_UNITS, unit_doc)
             except Exception as ex:
                 await self.exc(ex, finish=finish)
         return unit_doc
 
     async def api_units(self, units_id, finish=False):
-        pipeline = {constants.UNIT_ID: {"$in": list(map(int, units_id))},
-                    constants.USOS_ID: self.getUsosId()}
-        cursor = self.db[constants.COLLECTION_COURSES_UNITS].find(pipeline).sort("unit_id")
+        pipeline = {fields.UNIT_ID: {"$in": list(map(int, units_id))},
+                    fields.USOS_ID: self.getUsosId()}
+        cursor = self.db[collections.COURSES_UNITS].find(pipeline).sort("unit_id")
         units_doc = await cursor.to_list(None)
 
         if not units_doc:
@@ -616,11 +616,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return units_doc
 
     async def api_group(self, group_id, finish=False):
-        pipeline = {constants.GROUP_ID: group_id, constants.USOS_ID: self.getUsosId()}
+        pipeline = {fields.GROUP_ID: group_id, fields.USOS_ID: self.getUsosId()}
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_GROUPS, pipeline)
+            await self.db_remove(collections.GROUPS, pipeline)
 
-        group_doc = await self.db[constants.COLLECTION_GROUPS].find_one(pipeline)
+        group_doc = await self.db[collections.GROUPS].find_one(pipeline)
         if not group_doc:
             try:
                 group_doc = await AsyncCaller(self._context).call_async(
@@ -636,7 +636,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     'class_type_id'])  # changing class_type_id to name
                 group_doc.pop('class_type_id')
 
-                await self.db_insert(constants.COLLECTION_GROUPS, group_doc)
+                await self.db_insert(collections.GROUPS, group_doc)
             except Exception as ex:
                 await self.exc(ex, finish=finish)
 
@@ -644,11 +644,11 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
     async def api_thesis(self, refresh=False, user_info=None):
 
-        pipeline = {constants.USER_ID: self.getUserId()}
+        pipeline = {fields.USER_ID: self.getUserId()}
         if self.do_refresh() and refresh:
-            await self.db_remove(constants.COLLECTION_THESES, pipeline)
+            await self.db_remove(collections.THESES, pipeline)
 
-        theses_doc = await self.db[constants.COLLECTION_THESES].find_one(pipeline)
+        theses_doc = await self.db[collections.THESES].find_one(pipeline)
 
         if not theses_doc:
             if not user_info:
@@ -657,12 +657,12 @@ class ApiMixin(ApiUserMixin, MathMixin):
             theses_doc = await UsosCaller(self._context).call(
                 path='services/theses/user',
                 arguments={
-                    'user_id': user_info[constants.ID],
+                    'user_id': user_info[fields.ID],
                     'fields': 'authored_theses[id|type|title|authors|supervisors|faculty]',
                 })
 
-            theses_doc[constants.USER_ID] = self.getUserId()
+            theses_doc[fields.USER_ID] = self.getUserId()
 
-            await self.db_insert(constants.COLLECTION_THESES, theses_doc)
+            await self.db_insert(collections.THESES, theses_doc)
 
         return theses_doc['authored_theses']

@@ -17,8 +17,8 @@ from admin.handlers.statistics.statistics import StatisticsBaseHandler
 from admin.handlers.statistics.user import UsersHandler
 from admin.handlers.statistics.usos import UsosHandler
 from admin.handlers.statistics.usosuser import UsosUserHandler
-from commons import constants
 from commons.config import Config
+from commons.constants import config as application_constants
 
 define('environment', default='development')
 
@@ -75,9 +75,9 @@ if __name__ == "__main__":
 
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
     logging.info(db)
-    application.settings[constants.APPLICATION_DB] = db
-    application.settings[constants.APPLICATION_CONFIG] = config
-    # application.settings[constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
+    application.settings[application_constants.APPLICATION_DB] = db
+    application.settings[application_constants.APPLICATION_CONFIG] = config
+    # application.settings[application_constants.APPLICATION_AES] = AESCipher(config.AES_SECRET)
 
     logging.info(config.ADMIN_WEB)
     tornado.ioloop.IOLoop.current().start()

@@ -28,3 +28,8 @@ class DaoError(Exception):
 class CallerError(Exception):
     """Base error for this module."""
     pass
+
+
+class FilesError(Exception):
+    """Base error for this module."""
+    pass

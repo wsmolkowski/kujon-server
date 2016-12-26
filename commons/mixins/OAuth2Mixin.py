@@ -5,7 +5,7 @@ from datetime import datetime
 from tornado import gen
 from tornado.auth import OAuthMixin
 
-from commons import constants
+from commons.constants import fields
 
 
 class OAuth2Mixin(OAuthMixin):
@@ -28,8 +28,8 @@ class OAuth2Mixin(OAuthMixin):
         :return:
         """
         self._OAUTH_CALLBACK_URI = self.config.DEPLOY_API + '/authentication/verify'
-        self._CONSUMER_TOKEN = dict(key=usos_doc[constants.CONSUMER_KEY], secret=usos_doc[constants.CONSUMER_SECRET])
-        self._OAUTH_BASE_URL = usos_doc[constants.USOS_URL]
+        self._CONSUMER_TOKEN = dict(key=usos_doc[fields.CONSUMER_KEY], secret=usos_doc[fields.CONSUMER_SECRET])
+        self._OAUTH_BASE_URL = usos_doc[fields.USOS_URL]
         self._OAUTH_REQUEST_TOKEN_URL = '{0}services/oauth/request_token'.format(self._OAUTH_BASE_URL)
         self._OAUTH_AUTHORIZE_URL = '{0}services/oauth/authorize'.format(self._OAUTH_BASE_URL)
         self._OAUTH_ACCESS_TOKEN_URL = '{0}services/oauth/access_token'.format(self._OAUTH_BASE_URL)
@@ -37,9 +37,9 @@ class OAuth2Mixin(OAuthMixin):
     @gen.coroutine
     def _oauth_get_user_future(self, access_token):
         response = dict()
-        response[constants.USOS_PAIRED] = True
-        response[constants.ACCESS_TOKEN_SECRET] = access_token['secret']
-        response[constants.ACCESS_TOKEN_KEY] = access_token['key']
-        response[constants.UPDATE_TIME] = datetime.now()
+        response[fields.USOS_PAIRED] = True
+        response[fields.ACCESS_TOKEN_SECRET] = access_token['secret']
+        response[fields.ACCESS_TOKEN_KEY] = access_token['key']
+        response[fields.UPDATE_TIME] = datetime.now()
 
         raise gen.Return(response)

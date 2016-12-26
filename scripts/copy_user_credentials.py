@@ -18,7 +18,7 @@ def main(arguments):
 
     try:
         DbUtils(None).copy_user_credentials(email_from=email_from, email_to=email_to, environment_to=environment_to,
-                                        environment_from=environment_from)
+                                            environment_from=environment_from)
 
         print('copying ok')
     except Exception as ex:

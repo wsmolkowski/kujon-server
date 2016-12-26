@@ -5,18 +5,19 @@ from base64 import b64decode
 from bson.objectid import ObjectId
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
 from commons import usosinstances
+from commons.constants import fields, collections, config
 from commons.errors import ApiError
 
 LIMIT_FIELDS_USER = (
     'email', 'user_created', 'user_type', 'family_name' 'given_name', 'update_time', 'picture', 'name', 'usos_id',
-    constants.PHOTO_URL, "{}.{}".format(constants.GOOGLE, constants.GOOGLE_NAME),
-    "{}.{}".format(constants.GOOGLE, constants.GOOGLE_PICTURE),
-    "{}.{}".format(constants.GOOGLE, constants.GOOGLE_EMAIL),
-    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_NAME),
-    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_PICTURE),
-    "{}.{}".format(constants.FACEBOOK, constants.FACEBOOK_EMAIL))
+    fields.PHOTO_URL, "{}.{}".format(fields.GOOGLE, fields.GOOGLE_NAME),
+    "{}.{}".format(fields.GOOGLE, fields.GOOGLE_PICTURE),
+    "{}.{}".format(fields.GOOGLE, fields.GOOGLE_EMAIL),
+    "{}.{}".format(fields.FACEBOOK, fields.FACEBOOK_NAME),
+    "{}.{}".format(fields.FACEBOOK, fields.FACEBOOK_PICTURE),
+    "{}.{}".format(fields.FACEBOOK, fields.FACEBOOK_EMAIL))
 
 
 class UsersInfoByIdApi(ApiHandler):
@@ -25,15 +26,15 @@ class UsersInfoByIdApi(ApiHandler):
 
         try:
             user_info_doc = await self.api_user_info(user_info_id)
-            self.success(user_info_doc, cache_age=constants.SECONDS_2MONTHS)
+            self.success(user_info_doc, cache_age=config.SECONDS_2MONTHS)
         except Exception as ex:
             await self.exc(ex)
 
 
 class AbstractUserInfo(ApiHandler):
     async def _users_info(self):
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.getUserId()},
+        user_doc = await self.db[collections.USERS].find_one(
+            {fields.MONGO_ID: self.getUserId()},
             LIMIT_FIELDS_USER)
 
         user_info = await self.api_user_usos_info()
@@ -44,21 +45,21 @@ class AbstractUserInfo(ApiHandler):
                 user_doc[k] = user_info[k]
 
         # check if get photo needed
-        if constants.PHOTO_URL in user_doc and user_doc[constants.PHOTO_URL]:
-            user_doc[constants.PHOTO_URL] = user_info[constants.PHOTO_URL]
+        if fields.PHOTO_URL in user_doc and user_doc[fields.PHOTO_URL]:
+            user_doc[fields.PHOTO_URL] = user_info[fields.PHOTO_URL]
         else:
-            if constants.GOOGLE in user_doc and constants.GOOGLE_PICTURE in user_doc[constants.GOOGLE]:
-                user_doc[constants.PHOTO_URL] = user_doc[constants.GOOGLE][constants.GOOGLE_PICTURE]
-            if constants.FACEBOOK in user_doc and constants.FACEBOOK_PICTURE in user_doc[constants.FACEBOOK]:
-                user_doc[constants.PHOTO_URL] = user_doc[constants.FACEBOOK][constants.FACEBOOK_PICTURE]
+            if fields.GOOGLE in user_doc and fields.GOOGLE_PICTURE in user_doc[fields.GOOGLE]:
+                user_doc[fields.PHOTO_URL] = user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE]
+            if fields.FACEBOOK in user_doc and fields.FACEBOOK_PICTURE in user_doc[fields.FACEBOOK]:
+                user_doc[fields.PHOTO_URL] = user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE]
 
         user_doc['usos_name'] = next((usos['name'] for usos in usosinstances.USOSINSTANCES if
-                                      usos[constants.USOS_ID] == user_doc[constants.USOS_ID]), None)
+                                      usos[fields.USOS_ID] == user_doc[fields.USOS_ID]), None)
 
         user_doc['theses'] = await self.api_thesis(refresh=True, user_info=user_doc)
 
-        del (user_doc[constants.UPDATE_TIME])
-        del (user_doc[constants.MONGO_ID])
+        del (user_doc[fields.UPDATE_TIME])
+        del (user_doc[fields.MONGO_ID])
 
         return user_doc
 
@@ -83,7 +84,7 @@ class UsersInfoAllApi(AbstractUserInfo):
 
             user_doc['avr_grades'] = await self.api_average_grades()
 
-            self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
+            self.success(user_doc, cache_age=config.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)
 
@@ -92,13 +93,13 @@ class UsersInfoApi(AbstractUserInfo):
     @decorators.authenticated
     async def get(self):
         """
-        :return:    join data from constants.COLLECTION_USERS and constants.COLLECTION_USERS_INFO and
+        :return:    join data from collections.USERS and collections.USERS_INFO and
                     school name from usosinstances.USOSINSTANCES
         """
 
         try:
             user_doc = await self._users_info()
-            self.success(user_doc, cache_age=constants.SECONDS_1MONTH)
+            self.success(user_doc, cache_age=config.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)
 
@@ -111,7 +112,7 @@ class UsersInfoPhotoApi(ApiHandler):
             if str(photo_id) == 'False' or str(photo_id) == 'True':
                 raise ApiError('Nie podano odpowiedniego parametru photo_id')
 
-            user_photo = await self.db[constants.COLLECTION_PHOTOS].find_one({constants.MONGO_ID: ObjectId(photo_id)})
+            user_photo = await self.db[collections.PHOTOS].find_one({fields.MONGO_ID: ObjectId(photo_id)})
 
             if user_photo and 'photo' in user_photo:
                 self.set_header('Content-Type', 'image/jpeg')

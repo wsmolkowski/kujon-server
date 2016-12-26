@@ -6,8 +6,9 @@ from datetime import date, timedelta
 from tornado import web
 
 from api.handlers.base import ApiHandler
-from commons import decorators, constants
+from commons import decorators
 from commons.UsosCaller import UsosCaller
+from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
 
 
@@ -48,10 +49,10 @@ class TTApi(ApiHandler):
             raise ApiError("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
-            await self.db_remove(constants.COLLECTION_TT, {constants.USER_ID: self.getUserId()})
+            await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})
 
-        tt_doc = await self.db[constants.COLLECTION_TT].find_one({constants.USER_ID: self.getUserId(),
-                                                                  constants.TT_STARTDATE: str(monday)})
+        tt_doc = await self.db[collections.TT].find_one({fields.USER_ID: self.getUserId(),
+                                                         fields.TT_STARTDATE: str(monday)})
         if not tt_doc:
             tt_response = await UsosCaller(self._context).call(
                 path='services/tt/user',
@@ -65,11 +66,11 @@ class TTApi(ApiHandler):
                 raise ApiError("Brak wydarzeń w kalendarzu dla {0}".format(given_date))
 
             tt_doc = dict()
-            tt_doc[constants.TT_STARTDATE] = str(given_date)
+            tt_doc[fields.TT_STARTDATE] = str(given_date)
             tt_doc['tts'] = tt_response
-            tt_doc[constants.USER_ID] = self.getUserId()
+            tt_doc[fields.USER_ID] = self.getUserId()
 
-            # await self.db_insert(constants.COLLECTION_TT, tt_doc)
+            # await self.db_insert(collections.TT, tt_doc)
 
         for tt_data in tt_doc['tts']:
             if tt_data['type'] == 'classgroup':
@@ -99,7 +100,7 @@ class TTApi(ApiHandler):
 
         try:
             tt_doc = await self.api_tt(given_date, lecturers_info, days)
-            self.success(tt_doc, cache_age=constants.SECONDS_1WEEK)
+            self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
         except (ApiError, CallerError) as ex:
             logging.debug(ex)
             self.success(list())

@@ -7,7 +7,8 @@ from tornado import escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 
-from commons import constants, utils
+from commons import utils
+from commons.constants import config as application_config
 from commons.errors import OneSignalError
 
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
@@ -40,13 +41,15 @@ class OneSignalMixin(object):
     async def signal_message(self, message, email_reciepient, language='en'):
 
         headers = HTTPHeaders({
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': self.config.AUTHORIZATION
         })
 
         body = json.dumps({
             'app_id': self.config.APPLICATION_ID,
-            'tags': [{"key": "user_email", "relation": "=", email_reciepient: "true"}],
+            'filters': [
+                {"field": "tag", "key": "user_email", "relation": "=", "value": email_reciepient},
+            ],
             'contents': {language: message}
         })
 
@@ -55,8 +58,8 @@ class OneSignalMixin(object):
                                                                        headers=headers,
                                                                        body=body,
                                                                        user_agent=self.config.PROJECT_TITLE,
-                                                                       connect_timeout=constants.HTTP_CONNECT_TIMEOUT,
-                                                                       request_timeout=constants.HTTP_REQUEST_TIMEOUT,
+                                                                       connect_timeout=application_config.HTTP_CONNECT_TIMEOUT,
+                                                                       request_timeout=application_config.HTTP_REQUEST_TIMEOUT,
                                                                        proxy_host=self.config.PROXY_URL,
                                                                        proxy_port=self.config.PROXY_PORT
                                                                        ))

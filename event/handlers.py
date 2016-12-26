@@ -7,7 +7,7 @@ from datetime import datetime
 from bson import ObjectId
 from tornado import web
 
-from commons import constants
+from commons.constants import fields, collections, config
 from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
 from commons.errors import AuthenticationError
@@ -24,12 +24,12 @@ class EventHandler(AbstractHandler):
         verify_token = self.get_argument('hub.verify_token', default=None)
         if verify_token:
             verify_token = self.aes.decrypt(verify_token.encode()).decode()
-            self._context.user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-                {constants.MONGO_ID: ObjectId(verify_token)})
+            self._context.user_doc = await self.db[collections.USERS].find_one(
+                {fields.MONGO_ID: ObjectId(verify_token)})
         else:
             self._context.user_doc = None
 
-        header_hub_signature = self.request.headers.get(constants.EVENT_X_HUB_SIGNATURE, False)
+        header_hub_signature = self.request.headers.get(config.EVENT_X_HUB_SIGNATURE, False)
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
         # X-Hub-Signature validation
 
@@ -69,18 +69,18 @@ class EventHandler(AbstractHandler):
 
             body = self.request.body
             if isinstance(body, bytes):
-                body = str(body, constants.ENCODING)
+                body = str(body, fields.ENCODING)
 
             event_data = json.loads(body)
-            event_data[constants.USOS_ID] = self.getUsosId()
+            event_data[fields.USOS_ID] = self.getUsosId()
 
-            await self.db_insert(constants.COLLECTION_JOBS_QUEUE, {
-                constants.CREATED_TIME: datetime.now(),
-                constants.UPDATE_TIME: None,
-                constants.JOB_MESSAGE: None,
-                constants.JOB_DATA: event_data,
-                constants.JOB_STATUS: JobStatus.PENDING.value,
-                constants.JOB_TYPE: JobType.SUBSCRIPTION_EVENT.value
+            await self.db_insert(collections.JOBS_QUEUE, {
+                fields.CREATED_TIME: datetime.now(),
+                fields.UPDATE_TIME: None,
+                fields.JOB_MESSAGE: None,
+                fields.JOB_DATA: event_data,
+                fields.JOB_STATUS: JobStatus.PENDING.value,
+                fields.JOB_TYPE: JobType.SUBSCRIPTION_EVENT.value
             })
 
             self.success(data='event consumed')

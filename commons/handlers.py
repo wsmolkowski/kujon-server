@@ -4,7 +4,8 @@ from bson import ObjectId
 from tornado import web
 from tornado.util import ObjectDict
 
-from commons import constants, utils
+from commons import utils
+from commons.constants import config, fields
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
@@ -18,15 +19,19 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     @property
     def db(self):
-        return self.application.settings[constants.APPLICATION_DB]
+        return self.application.settings[config.APPLICATION_DB]
 
     @property
     def config(self):
-        return self.application.settings[constants.APPLICATION_CONFIG]
+        return self.application.settings[config.APPLICATION_CONFIG]
 
     @property
     def aes(self):
-        return self.application.settings[constants.APPLICATION_AES]
+        return self.application.settings[config.APPLICATION_AES]
+
+    @property
+    def fs(self):
+        return self.application.settings[config.APPLICATION_FS]
 
     def get_remote_ip(self):
         return self.request.headers.get('X-Forwarded-For',
@@ -51,13 +56,15 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
             await self.exc(ex)
             return
 
-        if self._context.user_doc and constants.USOS_ID in self._context.user_doc:
-            usos_id = self._context.user_doc[constants.USOS_ID]  # request authenticated
+        if self._context.user_doc and fields.USOS_ID in self._context.user_doc:
+            usos_id = self._context.user_doc[fields.USOS_ID]  # request authenticated
         else:
             usos_id = self.get_argument('usos_id', default=None)  # request authentication/register
 
         if usos_id:
             self._context.usos_doc = await self.db_get_usos(usos_id)
+
+        self._context.settings = await self.db_settings(self.getUserId())
 
     def get_current_user(self):
         if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
@@ -66,15 +73,15 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     def getUsosId(self):
         if hasattr(self._context,
-                   'usos_doc') and self._context.usos_doc and constants.USOS_ID in self._context.usos_doc:
-            return self._context.usos_doc[constants.USOS_ID]
+                   'usos_doc') and self._context.usos_doc and fields.USOS_ID in self._context.usos_doc:
+            return self._context.usos_doc[fields.USOS_ID]
         return
 
     def getUserId(self, return_object_id=True):
         if self.get_current_user():
             if return_object_id:
-                return ObjectId(self.get_current_user()[constants.MONGO_ID])
-            return self.get_current_user()[constants.MONGO_ID]
+                return ObjectId(self.get_current_user()[fields.MONGO_ID])
+            return self.get_current_user()[fields.MONGO_ID]
         return
 
     def reset_user_cookie(self, user_id):
@@ -83,10 +90,14 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self.set_secure_cookie(self.config.KUJON_SECURE_COOKIE, encoded, domain=self.config.SITE_DOMAIN)
 
     def isMobileRequest(self):
-        if self.request.headers.get(constants.MOBILE_X_HEADER_EMAIL, False) \
-                and self.request.headers.get(constants.MOBILE_X_HEADER_TOKEN, False):
+        if self.request.headers.get(config.MOBILE_X_HEADER_EMAIL, False) \
+                and self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False):
             return True
         return False
+
+    def getUserSettings(self):
+        if hasattr(self, '_context') and hasattr(self._context, 'settings'):
+            return self._context.settings
 
 
 class DefaultErrorHandler(AbstractHandler):

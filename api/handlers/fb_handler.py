@@ -6,7 +6,8 @@ from tornado import auth
 from tornado import web
 
 from api.handlers.base import ApiHandler
-from commons import constants, decorators
+from commons import decorators
+from commons.constants import fields, collections
 from commons.errors import ApiError
 
 
@@ -15,13 +16,13 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
     @web.asynchronous
     async def get(self):
 
-        user_doc = await self.db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: self.getUserId()})
+        user_doc = await self.db[collections.USERS].find_one(
+            {fields.MONGO_ID: self.getUserId()})
 
-        if constants.FACEBOOK not in user_doc:
+        if fields.FACEBOOK not in user_doc:
             raise ApiError('Użytkownik nie ma konta połączonego z Facebook.')
 
-        token = user_doc[constants.FACEBOOK][constants.FACEBOOK_ACCESS_TOKEN]
+        token = user_doc[fields.FACEBOOK][fields.FACEBOOK_ACCESS_TOKEN]
 
         graph = facebook.GraphAPI(access_token=token, version='2.6')
 
@@ -32,7 +33,7 @@ class FacebookApi(ApiHandler, auth.FacebookGraphMixin, web.RequestHandler):
             try:
                 for friend in friends['data']:
                     all_friends.append(friend['name'])
-                friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
+                    friends = facebook.requests.get("/after={}".format(friends['paging']['cursors']['after']))
             except Exception as ex:
                 logging.error("Key Error" + ex.message)
 

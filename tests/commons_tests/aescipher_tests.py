@@ -5,9 +5,9 @@ from datetime import datetime
 from bson import ObjectId
 from pymongo import MongoClient
 
-from commons import constants
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.constants import fields, collections
 from commons.usosinstances import USOSINSTANCES
 from scripts.dbutils import DbUtils
 
@@ -51,17 +51,17 @@ class CookieEncrtyptTests(unittest.TestCase):
 
     def testCookieEncrtypt(self):
         # assume
-        self.user_id = self.client_db[constants.COLLECTION_USERS].insert(USER_DOC)
+        self.user_id = self.client_db[collections.USERS].insert(USER_DOC)
 
         # when
         cookie_encrypted = self.aes.encrypt(str(self.user_id))
 
         cookie_decrypted = self.aes.decrypt(cookie_encrypted)
 
-        user = self.client_db[constants.COLLECTION_USERS].find_one(
-            {constants.MONGO_ID: ObjectId(cookie_decrypted.decode())})
+        user = self.client_db[collections.USERS].find_one(
+            {fields.MONGO_ID: ObjectId(cookie_decrypted.decode())})
 
         # then
         self.assertIsNotNone(user)
-        self.assertEqual(USER_DOC[constants.ACCESS_TOKEN_KEY], user[constants.ACCESS_TOKEN_KEY])
-        self.assertEqual(USER_DOC[constants.ACCESS_TOKEN_SECRET], user[constants.ACCESS_TOKEN_SECRET])
+        self.assertEqual(USER_DOC[fields.ACCESS_TOKEN_KEY], user[fields.ACCESS_TOKEN_KEY])
+        self.assertEqual(USER_DOC[fields.ACCESS_TOKEN_SECRET], user[fields.ACCESS_TOKEN_SECRET])

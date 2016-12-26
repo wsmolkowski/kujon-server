@@ -3,8 +3,9 @@
 from tornado import web
 
 from api.handlers.base import ApiHandler
-from commons import decorators, constants
+from commons import decorators
 from commons.UsosCaller import UsosCaller
+from commons.constants import fields
 
 
 class SubscriptionsHandler(ApiHandler):
@@ -18,9 +19,9 @@ class SubscriptionsHandler(ApiHandler):
         try:
             subscriptions_doc = dict()
             subscriptions = await self.db_subscriptions({
-                constants.USER_ID: self.getUserId(),
-                constants.USOS_ID: self.getUsosId(),
-                constants.MONGO_ID: False
+                fields.USER_ID: self.getUserId(),
+                fields.USOS_ID: self.getUsosId(),
+                fields.MONGO_ID: False
             })
 
             if subscriptions:

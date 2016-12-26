@@ -3,12 +3,12 @@
 from tornado import web
 
 from admin.handlers.base import BaseHandler
-from commons import constants
+from commons.constants import collections, fields
 
 
 class StatisticsBaseHandler(BaseHandler):
     async def _aggreate_users(self, pipeline):
-        cursor = self.db[constants.COLLECTION_USERS].aggregate(pipeline)
+        cursor = self.db[collections.COLLECTION_USERS].aggregate(pipeline)
         return await cursor.to_list(None)
 
     async def _stat_users_paired(self):
@@ -36,7 +36,7 @@ class StatisticsBaseHandler(BaseHandler):
 
     async def _stat_usos_users(self):
         pipeline = [
-            {'$match': {constants.USOS_PAIRED: True
+            {'$match': {fields.USOS_PAIRED: True
                         }},
             {'$group': {'_id': {'user': '$user_id', 'usos_id': {'$ifNull': ["$usos_id", "Unknown"]}},
                         'count': {'$sum': 1}
@@ -54,7 +54,6 @@ class StatisticsBaseHandler(BaseHandler):
             }]
 
         return await self._aggreate_users(pipeline)
-
 
     @web.removeslash
     @web.asynchronous

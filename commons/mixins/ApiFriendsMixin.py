@@ -1,6 +1,7 @@
 # coding=UTF-8
 
-from commons import constants, helpers
+from commons import helpers
+from commons.constants import collections, fields
 from commons.errors import ApiError, CallerError
 from commons.mixins.DaoMixin import DaoMixin
 
@@ -11,7 +12,7 @@ class ApiMixinFriends(DaoMixin):
         pipeline = [{'$match': {'user_id': self.getUserId()}},
                     {'$lookup': {'from': 'users_info', 'localField': 'friend_id', 'foreignField': 'id',
                                  'as': 'users_info'}}]
-        cursor = self.db[constants.COLLECTION_FRIENDS].aggregate(pipeline)
+        cursor = self.db[collections.FRIENDS].aggregate(pipeline)
         friend_doc = await cursor.to_list(None)
         if friend_doc:
             for friend in friend_doc:
@@ -28,16 +29,16 @@ class ApiMixinFriends(DaoMixin):
             raise ApiError("Poczekaj szukamy przyjaciół.")
 
     async def api_friends_add(self, user_info_id):
-        friend_doc = await self.db[constants.COLLECTION_FRIENDS].find_one(
-            {constants.USER_ID: self.getUserId(),
-             constants.FRIEND_ID: user_info_id})
+        friend_doc = await self.db[collections.FRIENDS].find_one(
+            {fields.USER_ID: self.getUserId(),
+             fields.FRIEND_ID: user_info_id})
         if not friend_doc:
             user_info_doc = await self.api_user_info(user_info_id)
             if user_info_doc:
                 result = dict()
-                result[constants.USER_ID] = self.get_current_user()[constants.MONGO_ID]
-                result[constants.FRIEND_ID] = str(user_info_id)
-                friend_doc = await self.db_insert(constants.COLLECTION_FRIENDS, result)
+                result[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
+                result[fields.FRIEND_ID] = str(user_info_id)
+                friend_doc = await self.db_insert(collections.FRIENDS, result)
 
                 if friend_doc:
                     return user_info_id
@@ -47,12 +48,12 @@ class ApiMixinFriends(DaoMixin):
 
     async def api_friends_remove(self, user_info_id):
 
-        pipeline = {constants.USER_ID: self.getUserId(),
-                    constants.FRIEND_ID: user_info_id}
+        pipeline = {fields.USER_ID: self.getUserId(),
+                    fields.FRIEND_ID: user_info_id}
 
-        friend_doc = await self.db[constants.COLLECTION_FRIENDS].find_one(pipeline)
+        friend_doc = await self.db[collections.FRIENDS].find_one(pipeline)
         if friend_doc:
-            friend_doc = await self.db_remove(constants.COLLECTION_FRIENDS, pipeline)
+            friend_doc = await self.db_remove(collections.FRIENDS, pipeline)
             if friend_doc:
                 return user_info_id
         else:
@@ -75,28 +76,28 @@ class ApiMixinFriends(DaoMixin):
             if courses_editions_doc:
                 for term in courses_editions_doc['course_editions']:
                     for course in courses_editions_doc['course_editions'][term]:
-                        courses[course[constants.COURSE_ID]] = course
+                        courses[course[fields.COURSE_ID]] = course
 
                 for course in courses:
-                    course_participants = await self.api_course_edition(course, courses[course][constants.TERM_ID])
+                    course_participants = await self.api_course_edition(course, courses[course][fields.TERM_ID])
                     if not course_participants:
                         continue
 
-                    cursor = self.db[constants.COLLECTION_FRIENDS].find()
+                    cursor = self.db[collections.FRIENDS].find()
                     friends_added = await cursor.to_list(None)
 
-                    for participant in course_participants[constants.PARTICIPANTS]:
-                        participant_id = participant[constants.USER_ID]
+                    for participant in course_participants[fields.PARTICIPANTS]:
+                        participant_id = participant[fields.USER_ID]
 
                         # checking if participant is not current logged user
-                        if user_info[constants.ID] == participant_id:
+                        if user_info[fields.ID] == participant_id:
                             continue
 
                         # checking if participant is already added
-                        poz = helpers.in_dictlist(constants.FRIEND_ID, participant_id, friends_added)
+                        poz = helpers.in_dictlist(fields.FRIEND_ID, participant_id, friends_added)
                         if poz:
                             continue
-                        del participant[constants.ID]
+                        del participant[fields.ID]
 
                         # count how many courses have together
                         if participant_id in suggested_participants:
