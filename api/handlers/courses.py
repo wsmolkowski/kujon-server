@@ -51,7 +51,7 @@ class CoursesEditionsByTermApi(ApiHandler):
 
         try:
             courses = await self.api_courses_by_term(
-                coursefields=[fields.COURSE_ID, fields.COURSE_NAME, fields.TERM_ID])
+                course_fields=[fields.COURSE_ID, fields.COURSE_NAME, fields.TERM_ID])
             self.success(courses, cache_age=config.SECONDS_1MONTH)
         except Exception as ex:
             await self.exc(ex)

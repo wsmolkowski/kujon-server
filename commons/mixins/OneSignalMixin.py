@@ -41,13 +41,15 @@ class OneSignalMixin(object):
     async def signal_message(self, message, email_reciepient, language='en'):
 
         headers = HTTPHeaders({
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': self.config.AUTHORIZATION
         })
 
         body = json.dumps({
             'app_id': self.config.APPLICATION_ID,
-            'tags': [{"key": "user_email", "relation": "=", email_reciepient: "true"}],
+            'filters': [
+                {"field": "tag", "key": "user_email", "relation": "=", "value": email_reciepient},
+            ],
             'contents': {language: message}
         })
 
