@@ -47,13 +47,21 @@ class MathMixin(object):
 
                     grade_value = grade[fields.VALUE_SYMBOL].replace(',', '.')
 
-                    # get only integer &decimal numbers somtimes grdes are in such format "5,0 (bdb)"
-                    grade_value = re.search('(?:\d*\.)?\d+', grade_value).group(0)
-
                     if 'NZAL' in grade_value or 'NK' in grade_value:
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
+                    if 'ZAL' in grade_value:
+                        continue
+
+                    # get only integer &decimal numbers somtimes grdes are in such format "5,0 (bdb)"
+                    tmp = re.search('(?:\d*\.)?\d+', grade_value)
+                    if tmp:
+                        grade_value = tmp.group(0)
+                    else:
+                        logging.error("Nieprawidłowa ocena %s ", grade_value)
+
                     value_symbols.append(float(grade_value))
+
                 except (ValueError, TypeError):
                     logging.error("Nieprawidłowa ocena %s ", grade_value)
                     continue
