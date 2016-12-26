@@ -282,9 +282,9 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         return selected_courses
 
-    async def api_courses_by_term(self, fields=None):
+    async def api_courses_by_term(self, coursefields=None):
 
-        courses_edition = await self.api_courses(fields)
+        courses_edition = await self.api_courses(coursefields)
 
         # grouping grades by term
         courses = dict()
