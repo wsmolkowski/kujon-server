@@ -8,7 +8,7 @@ from commons.constants import collections, fields
 
 class StatisticsBaseHandler(BaseHandler):
     async def _aggreate_users(self, pipeline):
-        cursor = self.db[collections.COLLECTION_USERS].aggregate(pipeline)
+        cursor = self.db[collections.USERS].aggregate(pipeline)
         return await cursor.to_list(None)
 
     async def _stat_users_paired(self):
