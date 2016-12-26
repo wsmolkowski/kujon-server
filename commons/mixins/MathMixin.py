@@ -1,6 +1,9 @@
 # coding=UTF-8
 
 import logging
+import re
+
+from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = 2
@@ -37,15 +40,22 @@ class MathMixin(object):
 
             grades = self._get_only_final_grades(course[fields.GRADES])
             for grade in grades:
+                grade_value = None
                 if fields.VALUE_SYMBOL not in grade or not grade[fields.VALUE_SYMBOL]:
                     continue
                 try:
+
                     grade_value = grade[fields.VALUE_SYMBOL].replace(',', '.')
+
+                    # get only integer &decimal numbers somtimes grdes are in such format "5,0 (bdb)"
+                    grade_value = re.search('(?:\d*\.)?\d+', grade_value).group(0)
+
                     if 'NZAL' in grade_value or 'NK' in grade_value:
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
                     value_symbols.append(float(grade_value))
                 except (ValueError, TypeError):
+                    logging.error("Nieprawidłowa ocena %s ", grade_value)
                     continue
 
         if not value_symbols:
