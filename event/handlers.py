@@ -69,7 +69,7 @@ class EventHandler(AbstractHandler):
 
             body = self.request.body
             if isinstance(body, bytes):
-                body = str(body, fields.ENCODING)
+                body = str(body, config.ENCODING)
 
             event_data = json.loads(body)
             event_data[fields.USOS_ID] = self.getUsosId()

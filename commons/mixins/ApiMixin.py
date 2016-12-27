@@ -602,11 +602,22 @@ class ApiMixin(ApiUserMixin, MathMixin):
         cursor = self.db[collections.COURSES_UNITS].find(pipeline).sort("unit_id")
         units_doc = await cursor.to_list(None)
 
-        if not units_doc:
+        # check what units are not in mongo
+        missing_units = list()
+        for unit_id in units_id:
+            found = 0
+            for unit_doc_id in units_doc:
+                if str(unit_id) == str(unit_doc_id[fields.UNIT_ID]):
+                    found = 1
+            if found == 0:
+                missing_units.append(str(unit_id))
+
+        # fetch missing units
+        if len(missing_units) > 0:
             try:
                 tasks_units = list()
-                for unit in units_id:
-                    tasks_units.append(self.api_unit(unit))
+                for unit_id in missing_units:
+                    tasks_units.append(self.api_unit(unit_id))
                 await gen.multi(tasks_units)
                 cursor.rewind()
                 units_doc = await cursor.to_list(None)

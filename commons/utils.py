@@ -77,9 +77,9 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
     log = logging.getLogger(__name__)
 
 
-def http_client(proxy_url=None, proxy_port=None):
+def http_client(proxy_host=None, proxy_port=None):
     httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
-                                         defaults=dict(proxy_host=proxy_url,
+                                         defaults=dict(proxy_host=proxy_host,
                                                        proxy_port=proxy_port,
                                                        validate_cert=config.HTTP_VALIDATE_CERT,
                                                        ca_certs=certifi.where()),
@@ -88,8 +88,8 @@ def http_client(proxy_url=None, proxy_port=None):
     return httpclient.AsyncHTTPClient()
 
 
-def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None,
-                 prepare_curl_callback=None):
+def http_request(url, proxy_host=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None,
+                 prepare_curl_callback=None, method='GET', body=None):
     if not headers:
         headers = HTTPHeaders({})
 
@@ -98,10 +98,12 @@ def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True,
         headers.add('X-Forwarded-For', x_forwarded_for)
 
     return HTTPRequest(url=url,
+                       method=method,
+                       body=body,
                        decompress_response=decompress_response,
                        headers=headers,
                        prepare_curl_callback=prepare_curl_callback,
-                       proxy_host=proxy_url,
+                       proxy_host=proxy_host,
                        proxy_port=proxy_port,
                        connect_timeout=config.HTTP_CONNECT_TIMEOUT,
                        request_timeout=config.HTTP_REQUEST_TIMEOUT)
