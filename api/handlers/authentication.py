@@ -423,7 +423,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
                 user_id, json_data[fields.USER_EMAIL]))
 
             self.success(
-                'Dziękujemy za zarejestrowanie konta {0}. Aby aktywować konto należy postępować zgodnie z instrukcją przesłą w emailu weryfikacyjnym.'.format(
+                'Aby aktywować konto należy kliknąć w link który został Ci wysłany mailem.'.format(
                     self.config.PROJECT_TITLE), cache_age=None)
         except Exception as ex:
             await self.exc(ex)
@@ -444,7 +444,7 @@ class EmailLoginHandler(AbstractEmailHandler):
                 raise AuthenticationError('Podano błędne dane.')
 
             if not user_doc[fields.USER_EMAIL_CONFIRMED]:
-                raise AuthenticationError('Adres email nie został potwierdzony.')
+                raise AuthenticationError('Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
 
             token = {
                 'token': self.aes.encrypt(str(user_doc[fields.MONGO_ID])).decode(),
