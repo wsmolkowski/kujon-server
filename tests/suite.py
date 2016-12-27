@@ -3,6 +3,7 @@
 import unittest
 
 from tests.api_tests.courses_tests import ApiCoursesTest
+from tests.api_tests.files_tests import ApiFilesTest
 from tests.api_tests.rest_tests import ApiRestTest
 from tests.api_tests.search_tests import ApiSearchTest
 from tests.api_tests.tt_tests import ApiTTTest
@@ -22,6 +23,7 @@ def build_suite():
     # api
     test_suite.addTest(unittest.makeSuite(ApiUserTest))
     test_suite.addTest(unittest.makeSuite(ApiCoursesTest))
+    test_suite.addTest(unittest.makeSuite(ApiFilesTest))
     test_suite.addTest(unittest.makeSuite(ApiSearchTest))
     test_suite.addTest(unittest.makeSuite(ApiRestTest))
     test_suite.addTest(unittest.makeSuite(ApiTTTest))

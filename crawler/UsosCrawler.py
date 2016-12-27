@@ -20,12 +20,13 @@ from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
-class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTermMixin):
+class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, ApiTermMixin):
     EXCEPTION_TYPE = ExceptionTypes.CRAWLER.value
 
     def __init__(self, config):
         self.config = config
         self._aes = AESCipher(self.config.AES_SECRET)
+        self._osm = OneSignalMixin(self.config)
 
     @property
     def aes(self):
@@ -270,8 +271,10 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
             logging.debug('user_point: {0}'.format(user_point))
 
             if user_point:
-                signal_point = await self.signal_message('wiadomosc {0}'.format(user_point),
-                                                         user_doc[fields.USER_EMAIL])
+                signal_point = await self._osm.signal_message(
+                    message='wiadomosc {0}'.format(user_point),
+                    email_reciepient=user_doc[fields.USER_EMAIL]
+                    )
                 logging.debug('user_point signal_response: {1}'.format(signal_point))
 
             user_grade = await caller.call(path='services/crstests/user_grade',
@@ -280,7 +283,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
 
             if user_grade:
                 message_text = 'wiadomosc {0}'.format(user_grade)
-                signal_grade = await self.signal_message(message_text, user_doc[fields.USER_EMAIL])
+                signal_grade = await self._osm.signal_message(message_text, user_doc[fields.USER_EMAIL])
                 await self.db_save_message(message_text, from_whom='Komunikat z USOS', message_type='powiadomienie')
 
                 logging.debug('user_point signal_response: {1}'.format(signal_grade))
