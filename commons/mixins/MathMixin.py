@@ -71,8 +71,9 @@ class MathMixin(object):
             return
 
         try:
-            logging.debug(value_symbols)
-            return str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
+            avg = str(float(round(sum(value_symbols) / len(value_symbols), AVERAGE_GRADE_ROUND)))
+            logging.debug("Średnia: %s z %s ocen: %s", avg, len(value_symbols), value_symbols)
+            return avg
         except Exception as ex:
             logging.exception(ex)
             return
