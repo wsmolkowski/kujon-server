@@ -11,7 +11,7 @@ class SocialMixin(object):
         try:
             tokeninfo = await self.get_auth_http_client().fetch(
                 utils.http_request(url='https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token,
-                                   proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+                                   proxy_host=self._context.proxy_host, proxy_port=self._context.proxy_port))
 
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
@@ -28,7 +28,7 @@ class SocialMixin(object):
         try:
             tokeninfo = await self.get_auth_http_client().fetch(
                 utils.http_request(url='https://graph.facebook.com/me?fields=id,name,email&access_token=' + token,
-                                   proxy_url=self._context.proxy_url, proxy_port=self._context.proxy_port))
+                                   proxy_host=self._context.proxy_host, proxy_port=self._context.proxy_port))
 
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
