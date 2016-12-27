@@ -41,7 +41,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, OneSignalMixin, ApiTerm
         self._context = ObjectDict()
         self._context.refresh = refresh
         self._context.prepare_curl_callback = self.config.PREPARE_CURL_CALLBACK
-        self._context.proxy_url = self.config.PROXY_URL
+        self._context.proxy_url = self.config.PROXY_HOST
         self._context.proxy_port = self.config.PROXY_PORT
         self._context.remote_ip = None
         self._context.http_client = utils.http_client()

@@ -53,7 +53,7 @@ class Config(object):
         self.PREPARE_CURL_CALLBACK = self.config.getboolean('application', 'PREPARE_CURL_CALLBACK')
 
         # proxy
-        self.PROXY_URL = self.config.get('proxy', 'PROXY_URL') if self.config.get('proxy', 'PROXY_URL') else None
+        self.PROXY_HOST = self.config.get('proxy', 'PROXY_HOST') if self.config.get('proxy', 'PROXY_HOST') else None
         self.PROXY_PORT = self.config.getint('proxy', 'PROXY_PORT') if self.config.get('proxy', 'PROXY_PORT') else None
 
         # social

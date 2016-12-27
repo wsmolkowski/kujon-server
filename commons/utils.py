@@ -89,7 +89,7 @@ def http_client(proxy_url=None, proxy_port=None):
 
 
 def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None,
-                 prepare_curl_callback=None):
+                 prepare_curl_callback=None, method='GET', body=None):
     if not headers:
         headers = HTTPHeaders({})
 
@@ -98,6 +98,8 @@ def http_request(url, proxy_url=None, proxy_port=None, decompress_response=True,
         headers.add('X-Forwarded-For', x_forwarded_for)
 
     return HTTPRequest(url=url,
+                       method=method,
+                       body=body,
                        decompress_response=decompress_response,
                        headers=headers,
                        prepare_curl_callback=prepare_curl_callback,
