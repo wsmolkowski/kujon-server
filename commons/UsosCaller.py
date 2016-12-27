@@ -56,7 +56,7 @@ class AbstractCaller(object):
         curl.setopt(pycurl.FRESH_CONNECT, pycurl.FRESH_CONNECT)
 
     async def request_fetch(self, url):
-        client = utils.http_client(self._context.proxy_url, self._context.proxy_port)
+        client = utils.http_client(self._context.proxy_host, self._context.proxy_port)
 
         if self._context.prepare_curl_callback:
             prepare_curl_callback = self._prepare_curl_callback
@@ -66,7 +66,7 @@ class AbstractCaller(object):
         return await client.fetch(
 
             utils.http_request(url=url,
-                               proxy_url=self._context.proxy_url,
+                               proxy_host=self._context.proxy_host,
                                proxy_port=self._context.proxy_port,
                                x_forwarded_for=self._context.remote_ip,
                                prepare_curl_callback=prepare_curl_callback))

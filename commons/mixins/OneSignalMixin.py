@@ -16,17 +16,17 @@ SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 class OneSignalMixin(object):
     async def signal_fetch(self, fetch_url):
-        client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
 
         headers = HTTPHeaders({
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': self.config.AUTHORIZATION
         })
 
         response = await client.fetch(utils.http_request(url=fetch_url,
                                                          decompress_response=True,
                                                          headers=headers,
-                                                         proxy_url=self.config.PROXY_URL,
+                                                         proxy_host=self.config.PROXY_HOST,
                                                          proxy_port=self.config.PROXY_PORT))
 
         logging.info('signal_fetch response code: {0} reason: {1}'.format(response.code, response.reason))
@@ -60,7 +60,7 @@ class OneSignalMixin(object):
                                                                        user_agent=self.config.PROJECT_TITLE,
                                                                        connect_timeout=application_config.HTTP_CONNECT_TIMEOUT,
                                                                        request_timeout=application_config.HTTP_REQUEST_TIMEOUT,
-                                                                       proxy_host=self.config.PROXY_URL,
+                                                                       proxy_host=self.config.PROXY_HOST,
                                                                        proxy_port=self.config.PROXY_PORT
                                                                        ))
 
