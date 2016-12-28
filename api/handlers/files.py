@@ -1,13 +1,10 @@
 # coding=UTF-8
 
-import base64
 import logging
 from datetime import datetime
 
-
 from tornado.ioloop import IOLoop
 from tornado.web import escape
-import pyclamd
 
 from api.handlers.base import ApiHandler
 from commons import decorators
@@ -17,18 +14,21 @@ from commons.errors import FilesError
 
 
 class AbstractFilesHandler(ApiHandler):
+
     async def api_files(self, pipeline):
         cursor = self.db[collections.FILES].find(pipeline)
         # TODO: convert USER_ID to name
+        # TODO: encode file content with base64
         return await cursor.to_list(None)
 
     async def api_validate_file(self, file_content):
         # base64.b64encode(file_content)
+        # TODO: virus scan
         return True
 
     async def api_files_scan(self, file_id, file_content):
 
-        file_ok = await self.api_validate_file(file_content) #TODO: virus scan
+        file_ok = await self.api_validate_file(file_content)
         if file_ok:
             file_upload_id = await self.fs.upload_from_stream()
             status = UploadFileStatus.STORED.value
@@ -115,7 +115,7 @@ class FileHandler(AbstractFilesHandler):
             file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
 
             if file_doc[fields.USER_ID] != self.getUserId():
-                raise FilesError('Cannot delete differenet user file.')
+                raise FilesError('Cannot delete another user\'s file.')
 
             # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
             # logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
@@ -130,3 +130,4 @@ class FileHandler(AbstractFilesHandler):
             self.success('file deleted.')
         except Exception as ex:
             await self.exc(ex)
+

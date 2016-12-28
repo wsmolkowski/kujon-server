@@ -1,30 +1,21 @@
 # coding=utf-8
 
-import unittest
-
 import pyclamd
+from tornado.testing import gen_test
 
-from commons.config import Config
-from commons.enumerators import Environment
+from tests.api_tests.base import AbstractApplicationTestBase
 
 
-class ClamAvTest(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
-        self.config = Config(Environment.TESTS.value)
-        pass
-
+class ClamAvTest(AbstractApplicationTestBase):
     def setUp(self):
-        pass
+        super(ClamAvTest, self).setUp()
 
     def tearDown(self):
         pass
 
+    @gen_test(timeout=1)
     def testConnectClamv(self):
         # assume
-        self.config = Config(Environment.TESTS.value)
-
         cd = pyclamd.ClamdNetworkSocket()
 
         # when
@@ -33,6 +24,7 @@ class ClamAvTest(unittest.TestCase):
         # then
         self.assertEqual(result, "ClamAV")
 
+    @gen_test(timeout=1)
     def testClamAVContainsEicar(self):
         # assume
         cd = pyclamd.ClamdNetworkSocket()
@@ -44,6 +36,7 @@ class ClamAvTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result['stream'], ('FOUND', 'Eicar-Test-Signature'))
 
+    @gen_test(timeout=1)
     def testClamAVNotContainsEicar(self):
         # assume
         cd = pyclamd.ClamdNetworkSocket()

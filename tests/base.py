@@ -3,20 +3,17 @@
 import logging
 from datetime import datetime
 
+import motor.motor_tornado
+from motor import MotorGridFSBucket
 from pymongo import MongoClient
 from tornado import escape
 from tornado import gen
 from tornado.testing import AsyncHTTPTestCase
-import motor.motor_tornado
-from motor import MotorGridFSBucket
-
-from api import server
-from commons.AESCipher import AESCipher
-from commons.constants import config
 
 from commons import utils
+from commons.AESCipher import AESCipher
 from commons.config import Config
-from commons.constants import fields, collections, config
+from commons.constants import collections, config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
