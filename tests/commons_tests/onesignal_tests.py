@@ -13,7 +13,7 @@ class OneSignalTest(AbstractApplicationTestBase):
         super(OneSignalTest, self).setUp()
         self.config = Config(Environment.TESTS.value)
 
-    @gen_test(timeout=30)
+    @gen_test(timeout=1)
     def testOneSignalMessageSend(self):
         # assume
         osm = OneSignal(self.config)

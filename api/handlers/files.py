@@ -51,8 +51,7 @@ class FilesHandler(AbstractFilesHandler):
         try:
             json_data = escape.json_decode(self.request.body.decode())
 
-            if fields.PROGRAMME_ID not in json_data \
-                    or fields.TERM_ID not in json_data \
+            if fields.TERM_ID not in json_data \
                     or fields.COURSE_ID not in json_data:
                 raise FilesError('Nie przekazano odpowiednich parametrów.')
 
@@ -68,8 +67,7 @@ class FilesHandler(AbstractFilesHandler):
         try:
             json_data = escape.json_decode(self.request.body.decode())
 
-            if fields.PROGRAMME_ID not in json_data \
-                    or fields.TERM_ID not in json_data \
+            if fields.TERM_ID not in json_data \
                     or fields.COURSE_ID not in json_data \
                     or fields.FILE_NAME not in json_data \
                     or fields.FILE_CONTENT not in json_data:

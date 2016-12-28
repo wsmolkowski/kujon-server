@@ -2,11 +2,7 @@
 
 import logging
 
-import motor.motor_tornado
-from motor import MotorGridFSBucket
-
 from api import server
-from commons.AESCipher import AESCipher
 from commons.constants import config
 from tests.base import BaseTestClass
 

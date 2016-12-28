@@ -9,7 +9,7 @@ class ApiSearchTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiSearchTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.inser_user(config=self.config)
+        self.insert_user(config=self.config)
 
     @gen_test(timeout=5)
     def testtermsSearchUsers(self):

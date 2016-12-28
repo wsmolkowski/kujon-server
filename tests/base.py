@@ -64,7 +64,7 @@ class BaseTestClass(AsyncHTTPTestCase):
     #     return IOLoop.current()
 
     @staticmethod
-    def inser_user(config, user_doc=None, token_doc=None):
+    def insert_user(config, user_doc=None, token_doc=None):
 
         if not user_doc:
             user_doc = USER_DOC
@@ -111,11 +111,11 @@ class BaseTestClass(AsyncHTTPTestCase):
         })
 
         if assert_response:
-            self.assertApiResponse(response)
+            self.assert_api_response(response)
 
         return response
 
-    def assertApiResponse(self, response):
+    def assert_api_response(self, response):
         logging.info(response.body)
         self.assertEqual(response.code, 200)
         self.assertTrue('application/json' in response.headers['Content-Type'])
@@ -125,7 +125,7 @@ class BaseTestClass(AsyncHTTPTestCase):
         self.assertIsNotNone(json_body)
         self.assertEqual('success', json_body['status'])
 
-    def assertApiResponseFail(self, response):
+    def assert_api_response_fail(self, response):
         logging.debug(response.body)
         self.assertEqual(response.code, 200)
         self.assertTrue('application/json' in response.headers['Content-Type'])
