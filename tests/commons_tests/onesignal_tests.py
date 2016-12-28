@@ -20,7 +20,7 @@ class OneSignalMixinTest(AbstractApplicationTestBase):
 
         # when
         result = yield osm.signal_message(message="test message",
-                                          email_reciepient="dzizes451@gmail.com")
+                                          email_reciepient="wojciech.smolkowski@gmail.com")
 
         # then
         self.assertIsNotNone(result)
