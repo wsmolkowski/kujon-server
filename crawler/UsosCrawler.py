@@ -10,6 +10,7 @@ from tornado.util import ObjectDict
 
 from commons import utils
 from commons.AESCipher import AESCipher
+from commons.OneSignal import OneSignal
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.constants import fields, collections
 from commons.enumerators import ExceptionTypes
@@ -17,7 +18,6 @@ from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.CrsTestsMixin import CrsTestsMixin
-from commons.mixins.OneSignalMixin import OneSignalMixin
 
 
 class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, ApiTermMixin):
@@ -26,7 +26,7 @@ class UsosCrawler(ApiMixin, ApiUserMixin, CrsTestsMixin, ApiTermMixin):
     def __init__(self, config):
         self.config = config
         self._aes = AESCipher(self.config.AES_SECRET)
-        self._osm = OneSignalMixin(self.config)
+        self._osm = OneSignal(self.config)
 
     @property
     def aes(self):
