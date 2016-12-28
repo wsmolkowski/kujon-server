@@ -14,7 +14,7 @@ from commons.errors import OneSignalError
 SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 
-class OneSignalMixin(object):
+class OneSignal(object):
     def __init__(self, config):
         self.config = config
         self.client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
