@@ -7,10 +7,16 @@ from pymongo import MongoClient
 from tornado import escape
 from tornado import gen
 from tornado.testing import AsyncHTTPTestCase
+import motor.motor_tornado
+from motor import MotorGridFSBucket
+
+from api import server
+from commons.AESCipher import AESCipher
+from commons.constants import config
 
 from commons import utils
 from commons.config import Config
-from commons.constants import fields, collections
+from commons.constants import fields, collections, config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
@@ -88,7 +94,12 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
-        self.client = utils.http_client(self.config.PROXY_URL, self.config.PROXY_PORT)
+        self.client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
+
+        self.db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+        logging.info(self.db)
+        self.aes = AESCipher(self.config.AES_SECRET)
+        self.fs = MotorGridFSBucket(self.db)
 
     @gen.coroutine
     def fetch_assert(self, url, assert_response=True):
@@ -97,9 +108,9 @@ class BaseTestClass(AsyncHTTPTestCase):
         #     yield self.http_client.fetch(request)
 
         response = yield self.client.fetch(url, headers={
-            fields.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
-            fields.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
-            fields.MOBILE_X_HEADER_REFRESH: 'True',
+            config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            config.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
+            config.MOBILE_X_HEADER_REFRESH: 'True',
         })
 
         if assert_response:
