@@ -8,9 +8,9 @@ from commons.enumerators import Environment
 from tests.api_tests.base import AbstractApplicationTestBase
 
 
-class OneSignalMixinTest(AbstractApplicationTestBase):
+class OneSignalTest(AbstractApplicationTestBase):
     def setUp(self):
-        super(OneSignalMixinTest, self).setUp()
+        super(OneSignalTest, self).setUp()
         self.config = Config(Environment.TESTS.value)
 
     @gen_test(timeout=30)

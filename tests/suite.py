@@ -10,7 +10,7 @@ from tests.api_tests.tt_tests import ApiTTTest
 from tests.api_tests.user_tests import ApiUserTest
 from tests.clamav_tests.clamav_tests import ClamAvTest
 from tests.commons_tests.config_tests import ConfigTest
-from tests.commons_tests.onesignal_tests import OneSignal
+from tests.commons_tests.onesignal_tests import OneSignalTest
 from tests.crawler_tests.crawler_tests import CrawlerTest
 from tests.scripts_tests.dbutilts_tests import DbUtilsTest
 
@@ -33,7 +33,7 @@ def build_suite():
     # test_suite.addTest(unittest.makeSuite(SerializationTest))
     # test_suite.addTest(unittest.makeSuite(AESCipher))
     test_suite.addTest(unittest.makeSuite(ConfigTest))
-    test_suite.addTest(unittest.makeSuite(OneSignal))
+    test_suite.addTest(unittest.makeSuite(OneSignalTest))
 
     # crawler
     test_suite.addTest(unittest.makeSuite(CrawlerTest))
