@@ -104,8 +104,6 @@ class FileHandler(AbstractFilesHandler):
             contents = await grid_out.read()
             self.write(contents)
 
-            #TODO: dodać zapisywanie kto i kiedy i z jakiego IP pobrał plik
-
         except Exception as ex:
             await self.exc(ex)
 
