@@ -2,9 +2,9 @@
 
 import unittest
 
-from tests.api_tests.courses_tests import ApiCoursesTest
+from tests.api_tests.api_authorized_tests import ApiCoursesTest
+from tests.api_tests.api_open_endpoints_tests import ApiRestTest
 from tests.api_tests.files_tests import ApiFilesTest
-from tests.api_tests.rest_tests import ApiRestTest
 from tests.api_tests.search_tests import ApiSearchTest
 from tests.api_tests.tt_tests import ApiTTTest
 from tests.api_tests.user_tests import ApiUserTest
