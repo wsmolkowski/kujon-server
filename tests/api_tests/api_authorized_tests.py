@@ -13,6 +13,14 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testCourseseditions(self):
+        yield self.fetch_assert(self.get_url('/users'))
+
+    @gen_test(timeout=10)
+    def testCourseseditions(self):
+        yield self.fetch_assert(self.get_url('/usersinfoall'))
+
+    @gen_test(timeout=10)
+    def testCourseseditions(self):
         yield self.fetch_assert(self.get_url('/courseseditions'))
 
     @gen_test(timeout=10)
