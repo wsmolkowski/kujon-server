@@ -157,7 +157,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.assert_api_response_fail(response)
 
         # check invalid course_id and term_id
-        # check invalid term_id
         file_json = json.dumps({
             fields.TERM_ID: "ZZ",
             fields.COURSE_ID: "YY",
@@ -201,6 +200,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         download_uri = '/files/' + file_upload_id
         response = yield self.http_client.fetch(self.get_url(download_uri), method="DELETE")
         self.assert_api_response_fail(response)
+
 
     @gen_test(timeout=1)
     def test_get_list_of_files(self):

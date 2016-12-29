@@ -12,23 +12,14 @@ from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.MathMixin import MathMixin
 
-LIMIT_FIELDS = (
-    'is_currently_conducted', 'bibliography', fields.COURSE_NAME, fields.FACULTY_ID, 'assessment_criteria',
-    fields.COURSE_ID, 'homepage_url', 'lang_id', 'learning_outcomes', 'description')
-LIMIT_FIELDS_GROUPS = ('class_type', 'group_number', 'course_unit_id')
-LIMIT_FIELDS_FACULTY = (fields.FACULTY_ID, 'logo_urls', 'name', 'postal_address', 'homepage_url', 'phone_numbers',
-                        'path', 'stats')
-LIMIT_FIELDS_USER = (
-    'first_name', 'last_name', 'titles', 'email_url', fields.ID, fields.PHOTO_URL, 'staff_status', 'room',
-    'office_hours', 'employment_positions', 'course_editions_conducted', 'interests', 'homepage_url')
-LIMIT_FIELDS_PROGRAMMES = (
-    'name', 'mode_of_studies', 'level_of_studies', 'programme_id', 'duration', 'description', 'faculty')
-USER_INFO_LIMIT_FIELDS = (
-    'first_name', 'last_name', fields.ID, 'student_number', 'student_status', fields.PHOTO_URL,
-    'student_programmes',
-    'user_type', fields.PHOTO_URL, 'has_photo', 'staff_status', 'employment_positions', 'room',
-    'course_editions_conducted',
-    'titles', 'office_hours', 'homepage_url', 'has_email', 'email_url', 'sex', 'user_id')
+LIMIT_FIELDS_COURSE = {'is_currently_conducted': 1, 'bibliography': 1, fields.COURSE_NAME: 1, fields.FACULTY_ID: 1,
+                       'assessment_criteria': 1, fields.COURSE_ID: 1, 'homepage_url': 1, 'lang_id': 1,
+                       'learning_outcomes': 1, 'description': 1, fields.MONGO_ID: 0}
+LIMIT_FIELDS_GROUPS = {'class_type': 1, 'group_number': 1, 'course_unit_id': 1}
+LIMIT_FIELDS_FACULTY = {fields.FACULTY_ID: 1, 'logo_urls': 1, 'name': 1, 'postal_address': 1, 'homepage_url': 1,
+                        'phone_numbers': 1, 'path': 1, 'stats': 1, fields.MONGO_ID: 0}
+LIMIT_FIELDS_PROGRAMMES = {'name': 1, 'mode_of_studies': 1, 'level_of_studies': 1, 'programme_id': 1, 'duration': 1,
+                           'description': 1, 'faculty': 1, fields.MONGO_ID: 0}
 
 
 class ApiMixin(ApiUserMixin, MathMixin):
@@ -127,7 +118,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         if self.do_refresh():
             await self.db_remove(collections.COURSES, pipeline)
 
-        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
+        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
 
         if not course_doc:
             try:
@@ -135,7 +126,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 await self.db_insert(collections.COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
-                course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
+                course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
             except Exception as ex:
                 if log_exception:
                     await self.exc(ex, finish=False)
@@ -198,7 +189,6 @@ class ApiMixin(ApiUserMixin, MathMixin):
             course_doc[fields.FACULTY_ID] = {fields.FACULTY_ID: faculty_doc[fields.FACULTY_ID],
                                              fields.FACULTY_NAME: faculty_doc[fields.FACULTY_NAME]}
 
-        course_doc.pop(fields.MONGO_ID)
         return course_doc
 
     async def usos_course(self, course_id):
@@ -221,7 +211,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         if self.do_refresh():
             await self.db_remove(collections.COURSES, pipeline)
 
-        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS)
+        course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
 
         if not course_doc:
             course_doc = await self.usos_course(course_id)
@@ -544,7 +534,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         programmes_ids = list()
         if 'student_programmes' in user_info:
             for programme in user_info['student_programmes']:
-                programmes_ids.append(programme['programme']['id'])
+                programmes_ids.append(programme['programme'][fields.ID])
 
         programmes = []
         tasks_progammes = list()
@@ -559,9 +549,9 @@ class ApiMixin(ApiUserMixin, MathMixin):
         # get faculties
         faculties_ids = list()
         for programme_doc in programmes:
-            if 'faculty' in programme_doc and fields.FACULTY_ID in programme_doc['faculty'] and \
-                            programme_doc['faculty'][fields.FACULTY_ID] not in faculties_ids:
-                faculties_ids.append(programme_doc['faculty'][fields.FACULTY_ID])
+            if 'faculty' in programme_doc and fields.ID in programme_doc['faculty'] and \
+                            programme_doc['faculty'][fields.ID] not in faculties_ids:
+                faculties_ids.append(programme_doc['faculty'][fields.ID])
 
         faculties = list()
         tasks_faculties = list()
