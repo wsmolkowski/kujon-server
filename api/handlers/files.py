@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+import pyclamd
 from tornado.ioloop import IOLoop
 from tornado.web import escape
 
@@ -14,21 +15,36 @@ from commons.errors import FilesError
 
 
 class AbstractFilesHandler(ApiHandler):
+    _clamd = None
+
+    @property
+    def clamd(self):
+        if not self._clamd:
+            self._clamd = pyclamd.ClamdNetworkSocket()
+        return self._clamd
+
 
     async def api_files(self, pipeline):
         cursor = self.db[collections.FILES].find(pipeline)
-        # TODO: convert USER_ID to name
-        # TODO: encode file content with base64
         return await cursor.to_list(None)
 
-    async def api_validate_file(self, file_content):
+    async def api_validate_file(self, file_id, file_content):
         # base64.b64encode(file_content)
-        # TODO: virus scan
-        return True
+        try:
+            scan_result = self.clamd.scan_stream(file_content)
+            if scan_result:
+                logging.info('file_id {0} virus found {1}'.format(file_id, scan_result))
+                return False
+
+            return True
+
+        except (pyclamd.BufferTooLongError, pyclamd.ConnectionError) as ex:
+            logging.debug(ex)
+            return False
 
     async def api_files_scan(self, file_id, file_content):
 
-        file_ok = await self.api_validate_file(file_content)
+        file_ok = await self.api_validate_file(file_id, file_content)
         if file_ok:
             file_upload_id = await self.fs.upload_from_stream()
             status = UploadFileStatus.STORED.value
