@@ -11,18 +11,18 @@ class ApiUserTest(AbstractApplicationTestBase):
         self.prepareDatabase(self.config)
         self.insert_user(config=self.config)
 
-    @gen_test(timeout=1)
-    def test_users(self):
+    @gen_test(timeout=10)
+    def testUsers(self):
         yield self.fetch_assert(self.get_url('/users'))
 
-    @gen_test(timeout=1)
-    def test_users_by_id(self):
+    @gen_test(timeout=10)
+    def testUsersById(self):
         yield self.fetch_assert(self.get_url('/users/1'))
 
-    @gen_test(timeout=1)
-    def test_users_with_fake_id(self):
+    @gen_test(timeout=10)
+    def testUsersWithFakeId(self):
         yield self.fetch_assert(self.get_url('/users/Fake'))
 
-    @gen_test(timeout=1)
-    def test_users_info_photos_by_id(self):
+    @gen_test(timeout=10)
+    def testUsersInfoPhotosById(self):
         yield self.fetch_assert(self.get_url('/users_info_photos/123'))
