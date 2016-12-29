@@ -77,7 +77,7 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
     log = logging.getLogger(__name__)
 
 
-def http_client(proxy_host=None, proxy_port=None):
+def http_client(proxy_host=None, proxy_port=None, io_loop=None):
     httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient",
                                          defaults=dict(proxy_host=proxy_host,
                                                        proxy_port=proxy_port,
@@ -85,7 +85,7 @@ def http_client(proxy_host=None, proxy_port=None):
                                                        ca_certs=certifi.where()),
                                          max_clients=config.MAX_HTTP_CLIENTS)
 
-    return httpclient.AsyncHTTPClient()
+    return httpclient.AsyncHTTPClient(io_loop=io_loop)
 
 
 def http_request(url, proxy_host=None, proxy_port=None, decompress_response=True, headers=None, x_forwarded_for=None,

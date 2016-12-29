@@ -1,20 +1,9 @@
 # coding=utf-8
 
-import logging
-
 from api import server
-from commons.constants import config
 from tests.base import BaseTestClass
 
 
 class AbstractApplicationTestBase(BaseTestClass):
     def get_app(self):
-        application = server.get_application(self.config)
-
-        application.settings[config.APPLICATION_DB] = self.db
-        application.settings[config.APPLICATION_CONFIG] = self.config
-        application.settings[config.APPLICATION_AES] = self.aes
-        application.settings[config.APPLICATION_FS] = self.fs
-        logging.info(self.config.DEPLOY_API)
-
-        return application
+        return server.get_application(self.config)

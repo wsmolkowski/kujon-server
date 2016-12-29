@@ -60,9 +60,6 @@ TOKEN_DOC = {"locale": "pl",
 
 
 class BaseTestClass(AsyncHTTPTestCase):
-    # def get_new_ioloop(self):
-    #     return IOLoop.current()
-
     @staticmethod
     def insert_user(config, user_doc=None, token_doc=None):
 
@@ -91,12 +88,27 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
-        self.client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
 
-        self.db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
+    def setUp(self):
+        super(BaseTestClass, self).setUp()
+
+        self.client = utils.http_client(proxy_host=self.config.PROXY_HOST,
+                                        proxy_port=self.config.PROXY_PORT,
+                                        io_loop=self.io_loop)
+
+        # io_loop=self.io_loop
+        client = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
+        self.db = client[self.config.MONGODB_NAME]
         logging.info(self.db)
         self.aes = AESCipher(self.config.AES_SECRET)
         self.fs = MotorGridFSBucket(self.db)
+
+        # self._app = self.get_app()
+        self._app.settings[config.APPLICATION_DB] = self.db
+        self._app.settings[config.APPLICATION_CONFIG] = self.config
+        self._app.settings[config.APPLICATION_AES] = self.aes
+        self._app.settings[config.APPLICATION_FS] = self.fs
+        # print(self.__port)
 
     @gen.coroutine
     def fetch_assert(self, url, assert_response=True):
