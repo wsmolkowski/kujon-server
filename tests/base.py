@@ -3,20 +3,17 @@
 import logging
 from datetime import datetime
 
+import motor.motor_tornado
+from motor import MotorGridFSBucket
 from pymongo import MongoClient
 from tornado import escape
 from tornado import gen
 from tornado.testing import AsyncHTTPTestCase
-import motor.motor_tornado
-from motor import MotorGridFSBucket
-
-from api import server
-from commons.AESCipher import AESCipher
-from commons.constants import config
 
 from commons import utils
+from commons.AESCipher import AESCipher
 from commons.config import Config
-from commons.constants import fields, collections, config
+from commons.constants import collections, config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
@@ -67,7 +64,7 @@ class BaseTestClass(AsyncHTTPTestCase):
     #     return IOLoop.current()
 
     @staticmethod
-    def inser_user(config, user_doc=None, token_doc=None):
+    def insert_user(config, user_doc=None, token_doc=None):
 
         if not user_doc:
             user_doc = USER_DOC
@@ -114,11 +111,11 @@ class BaseTestClass(AsyncHTTPTestCase):
         })
 
         if assert_response:
-            self.assertApiResponse(response)
+            self.assert_api_response(response)
 
         return response
 
-    def assertApiResponse(self, response):
+    def assert_api_response(self, response):
         logging.info(response.body)
         self.assertEqual(response.code, 200)
         self.assertTrue('application/json' in response.headers['Content-Type'])
@@ -128,7 +125,7 @@ class BaseTestClass(AsyncHTTPTestCase):
         self.assertIsNotNone(json_body)
         self.assertEqual('success', json_body['status'])
 
-    def assertApiResponseFail(self, response):
+    def assert_api_response_fail(self, response):
         logging.debug(response.body)
         self.assertEqual(response.code, 200)
         self.assertTrue('application/json' in response.headers['Content-Type'])

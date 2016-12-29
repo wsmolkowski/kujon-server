@@ -47,7 +47,7 @@ class EventTest(BaseTestClass):
         challange = 'BKHeL7VXuPDttqDVzWne'
         self.prepareDatabase(self.config)
 
-        result = self.inser_user(config=self.config, user_doc=USER_DOC)
+        result = self.insert_user(config=self.config, user_doc=USER_DOC)
         user_id = str(result[0])
 
         aes = AESCipher(self.config.AES_SECRET)

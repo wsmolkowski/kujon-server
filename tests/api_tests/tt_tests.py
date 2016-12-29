@@ -52,7 +52,7 @@ class ApiTTTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiTTTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.inser_user(config=self.config, user_doc=USER_DOC, token_doc=TOKEN_DOC)
+        self.insert_user(config=self.config, user_doc=USER_DOC, token_doc=TOKEN_DOC)
 
     @gen_test(timeout=30)
     def testTT(self):

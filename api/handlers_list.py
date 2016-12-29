@@ -82,10 +82,14 @@ HANDLERS = [
     (r"/search/theses/([^/]+)", SearchThesesApi),
 
     (r"/theses", ThesesApi),
+
     (r"/crstests", CrsTestsApi),
     (r"/crstests/([^/]+)", CrsTestsNodeApi),
+
     (r"/subscriptions", SubscriptionsHandler),
+
     (r"/messages", MessagesHandler),
+
     (r"/files", FilesHandler),
     (r"/files/([^/]+)", FileHandler),
 ]
