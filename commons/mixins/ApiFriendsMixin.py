@@ -26,7 +26,7 @@ class ApiMixinFriends(DaoMixin):
 
             return friends_returned
         else:
-            raise ApiError("Poczekaj szukamy przyjaciół.")
+            return friend_doc
 
     async def api_friends_add(self, user_info_id):
         friend_doc = await self.db[collections.FRIENDS].find_one(
