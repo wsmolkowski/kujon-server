@@ -4,8 +4,8 @@ from random import randint
 
 from tornado.testing import gen_test
 
+from commons.constants import fields
 from tests.api_tests.base import AbstractApplicationTestBase
-
 
 class ApiCoursesTest(AbstractApplicationTestBase):
     def setUp(self):
@@ -36,7 +36,9 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testCourses(self):
-        yield self.fetch_assert(self.get_url('/courses/{0}'.format(self.random)), assert_response=False)
+        result = yield self.fetch_assert(self.get_url('/courseseditions'))
+        course_id = result['data'][0][fields.COURSE_ID]
+        yield self.fetch_assert(self.get_url('/courses/{0}'.format(course_id)), assert_response=True)
 
     @gen_test(timeout=10)
     def testGrades(self):
@@ -52,7 +54,9 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsSingle(self):
-        yield self.fetch_assert(self.get_url('/terms/{0}'.format(self.random)), assert_response=False)
+        result = yield self.fetch_assert(self.get_url('/terms'))
+        term_id = result['data'][0][fields.TERM_ID]
+        yield self.fetch_assert(self.get_url('/terms/{0}'.format(term_id)))
 
     @gen_test(timeout=10)
     def testTermsLecturers(self):
@@ -60,7 +64,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsLecturersSingle(self):
-        yield self.fetch_assert(self.get_url('/lecturers/{0}'.format(self.random)), assert_response=False)
+        yield self.fetch_assert(self.get_url('/lecturers/1480001'.format(self.random)))
 
     @gen_test(timeout=10)
     def testTermsProgrammes(self):
@@ -88,6 +92,8 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsCrstestsSingle(self):
+        result = yield self.fetch_assert(self.get_url('/crstests'))
+
         yield self.fetch_assert(self.get_url('/crstests/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)

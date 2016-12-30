@@ -98,6 +98,7 @@ class BaseTestClass(AsyncHTTPTestCase):
     @gen.coroutine
     def fetch_assert(self, url, assert_response=True, method="GET", body=None):
 
+
         response = yield self.client.fetch(url, method=method, body=body, headers={
             config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
             config.MOBILE_X_HEADER_TOKEN: TOKEN_DOC['token'],
