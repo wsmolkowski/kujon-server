@@ -6,7 +6,7 @@ from api.handlers.base import UsosesApi, UsosesAllApi, ApplicationConfigHandler
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi
-from api.handlers.files import FilesHandler, FileHandler
+from api.handlers.files import FilesHandler, FilesHandlerByTermIDCourseID, FilesHandlerByID, FilesHandlerUploadV1
 from api.handlers.friends import FriendsSuggestionsApi, FriendsApi
 from api.handlers.grades import GradesForUserApi, GradesForUserByTermApi
 from api.handlers.lecturers import LecturersApi, LecturerByIdApi
@@ -90,5 +90,7 @@ HANDLERS = [
     (r"/messages", MessagesHandler),
 
     (r"/files", FilesHandler),
-    (r"/files/([^/]+)", FileHandler),
+    (r"/files/([^/]+)/([^/]+)", FilesHandlerByTermIDCourseID),
+    (r"/files/([^/]+)", FilesHandlerByID),
+    (r"/filesupload/v1", FilesHandlerUploadV1),
 ]

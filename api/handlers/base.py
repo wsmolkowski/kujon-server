@@ -11,6 +11,7 @@ from commons.constants import fields, collections, config
 from commons.enumerators import ExceptionTypes, Environment, UserTypes
 from commons.errors import AuthenticationError
 from commons.handlers import AbstractHandler
+from commons.mixins.ApiFileMixin import ApiMixinFiles
 from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
@@ -128,7 +129,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
             self.set_header("Access-Control-Allow-Credentials", "true")
 
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin, ApiMixinFiles):
     EXCEPTION_TYPE = ExceptionTypes.API.value
 
     def do_refresh(self):  # overwrite from DaoMixin
