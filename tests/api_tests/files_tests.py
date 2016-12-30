@@ -196,7 +196,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
             fields.FILE_NAME: filename,
             fields.FILE_CONTENT: self.file_sample,
         })
-        file_doc = yield self.fetch_assert(self.get_url('/filesupload/v1'), method="POST", body=file_json)
+        file_doc = yield self.fetch_assert(self.get_url('/filesupload'), method="POST", body=file_json)
 
         if file_doc and 'data' in file_doc:
             file_id = file_doc['data']
@@ -206,8 +206,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
         yield self.fetch_assert(self.get_url(download_uri), method="DELETE")
 
         # delete
-        delete_uri = '/files/' + file_id
-        yield self.fetch_assert(self.get_url(delete_uri), assert_response=False, method="DELETE")
+        # delete_uri = '/files/' + file_id
+        # yield self.fetch_assert(self.get_url(delete_uri), assert_response=False, method="DELETE")
 
     @gen_test(timeout=5)
     def test_get_and_delete_file_from_not_my_courseedition(self):
