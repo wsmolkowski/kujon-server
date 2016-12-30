@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-import logging
 from datetime import datetime
 
 from tornado.web import escape
@@ -12,7 +11,9 @@ from commons.enumerators import UploadFileStatus, Environment
 from commons.errors import FilesError
 
 
-class FilesHandlerByID(ApiHandler):
+class FileHandler(ApiHandler):
+    SUPPORTED_METHODS = ('OPTIONS', 'GET', 'DELETE')
+
     @decorators.authenticated
     async def get(self, file_id):
         try:
@@ -33,8 +34,33 @@ class FilesHandlerByID(ApiHandler):
         except Exception as ex:
             await self.exc(ex)
 
+    @decorators.authenticated
+    async def delete(self, file_id):
+        try:
+            file_doc = await self.db[collections.FILES].find_one({fields.FILE_ID: file_id,
+                                                                  fields.FILE_SIZE: UploadFileStatus.STORED.value,
+                                                                  fields.USER_ID: self.getUserId(),
+                                                                  fields.USOS_ID: self.getUsosId()})
 
-class FilesHandlerByTermIDCourseID(ApiHandler):
+            if not file_doc:
+                self.error("Nie znaleziono pliku.", code=404)
+                return
+
+            # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
+            # logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
+
+            file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
+            file_doc[fields.UPDATE_TIME] = datetime.now()
+
+            file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
+
+            self.success(file_id)
+        except Exception as ex:
+            await self.exc(ex)
+
+
+
+class FilesHandler(ApiHandler):
     @decorators.authenticated
     async def get(self, term_id, course_id):
         try:
@@ -44,7 +70,7 @@ class FilesHandlerByTermIDCourseID(ApiHandler):
             await self.exc(ex)
 
 
-class FilesHandler(ApiHandler):
+class FilesUserHandler(ApiHandler):
 
     @decorators.authenticated
     async def get(self):
@@ -57,31 +83,8 @@ class FilesHandler(ApiHandler):
 
 
 
-    @decorators.authenticated
-    async def delete(self, file_id):
 
-        try:
-            file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
-
-            if file_doc[fields.USER_ID] != self.getUserId():
-                raise FilesError('Cannot delete another user\'s file.')
-
-            # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
-            # logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
-
-            file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
-            file_doc[fields.UPDATE_TIME] = datetime.now()
-
-            file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
-
-            logging.debug('changed file status: {0} to: {1}'.format(file_id, UploadFileStatus.DELETED.value))
-
-            self.success(file_id)
-        except Exception as ex:
-            await self.exc(ex)
-
-
-class FilesHandlerUploadV1(ApiHandler):
+class FileUploadHandler(ApiHandler):
 
     @decorators.authenticated
     async def post(self):

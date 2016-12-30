@@ -76,10 +76,6 @@ class ApiMixinFiles(DaoMixin):
         log_doc[fields.USOS_ID] = self.getUsosId()
         log_doc[fields.REMOTE_ADDRESS] = remote_address
         log_doc[fields.CREATED_TIME] = datetime.now()
-        if file_doc:
-            log_doc[fields.FILE_DOWNLOADEDFLAG] = True
-        else:
-            log_doc[fields.FILE_DOWNLOADEDFLAG] = False
         log_id = await self.db_insert(collections.FILES_DOWNLOADS, log_doc, update=False)
         if not log_id:
             logging.error('Nie udalo sie zalogować pobrania pliku: {0}'.format(file_id))
