@@ -3,128 +3,63 @@
 import logging
 from datetime import datetime
 
-import pyclamd
-from tornado.ioloop import IOLoop
 from tornado.web import escape
 
 from api.handlers.base import ApiHandler
 from commons import decorators
-from commons.constants import fields, collections
-from commons.enumerators import UploadFileStatus
+from commons.constants import fields, collections, config
+from commons.enumerators import UploadFileStatus, Environment
 from commons.errors import FilesError
 
 
-class AbstractFilesHandler(ApiHandler):
-    _clamd = None
-
-    @property
-    def clamd(self):
-        if not self._clamd:
-            self._clamd = pyclamd.ClamdNetworkSocket()
-        return self._clamd
-
-
-    async def api_files(self, pipeline):
-        cursor = self.db[collections.FILES].find(pipeline)
-        return await cursor.to_list(None)
-
-    async def api_validate_file(self, file_id, file_content):
-        # base64.b64encode(file_content)
-        try:
-            scan_result = self.clamd.scan_stream(file_content)
-            if scan_result:
-                logging.info('file_id {0} virus found {1}'.format(file_id, scan_result))
-                return False
-
-            return True
-
-        except (pyclamd.BufferTooLongError, pyclamd.ConnectionError) as ex:
-            logging.debug(ex)
-            return False
-
-    async def api_files_scan(self, file_id, file_content):
-
-        file_ok = await self.api_validate_file(file_id, file_content)
-        if file_ok:
-            file_upload_id = await self.fs.upload_from_stream()
-            status = UploadFileStatus.STORED.value
-        else:
-            status = UploadFileStatus.INVALID.value
-            file_upload_id = None
-
-        file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
-        file_doc[fields.FILE_UPLOAD_ID] = file_upload_id
-        file_doc[fields.FILE_STATUS] = status
-        file_doc[fields.UPDATE_TIME] = datetime.now()
-
-        file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
-        logging.debug('Updated file_id: {0} with status: {1}'.format(file_id, status))
-
-
-class FilesHandler(AbstractFilesHandler):
-    @decorators.authenticated
-    async def get(self):
-        try:
-            json_data = escape.json_decode(self.request.body.decode())
-
-            if fields.TERM_ID not in json_data \
-                    or fields.COURSE_ID not in json_data:
-                raise FilesError('Nie przekazano odpowiednich parametrów.')
-
-            json_data[fields.USOS_ID] = self.getUsosId()
-
-            files = await self.api_files(json_data)
-            self.success(files)
-        except Exception as ex:
-            await self.exc(ex)
-
-    @decorators.authenticated
-    async def post(self):
-        try:
-            json_data = escape.json_decode(self.request.body.decode())
-
-            if fields.TERM_ID not in json_data \
-                    or fields.COURSE_ID not in json_data \
-                    or fields.FILE_NAME not in json_data \
-                    or fields.FILE_CONTENT not in json_data:
-                raise FilesError('Nie przekazano odpowiednich parametrów.')
-
-            # walidacja hederów multipart/form-data
-            json_data[fields.USER_ID] = self.getUserId()
-            json_data[fields.USOS_ID] = self.getUsosId()
-            json_data[fields.FILE_SIZE] = -1
-            json_data[fields.FILE_STATUS] = UploadFileStatus.NEW.value
-            json_data[fields.FILE_TYPE] = 'type'
-
-            json_data[fields.CREATED_TIME] = datetime.now()
-            json_data[fields.UPDATE_TIME] = datetime.now()
-
-            file_id = self.db_insert(collections.FILES, json_data)
-            IOLoop.current().spawn_callback(self.api_files_scan(file_id, json_data[fields.FILE_CONTENT]))
-            self.success(file_id)
-        except Exception as ex:
-            await self.exc(ex)
-
-
-class FileHandler(AbstractFilesHandler):
-    SUPPORTED_METHODS = ('DELETE', 'OPTIONS', 'GET')
-
+class FilesHandlerByID(ApiHandler):
     @decorators.authenticated
     async def get(self, file_id):
         try:
-            file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
-            if fields.FILE_UPLOAD_ID not in file_doc or not file_doc[fields.FILE_UPLOAD_ID]:
-                raise FilesError('File not validated yet.')
+            remote_address = self.request.headers.get("X-Real-IP")
+            if not remote_address:
+                if self.config.ENVIRONMENT.lower() in [Environment.DEVELOPMENT.value, Environment.TESTS.value]:
+                    remote_address = "127.0.0.1"
+                else:
+                    self.error("Bład rozpoznawania adres IP.", code=200)
+                    return
 
-            grid_out = await self.fs.open_download_stream_by_name(file_doc[fields.FILE_UPLOAD_ID])
-            contents = await grid_out.read()
-            self.write(contents)
+            file_doc = await self.api_get_file_by_id(file_id, remote_address)
+            if file_doc:
+                self.success(file_doc, cache_age=config.SECONDS_YEAR)
+            else:
+                self.error("Nie znaleziono pliku.", code=404)
 
         except Exception as ex:
             await self.exc(ex)
 
+
+class FilesHandlerByTermIDCourseID(ApiHandler):
+    @decorators.authenticated
+    async def get(self, term_id, course_id):
+        try:
+            files_doc = await self.api_files(term_id, course_id)
+            self.success(files_doc, cache_age=config.SECONDS_HOUR)
+        except Exception as ex:
+            await self.exc(ex)
+
+
+class FilesHandler(ApiHandler):
+
+    @decorators.authenticated
+    async def get(self):
+        try:
+            files_doc = await self.api_files_for_user()
+            self.success(files_doc, cache_age=config.SECONDS_HOUR)
+
+        except Exception as ex:
+            await self.exc(ex)
+
+
+
     @decorators.authenticated
     async def delete(self, file_id):
+
         try:
             file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
 
@@ -141,7 +76,29 @@ class FileHandler(AbstractFilesHandler):
 
             logging.debug('changed file status: {0} to: {1}'.format(file_id, UploadFileStatus.DELETED.value))
 
-            self.success('file deleted.')
+            self.success(file_id)
         except Exception as ex:
             await self.exc(ex)
 
+
+class FilesHandlerUploadV1(ApiHandler):
+
+    @decorators.authenticated
+    async def post(self):
+        try:
+            json_data = escape.json_decode(self.request.body.decode())
+
+            if fields.TERM_ID not in json_data \
+                    or fields.COURSE_ID not in json_data \
+                    or fields.FILE_NAME not in json_data \
+                    or fields.FILE_CONTENT not in json_data:
+                raise FilesError('Nie przekazano odpowiednich parametrów.')
+
+            file_id = await self.api_storefile_by_termid_courseid(json_data[fields.TERM_ID],
+                                                                  json_data[fields.COURSE_ID],
+                                                                  json_data[fields.FILE_NAME],
+                                                                  'content-type-to-change',
+                                                                  json_data[fields.FILE_CONTENT])
+            self.success(file_id)
+        except Exception as ex:
+            await self.exc(ex)

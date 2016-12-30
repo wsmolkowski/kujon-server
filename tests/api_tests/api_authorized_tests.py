@@ -1,5 +1,7 @@
 # coding=utf-8
 
+from random import randint
+
 from tornado.testing import gen_test
 
 from tests.api_tests.base import AbstractApplicationTestBase
@@ -10,6 +12,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
         super(ApiCoursesTest, self).setUp()
         self.prepareDatabase(self.config)
         self.insert_user(config=self.config)
+        self.random = randint(0, 9999)
 
     @gen_test(timeout=10)
     def testCourseseditions(self):
@@ -29,11 +32,11 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testCourseseditionsCourseIdTermId(self):
-        yield self.fetch_assert(self.get_url('/courseseditions/4018-WYK18E-OG/2014'))
+        yield self.fetch_assert(self.get_url('/courseseditions/X/y'), assert_response=False)
 
     @gen_test(timeout=10)
     def testCourses(self):
-        yield self.fetch_assert(self.get_url('/courses/123'))
+        yield self.fetch_assert(self.get_url('/courses/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testGrades(self):
@@ -49,7 +52,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsSingle(self):
-        yield self.fetch_assert(self.get_url('/terms/123'))
+        yield self.fetch_assert(self.get_url('/terms/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testTermsLecturers(self):
@@ -57,7 +60,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsLecturersSingle(self):
-        yield self.fetch_assert(self.get_url('/lecturers/123'))
+        yield self.fetch_assert(self.get_url('/lecturers/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testTermsProgrammes(self):
@@ -65,7 +68,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsProgrammesSingle(self):
-        yield self.fetch_assert(self.get_url('/programmes/123'))
+        yield self.fetch_assert(self.get_url('/programmes/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testTermsFaculties(self):
@@ -73,7 +76,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsFacultiesSingle(self):
-        yield self.fetch_assert(self.get_url('/faculties/123'))
+        yield self.fetch_assert(self.get_url('/faculties/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testTermsTheses(self):
@@ -85,7 +88,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTermsCrstestsSingle(self):
-        yield self.fetch_assert(self.get_url('/crstests/123'))
+        yield self.fetch_assert(self.get_url('/crstests/{0}'.format(self.random)), assert_response=False)
 
     @gen_test(timeout=10)
     def testTermsSubscriptions(self):
