@@ -39,7 +39,7 @@ class ApiMixinSearch(object):
                                                               'name': query,
                                                               'start': int(start),
                                                               'num': NUMBER_SEARCH_RESULTS,
-                                                              'fields': 'items[course_name]|match|next_page]',
+                                                              'fields': 'items[course_id|match|next_page]',
                                                           })
 
         return search_doc
