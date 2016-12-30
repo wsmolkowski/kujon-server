@@ -1,7 +1,5 @@
 # coding=UTF-8
 
-from datetime import datetime
-
 from tornado.web import escape
 
 from api.handlers.base import ApiHandler
@@ -38,7 +36,7 @@ class FileHandler(ApiHandler):
     async def delete(self, file_id):
         try:
             file_doc = await self.db[collections.FILES].find_one({fields.FILE_ID: file_id,
-                                                                  fields.FILE_SIZE: UploadFileStatus.STORED.value,
+                                                                  fields.FILE_STATUS: UploadFileStatus.STORED.value,
                                                                   fields.USER_ID: self.getUserId(),
                                                                   fields.USOS_ID: self.getUsosId()})
 
@@ -47,12 +45,10 @@ class FileHandler(ApiHandler):
                 return
 
             # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
-            # logging.debug('deleted file content for: {0}'.format(file_doc[fields.MONGO_ID]))
 
             file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
-            file_doc[fields.UPDATE_TIME] = datetime.now()
 
-            file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
+            file_id = await self.db[collections.FILES].update({fields.FILE_ID: file_doc[fields.FILE_ID]}, file_doc)
 
             self.success(file_id)
         except Exception as ex:

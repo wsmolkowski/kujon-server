@@ -1,9 +1,9 @@
 # coding=UTF-8
 
-import pycurl
 import urllib.parse as urllib_parse
 from base64 import b64encode
 
+import pycurl
 from tornado import escape
 from tornado.auth import OAuthMixin
 
@@ -11,12 +11,12 @@ from commons import utils
 from commons.errors import CallerError
 
 
-def clean_language(data):
+def strip_english_language(data):
     def clean_list(array):
         new_list = []
         for a in array:
             if isinstance(a, dict):
-                new_list.append(clean_language(a))
+                new_list.append(strip_english_language(a))
             elif isinstance(a, list):
                 new_list.append(clean_list(a))
             else:
@@ -44,7 +44,7 @@ def clean_language(data):
         if isinstance(value, dict) and 'pl' in value and 'en' in value:
             data[key] = value['pl']
         elif isinstance(value, dict):
-            data[key] = clean_language(value)
+            data[key] = strip_english_language(value)
         elif isinstance(value, list):
             data[key] = clean_list(value)
 
@@ -78,7 +78,7 @@ class AbstractCaller(object):
                     'Null USOS response: {0} with body: {1} while USOS fetching: {2}'.format(response.code,
                                                                                              response.body,
                                                                                              url))
-            return clean_language(escape.json_decode(response.body))
+            return strip_english_language(escape.json_decode(response.body))
         elif response.code == 200 and 'image/jpg' in response.headers['Content-Type']:
             return {'photo': b64encode(response.body)}
         else:

@@ -1,11 +1,11 @@
 # coding=utf-8
 import unittest
 
-from commons.UsosCaller import clean_language
+from commons.UsosCaller import strip_english_language
 
 
 class UsosCallerTest(unittest.TestCase):
-    def testCleanLanguage(self):
+    def test_strip_en_language(self):
         # assume
         input_json = {
             "course_id": "2500-KF-PB-10",
@@ -26,7 +26,7 @@ class UsosCallerTest(unittest.TestCase):
         }
 
         # when
-        result = clean_language(input_json)
+        result = strip_english_language(input_json)
 
         # then
         print(result)

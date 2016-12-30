@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 
 import pyclamd
+import tornado.ioloop
 
 from commons.constants import collections, fields
 from commons.enumerators import UploadFileStatus
@@ -97,7 +98,7 @@ class ApiMixinFiles(DaoMixin):
         file_doc[fields.FILE_ID] = str(uuid.uuid4())
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
-        # IOLoop.current().spawn_callback(self._store_file(file_id, file_content))
+        tornado.ioloop.current().spawn_callback(self._store_file(file_id, file_content))
         return file_doc[fields.FILE_ID]
 
 
