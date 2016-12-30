@@ -32,7 +32,7 @@ class AbstractSearch(ApiHandler):
             'path': self.request.path,
             'query': self.request.query,
             'remote_ip': self.get_remote_ip()
-        })
+        }, update=False)
 
 
 class SearchUsersApi(AbstractSearch):

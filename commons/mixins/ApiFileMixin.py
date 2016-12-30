@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 import pyclamd
-import tornado.ioloop
+from tornado.ioloop import IOLoop
 
 from commons.constants import collections, fields
 from commons.enumerators import UploadFileStatus
@@ -70,17 +70,6 @@ class ApiMixinFiles(DaoMixin):
         cursor = self.db[collections.FILES].find(pipeline)
         file_doc = await cursor.to_list(None)
 
-        # logging file download
-        log_doc = dict()
-        log_doc[fields.FILE_ID] = file_id
-        log_doc[fields.USER_ID] = self.getUserId()
-        log_doc[fields.USOS_ID] = self.getUsosId()
-        log_doc[fields.REMOTE_ADDRESS] = remote_address
-        log_doc[fields.CREATED_TIME] = datetime.now()
-        log_id = await self.db_insert(collections.FILES_DOWNLOADS, log_doc, update=False)
-        if not log_id:
-            logging.error('Nie udalo sie zalogować pobrania pliku: {0}'.format(file_id))
-
         return file_doc
 
     async def api_storefile_by_termid_courseid(self, term_id, course_id, file_name, file_type, file_content):
@@ -98,9 +87,8 @@ class ApiMixinFiles(DaoMixin):
         file_doc[fields.FILE_ID] = str(uuid.uuid4())
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
-        tornado.ioloop.current().spawn_callback(self._store_file(file_id, file_content))
+        IOLoop.current().spawn_callback(self._store_file(file_id, file_content))
         return file_doc[fields.FILE_ID]
-
 
 
 
