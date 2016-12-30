@@ -19,7 +19,7 @@ class OneSignalTest(AbstractApplicationTestBase):
         osm = OneSignal(self.config)
 
         # when
-        result = yield osm.signal_message(message="test message",
+        result = yield osm.signal_message(message="test message from unit testing..",
                                           email_reciepient="wojciech.smolkowski@gmail.com")
 
         # then

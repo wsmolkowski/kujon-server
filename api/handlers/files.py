@@ -1,5 +1,8 @@
 # coding=UTF-8
 
+from datetime import datetime
+
+from tornado.ioloop import IOLoop
 from tornado.web import escape
 
 from api.handlers.base import ApiHandler
@@ -9,7 +12,21 @@ from commons.enumerators import UploadFileStatus, Environment
 from commons.errors import FilesError
 
 
-class FileHandler(ApiHandler):
+class AbstractFileHandler(ApiHandler):
+
+    def on_finish(self):
+
+        IOLoop.current().spawn_callback(self.db_insert, collections.FILES_DOWNLOADS, {
+            fields.USER_ID: self.get_current_user()[fields.MONGO_ID],
+            fields.CREATED_TIME: datetime.now(),
+            'method': self.request.method,
+            'path': self.request.path,
+            'query': self.request.query,
+            'remote_ip': self.get_remote_ip()
+        }, update=False)
+
+
+class FileHandler(AbstractFileHandler):
     SUPPORTED_METHODS = ('OPTIONS', 'GET', 'DELETE')
 
     @decorators.authenticated
@@ -56,7 +73,7 @@ class FileHandler(ApiHandler):
 
 
 
-class FilesHandler(ApiHandler):
+class FilesHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self, term_id, course_id):
         try:
@@ -66,7 +83,7 @@ class FilesHandler(ApiHandler):
             await self.exc(ex)
 
 
-class FilesUserHandler(ApiHandler):
+class FilesUserHandler(AbstractFileHandler):
 
     @decorators.authenticated
     async def get(self):
@@ -78,9 +95,7 @@ class FilesUserHandler(ApiHandler):
             await self.exc(ex)
 
 
-
-
-class FileUploadHandler(ApiHandler):
+class FileUploadHandler(AbstractFileHandler):
 
     @decorators.authenticated
     async def post(self):
