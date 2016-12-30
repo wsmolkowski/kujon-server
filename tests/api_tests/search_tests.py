@@ -12,21 +12,21 @@ class ApiSearchTest(AbstractApplicationTestBase):
         self.insert_user(config=self.config)
 
     @gen_test(timeout=10)
-    def testtermsSearchUsers(self):
+    def testSearchUsers(self):
         yield self.fetch_assert(self.get_url('/search/users/adam'))
 
     @gen_test(timeout=10)
-    def testtermsSearchCourses(self):
-        yield self.fetch_assert(self.get_url('/search/courses/geograf'))
+    def testSearchCourses(self):
+        yield self.fetch_assert(self.get_url('/search/courses/mate'))
 
     @gen_test(timeout=10)
-    def testtermsSearchFaculties(self):
-        yield self.fetch_assert(self.get_url('/search/faculties/adamini'))
+    def testSearchFaculties(self):
+        yield self.fetch_assert(self.get_url('/search/faculties/Wydz'))
 
     @gen_test(timeout=5)
-    def testtermsSearchProgrammes(self):
+    def testSearchProgrammes(self):
         yield self.fetch_assert(self.get_url('/search/programmes/geograf'))
 
     @gen_test(timeout=10)
-    def testtermsSearchTheses(self):
+    def testSearchTheses(self):
         yield self.fetch_assert(self.get_url('/search/theses/geograf'))
