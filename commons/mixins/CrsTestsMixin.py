@@ -54,12 +54,12 @@ class CrsTestsMixin(DaoMixin):
             except Exception as ex:
                 await self.exc(ex, finish=False)
                 return
-
-            crstests_doc[fields.NODE_ID] = node_id
-            crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
-
-            await self.db_insert(collections.CRSTESTS_GRADES, crstests_doc)
-
+            if crstests_doc:
+                crstests_doc[fields.NODE_ID] = node_id
+                crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
+                await self.db_insert(collections.CRSTESTS_GRADES, crstests_doc)
+            else:
+                return None
         return crstests_doc
 
     async def api_crstests_points(self, node_id):
