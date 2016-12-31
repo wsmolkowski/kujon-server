@@ -7,6 +7,7 @@ from tornado.testing import AsyncTestCase, gen_test
 
 from commons.config import Config
 from commons.constants import collections
+from commons.enumerators import Environment
 from crawler.UsosCrawler import UsosCrawler
 from scripts.dbutils import DbUtils
 from tests.base import USER_DOC
@@ -15,7 +16,7 @@ from tests.base import USER_DOC
 class CrawlerTest(AsyncTestCase):
     @classmethod
     def setUpClass(self):
-        self.config = Config('tests')
+        self.config = Config(Environment.TESTS.value)
         self.dbu = DbUtils(self.config)
         self.client_db = MongoClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
 
