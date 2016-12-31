@@ -42,6 +42,7 @@ TOKEN_DOC = {"user_type": "EMAIL",
 enable_pretty_logging()
 logging.getLogger().setLevel(logging.DEBUG)
 
+
 class BaseTestClass(AsyncHTTPTestCase):
     @staticmethod
     def insert_user(config, user_doc=None, token_doc=None):

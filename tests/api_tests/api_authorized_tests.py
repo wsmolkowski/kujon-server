@@ -7,6 +7,7 @@ from tornado.testing import gen_test
 from commons.constants import fields
 from tests.api_tests.base import AbstractApplicationTestBase
 
+
 class ApiCoursesTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiCoursesTest, self).setUp()
@@ -22,7 +23,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
     def testCourseseditions(self):
         yield self.fetch_assert(self.get_url('/usersinfoall'))
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=30)
     def testCourseseditions(self):
         yield self.fetch_assert(self.get_url('/courseseditions'))
 

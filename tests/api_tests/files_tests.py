@@ -11,7 +11,6 @@ from tests.api_tests.base import AbstractApplicationTestBase
 
 
 class ApiFilesTest(AbstractApplicationTestBase):
-
     def setUp(self):
 
         super(ApiFilesTest, self).setUp()
@@ -136,4 +135,3 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # try to delete not my file
         delete_uri = '/files/' + self.generateRandomFilename()
         yield self.fetch_assert(self.get_url(delete_uri), assert_response=False, method="DELETE")
-
