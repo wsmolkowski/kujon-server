@@ -1,4 +1,5 @@
 # coding=utf-8
+
 from tornado.testing import gen_test
 
 from commons.constants import fields
