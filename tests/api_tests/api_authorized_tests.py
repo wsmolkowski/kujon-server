@@ -15,7 +15,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
         self.random = randint(0, 9999)
 
     @gen_test(timeout=10)
-    def testCourseseditions(self):
+    def testUsers(self):
         yield self.fetch_assert(self.get_url('/users'))
 
     @gen_test(timeout=10)
