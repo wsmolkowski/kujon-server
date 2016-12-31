@@ -6,8 +6,8 @@ from datetime import datetime
 import motor.motor_tornado
 from motor import MotorGridFSBucket
 from pymongo import MongoClient
-from tornado import escape
-from tornado import gen
+from tornado import escape, gen
+from tornado.log import enable_pretty_logging
 from tornado.testing import AsyncHTTPTestCase
 
 from commons import utils
@@ -17,29 +17,30 @@ from commons.constants import collections, config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
-USER_DOC = { "access_token_secret" : "RbqLudKTUV3SddKbZ2qqvhGEYTrwBpUUKGcjr39W",
-             "name" : "kujontest@gmail.com",
-             "created_time" : datetime.now(),
-             "email" : "kujontest@gmail.com",
-             "email_confirmed" : "True",
-             "usos_id" : "DEMO",
-             "usos_paired": "True",
-             "user_created" : datetime.now(), "device_id" : "WWW",
-             "password" : "xxx",
-             "user_type" : "EMAIL",
-             "update_time" : datetime.now(),
-             "device_type" : "WWW",
-             "access_token_key" : "zGzZaWNj32HnsYMP69rb",
-             "usos_user_id" : "1015146" }
+USER_DOC = {"access_token_secret": "RbqLudKTUV3SddKbZ2qqvhGEYTrwBpUUKGcjr39W",
+            "name": "kujontest@gmail.com",
+            "created_time": datetime.now(),
+            "email": "kujontest@gmail.com",
+            "email_confirmed": "True",
+            "usos_id": "DEMO",
+            "usos_paired": "True",
+            "user_created": datetime.now(), "device_id": "WWW",
+            "password": "xxx",
+            "user_type": "EMAIL",
+            "update_time": datetime.now(),
+            "device_type": "WWW",
+            "access_token_key": "zGzZaWNj32HnsYMP69rb",
+            "usos_user_id": "1015146"}
 
+TOKEN_DOC = {"user_type": "EMAIL",
+             "token": "gAAAAABYZj1qBvTzYre_J1XtkqTAzg0OB7Kn4UB0CGRYqjHLflT4w1Jhzuz7lAqGF2uIrCaV3kkE5FEF54qyHMQbDs13aN6lu7mnAvh1v1a6Z-hNijUle14=",
+             "update_time": datetime.now(),
+             "user_id": "xxx",
+             "email": "kujontest@gmail.com",
+             "created_time": datetime.now()}
 
-TOKEN_DOC = { "user_type" : "EMAIL",
-              "token" : "gAAAAABYZj1qBvTzYre_J1XtkqTAzg0OB7Kn4UB0CGRYqjHLflT4w1Jhzuz7lAqGF2uIrCaV3kkE5FEF54qyHMQbDs13aN6lu7mnAvh1v1a6Z-hNijUle14=",
-              "update_time" : datetime.now(),
-              "user_id" : "xxx",
-              "email" : "kujontest@gmail.com",
-              "created_time" : datetime.now() }
-
+enable_pretty_logging()
+logging.getLogger().setLevel(logging.DEBUG)
 
 class BaseTestClass(AsyncHTTPTestCase):
     @staticmethod
@@ -71,6 +72,8 @@ class BaseTestClass(AsyncHTTPTestCase):
     def setUpClass(self):
         super(BaseTestClass, self).setUpClass()
 
+        utils.initialize_logging(logger_name='tests', log_dir=self.config.LOG_DIR)
+
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
 
@@ -81,23 +84,19 @@ class BaseTestClass(AsyncHTTPTestCase):
                                         proxy_port=self.config.PROXY_PORT,
                                         io_loop=self.io_loop)
 
-        # io_loop=self.io_loop
         client = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
         self.db = client[self.config.MONGODB_NAME]
         logging.info(self.db)
         self.aes = AESCipher(self.config.AES_SECRET)
         self.fs = MotorGridFSBucket(self.db)
 
-        # self._app = self.get_app()
         self._app.settings[config.APPLICATION_DB] = self.db
         self._app.settings[config.APPLICATION_CONFIG] = self.config
         self._app.settings[config.APPLICATION_AES] = self.aes
         self._app.settings[config.APPLICATION_FS] = self.fs
-        # print(self.__port)
 
     @gen.coroutine
-    def fetch_assert(self, url, assert_response=True, method="GET", body=None, contenttype='application/json'):
-
+    def fetch_assert(self, url, assert_response=True, method='GET', body=None, contenttype='application/json'):
 
         response = yield self.client.fetch(url, method=method, body=body, headers={
             config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
