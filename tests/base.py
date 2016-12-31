@@ -96,7 +96,7 @@ class BaseTestClass(AsyncHTTPTestCase):
         # print(self.__port)
 
     @gen.coroutine
-    def fetch_assert(self, url, assert_response=True, method="GET", body=None):
+    def fetch_assert(self, url, assert_response=True, method="GET", body=None, contenttype='application/json'):
 
 
         response = yield self.client.fetch(url, method=method, body=body, headers={
@@ -106,29 +106,31 @@ class BaseTestClass(AsyncHTTPTestCase):
         })
 
         if assert_response:
-            return self.assert_api_response(response)
+            return self.assert_api_response(response, contenttype)
         else:
-            return self.assert_api_response_fail(response)
+            return self.assert_api_response_fail(response, contenttype)
 
-    def assert_api_response(self, response):
+    def assert_api_response(self, response, contenttype):
+
+        logging.debug(response.body)
+
+        self.assertEqual(response.code, 200)
+        self.assertTrue(contenttype in response.headers['Content-Type'])
+        if contenttype == 'application/json':
+            json_body = escape.json_decode(response.body)
+            self.assertIsNotNone(json_body)
+            self.assertEqual('success', json_body['status'])
+            return json_body
+
+    def assert_api_response_fail(self, response, contenttype):
+
         logging.debug(response.body)
         self.assertEqual(response.code, 200)
-        self.assertTrue('application/json' in response.headers['Content-Type'])
+        self.assertTrue(contenttype in response.headers['Content-Type'])
 
-        json_body = escape.json_decode(response.body)
-
-        self.assertIsNotNone(json_body)
-        self.assertEqual('success', json_body['status'])
-        return json_body
-
-    def assert_api_response_fail(self, response):
-        logging.debug(response.body)
-        self.assertEqual(response.code, 200)
-        self.assertTrue('application/json' in response.headers['Content-Type'])
-
-        json_body = escape.json_decode(response.body)
-
-        self.assertIsNotNone(json_body)
-        self.assertEqual('error', json_body['status'])
-        self.assertNotEqual(200, json_body['code'])
-        return json_body
+        if contenttype == 'application/json':
+            json_body = escape.json_decode(response.body)
+            self.assertIsNotNone(json_body)
+            self.assertEqual('error', json_body['status'])
+            self.assertNotEqual(200, json_body['code'])
+            return json_body
