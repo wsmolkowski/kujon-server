@@ -87,7 +87,7 @@ class ApiMixinFiles(DaoMixin):
         file_doc[fields.FILE_ID] = str(uuid.uuid4())
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
-        IOLoop.current().spawn_callback(self._store_file(file_id, file_content))
+        IOLoop.current().spawn_callback(self._store_file, file_id, file_content)
         return file_doc[fields.FILE_ID]
 
 
