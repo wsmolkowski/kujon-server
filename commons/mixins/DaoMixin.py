@@ -348,13 +348,17 @@ class DaoMixin(object):
         if not user_id:
             user_id = self.getUserId()
 
-        return await self.db[collections.MESSAGES].insert({
+        msg_doc = await self.db[collections.MESSAGES].insert({
             fields.USER_ID: user_id,
             fields.CREATED_TIME: datetime.now(),
             fields.FIELD_MESSAGE_FROM: from_whom,
             fields.FIELD_MESSAGE_TYPE: message_type,
             fields.FIELD_MESSAGE_TEXT: message,
         })
+
+        logging.debug('user message saved for message_type: {0} with id: {1}'.format(message_type, msg_doc))
+
+        return msg_doc
 
     async def db_settings(self, user_id):
         '''
