@@ -11,6 +11,8 @@ from tests.api_tests.user_tests import ApiUserTest
 from tests.commons_tests.clamav_tests import ClamAvTest
 from tests.commons_tests.config_tests import ConfigTest
 from tests.commons_tests.onesignal_tests import OneSignalTest
+from tests.commons_tests.serialize_tests import SerializationTest
+from tests.commons_tests.usos_caller_tests import UsosCallerTest
 from tests.crawler_tests.crawler_tests import CrawlerTest
 from tests.scripts_tests.dbutilts_tests import DbUtilsTest
 
@@ -28,8 +30,9 @@ def build_suite():
 
     # commons
     test_suite.addTest(unittest.makeSuite(ClamAvTest))
-    # test_suite.addTest(unittest.makeSuite(SerializationTest))
+    test_suite.addTest(unittest.makeSuite(SerializationTest))
     # test_suite.addTest(unittest.makeSuite(AESCipherTest))
+    test_suite.addTest(unittest.makeSuite(UsosCallerTest))
     test_suite.addTest(unittest.makeSuite(ConfigTest))
     test_suite.addTest(unittest.makeSuite(OneSignalTest))
 
