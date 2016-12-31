@@ -72,8 +72,6 @@ class BaseTestClass(AsyncHTTPTestCase):
     def setUpClass(self):
         super(BaseTestClass, self).setUpClass()
 
-        utils.initialize_logging(logger_name='tests', log_dir=self.config.LOG_DIR)
-
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
 
