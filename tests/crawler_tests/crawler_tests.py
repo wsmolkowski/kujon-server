@@ -62,7 +62,7 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
         self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
 
-    @gen_test(timeout=1)
+    @gen_test(timeout=10)
     def testArchiveUser(self):
         # assume - run crawler
         yield UsosCrawler(self.config).archive_user(self.user_id)
@@ -71,7 +71,7 @@ class CrawlerTest(AsyncTestCase):
         # this is not the best - better test DaoMixin
         self.assertEqual(0, self.client_db[collections.USERS_ARCHIVE].count())
 
-    @gen_test(timeout=1)
+    @gen_test(timeout=10)
     def testSubscribe(self):
         # assume - run crawler
         yield UsosCrawler(self.config).subscribe(self.user_id)
@@ -79,7 +79,7 @@ class CrawlerTest(AsyncTestCase):
         # then - check if tables are filled
         self.assertNotEqual(0, self.client_db[collections.SUBSCRIPTIONS].count())
 
-    @gen_test(timeout=1)
+    @gen_test(timeout=10)
     def testProcessEvent(self):
         event = {u'entry': [
             {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
