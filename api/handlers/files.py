@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import logging
 from datetime import datetime
 
 from tornado.ioloop import IOLoop
@@ -37,8 +38,7 @@ class FileHandler(AbstractFileHandler):
                 if self.config.ENVIRONMENT.lower() in [Environment.DEVELOPMENT.value, Environment.TESTS.value]:
                     remote_address = "127.0.0.1"
                 else:
-                    self.error("Bład rozpoznawania adres IP.", code=200)
-                    return
+                    logging.error('Bład rozpoznawania adres IP')
 
             file_doc = await self.apiGetFile(file_id, remote_address)
             if file_doc:
