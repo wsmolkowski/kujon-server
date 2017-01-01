@@ -40,7 +40,7 @@ class FileHandler(AbstractFileHandler):
                     self.error("Bład rozpoznawania adres IP.", code=200)
                     return
 
-            file_doc = await self.api_get_file_by_id(file_id, remote_address)
+            file_doc = await self.apiGetFile(file_id, remote_address)
             if file_doc:
                 self.success(file_doc, cache_age=config.SECONDS_YEAR)
             else:
@@ -77,7 +77,7 @@ class FilesHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self, term_id, course_id):
         try:
-            files_doc = await self.api_files(term_id, course_id)
+            files_doc = await self.apiGetFiles(term_id, course_id)
             self.success(files_doc, cache_age=config.SECONDS_HOUR)
         except Exception as ex:
             await self.exc(ex)
@@ -88,7 +88,7 @@ class FilesUserHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self):
         try:
-            files_doc = await self.api_files_for_user()
+            files_doc = await self.apiGetUserFiles()
             self.success(files_doc, cache_age=config.SECONDS_HOUR)
 
         except Exception as ex:
@@ -108,11 +108,11 @@ class FileUploadHandler(AbstractFileHandler):
                     or fields.FILE_CONTENT not in json_data:
                 raise FilesError('Nie przekazano odpowiednich parametrów.')
 
-            file_id = await self.api_storefile_by_termid_courseid(json_data[fields.TERM_ID],
-                                                                  json_data[fields.COURSE_ID],
-                                                                  json_data[fields.FILE_NAME],
+            file_id = await self.apiStorefile(json_data[fields.TERM_ID],
+                                              json_data[fields.COURSE_ID],
+                                              json_data[fields.FILE_NAME],
                                                                   'content-type-to-change',
-                                                                  json_data[fields.FILE_CONTENT])
+                                              json_data[fields.FILE_CONTENT])
             self.success(file_id)
         except Exception as ex:
             await self.exc(ex)

@@ -21,7 +21,7 @@ class ApiMixinFiles(DaoMixin):
             self._clamd = pyclamd.ClamdNetworkSocket()
         return self._clamd
 
-    async def _validate_file(self, file_id, file_content):
+    async def _validateFile(self, file_id, file_content):
         try:
             scan_result = self.clamd.scan_stream(file_content)
             if scan_result:
@@ -34,9 +34,9 @@ class ApiMixinFiles(DaoMixin):
             logging.debug(ex)
             return False
 
-    async def _store_file(self, file_id, file_content):
+    async def _storeFile(self, file_id, file_content):
 
-        file_ok = await self._validate_file(file_id, file_content)
+        file_ok = await self._validateFile(file_id, file_content)
         if file_ok:
             file_upload_id = await self.fs.upload_from_stream()
             status = UploadFileStatus.STORED.value
@@ -52,19 +52,19 @@ class ApiMixinFiles(DaoMixin):
         file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
         logging.debug('Updated file_id: {0} with status: {1}'.format(file_id, status))
 
-    async def api_files_for_user(self):
+    async def apiGetUserFiles(self):
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId()}
         cursor = self.db[collections.FILES].find(pipeline)
         return await cursor.to_list(None)
 
-    async def api_files(self, term_id, course_id):
+    async def apiGetFiles(self, term_id, course_id):
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id, fields.TERM_ID: term_id}
         cursor = self.db[collections.FILES].find(pipeline)
         return await cursor.to_list(None)
 
-    async def api_get_file_by_id(self, file_id, remote_address):
+    async def apiGetFile(self, file_id, remote_address):
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId(),
                     fields.FILE_ID: file_id}
         cursor = self.db[collections.FILES].find(pipeline)
@@ -72,7 +72,7 @@ class ApiMixinFiles(DaoMixin):
 
         return file_doc
 
-    async def api_storefile_by_termid_courseid(self, term_id, course_id, file_name, file_type, file_content):
+    async def apiStorefile(self, term_id, course_id, file_name, file_type, file_content):
 
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
@@ -87,7 +87,7 @@ class ApiMixinFiles(DaoMixin):
         file_doc[fields.FILE_ID] = str(uuid.uuid4())
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
-        IOLoop.current().spawn_callback(self._store_file, file_id, file_content)
+        IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
         return file_doc[fields.FILE_ID]
 
 
