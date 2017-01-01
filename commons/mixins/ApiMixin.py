@@ -71,7 +71,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                 'term_id': term_id
             })
         else:
-            result = await self.asynCall(path='services/courses/course_edition', arguments={
+            result = await self.asyncCall(path='services/courses/course_edition', arguments={
                 'fields': 'course_name|coordinators|course_units_ids|lecturers',
                 'course_id': course_id,
                 'term_id': term_id
