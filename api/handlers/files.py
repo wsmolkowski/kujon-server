@@ -150,7 +150,6 @@ class FileHandler(AbstractFileHandler):
             await self.exc(ex)
 
 
-
 class FilesHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self, term_id, course_id):
@@ -162,7 +161,6 @@ class FilesHandler(AbstractFileHandler):
 
 
 class FilesUserHandler(AbstractFileHandler):
-
     @decorators.authenticated
     async def get(self):
         try:
