@@ -15,10 +15,9 @@ from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.ApiTermMixin import ApiTermMixin
 from commons.mixins.ApiUserMixin import ApiUserMixin
 from commons.mixins.JSendMixin import JSendMixin
-from commons.mixins.SocialMixin import SocialMixin
 
 
-class BaseHandler(AbstractHandler, SocialMixin):
+class BaseHandler(AbstractHandler):
     EXCEPTION_TYPE = ExceptionTypes.DEFAULT.value
 
     async def _prepare_user(self):
@@ -46,7 +45,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
             if user_doc[fields.USER_TYPE].upper() == UserTypes.GOOGLE.value:
                 token_exists = await self.db_find_token(header_email, UserTypes.GOOGLE.value)
                 if not token_exists:
-                    google_token = await self.google_token(header_token)
+                    google_token = await self._context.socialCaller.google_token(header_token)
                     google_token[fields.USER_TYPE] = UserTypes.GOOGLE.value
                     await self.db_insert_token(google_token)
                 return user_doc
@@ -54,7 +53,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
             elif user_doc[fields.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
                 token_exists = await self.db_find_token(header_email, UserTypes.FACEBOOK.value)
                 if not token_exists:
-                    facebook_token = await self.facebook_token(header_token)
+                    facebook_token = await self._context.socialCaller.facebook_token(header_token)
                     facebook_token[fields.USER_TYPE] = UserTypes.FACEBOOK.value
                     await self.db_insert_token(facebook_token)
                 return user_doc

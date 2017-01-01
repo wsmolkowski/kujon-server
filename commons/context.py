@@ -1,6 +1,7 @@
 from tornado.util import ObjectDict
 
 from commons import utils
+from commons.SocialCaller import SocialCaller
 from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.constants import fields
 
@@ -24,6 +25,7 @@ class Context(ObjectDict):
             http_client = utils.http_client(self.proxy_host, self.proxy_port, io_loop)
 
         self.http_client = http_client
+        self.socialCaller = SocialCaller(self.http_client, self.proxy_host, self.proxy_port)
 
         if user_doc and usos_doc:
             self.setUp()

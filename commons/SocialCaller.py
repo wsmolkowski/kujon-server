@@ -6,12 +6,19 @@ from commons import utils
 from commons.errors import AuthenticationError
 
 
-class SocialMixin(object):
+class SocialCaller(object):
+    def __init__(self, client=None, proxy_host=None, proxy_port=None, io_loop=None):
+        if not client:
+            client = utils.http_client(proxy_host, proxy_port, io_loop)
+        self.client = client
+        self.proxy_host = proxy_host
+        self.proxy_port = proxy_port
+
     async def google_token(self, token):
         try:
-            tokeninfo = await self.get_auth_http_client().fetch(
+            tokeninfo = await self.client.fetch(
                 utils.http_request(url='https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + token,
-                                   proxy_host=self._context.proxy_host, proxy_port=self._context.proxy_port))
+                                   proxy_host=self.proxy_host, proxy_port=self.proxy_port))
 
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
@@ -26,9 +33,9 @@ class SocialMixin(object):
 
     async def facebook_token(self, token):
         try:
-            tokeninfo = await self.get_auth_http_client().fetch(
+            tokeninfo = await self.client.fetch(
                 utils.http_request(url='https://graph.facebook.com/me?fields=id,name,email&access_token=' + token,
-                                   proxy_host=self._context.proxy_host, proxy_port=self._context.proxy_port))
+                                   proxy_host=self.proxy_host, proxy_port=self.proxy_port))
 
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
