@@ -67,22 +67,17 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self._context.setUp()
 
     def get_current_user(self):
-        if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
-            return self._context.user_doc
-        return
+        return self._context.user_doc
 
     def getUsosId(self):
-        if hasattr(self._context,
-                   'usos_doc') and self._context.usos_doc and fields.USOS_ID in self._context.usos_doc:
+        if self._context.usos_doc:
             return self._context.usos_doc[fields.USOS_ID]
-        return
 
     def getUserId(self, return_object_id=True):
         if self.get_current_user():
             if return_object_id:
                 return ObjectId(self.get_current_user()[fields.MONGO_ID])
             return self.get_current_user()[fields.MONGO_ID]
-        return
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
