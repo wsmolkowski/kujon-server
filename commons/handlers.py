@@ -46,14 +46,14 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def prepare(self):
 
+        self._context = Context(self.config, remote_ip=self.get_remote_ip(),
+                                io_loop=IOLoop.current())
+
         try:
-            user_doc = await self._prepare_user()
+            self._context.user_doc = await self._prepare_user()
         except Exception as ex:
             await self.exc(ex)
             return
-
-        self._context = Context(self.config, user_doc=user_doc, remote_ip=self.get_remote_ip(),
-                                io_loop=IOLoop.current())
 
         if self._context.user_doc and fields.USOS_ID in self._context.user_doc:
             usos_id = self._context.user_doc[fields.USOS_ID]  # request authenticated
@@ -99,6 +99,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
         return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
+
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous
