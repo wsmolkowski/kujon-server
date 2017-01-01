@@ -7,7 +7,6 @@ from tornado import web
 
 from api.handlers.base import ApiHandler
 from commons import decorators
-from commons.UsosCaller import UsosCaller
 from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
 
@@ -54,7 +53,7 @@ class TTApi(ApiHandler):
         tt_doc = await self.db[collections.TT].find_one({fields.USER_ID: self.getUserId(),
                                                          fields.TT_STARTDATE: str(monday)})
         if not tt_doc:
-            tt_response = await UsosCaller(self._context).call(
+            tt_response = await self.usosCall(
                 path='services/tt/user',
                 arguments={
                     'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',

@@ -7,7 +7,6 @@ from commons.errors import ApiError
 
 
 class AbstractFriendHandler(ApiHandler):
-
     async def api_friends(self):
         friends_returned = list()
         pipeline = [{'$match': {'user_id': self.getUserId()}},

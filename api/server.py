@@ -4,9 +4,9 @@ import logging
 import ssl
 
 import motor
-from motor import MotorGridFSBucket
 import tornado.ioloop
 import tornado.web
+from motor import MotorGridFSBucket
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define, options

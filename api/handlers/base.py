@@ -6,12 +6,10 @@ from bson import ObjectId
 from cryptography.fernet import InvalidToken
 from tornado import web
 
-from commons.UsosCaller import AsyncCaller
 from commons.constants import fields, collections, config
 from commons.enumerators import ExceptionTypes, Environment, UserTypes
 from commons.errors import AuthenticationError
 from commons.handlers import AbstractHandler
-from commons.mixins.ApiFriendsMixin import ApiMixinFriends
 from commons.mixins.ApiMixin import ApiMixin
 from commons.mixins.ApiSearchMixin import ApiMixinSearch
 from commons.mixins.ApiTermMixin import ApiTermMixin
@@ -85,25 +83,11 @@ class BaseHandler(AbstractHandler, SocialMixin):
                 raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[fields.USER_TYPE]))
         return
 
-    async def prepare(self):
-        await super(BaseHandler, self).prepare()
-
-        if 'usos_doc' in self._context:
-            # before login
-            self._context.base_uri = self._context.usos_doc[fields.USOS_URL]
-            self._context.consumer_token = dict(key=self._context.usos_doc[fields.CONSUMER_KEY],
-                                                secret=self._context.usos_doc[fields.CONSUMER_SECRET])
-
-            if self.isRegistered():
-                # before usos registration
-                self._context.access_token = dict(key=self._context.user_doc[fields.ACCESS_TOKEN_KEY],
-                                                  secret=self._context.user_doc[fields.ACCESS_TOKEN_SECRET])
-
     def isRegistered(self):
         if not self._context:
             return False
 
-        if 'user_doc' not in self._context:
+        if self._context.user_doc:
             return False
 
         if not self._context.user_doc:
@@ -128,7 +112,7 @@ class BaseHandler(AbstractHandler, SocialMixin):
             self.set_header("Access-Control-Allow-Credentials", "true")
 
 
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinFriends, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
     EXCEPTION_TYPE = ExceptionTypes.API.value
 
     def do_refresh(self):  # overwrite from DaoMixin
@@ -173,7 +157,7 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
     async def usos_works(self):
         try:
             # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
-            await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index')
+            await self.asyncCall(path='services/courses/classtypes_index')
             return True
         except Exception as ex:
             logging.exception(ex)

@@ -7,7 +7,6 @@ from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
 from commons import usoshelper
-from commons.UsosCaller import UsosCaller
 from commons.constants import fields, collections
 from commons.errors import ApiError
 from commons.mixins.DaoMixin import DaoMixin
@@ -27,7 +26,7 @@ class ApiUserMixin(DaoMixin):
 
         if not photo_doc:
             try:
-                photo_doc = await UsosCaller(self._context).call(
+                photo_doc = await self.usosCall(
                     path='services/photos/photo',
                     arguments={
                         'user_id': user_info_id,
@@ -51,10 +50,10 @@ class ApiUserMixin(DaoMixin):
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 
         if user_id:
-            result = await UsosCaller(self._context).call(path='services/users/user',
-                                                          arguments={'fields': fields, 'user_id': user_id})
+            result = await self.usosCall(path='services/users/user',
+                                         arguments={'fields': fields, 'user_id': user_id})
         else:
-            result = await UsosCaller(self._context).call(path='services/users/user', arguments={'fields': fields})
+            result = await self.usosCall(path='services/users/user', arguments={'fields': fields})
 
         if not result:
             raise ApiError('Problem z pobraniem danych z USOS na temat użytkownika.')

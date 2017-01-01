@@ -2,8 +2,8 @@
 
 from api.handlers.base import ApiHandler
 from commons import decorators
-from commons.errors import ApiError
 from commons.constants import fields, config
+from commons.errors import ApiError
 
 
 class LecturersApi(ApiHandler):
