@@ -444,7 +444,8 @@ class EmailLoginHandler(AbstractEmailHandler):
                 raise AuthenticationError('Podano błędne dane.')
 
             if not user_doc[fields.USER_EMAIL_CONFIRMED]:
-                raise AuthenticationError('Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
+                raise AuthenticationError(
+                    'Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
 
             token = {
                 'token': self.aes.encrypt(str(user_doc[fields.MONGO_ID])).decode(),

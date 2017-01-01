@@ -16,7 +16,6 @@ from commons.errors import FilesError
 
 
 class AbstractFileHandler(ApiHandler):
-
     _clamd = None
 
     def on_finish(self):
@@ -105,6 +104,7 @@ class AbstractFileHandler(ApiHandler):
         IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
         return file_doc[fields.FILE_ID]
 
+
 class FileHandler(AbstractFileHandler):
     SUPPORTED_METHODS = ('OPTIONS', 'GET', 'DELETE')
 
@@ -172,7 +172,6 @@ class FilesUserHandler(AbstractFileHandler):
 
 
 class FileUploadHandler(AbstractFileHandler):
-
     @decorators.authenticated
     async def post(self):
         try:
@@ -187,7 +186,7 @@ class FileUploadHandler(AbstractFileHandler):
             file_id = await self.apiStorefile(json_data[fields.TERM_ID],
                                               json_data[fields.COURSE_ID],
                                               json_data[fields.FILE_NAME],
-                                                                  'content-type-to-change',
+                                              'content-type-to-change',
                                               json_data[fields.FILE_CONTENT])
             self.success(file_id)
         except Exception as ex:

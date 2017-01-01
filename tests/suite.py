@@ -10,6 +10,7 @@ from tests.api_tests.tt_tests import ApiTTTest
 from tests.api_tests.user_tests import ApiUserTest
 from tests.commons_tests.clamav_tests import ClamAvTest
 from tests.commons_tests.config_tests import ConfigTest
+from tests.commons_tests.context_tests import ContextTest
 from tests.commons_tests.onesignal_tests import OneSignalTest
 from tests.commons_tests.usos_caller_tests import UsosCallerTest
 from tests.crawler_tests.crawler_tests import CrawlerTest
@@ -32,6 +33,7 @@ def build_suite():
     # test_suite.addTest(unittest.makeSuite(AESCipherTest))
     test_suite.addTest(unittest.makeSuite(UsosCallerTest))
     test_suite.addTest(unittest.makeSuite(ConfigTest))
+    test_suite.addTest(unittest.makeSuite(ContextTest))
     test_suite.addTest(unittest.makeSuite(OneSignalTest))
 
     # crawler

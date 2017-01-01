@@ -2,10 +2,11 @@
 
 from bson import ObjectId
 from tornado import web
-from tornado.util import ObjectDict
+from tornado.ioloop import IOLoop
 
 from commons import utils
 from commons.constants import config, fields
+from commons.context import Context
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
@@ -44,17 +45,15 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         return
 
     async def prepare(self):
-        self._context = ObjectDict()
-        self._context.prepare_curl_callback = self.config.PREPARE_CURL_CALLBACK
-        self._context.proxy_host = self.config.PROXY_HOST
-        self._context.proxy_port = self.config.PROXY_PORT
-        self._context.remote_ip = self.get_remote_ip()
 
         try:
-            self._context.user_doc = await self._prepare_user()
+            user_doc = await self._prepare_user()
         except Exception as ex:
             await self.exc(ex)
             return
+
+        self._context = Context(self.config, user_doc=user_doc, remote_ip=self.get_remote_ip(),
+                                io_loop=IOLoop.current())
 
         if self._context.user_doc and fields.USOS_ID in self._context.user_doc:
             usos_id = self._context.user_doc[fields.USOS_ID]  # request authenticated
@@ -65,6 +64,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
             self._context.usos_doc = await self.db_get_usos(usos_id)
 
         self._context.settings = await self.db_settings(self.getUserId())
+        self._context.setUp()
 
     def get_current_user(self):
         if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
@@ -96,9 +96,13 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         return False
 
     def getUserSettings(self):
-        if hasattr(self, '_context') and hasattr(self._context, 'settings'):
-            return self._context.settings
+        return self._context.settings
 
+    async def usosCall(self, path, arguments=None):
+        return await self._context.usosCaller.call(path, arguments)
+
+    async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
+        return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous

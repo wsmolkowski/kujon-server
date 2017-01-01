@@ -17,6 +17,13 @@ from commons.constants import collections, config
 from commons.enumerators import Environment
 from scripts.dbutils import DbUtils
 
+USOS_DEMO = {"_id": {"$oid": "585e3c6d11b85839d440669c"}, "validate_ssl_certificate": True,
+             "consumer_key": "u9xbMGsj9rfER3QBPCBR", "comment": "OK",
+             "consumer_secret": "f6TDvucnwDUJ8ZX7HCFa4kvNEFnE7MzByezgBy5v", "usos_id": "DEMO",
+             "name": "Uniwersytet DEMO w Nibylandi", "contact": "dsksysadm@adm.uw.edu.pl",
+             "created_time": {"$date": 1482574461247}, "logo": "/static/img/logo/logo-demo-64x64.jpg",
+             "url": "https://usosapps.demo.usos.edu.pl/", "enabled": True}
+
 USER_DOC = {"access_token_secret": "RbqLudKTUV3SddKbZ2qqvhGEYTrwBpUUKGcjr39W",
             "name": "kujontest@gmail.com",
             "created_time": datetime.now(),

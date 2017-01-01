@@ -6,7 +6,6 @@ from datetime import date, datetime
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons.UsosCaller import AsyncCaller
 from commons.constants import collections, fields
 from commons.errors import ApiError
 
@@ -18,7 +17,7 @@ class ApiTermMixin(object):
     async def _api_term_task(self, term_id):
         term_doc = None
         try:
-            term_doc = await AsyncCaller(self._context).call_async(
+            term_doc = await self.asyncCall(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
             term_doc[fields.TERM_ID] = term_doc.pop(fields.ID)

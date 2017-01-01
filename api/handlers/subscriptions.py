@@ -4,7 +4,6 @@ from tornado import web
 
 from api.handlers.base import ApiHandler
 from commons import decorators
-from commons.UsosCaller import UsosCaller
 from commons.constants import fields
 
 
@@ -27,7 +26,7 @@ class SubscriptionsHandler(ApiHandler):
             if subscriptions:
                 subscriptions_doc['subscriptions'] = subscriptions
 
-            usos_subscriptions = await UsosCaller(self._context).call(path='services/events/subscriptions')
+            usos_subscriptions = await self.usosCall(path='services/events/subscriptions')
             if not usos_subscriptions:
                 usos_subscriptions = dict()
 
