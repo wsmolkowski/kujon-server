@@ -67,10 +67,11 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self._context.setUp()
 
     def get_current_user(self):
-        return self._context.user_doc
+        if hasattr(self, '_context'):
+            return self._context.user_doc
 
     def getUsosId(self):
-        if self._context.usos_doc:
+        if hasattr(self, '_context') and self._context.usos_doc:
             return self._context.usos_doc[fields.USOS_ID]
 
     def getUserId(self, return_object_id=True):
