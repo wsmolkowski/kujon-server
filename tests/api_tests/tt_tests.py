@@ -13,16 +13,16 @@ class ApiTTTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testTT(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05'))
+        yield self.assertOK(self.get_url('/tt/2015-05-05'))
 
     @gen_test(timeout=10)
     def testTTLecturersFalse(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05?lecturers_info=False'))
+        yield self.assertOK(self.get_url('/tt/2015-05-05?lecturers_info=False'))
 
     @gen_test(timeout=10)
     def testTTDays(self):
-        yield self.fetch_assert(self.get_url('/tt/2015-05-05?days=1'))
+        yield self.assertOK(self.get_url('/tt/2015-05-05?days=1'))
 
     @gen_test(timeout=10)
     def testTTFake(self):
-        yield self.fetch_assert(self.get_url('/tt/Fake'))
+        yield self.assertOK(self.get_url('/tt/Fake'))

@@ -14,23 +14,23 @@ class ApiUserTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testUsers(self):
-        yield self.fetch_assert(self.get_url('/users'))
+        yield self.assertOK(self.get_url('/users'))
 
     @gen_test(timeout=10)
     def testUsersById(self):
-        yield self.fetch_assert(self.get_url('/users/1'))
+        yield self.assertOK(self.get_url('/users/1'))
 
     @gen_test(timeout=10)
     def testUsersWithFakeId(self):
-        yield self.fetch_assert(self.get_url('/users/Fake'), assert_response=False)
+        yield self.assertFail(self.get_url('/users/Fake'))
 
     @gen_test(timeout=10)
     def testUsersInfoPhotosById(self):
-        user_doc = yield self.fetch_assert(self.get_url('/users'))
+        user_doc = yield self.assertOK(self.get_url('/users'))
         # get photo_id from PHOTO_URL field
         photo_id = user_doc['data'][fields.PHOTO_URL].split('/', 4)[4]
-        yield self.fetch_assert(self.get_url('/users_info_photos/{0}'.format(photo_id)), contenttype='image/jpeg')
+        yield self.assertOK(self.get_url('/users_info_photos/{0}'.format(photo_id)), contentType='image/jpeg')
 
     @gen_test(timeout=10)
     def testUsersInfoAll(self):
-        yield self.fetch_assert(self.get_url('/usersinfoall'))
+        yield self.assertOK(self.get_url('/usersinfoall'))
