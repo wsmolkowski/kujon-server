@@ -5,7 +5,7 @@ from commons.UsosCaller import strip_english_language
 
 
 class UsosCallerTest(unittest.TestCase):
-    def test_strip_en_language(self):
+    def testStripENLanguage(self):
         # assume
         input_json = {
             "course_id": "2500-KF-PB-10",
