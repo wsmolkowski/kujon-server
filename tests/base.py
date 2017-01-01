@@ -119,6 +119,9 @@ class BaseTestClass(AsyncHTTPTestCase):
             self.assertIsNotNone(json_body)
             self.assertEqual('success', json_body['status'])
             return json_body
+        else:
+            # not json, e.g. image notihing to test
+            pass
 
     @gen.coroutine
     def assertFail(self, url, method='GET', body=None, contentType='application/json'):
@@ -131,3 +134,6 @@ class BaseTestClass(AsyncHTTPTestCase):
             self.assertEqual('error', json_body['status'])
             self.assertNotEqual(200, json_body['code'])
             return json_body
+        else:
+            # not json, e.g. image notihing to test
+            pass
