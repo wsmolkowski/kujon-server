@@ -19,7 +19,7 @@ from crawler import job_factory
 class DbUtils(object):
     INDEXED_FIELDS = (fields.USOS_ID, fields.USER_ID, fields.COURSE_ID, fields.TERM_ID, fields.ID,
                       fields.UNIT_ID, fields.GROUP_ID, fields.PROGRAMME_ID, fields.FACULTY_ID,
-                      fields.USOS_PAIRED, fields.USER_EMAIL, fields.NODE_ID)
+                      fields.USOS_PAIRED, fields.USER_EMAIL, fields.NODE_ID, fields.FILE_ID, fields.FILE_STATUS)
 
     def __init__(self, config, encrypt_usoses_keys=False):
         if config:
