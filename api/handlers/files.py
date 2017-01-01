@@ -32,7 +32,7 @@ class FileHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self, file_id):
         try:
-            remote_address = self.request.headers.get("X-Real-IP")
+            remote_address = self.get_remote_ip()
             if not remote_address:
                 if self.config.ENVIRONMENT.lower() in [Environment.DEVELOPMENT.value, Environment.TESTS.value]:
                     remote_address = "127.0.0.1"
