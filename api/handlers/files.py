@@ -175,6 +175,9 @@ class FileUploadHandler(AbstractFileHandler):
     @decorators.authenticated
     async def post(self):
         try:
+
+            fileinfo = self.request.files['filearg'][0]
+
             json_data = escape.json_decode(self.request.body.decode())
 
             if fields.TERM_ID not in json_data \

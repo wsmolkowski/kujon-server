@@ -102,13 +102,19 @@ class BaseTestClass(AsyncHTTPTestCase):
         self._app.settings[config.APPLICATION_FS] = self.fs
 
     @gen.coroutine
-    def _assertFetch(self, url, method, body, contentType):
+    def _assertFetch(self, url, method, body, contentType, headers):
 
-        response = yield self.client.fetch(url, method=method, body=body, headers={
+        header = {
             config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
             config.MOBILE_X_HEADER_TOKEN: TOKEN_DOC['token'],
             config.MOBILE_X_HEADER_REFRESH: 'True',
-        })
+        }
+        # if additional header to add
+        if headers:
+            for key in headers:
+                header[key] = headers[key]
+
+        response = yield self.client.fetch(url, method=method, body=body, headers=header)
 
         logging.debug(response.body)
 
@@ -117,9 +123,9 @@ class BaseTestClass(AsyncHTTPTestCase):
         return response
 
     @gen.coroutine
-    def assertOK(self, url, method='GET', body=None, contentType='application/json'):
+    def assertOK(self, url, method='GET', body=None, contentType='application/json', headers=None):
 
-        response = yield self._assertFetch(url, method, body, contentType)
+        response = yield self._assertFetch(url, method, body, contentType, headers)
 
         if contentType == 'application/json':
             json_body = escape.json_decode(response.body)
@@ -127,13 +133,13 @@ class BaseTestClass(AsyncHTTPTestCase):
             self.assertEqual('success', json_body['status'])
             return json_body
         else:
-            # not json, e.g. image notihing to test
+            # not json, e.g. image nothing to test
             pass
 
     @gen.coroutine
-    def assertFail(self, url, method='GET', body=None, contentType='application/json'):
+    def assertFail(self, url, method='GET', body=None, contentType='application/json', headers=None):
 
-        response = yield self._assertFetch(url, method, body, contentType)
+        response = yield self._assertFetch(url, method, body, contentType, headers)
 
         if contentType == 'application/json':
             json_body = escape.json_decode(response.body)
