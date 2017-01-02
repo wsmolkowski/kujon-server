@@ -146,7 +146,7 @@ class DbUtils(object):
 
             user_to_doc = self.db_to[collections.USERS].find_one({
                 fields.USER_EMAIL: email_to, fields.USOS_PAIRED: True})
-            if not user_from_doc:
+            if not user_to_doc:
                 raise Exception("user to {0} not found.".format(email_to))
 
             logging.info('user_to_doc: {0}'.format(user_to_doc))
