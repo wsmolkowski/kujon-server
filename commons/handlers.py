@@ -46,14 +46,14 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def prepare(self):
 
+        self._context = Context(self.config, remote_ip=self.get_remote_ip(),
+                                io_loop=IOLoop.current())
+
         try:
-            user_doc = await self._prepare_user()
+            self._context.user_doc = await self._prepare_user()
         except Exception as ex:
             await self.exc(ex)
             return
-
-        self._context = Context(self.config, user_doc=user_doc, remote_ip=self.get_remote_ip(),
-                                io_loop=IOLoop.current())
 
         if self._context.user_doc and fields.USOS_ID in self._context.user_doc:
             usos_id = self._context.user_doc[fields.USOS_ID]  # request authenticated
@@ -67,22 +67,18 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self._context.setUp()
 
     def get_current_user(self):
-        if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
+        if hasattr(self, '_context'):
             return self._context.user_doc
-        return
 
     def getUsosId(self):
-        if hasattr(self._context,
-                   'usos_doc') and self._context.usos_doc and fields.USOS_ID in self._context.usos_doc:
+        if hasattr(self, '_context') and self._context.usos_doc:
             return self._context.usos_doc[fields.USOS_ID]
-        return
 
     def getUserId(self, return_object_id=True):
         if self.get_current_user():
             if return_object_id:
                 return ObjectId(self.get_current_user()[fields.MONGO_ID])
             return self.get_current_user()[fields.MONGO_ID]
-        return
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
@@ -103,6 +99,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
         return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
+
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous
