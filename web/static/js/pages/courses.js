@@ -39,7 +39,7 @@ define(['jquery', 'handlebars', 'main', 'text!templates/courses.html', 'text!tem
 
                         var tr = $(this).closest('tr');
 
-                        var url = '/courseseditions/' + courseId + '/' + encodeURIComponent(termId);
+                        var url = '/courseseditions/' + encodeURIComponent(courseId) + '/' + encodeURIComponent(termId);
                         main.ajaxGet(url).then(function(courseInfo) {
                             var idContent = '#courseDetails' + courseId;
 
