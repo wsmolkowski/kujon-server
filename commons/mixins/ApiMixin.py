@@ -385,7 +385,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         for unit_doc in units_doc:
                             if int(unit) == unit_doc[fields.UNIT_ID]:
                                 grade[fields.CLASS_TYPE] = unit_doc[fields.CLASS_TYPE_ID]
-                                del (grade['unit'])
+                                if 'unit' in grade:
+                                    del(grade['unit'])
 
         return result
 
@@ -623,13 +624,17 @@ class ApiMixin(ApiUserMixin, MathMixin):
         group_doc = await self.db[collections.GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = await self.asyncCall(
-                    path='services/groups/group',
-                    arguments={
-                        'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
-                        'course_unit_id': group_id,
-                        'group_number': 1,
-                    })
+                try:
+                    group_doc = await self.asyncCall(
+                        path='services/groups/group',
+                        arguments={
+                            'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
+                            'course_unit_id': group_id,
+                            'group_number': 1,
+                        })
+                except Exception as ex:
+                    if not group_doc:
+                        return None
 
                 classtypes = await self.get_classtypes()
                 group_doc['class_type'] = self.classtype_name(classtypes, group_doc[

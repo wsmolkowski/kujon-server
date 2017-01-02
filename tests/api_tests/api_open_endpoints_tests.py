@@ -13,15 +13,13 @@ class ApiRestTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=5)
     def testConfig(self):
-        response = yield self.http_client.fetch(self.get_url('/config'))
-        self.assert_api_response(response)
+        yield self.assertOK(self.get_url('/config'))
+
 
     @gen_test(timeout=5)
     def testUsoses(self):
-        response = yield self.http_client.fetch(self.get_url('/usoses'))
-        self.assert_api_response(response)
+        yield self.assertOK(self.get_url('/usoses'))
 
     @gen_test(timeout=5)
     def testUsosesAll(self):
-        response = yield self.http_client.fetch(self.get_url('/usosesall'))
-        self.assert_api_response(response)
+        yield self.assertOK(self.get_url('/usosesall'))
