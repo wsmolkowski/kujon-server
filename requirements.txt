@@ -10,3 +10,5 @@ google-api-python-client
 aiohttp
 pyclamd
 # install on dev machine https://www.clamav.net/downloads#otherversions
+requests_toolbelt
+

@@ -2,6 +2,9 @@
 
 import datetime
 import json
+import requests
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+
 from random import randint
 
 from tornado.testing import gen_test
@@ -91,7 +94,15 @@ class ApiFilesTest(AbstractApplicationTestBase):
             fields.FILE_NAME: filename,
             fields.FILE_CONTENT: self.file_sample,
         })
-        file_doc = yield self.assertOK(self.get_url('/filesupload'), method="POST", body=file_json)
+
+        multipart_data = MultipartEncoder(
+            fields={
+                'file': (filename, self.file_sample, 'text/plain'),
+            }
+        )
+
+        file_doc = yield self.assertOK(self.get_url('/filesupload'), method="POST", body=multipart_data,
+                                       headers = {'Content-Type': multipart_data.content_type})
 
         if file_doc and 'data' in file_doc:
             file_id = file_doc['data']
