@@ -94,8 +94,11 @@ class ApiCoursesTest(AbstractApplicationTestBase):
     @gen_test(timeout=30)
     def testTermsCrstestsSingle(self):
         result = yield self.assertOK(self.get_url('/crstests'))
-
-        yield self.assertOK(self.get_url('/crstests/{0}'.format(self.random)))
+        if len(result['data']['tests']) > 0:
+            id = result['data']['tests'][0]
+            yield self.assertOK(self.get_url('/crstests/{0}'.format(id)))
+        else:
+            yield self.assertFail(self.get_url('/crstests/{0}'.format(self.random)))
 
     @gen_test(timeout=30)
     def testTermsSubscriptions(self):
