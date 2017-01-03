@@ -262,7 +262,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     message='wiadomosc {0}'.format(user_point),
                     email_reciepient=user_doc[fields.USER_EMAIL]
                 )
-                logging.debug('user_point signal_response: {1}'.format(signal_point))
+                logging.debug('user_point signal_response: {0}'.format(signal_point))
 
             user_grade = await self.usosCall(path='services/crstests/user_grade',
                                              arguments={'node_id': node_id})
@@ -273,7 +273,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                 signal_grade = await self._osm.signal_message(message_text, user_doc[fields.USER_EMAIL])
                 await self.db_save_message(message_text, from_whom='Komunikat z USOS', message_type='powiadomienie')
 
-                logging.debug('user_point signal_response: {1}'.format(signal_grade))
+                logging.debug('user_point signal_response: {0}'.format(signal_grade))
 
         except Exception as ex:
             logging.error(
