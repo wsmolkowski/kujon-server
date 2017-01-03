@@ -103,6 +103,8 @@ FILE_SIZE = 'file_size'
 FILE_STATUS = 'file_status'
 FILE_CONTENT_TYPE = 'file_content_type'
 FILE_CONTENT = 'file_content'
+FILE_AV_RESULT = 'av_result'
 FILE_ID = 'file_id'
+FILE_USER_INFO = 'user_info'
 
 REMOTE_ADDRESS = 'remote_address'

@@ -3,20 +3,17 @@
 import sys
 import logging
 import pyclamd
-import gridfs
 import mimetypes
 from bson.objectid import ObjectId
 from datetime import datetime
 from tornado.ioloop import IOLoop
-
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
 from commons.enumerators import UploadFileStatus, Environment
-from commons.errors import FilesError
 
 FILES_LIMIT_FIELDS = {'created_time': 1, 'file_name': 1, 'file_size': 1, 'file_content_type': 1, fields.TERM_ID: 1,
-                     fields.COURSE_ID: 1, fields.MONGO_ID: 1}
+                     fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1}
 
 
 class AbstractFileHandler(ApiHandler):
@@ -39,16 +36,17 @@ class AbstractFileHandler(ApiHandler):
             self._clamd = pyclamd.ClamdNetworkSocket()
         return self._clamd
 
-    async def _validateFile(self, file_id, file_content):
+    async def _scanForViruses(self, file_id, file_content):
         try:
 
-            return True
-            # TODO do sprawdzenia bo zrobieniu uploadu
+            # scanowanie AV
             scan_result = self.clamd.scan_stream(file_content)
-            if scan_result:
-                logging.info('file_id {0} virus found {1}'.format(file_id, scan_result))
+            if not scan_result:
+                logging.info('file_id {0} scanned: clean'.format(file_id, scan_result))
                 return False
-
+            else:
+                logging.info('file_id {0} scanned: virus found {1}'.format(file_id, scan_result))
+                return scan_result
 
         except (pyclamd.BufferTooLongError, pyclamd.ConnectionError) as ex:
             logging.debug(ex)
@@ -56,9 +54,9 @@ class AbstractFileHandler(ApiHandler):
 
     async def _storeFile(self, file_id, file_content):
 
-        file_ok = await self._validateFile(file_id, file_content)
+        scan_for_viruses = await self._scanForViruses(file_id, file_content)
 
-        if file_ok:
+        if not scan_for_viruses:
             logging.error("Zeskanowano plik {0} ClamAV ze statusem pozytywnym nowy status: {1}".format(file_id, UploadFileStatus.STORED.value))
             status = UploadFileStatus.STORED.value
         else:
@@ -69,12 +67,15 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.FILE_STATUS] = status
         file_doc[fields.UPDATE_TIME] = datetime.now()
         file_doc[fields.FILE_CONTENT] = file_content
-        file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
+        if scan_for_viruses:
+            file_doc[fields.FILE_AV_RESULT] = scan_for_viruses
 
+        return await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
 
     async def apiGetUserFiles(self):
 
-        pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId()}
+        pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId(),
+                    fields.FILE_STATUS: UploadFileStatus.STORED.value}
         cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
         files_doc = await cursor.to_list(None)
 
@@ -91,18 +92,21 @@ class AbstractFileHandler(ApiHandler):
         if not await self.api_course_edition(course_id, term_id):
             return None
 
-        pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id, fields.TERM_ID: term_id}
-        cursor = self.db[collections.FILES].find(pipeline)
-        return await cursor.to_list(None)
+        pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id,
+                    fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value}
+        cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
+        files_doc = await cursor.to_list(None)
+
+        # change file id from _id to fields.FILE_ID
+        for file in files_doc:
+            file[fields.FILE_ID] = file[fields.MONGO_ID]
+            file.pop(fields.MONGO_ID)
+
+        return files_doc
 
     async def apiGetFile(self, file_id):
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id)}
         return await self.db[collections.FILES].find_one(pipeline)
-
-    async def apiGetFileContent(self, file_id):
-        # todo get file from grifs
-        grid_fs = gridfs.GridFS(self.db, collections=collections.FILES_CONTENT)
-        return self.fs.get(file_id).read()
 
     async def apiStorefile(self, term_id, course_id, file_name, file_content):
 
@@ -112,6 +116,13 @@ class AbstractFileHandler(ApiHandler):
 
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
+
+        # dodawanie inforamcji o użytkowniku
+        user_info = await self.api_user_usos_info()
+        file_doc[fields.FILE_USER_INFO] = {fields.USER_ID: user_info[fields.ID],
+                                    "first name": user_info['first_name'],
+                                    "last_name": user_info['last_name']}
+
         file_doc[fields.USOS_ID] = self.getUsosId()
         file_doc[fields.TERM_ID] = term_id
         file_doc[fields.COURSE_ID] = course_id
@@ -130,9 +141,6 @@ class AbstractFileHandler(ApiHandler):
             file_doc[fields.FILE_CONTENT_TYPE] = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
         except Exception as ex:
             file_doc[fields.FILE_CONTENT_TYPE] = 'application/octet-stream'
-
-        # TODO - sprawdzic czy ten upload działa asynchronicznie
-        # file_upload_id = await self.fs.upload_from_stream()
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
         IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
@@ -174,10 +182,7 @@ class FileHandler(AbstractFileHandler):
                 self.error("Nie znaleziono pliku.", code=404)
                 return
 
-            # await self.fs.delete(file_doc[fields.FILE_UPLOAD_ID])
-
             file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
-
             file_id = await self.db[collections.FILES].update({fields.FILE_ID: file_doc[fields.FILE_ID]}, file_doc)
 
             self.success(file_id)
