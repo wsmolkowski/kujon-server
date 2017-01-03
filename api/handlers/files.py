@@ -124,6 +124,7 @@ class AbstractFileHandler(ApiHandler):
         # mime = mimetypes.MimeTypes()
         # file_doc[fields.FILE_CONTENT] = mime.guess_type(file_content)
         file_doc[fields.FILE_CONTENT_TYPE] = "text/plain"
+
         # TODO - sprawdzic czy ten upload działa asynchronicznie
         # file_upload_id = await self.fs.upload_from_stream()
 
@@ -203,16 +204,17 @@ class FileUploadHandler(AbstractFileHandler):
 
             course_id = self.get_argument('course_id', default=None)
             term_id = self.get_argument('term_id', default=None)
-            file_name = self.get_argument('file_name', default=None)
-            if not term_id or not course_id or not file_name:
-                raise FilesError('Nie przekazano odpowiednich parametrów.')
+            files = self.request.files
+            if not term_id or not course_id or not files or 'files' not in files:
+                return self.error('Nie przekazano odpowiednich parametrów.', code=400)
 
-            file = self.request.body.decode()
-
-            file_id = await self.apiStorefile(term_id, course_id, file_name, file)
-            if file_id:
-                self.success(file_id)
+            files_doc = list()
+            for file in files['files']:
+                file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'])
+                files_doc.append(file_id)
+            if len(files_doc) > 0:
+                self.success(files_doc)
             else:
-                self.error("Niepoprawne parametry wywołania.", code=400)
+                self.error("Niepoprawne parametry wywołania 2.", code=400)
         except Exception as ex:
             await self.exc(ex)

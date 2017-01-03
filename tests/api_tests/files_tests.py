@@ -103,6 +103,16 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # get user sample course edition
         course_id, term_id = yield from self.getRandomCourseEdition()
 
+
+        # up2
+        import MultipartPostHandler, urllib2
+
+        opener = urllib2.build_opener(MultipartPostHandler.MultipartPostHandler)
+        params = {"username": "bob", "password": "riviera",
+                  "file": open("filename", "rb")}
+        opener.open("http://wwww.bobsite.com/upload/", params)
+
+
         # upload
         file_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.randomfilename)),
                                        method="POST", body=self.file_sample, headers={'Content-Type': 'text/plain'})
