@@ -10,9 +10,12 @@ from tornado.ioloop import IOLoop
 
 from api.handlers.base import ApiHandler
 from commons import decorators
-from commons.constants import fields, collections, config
+from commons.constants import fields, collections
 from commons.enumerators import UploadFileStatus, Environment
 from commons.errors import FilesError
+
+FILES_LIMIT_FIELDS = {'created_time': 1, 'file_name': 1, 'file_size': 1, 'file_content_type': 1, fields.TERM_ID: 1,
+                     fields.COURSE_ID: 1, fields.MONGO_ID: 1}
 
 
 class AbstractFileHandler(ApiHandler):
@@ -39,7 +42,7 @@ class AbstractFileHandler(ApiHandler):
         try:
 
             return True
-            # TODO do sprawdzenia
+            # TODO do sprawdzenia bo zrobieniu uploadu
             scan_result = self.clamd.scan_stream(file_content)
             if scan_result:
                 logging.info('file_id {0} virus found {1}'.format(file_id, scan_result))
@@ -55,40 +58,37 @@ class AbstractFileHandler(ApiHandler):
         file_ok = await self._validateFile(file_id, file_content)
 
         if file_ok:
-            # TODO - sprawdzic czy ten upload działa asynchronicznie
-            # file_upload_id = await self.fs.upload_from_stream()
+            logging.error("Zeskanowano plik {0} ClamAV ze statusem pozytywnym nowy status: {1}".format(file_id, UploadFileStatus.STORED.value))
             status = UploadFileStatus.STORED.value
         else:
-            logging.debug("Zeskanowano Clam ze statusem negatywnym")
+            logging.error("Zeskanowano plik {0} ClamAV ze statusem negatywnym nowy status: {1}".format(file_id, UploadFileStatus.INVALID.value))
             status = UploadFileStatus.INVALID.value
-            return
 
         file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
         file_doc[fields.FILE_STATUS] = status
         file_doc[fields.UPDATE_TIME] = datetime.now()
         file_doc[fields.FILE_CONTENT] = file_content
-
         file_id = await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
-        logging.debug("Zeskanowano Clam ze statusem pozytywnym")
-        file_doc[fields.FILE_ID] = file_id
 
 
     async def apiGetUserFiles(self):
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId()}
-        cursor = self.db[collections.FILES].find(pipeline)
+        cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
+        files_doc = await cursor.to_list(None)
 
-        # TODO: napisać zwracanie z grid FC
-        return await cursor.to_list(None)
+        # change file id from _id to fields.FILE_ID
+        for file in files_doc:
+            file[fields.FILE_ID] = file[fields.MONGO_ID]
+            file.pop(fields.MONGO_ID)
+
+        return files_doc
 
     async def apiGetFiles(self, term_id, course_id):
 
-        # sprawdzenie czy listuje swoje course_id & term_id
-        courseseditions = self.api_course_edition(course_id, term_id)
-        # found = 0
-        # for ce in courseseditions:
-        #     pass
-        #     # TODO napisać sprawdzenie czy ma uprawnienie do tej edycji kursu
+        # check if user is on given course_id & term_id
+        if not await self.api_course_edition(course_id, term_id):
+            return None
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id, fields.TERM_ID: term_id}
         cursor = self.db[collections.FILES].find(pipeline)
@@ -105,12 +105,17 @@ class AbstractFileHandler(ApiHandler):
 
     async def apiStorefile(self, term_id, course_id, file_name, file_content):
 
+        # check if user is on given course_id & term_id
+        if not await self.api_course_edition(course_id, term_id):
+            return None
+
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
         file_doc[fields.USOS_ID] = self.getUsosId()
         file_doc[fields.TERM_ID] = term_id
         file_doc[fields.COURSE_ID] = course_id
 
+        # TODO liczenie rozmiaru pliku
         file_doc[fields.FILE_SIZE] = 999
         file_doc[fields.FILE_STATUS] = UploadFileStatus.NEW.value
         file_doc[fields.FILE_NAME] = file_name
@@ -119,6 +124,8 @@ class AbstractFileHandler(ApiHandler):
         # mime = mimetypes.MimeTypes()
         # file_doc[fields.FILE_CONTENT] = mime.guess_type(file_content)
         file_doc[fields.FILE_CONTENT_TYPE] = "text/plain"
+        # TODO - sprawdzic czy ten upload działa asynchronicznie
+        # file_upload_id = await self.fs.upload_from_stream()
 
         file_id = await self.db_insert(collections.FILES, file_doc, update=False)
         IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
@@ -203,6 +210,9 @@ class FileUploadHandler(AbstractFileHandler):
             file = self.request.body.decode()
 
             file_id = await self.apiStorefile(term_id, course_id, file_name, file)
-            self.success(file_id)
+            if file_id:
+                self.success(file_id)
+            else:
+                self.error("Niepoprawne parametry wywołania.", code=400)
         except Exception as ex:
             await self.exc(ex)
