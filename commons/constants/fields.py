@@ -100,8 +100,8 @@ COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED
 
 FILE_NAME = 'file_name'
 FILE_SIZE = 'file_size'
-FILE_TYPE = 'file_type'
 FILE_STATUS = 'file_status'
+FILE_CONTENT_TYPE = 'file_content_type'
 FILE_CONTENT = 'file_content'
 FILE_ID = 'file_id'
 

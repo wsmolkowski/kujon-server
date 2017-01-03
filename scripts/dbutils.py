@@ -99,15 +99,18 @@ class DbUtils(object):
             now = datetime.now()
             aes = AESCipher(aes_secret)
             self.client.drop_collection(collections.USOSINSTANCES)
+            msg = "Added usos to instances: "
             for usos in usosinstances.USOSINSTANCES:
                 usos[fields.CREATED_TIME] = now
-                logging.debug("adding usos: %r ", usos[fields.USOS_ID])
                 doc = self.client.usosinstances.find_one({fields.USOS_ID: usos[fields.USOS_ID]})
                 if not doc:
                     if self.encrypt_usoses_keys:
                         self.client[collections.USOSINSTANCES].insert(aes.encrypt_usos(usos))
                     else:
                         self.client[collections.USOSINSTANCES].insert(usos)
+                msg = msg + usos[fields.USOS_ID] + " "
+            logging.debug(msg)
+
         except Exception as ex:
             logging.exception(ex)
 
