@@ -19,7 +19,7 @@ from crawler import job_factory
 class DbUtils(object):
     INDEXED_FIELDS = (fields.USOS_ID, fields.USER_ID, fields.COURSE_ID, fields.TERM_ID, fields.ID,
                       fields.UNIT_ID, fields.GROUP_ID, fields.PROGRAMME_ID, fields.FACULTY_ID,
-                      fields.USOS_PAIRED, fields.USER_EMAIL, fields.NODE_ID, fields.FILE_ID, fields.FILE_STATUS)
+                      fields.USOS_PAIRED, fields.USER_EMAIL, fields.NODE_ID, fields.FILE_STATUS)
 
     def __init__(self, config, encrypt_usoses_keys=False):
         if config:
@@ -99,15 +99,18 @@ class DbUtils(object):
             now = datetime.now()
             aes = AESCipher(aes_secret)
             self.client.drop_collection(collections.USOSINSTANCES)
+            msg = "Added usos to instances: "
             for usos in usosinstances.USOSINSTANCES:
                 usos[fields.CREATED_TIME] = now
-                logging.debug("adding usos: %r ", usos[fields.USOS_ID])
                 doc = self.client.usosinstances.find_one({fields.USOS_ID: usos[fields.USOS_ID]})
                 if not doc:
                     if self.encrypt_usoses_keys:
                         self.client[collections.USOSINSTANCES].insert(aes.encrypt_usos(usos))
                     else:
                         self.client[collections.USOSINSTANCES].insert(usos)
+                msg = msg + usos[fields.USOS_ID] + " "
+            logging.debug(msg)
+
         except Exception as ex:
             logging.exception(ex)
 
