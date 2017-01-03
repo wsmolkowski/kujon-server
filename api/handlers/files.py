@@ -120,7 +120,7 @@ class AbstractFileHandler(ApiHandler):
         # dodawanie inforamcji o użytkowniku
         user_info = await self.api_user_usos_info()
         file_doc[fields.FILE_USER_INFO] = {fields.USER_ID: user_info[fields.ID],
-                                    "first name": user_info['first_name'],
+                                    "first_name": user_info['first_name'],
                                     "last_name": user_info['last_name']}
 
         file_doc[fields.USOS_ID] = self.getUsosId()
