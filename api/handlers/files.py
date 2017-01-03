@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import sys
 import logging
 import pyclamd
 import gridfs
@@ -115,15 +116,20 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.TERM_ID] = term_id
         file_doc[fields.COURSE_ID] = course_id
 
-        # TODO liczenie rozmiaru pliku
-        file_doc[fields.FILE_SIZE] = 999
+        # liczenie rozmiaru pliku w MB
+        filesize = sys.getsizeof(file_content)
+        if filesize > 0:
+            filesize = "{0:.2f}".format((filesize/1024/1024))
+        file_doc[fields.FILE_SIZE] = filesize
+
         file_doc[fields.FILE_STATUS] = UploadFileStatus.NEW.value
         file_doc[fields.FILE_NAME] = file_name
 
-        # TODO: rozpoznawanie contentu i co jak nie rozpozna
-        # mime = mimetypes.MimeTypes()
-        # file_doc[fields.FILE_CONTENT] = mime.guess_type(file_content)
-        file_doc[fields.FILE_CONTENT_TYPE] = "text/plain"
+        # rozpoznawanie rodzaju contentu
+        try:
+            file_doc[fields.FILE_CONTENT_TYPE] = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+        except Exception as ex:
+            file_doc[fields.FILE_CONTENT_TYPE] = 'application/octet-stream'
 
         # TODO - sprawdzic czy ten upload działa asynchronicznie
         # file_upload_id = await self.fs.upload_from_stream()
@@ -211,7 +217,7 @@ class FileUploadHandler(AbstractFileHandler):
             files_doc = list()
             for file in files['files']:
                 file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'])
-                files_doc.append(file_id)
+                files_doc.append({fields.FILE_ID: file_id, fields.FILE_NAME: file['filename']})
             if len(files_doc) > 0:
                 self.success(files_doc)
             else:
