@@ -46,7 +46,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # upload 2 files
         course_id1, term_id1 = yield from self.getRandomCourseEdition()
-
+        # TODO: zmienić na uploadowanie multipartem
         file1_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id1, course_id1, self.randomfilename)),
                                        method="POST", body=self.file_sample, headers={'Content-Type': 'text/plain'})
         if file1_doc and 'data' in file1_doc:
@@ -55,6 +55,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         course_id2, term_id2 = yield from self.getRandomCourseEdition()
         filename2 = self.generateRandomFilename()
 
+        # TODO: zmienić na uploadowanie multipartem
         file2_doc = yield self.assertOK(self.get_url(
             '/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id2, course_id2, filename2)),
                                        method="POST", body=self.file_sample, headers={'Content-Type': 'text/plain'})
@@ -78,6 +79,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         course_id, term_id = yield from self.getRandomCourseEdition()
 
         # upload a file with virus
+        # TODO: zmienić na uploadowanie multipartem
         file_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.randomfilename)),
                                        method="POST", body=self.file_sample_with_eicar, headers={'Content-Type': 'text/plain'})
         if file_doc and 'data' in file_doc:
@@ -104,6 +106,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         course_id, term_id = yield from self.getRandomCourseEdition()
 
         # upload
+        # TODO: zmienić na uploadowanie multipartem
         file_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.randomfilename)),
                                        method="POST", body=self.file_sample, headers={'Content-Type': 'text/plain'})
         if file_doc and 'data' in file_doc:
@@ -123,6 +126,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.assertEquals(files_doc['data'][0][fields.TERM_ID], term_id)
         self.assertEquals(files_doc['data'][0][fields.COURSE_ID], course_id)
         self.assertEquals(files_doc['data'][0][fields.FILE_NAME], self.randomfilename)
+        self.assertIsNone(files_doc['data'][0][fields.FILE_USER_INFO])
 
         # delete
         delete_uri = '/files/' + file_id
@@ -141,6 +145,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         file_doc[fields.FILE_SIZE] = 999
         file_doc[fields.FILE_STATUS] = UploadFileStatus.STORED.value
         file_doc[fields.FILE_NAME] = self.randomfilename
+        file_doc[fields.FILE_USER_INFO] = {"user_id": "1015146", "first name": "Ewa", "last_name": "Datoń-Pawłowicz"}
 
         config = Config(options.environment)
         client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
