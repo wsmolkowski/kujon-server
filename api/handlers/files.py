@@ -1,19 +1,24 @@
 # coding=UTF-8
 
-import sys
 import logging
-import pyclamd
 import mimetypes
-from bson.objectid import ObjectId
+import sys
 from datetime import datetime
+
+import pyclamd
+from bson.objectid import ObjectId
 from tornado.ioloop import IOLoop
+
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
-from commons.enumerators import UploadFileStatus, Environment
+from commons.enumerators import UploadFileStatus
 
-FILES_LIMIT_FIELDS = {'created_time': 1, 'file_name': 1, 'file_size': 1, 'file_content_type': 1, fields.TERM_ID: 1,
-                     fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1}
+FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
+                      fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
+                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1}
+
+FILE_SCAN_RESULT_OK = 'file_clean'
 
 
 class AbstractFileHandler(ApiHandler):
@@ -38,37 +43,29 @@ class AbstractFileHandler(ApiHandler):
 
     async def _scanForViruses(self, file_id, file_content):
         try:
-
-            # scanowanie AV
             scan_result = self.clamd.scan_stream(file_content)
             if not scan_result:
-                logging.info('file_id {0} scanned: clean'.format(file_id, scan_result))
-                return False
+                logging.debug('Zeskanowano plik {0} ClamAV ze statusem pozytywnym nowy status: {1}'.format(
+                    file_id, UploadFileStatus.STORED.value))
+                return UploadFileStatus.STORED.value, FILE_SCAN_RESULT_OK
             else:
-                logging.info('file_id {0} scanned: virus found {1}'.format(file_id, scan_result))
-                return scan_result
+                logging.error('Zeskanowano plik {0} ClamAV ze statusem negatywnym nowy status: {1} wynik: {2}'.format(
+                    file_id, UploadFileStatus.INVALID.value, scan_result))
+                return UploadFileStatus.INVALID.value, scan_result
 
         except (pyclamd.BufferTooLongError, pyclamd.ConnectionError) as ex:
             logging.debug(ex)
-            return False
+            return UploadFileStatus.INVALID.value, FILE_SCAN_RESULT_OK
 
     async def _storeFile(self, file_id, file_content):
 
-        scan_for_viruses = await self._scanForViruses(file_id, file_content)
-
-        if not scan_for_viruses:
-            logging.error("Zeskanowano plik {0} ClamAV ze statusem pozytywnym nowy status: {1}".format(file_id, UploadFileStatus.STORED.value))
-            status = UploadFileStatus.STORED.value
-        else:
-            logging.error("Zeskanowano plik {0} ClamAV ze statusem negatywnym nowy status: {1}".format(file_id, UploadFileStatus.INVALID.value))
-            status = UploadFileStatus.INVALID.value
+        file_status, scan_result = await self._scanForViruses(file_id, file_content)
 
         file_doc = await self.db[collections.FILES].find_one({fields.MONGO_ID: file_id})
-        file_doc[fields.FILE_STATUS] = status
+        file_doc[fields.FILE_STATUS] = file_status
+        file_doc[fields.FILE_SCAN_RESULT] = scan_result
         file_doc[fields.UPDATE_TIME] = datetime.now()
         file_doc[fields.FILE_CONTENT] = file_content
-        if scan_for_viruses:
-            file_doc[fields.FILE_AV_RESULT] = scan_for_viruses
 
         return await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
 
@@ -120,8 +117,8 @@ class AbstractFileHandler(ApiHandler):
         # dodawanie inforamcji o użytkowniku
         user_info = await self.api_user_usos_info()
         file_doc[fields.FILE_USER_INFO] = {fields.USER_ID: user_info[fields.ID],
-                                    "first_name": user_info['first_name'],
-                                    "last_name": user_info['last_name']}
+                                           'first_name': user_info['first_name'],
+                                           'last_name': user_info['last_name']}
 
         file_doc[fields.USOS_ID] = self.getUsosId()
         file_doc[fields.TERM_ID] = term_id
@@ -130,7 +127,7 @@ class AbstractFileHandler(ApiHandler):
         # liczenie rozmiaru pliku w MB
         filesize = sys.getsizeof(file_content)
         if filesize > 0:
-            filesize = "{0:.2f}".format((filesize/1024/1024))
+            filesize = '{0:.2f}'.format((filesize / 1024 / 1024))
         file_doc[fields.FILE_SIZE] = filesize
 
         file_doc[fields.FILE_STATUS] = UploadFileStatus.NEW.value
@@ -153,13 +150,6 @@ class FileHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self, file_id):
         try:
-            remote_address = self.get_remote_ip()
-            if not remote_address:
-                if self.config.ENVIRONMENT.lower() in [Environment.DEVELOPMENT.value, Environment.TESTS.value]:
-                    remote_address = "127.0.0.1"
-                else:
-                    logging.error('Bład rozpoznawania adres IP')
-
             file_doc = await self.apiGetFile(file_id)
             if file_doc:
                 self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
@@ -179,7 +169,7 @@ class FileHandler(AbstractFileHandler):
                                                                   fields.USOS_ID: self.getUsosId()})
 
             if not file_doc:
-                self.error("Nie znaleziono pliku.", code=404)
+                self.error('Nie znaleziono pliku.', code=404)
                 return
 
             file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
@@ -216,6 +206,7 @@ class FileUploadHandler(AbstractFileHandler):
             course_id = self.get_argument('course_id', default=None)
             term_id = self.get_argument('term_id', default=None)
             files = self.request.files
+
             if not term_id or not course_id or not files or 'files' not in files:
                 return self.error('Nie przekazano odpowiednich parametrów.', code=400)
 
@@ -223,9 +214,10 @@ class FileUploadHandler(AbstractFileHandler):
             for file in files['files']:
                 file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'])
                 files_doc.append({fields.FILE_ID: file_id, fields.FILE_NAME: file['filename']})
+
             if len(files_doc) > 0:
                 self.success(files_doc)
             else:
-                self.error("Niepoprawne parametry wywołania 2.", code=400)
+                self.error('Niepoprawne parametry wywołania.', code=400)
         except Exception as ex:
             await self.exc(ex)
