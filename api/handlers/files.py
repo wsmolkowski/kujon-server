@@ -13,6 +13,7 @@ from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
 from commons.enumerators import UploadFileStatus
+from commons.errors import FilesError
 
 FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                       fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
@@ -106,10 +107,6 @@ class AbstractFileHandler(ApiHandler):
         return await self.db[collections.FILES].find_one(pipeline)
 
     async def apiStorefile(self, term_id, course_id, file_name, file_content):
-
-        # check if user is on given course_id & term_id
-        if not await self.api_course_edition(course_id, term_id):
-            return None
 
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
@@ -207,17 +204,20 @@ class FileUploadHandler(AbstractFileHandler):
             term_id = self.get_argument('term_id', default=None)
             files = self.request.files
 
-            if not term_id or not course_id or not files or 'files' not in files:
+            if not term_id or not course_id or not files:  # or 'files' not in files
                 return self.error('Nie przekazano odpowiednich parametrów.', code=400)
 
+            # check if user is on given course_id & term_id
+            if not await self.api_course_edition(course_id, term_id):
+                raise FilesError('Błędne parametry wywołania dla użytkownika.')
+
             files_doc = list()
-            for file in files['files']:
+            for key, file in files.items():
+                if isinstance(file, list):
+                    file = file[0]  # ['files']
                 file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'])
                 files_doc.append({fields.FILE_ID: file_id, fields.FILE_NAME: file['filename']})
 
-            if len(files_doc) > 0:
-                self.success(files_doc)
-            else:
-                self.error('Niepoprawne parametry wywołania.', code=400)
+            self.success(files_doc)
         except Exception as ex:
             await self.exc(ex)
