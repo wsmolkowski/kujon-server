@@ -166,7 +166,7 @@ class ApiUserMixin(DaoMixin):
         :param user_id:
         :return:
         '''
-
+        user_id = str(user_id)
         pipeline = {fields.ID: user_id, fields.USOS_ID: self.getUsosId()}
 
         if self.do_refresh() and user_id:

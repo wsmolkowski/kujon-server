@@ -247,47 +247,136 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         except Exception as ex:
             logging.exception(ex)
 
-    async def _user_event(self, user_id, node_id, usos_id):
+    def _replace_tag(self, text, tag, replacement):
+        return text.replace(tag, replacement)
+
+    def _message_formater_crstests_user_point(self, user_point):
+        # todo: dodać przedmiot
+        notification = "Punty [POINTS] za zadanie [COURSE_NAME] "
+        message_title = "Powiadomienie - wpisano [POINTS] punktów za zadanie [COURSE_NAME]"
+        message_body = 'Kujon przesyła powiadomienie o wpisanych punktach z zdania:\n' \
+                  'Punkty: [POINTS]\n'\
+                  'Zadnie: [COURSE_NAME]\n' \
+                  'Przedmiot: ???\n' \
+                  'Komentarz: [PUBLIC_COMMENT]\n'\
+                  'Wpisane przez: [LECTURER]\n'
+
+        # todo: dadać sprawdzanie wypełaniania pól i co jak nie są wypełnuone np. zamiast grader_id lecturer_id
+        tags = {'[COURSE_NAME]':  str(user_point['node_id']),
+                '[POINTS]': str(user_point['points']),
+                '[PUBLIC_COMMENT]': str(user_point['comment']),
+                '[LECTURER]': str(user_point['grader'])
+        }
+        for key, value in tags.items():
+            notification = notification.replace(key, value)
+            message_title = message_title.replace(key, value)
+            message_body = message_body.replace(key, value)
+
+        return notification, message_title, message_body
+
+    def _message_formater_crstests_user_grade(self, user_grade):
+        notification = "Ocena [GRADE] - sprawdzian z [COURSE_NAME] - [PASSED]"
+        message_title = "Powiadomienie - ocena [GRADE] - sprawdzian z [COURSE_NAME] - [PASSED]"
+        message_body = 'Kujon przesyła powiadomienie o sprawdzianie:\n' \
+                  'Ocena: [GRADE]\n' \
+                  'Zaliczone: tak\n' \
+                  'Przedmiot: [COURSE_NAME]\n' \
+                  'Komentarz: [PUBLIC_COMMENT]\n' \
+                  'Wpisane przez: [LECTURER]\n'
+
+        # todo: dadać sprawdzanie wypełaniania pól i co jak nie są wypełnuone np. zamiast grader_id lecturer_id
+        tags = {'[COURSE_NAME]':  str(user_grade['node_id']),
+                '[GRADE]': str(user_grade['grade']['decimal_value']),
+                '[PUBLIC_COMMENT]': str(user_grade['public_comment']),
+                '[LECTURER]': str(user_grade['grader']),
+                '[PASSED]': 'zaliczony' if user_grade['grade']['passes'] else 'nie zaliczony',
+        }
+        for key, value in tags.items():
+            notification = notification.replace(key, value)
+            message_title = message_title.replace(key, value)
+            message_body = message_body.replace(key, value)
+
+        return notification, message_title, message_body
+
+    async def _user_event(self, user_id, node_id, usos_id, event_type):
         try:
             user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
 
+            if not user_doc:
+                logging.debug("Nie znaleziono użytkownika dla którego jest obsługa eventu.")
+                # TODO: co jak nie uda się pobrać powiadomień bo USOS nie dostępny?
+                return False
+
             await self._buildContext(user_doc[fields.MONGO_ID])
 
-            user_point = await self.usosCall(path='services/crstests/user_point',
-                                             arguments={'node_id': node_id})
+            if event_type == 'crstests/user_point':
+                user_point = await self.usosCall(path='services/crstests/user_point', arguments={'node_id': node_id})
+                logging.debug('user_point: {0}'.format(user_point))
+                if user_point:
 
-            logging.debug('user_point: {0}'.format(user_point))
+                    # todo: get info about course_id
+                    crstests_doc = await self.usosCall(path='services/crstests/task_node',
+                                                       arguments={'node_id': node_id, 'fields': 'name|type|root_id'})
 
-            if user_point:
-                signal_point = await self._osm.signal_message(
-                    message='wiadomosc {0}'.format(user_point),
-                    email_reciepient=user_doc[fields.USER_EMAIL]
-                )
-                logging.debug('user_point signal_response: {0}'.format(signal_point))
+                    # get grader data
+                    grader_doc = await self.api_user_info(user_point['grader_id'])
+                    user_point['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
-            user_grade = await self.usosCall(path='services/crstests/user_grade',
-                                             arguments={'node_id': node_id})
-            logging.debug('user_grade: {0}'.format(user_grade))
+                    notification, message_title, message_body = self._message_formater_crstests_user_grade(user_point)
+                    signal_point = await self._osm.signal_message(message=notification,
+                                                                  email_reciepient=user_doc[fields.USER_EMAIL])
+                    if signal_point:
+                        # todo: sprawdzić zawartość
+                        notified = True
+                    else:
+                        notified = False
+                    await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
+                                               notified=notified)
+                    logging.debug('user_point signal_response: {0}'.format(signal_point))
 
-            if user_grade:
-                message_text = 'wiadomosc {0}'.format(user_grade)
-                signal_grade = await self._osm.signal_message(message_text, user_doc[fields.USER_EMAIL])
-                await self.db_save_message(message_text, from_whom='Komunikat z USOS', message_type='powiadomienie')
+            elif event_type == 'crstests/user_grade':
 
-                logging.debug('user_point signal_response: {0}'.format(signal_grade))
+                user_grade = await self.usosCall(path='services/crstests/user_grade', arguments={'node_id': node_id})
+                logging.debug('user_grade: {0}'.format(user_grade))
+                if user_grade:
+
+                    # todo: get info about course_id
+                    crstests_doc = await self.usosCall(path='services/crstests/participant')
+
+                    # get grader data
+                    grader_doc = await self.api_user_info(user_grade['grader_id'])
+                    user_grade['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
+
+                    notification, message_title, message_body = self._message_formater_crstests_user_grade(user_grade)
+                    signal_grade = await self._osm.signal_message(message=notification,
+                                                                  email_reciepient= user_doc[fields.USER_EMAIL])
+                    if signal_grade:
+                        # todo: sprawdzić zawartość
+                        notified = True
+                    else:
+                        notified = False
+                    await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
+                                               notified=notified)
+                    logging.debug('user_point signal_response: {0}'.format(signal_grade))
+
+            else:
+                logging.error('nierozpoznany typ powiadomienia: {0}'.format(event_type))
+                return False
 
         except Exception as ex:
             logging.error(
                 'Exception while user event processing for user_id: {0} and node_id: {1}'.format(user_id, node_id))
             await self.exc(ex, finish=False)
+            return False
 
     async def process_event(self, event):
         logging.debug('processing event: {0}'.format(event))
 
+        # TODO: co jak nie uda się pobrać powiadomień bo USOS nie dostępny?
         user_events = list()
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
-                result = await self._user_event(user_id, entry['node_id'], event[fields.USOS_ID])
+                await self._user_event(user_id, entry['node_id'], event[fields.USOS_ID], event['event_type'])
 
     async def notifier_status(self):
         # unused
