@@ -23,7 +23,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         self.config = config
         self._aes = AESCipher(self.config.AES_SECRET)
         self._osm = OneSignal(self.config)
-        self._contex = Context()  # initial empty context for cases when user is not set up
+        self._context = Context()  # initial empty context for cases when user is not set up
 
     @property
     def aes(self):
