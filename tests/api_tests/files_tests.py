@@ -1,5 +1,13 @@
 # coding=utf-8
 
+# https://github.com/tornadoweb/tornado/blob/master/demos/file_upload/file_uploader.py
+
+
+import mimetypes
+from functools import partial
+from uuid import uuid4
+
+from tornado import gen
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
@@ -7,6 +15,36 @@ from tornado.testing import gen_test
 from commons.constants import config
 from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC, TOKEN_DOC
+
+
+@gen.coroutine
+def multipart_producer(boundary, filenames, write):
+    boundary_bytes = boundary.encode()
+
+    for filename in filenames:
+        filename_bytes = filename.encode()
+        write(b'--%s\r\n' % (boundary_bytes,))
+        write(b'Content-Disposition: form-data; name="%s"; filename="%s"\r\n' %
+              (filename_bytes, filename_bytes))
+
+        mtype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        write(b'Content-Type: %s\r\n' % (mtype.encode(),))
+        write(b'\r\n')
+        with open(filename, 'rb') as f:
+            while True:
+                # 16k at a time.
+                chunk = f.read(16 * 1024)
+                if not chunk:
+                    break
+                write(chunk)
+
+                # Let the IOLoop process its event queue.
+                yield gen.moment
+
+        write(b'\r\n')
+        yield gen.moment
+
+    write(b'--%s--\r\n' % (boundary_bytes,))
 
 
 class ApiFilesTest(AbstractApplicationTestBase):
@@ -17,14 +55,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         self.file_sample_with_eicar = 'WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo='
         self.file_sample = bytes('to jest przykładowy plik do testów base64', 'utf-8')
-        self.file_name_upload = 'sample upload file'
-
-    # def getRandomCourseEdition(self):
-    #     response = yield self.assertOK(self.get_url('/courseseditions'), method='GET')
-    #     random_courseedition = randint(0, len(response['data']) - 1)
-    #     term_id = response['data'][random_courseedition][fields.TERM_ID]
-    #     course_id = response['data'][random_courseedition][fields.COURSE_ID]
-    #     return course_id, term_id
+        self.file_name_upload = 'sample_post_file.txt'
 
     @gen_test(timeout=10)
     def testUserFileEmptyList(self):
@@ -71,17 +102,20 @@ class ApiFilesTest(AbstractApplicationTestBase):
         upload_uri = self.get_url(
             '/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.file_name_upload))
 
+        boundary = uuid4().hex
+        producer = partial(multipart_producer, boundary, [self.file_name_upload, ])
+
         headers = HTTPHeaders({
             config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
             config.MOBILE_X_HEADER_TOKEN: TOKEN_DOC['token'],
             config.MOBILE_X_HEADER_REFRESH: 'True',
+            'Content-Type': 'multipart/form-data; boundary=%s' % boundary
         })
 
         request = HTTPRequest(url=upload_uri,
                               method='POST',
-                              body=self.file_sample,
                               headers=headers,
-                              allow_nonstandard_methods=True)
+                              body_producer=producer)
 
         file_doc = yield self.client.fetch(request=request)
 
