@@ -10,6 +10,7 @@ DEFAULT_NEGATIVE_GRADE = "2.0"
 NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "nk", "nzal"]
 POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "zal"]
 
+
 class MathMixin(object):
     @staticmethod
     def _get_only_final_grades(grades):

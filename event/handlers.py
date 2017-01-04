@@ -15,7 +15,6 @@ from commons.handlers import AbstractHandler
 
 
 class EventHandler(AbstractHandler):
-    SUPPORTED_METHODS = ('GET', 'POST')
     EXCEPTION_TYPE = ExceptionTypes.EVENT.value
 
     async def prepare(self):

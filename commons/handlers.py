@@ -2,10 +2,11 @@
 
 from bson import ObjectId
 from tornado import web
-from tornado.util import ObjectDict
+from tornado.ioloop import IOLoop
 
 from commons import utils
 from commons.constants import config, fields
+from commons.context import Context
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
@@ -44,11 +45,9 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         return
 
     async def prepare(self):
-        self._context = ObjectDict()
-        self._context.prepare_curl_callback = self.config.PREPARE_CURL_CALLBACK
-        self._context.proxy_host = self.config.PROXY_HOST
-        self._context.proxy_port = self.config.PROXY_PORT
-        self._context.remote_ip = self.get_remote_ip()
+
+        self._context = Context(self.config, remote_ip=self.get_remote_ip(),
+                                io_loop=IOLoop.current())
 
         try:
             self._context.user_doc = await self._prepare_user()
@@ -65,24 +64,21 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
             self._context.usos_doc = await self.db_get_usos(usos_id)
 
         self._context.settings = await self.db_settings(self.getUserId())
+        self._context.setUp()
 
     def get_current_user(self):
-        if hasattr(self, '_context') and hasattr(self._context, 'user_doc'):
+        if hasattr(self, '_context'):
             return self._context.user_doc
-        return
 
     def getUsosId(self):
-        if hasattr(self._context,
-                   'usos_doc') and self._context.usos_doc and fields.USOS_ID in self._context.usos_doc:
+        if hasattr(self, '_context') and self._context.usos_doc:
             return self._context.usos_doc[fields.USOS_ID]
-        return
 
     def getUserId(self, return_object_id=True):
         if self.get_current_user():
             if return_object_id:
                 return ObjectId(self.get_current_user()[fields.MONGO_ID])
             return self.get_current_user()[fields.MONGO_ID]
-        return
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
@@ -96,8 +92,13 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         return False
 
     def getUserSettings(self):
-        if hasattr(self, '_context') and hasattr(self._context, 'settings'):
-            return self._context.settings
+        return self._context.settings
+
+    async def usosCall(self, path, arguments=None):
+        return await self._context.usosCaller.call(path, arguments)
+
+    async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
+        return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
 
 
 class DefaultErrorHandler(AbstractHandler):

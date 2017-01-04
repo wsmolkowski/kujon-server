@@ -1,11 +1,15 @@
 # coding=utf-8
 
+import logging
 from datetime import datetime
 
 import motor.motor_tornado
 
+from commons import utils
 from commons.AESCipher import AESCipher
-from commons.constants import fields
+from commons.config import Config
+from commons.constants import config, fields
+from commons.enumerators import Environment
 from event.server import get_application
 from tests.base import BaseTestClass
 
@@ -33,13 +37,32 @@ USER_DOC = {"access_token_secret": "cjFPyKjDk5GNTcqpxeEsfWuhd9bLApbaw7ECfqHv",
 
 class EventTest(BaseTestClass):
     def get_app(self):
-        application = get_application(self.config)
-        db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
-        application.settings[fields.APPLICATION_DB] = db
-        application.settings[fields.APPLICATION_CONFIG] = self.config
-        application.settings[fields.APPLICATION_AES] = AESCipher(self.config.AES_SECRET)
+        return get_application(self.config)
 
-        return application
+    @classmethod
+    def setUpClass(self):
+        super(BaseTestClass, self).setUpClass()
+
+        logging.info("Preparing tests for class: {0}".format(self.__name__))
+        self.config = Config(Environment.TESTS.value)
+
+    def setUp(self):
+        super(BaseTestClass, self).setUp()
+
+        self.client = utils.http_client(proxy_host=self.config.PROXY_HOST,
+                                        proxy_port=self.config.PROXY_PORT,
+                                        io_loop=self.io_loop)
+
+        # io_loop=self.io_loop
+        client = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
+        self.db = client[self.config.MONGODB_NAME]
+        logging.info(self.db)
+        self.aes = AESCipher(self.config.AES_SECRET)
+
+        # self._app = self.get_app()
+        self._app.settings[config.APPLICATION_DB] = self.db
+        self._app.settings[config.APPLICATION_CONFIG] = self.config
+        self._app.settings[config.APPLICATION_AES] = self.aes
 
     # @gen_test(timeout=50)
     def testEvent(self):
@@ -59,10 +82,10 @@ class EventTest(BaseTestClass):
         # when
         # result = yield self.client.fetch(self.get_url(url))
         result = self.fetch(url, method='GET', headers={
-            fields.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
-            fields.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
-            fields.MOBILE_X_HEADER_REFRESH: 'True',
+            config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            config.MOBILE_X_HEADER_TOKEN: USER_DOC['google']['access_token'],
+            config.MOBILE_X_HEADER_REFRESH: 'True',
         })
 
         # then
-        self.assertEquals(challange, result.body)
+        self.assertEquals(bytes(challange, encoding=config.ENCODING), result.body)

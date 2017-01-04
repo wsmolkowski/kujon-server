@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import ObjectId
-from tornado import auth, gen, web, escape
+from tornado import auth, escape
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
@@ -14,13 +14,11 @@ from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
-from commons.mixins.SocialMixin import SocialMixin
 from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
     @decorators.authenticated
-    @web.asynchronous
     async def post(self):
         try:
             user_doc = self.get_current_user()
@@ -57,13 +55,11 @@ class LogoutHandler(AuthenticationHandler):
         if user_doc and fields.USER_EMAIL in user_doc:
             await self.db_remove_token(user_doc[fields.USER_EMAIL], user_doc[fields.USER_TYPE])
 
-    @web.asynchronous
     async def get(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         await self.remove_token()
         self.redirect(self.config.DEPLOY_WEB)
 
-    @web.asynchronous
     async def post(self):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
         await self.remove_token()
@@ -71,18 +67,16 @@ class LogoutHandler(AuthenticationHandler):
 
 
 class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
+    async def get(self):
         if self.get_argument('code', False):
-            access = yield self.get_authenticated_user(
+            access = await self.get_authenticated_user(
                 redirect_uri=self.config.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 client_secret=self.settings['facebook_oauth']['secret'],
                 code=self.get_argument('code'),
                 extra_fields={'email', 'id'})
 
-            user_doc = yield self.db_find_user_email(access['email'])
+            user_doc = await self.db_find_user_email(access['email'])
 
             if not user_doc:
                 user_doc = dict()
@@ -103,7 +97,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
                 user_doc[fields.USOS_PAIRED] = False
                 user_doc[fields.USER_CREATED] = datetime.now()
-                yield self.db_insert_user(user_doc)
+                await self.db_insert_user(user_doc)
             else:
                 user_doc[fields.FACEBOOK] = dict()
                 user_doc[fields.FACEBOOK][fields.FACEBOOK_NAME] = access[fields.FACEBOOK_NAME]
@@ -114,14 +108,14 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 user_doc[fields.FACEBOOK][fields.FACEBOOK_SESSION_EXPIRES] = datetime.now() + timedelta(
                     seconds=int(access[fields.FACEBOOK_SESSION_EXPIRES][0]))
                 user_doc[fields.UPDATE_TIME] = datetime.now()
-                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
 
-            user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
+            user_doc = await self.db_cookie_user_id(user_doc[fields.MONGO_ID])
             self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
             self.redirect(self.config.DEPLOY_WEB)
         else:
-            yield self.authorize_redirect(
+            await self.authorize_redirect(
                 redirect_uri=self.config.DEPLOY_API + '/authentication/facebook',
                 client_id=self.settings['facebook_oauth']['key'],
                 scope=['public_profile', 'email', 'user_friends'],
@@ -130,9 +124,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
 
 
 class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
+    async def get(self):
 
         if self.get_argument('error', False):
             logging.error('Błąd autoryzacji Google+.')
@@ -140,14 +132,14 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
             return
 
         if self.get_argument('code', False):
-            access = yield self.get_authenticated_user(
+            access = await self.get_authenticated_user(
                 redirect_uri=self.config.DEPLOY_API + '/authentication/google',
                 code=self.get_argument('code'))
-            user = yield self.oauth2_request(
+            user = await self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
 
-            user_doc = yield self.db_find_user_email(user['email'])
+            user_doc = await self.db_find_user_email(user['email'])
             if not user_doc:
                 user_doc = dict()
                 user_doc[fields.USER_TYPE] = UserTypes.GOOGLE.value
@@ -168,8 +160,8 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 user_doc[fields.GOOGLE][fields.GOOGLE_ID_TOKEN] = access[fields.GOOGLE_ID_TOKEN]
                 user_doc[fields.GOOGLE][fields.GOOGLE_TOKEN_TYPE] = access[fields.GOOGLE_TOKEN_TYPE]
 
-                user_doc = yield self.db_insert_user(user_doc)
-                user_doc = yield self.db[collections.USERS].find_one({fields.MONGO_ID: user_doc})
+                user_doc = await self.db_insert_user(user_doc)
+                user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_doc})
 
             else:
                 user_doc[fields.GOOGLE] = dict()
@@ -184,14 +176,14 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
 
                 user_doc[fields.UPDATE_TIME] = datetime.now()
 
-                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
-                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
+                await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                user_doc = await self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
             self.reset_user_cookie(user_doc[fields.MONGO_ID])
             self.redirect(self.config.DEPLOY_WEB)
 
         else:
-            yield self.authorize_redirect(
+            await self.authorize_redirect(
                 redirect_uri=self.config.DEPLOY_API + '/authentication/google',
                 client_id=self.settings['google_oauth']['key'],
                 scope=['profile', 'email'],
@@ -199,10 +191,8 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 extra_params={'approval_prompt': 'auto'})
 
 
-class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
+class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
+    async def get(self):
         email = self.get_argument('email', default=None)
         token = self.get_argument('token', default=None)
         usos_id = self.get_argument('usos_id', default=None)
@@ -218,7 +208,7 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
             if login_type not in ['FB', 'WWW', 'GOOGLE', 'EMAIL', 'FACEBOOK']:
                 raise AuthenticationError('Nieznany typ logowania.')
 
-            usos_doc = yield self.db_get_usos(usos_id)
+            usos_doc = await self.db_get_usos(usos_id)
 
             if not usos_doc:
                 raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
@@ -226,12 +216,12 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
             self.oauth_set_up(usos_doc)
 
             if email:
-                user_doc = yield self.db_find_user_email(email)
+                user_doc = await self.db_find_user_email(email)
                 if not user_doc:
                     user_doc = dict()
                     new_user = True
             else:
-                user_doc = yield self.db_find_user()
+                user_doc = await self.db_find_user()
                 if not user_doc:
                     raise AuthenticationError('Użytkownik musi posiadać konto. Prośba o zalogowanie.')
 
@@ -240,13 +230,13 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                         'Użytkownik jest już zarejestrowany w {0}.'.format(user_doc[fields.USOS_ID]))
 
             if email and token and login_type == UserTypes.GOOGLE.value:
-                google_token = yield self.google_token(token)
+                google_token = await self._context.socialCaller.google_token(token)
                 google_token[fields.USER_TYPE] = login_type
-                yield self.db_insert_token(google_token)
+                await self.db_insert_token(google_token)
             elif email and token and login_type.upper() in (UserTypes.FACEBOOK.value, 'FB'):
-                facebook_token = yield self.facebook_token(token)
+                facebook_token = await self._context.socialCaller.facebook_token(token)
                 facebook_token[fields.USER_TYPE] = login_type
-                yield self.db_insert_token(facebook_token)
+                await self.db_insert_token(facebook_token)
 
             user_doc[fields.USOS_ID] = usos_doc[fields.USOS_ID]
             user_doc[fields.UPDATE_TIME] = datetime.now()
@@ -261,37 +251,34 @@ class UsosRegisterHandler(AuthenticationHandler, SocialMixin, OAuth2Mixin):
                 user_doc[fields.USER_DEVICE_TYPE] = device_type
                 user_doc[fields.USER_DEVICE_ID] = device_id
                 user_doc[fields.CREATED_TIME] = datetime.now()
-                new_id = yield self.db_insert_user(user_doc)
+                new_id = await self.db_insert_user(user_doc)
 
                 self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(new_id))
             else:
-                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
                 self.set_cookie(self.config.KUJON_MOBI_REGISTER, str(user_doc[fields.MONGO_ID]))
 
-            yield self.authorize_redirect(extra_params={
+            await self.authorize_redirect(extra_params={
                 'scopes': 'studies|offline_access|student_exams|grades|crstests',
                 'oauth_callback': self.config.DEPLOY_API + '/authentication/verify'
             })
 
         except Exception as ex:
             if login_type and login_type.upper() == 'WWW':
-                yield self.exc(ex, finish=False)
+                await self.exc(ex, finish=False)
                 self.redirect(self.config.DEPLOY_WEB)
             else:
-                yield self.exc(ex)
+                await self.exc(ex)
 
 
 class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    @gen.coroutine
-    def _create_jobs(self, user_doc):
-        yield self.db_insert(collections.JOBS_QUEUE,
+    async def _create_jobs(self, user_doc):
+        await self.db_insert(collections.JOBS_QUEUE,
                              job_factory.subscribe_user_job(user_doc[fields.MONGO_ID]))
-        yield self.db_insert(collections.JOBS_QUEUE,
+        await self.db_insert(collections.JOBS_QUEUE,
                              job_factory.initial_user_job(user_doc[fields.MONGO_ID]))
 
-    @web.asynchronous
-    @gen.coroutine
-    def get(self):
+    async def get(self):
         oauth_token_key = self.get_argument('oauth_token', default=None)
         oauth_verifier = self.get_argument('oauth_verifier', default=None)
 
@@ -308,14 +295,14 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 user_id, oauth_token_key, oauth_token_key
             ))
 
-            user_doc = yield self.db[collections.USERS].find_one({fields.MONGO_ID: ObjectId(user_id)})
+            user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: ObjectId(user_id)})
 
             if not user_doc:
                 raise AuthenticationError('Nie znaleziono użytkownika.')
 
             self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
-            usos_doc = yield self.db_get_usos(user_doc[fields.USOS_ID])
+            usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
 
             self.oauth_set_up(usos_doc)
 
@@ -327,9 +314,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
                 updated_user[fields.UPDATE_TIME] = datetime.now()
                 updated_user[fields.OAUTH_VERIFIER] = None
 
-                yield self.db_update_user(user_doc[fields.MONGO_ID], updated_user)
+                await self.db_update_user(user_doc[fields.MONGO_ID], updated_user)
 
-                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
+                user_doc = await self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
                 self.reset_user_cookie(user_doc[fields.MONGO_ID])
@@ -337,16 +324,16 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
             if user_doc:
 
-                auth_user = yield self.get_authenticated_user()  # dict with access_token key/secret
+                auth_user = await self.get_authenticated_user()  # dict with access_token key/secret
                 user_doc.update(auth_user)
                 del (user_doc['access_token'])
-                yield self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+                await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
 
-                user_doc = yield self.db_cookie_user_id(user_doc[fields.MONGO_ID])
+                user_doc = await self.db_cookie_user_id(user_doc[fields.MONGO_ID])
 
                 self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
-                yield self._create_jobs(user_doc)
+                await self._create_jobs(user_doc)
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
@@ -355,17 +342,17 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
-                    yield self.email_registration(user_doc)
+                    await self.email_registration(user_doc)
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.debug('Finish register WWW OK')
-                    yield self.email_registration(user_doc)
+                    await self.email_registration(user_doc)
                     self.redirect(self.config.DEPLOY_WEB)
             else:
                 self.redirect(self.config.DEPLOY_WEB)
 
         except Exception as ex:
-            yield self.exc(ex)
+            await self.exc(ex)
 
 
 class AbstractEmailHandler(AuthenticationHandler):
@@ -380,7 +367,6 @@ class AbstractEmailHandler(AuthenticationHandler):
 
 
 class EmailRegisterHandler(AbstractEmailHandler):
-    @web.asynchronous
     async def post(self):
         try:
             json_data = escape.json_decode(self.request.body.decode())
@@ -430,7 +416,6 @@ class EmailRegisterHandler(AbstractEmailHandler):
 
 
 class EmailLoginHandler(AbstractEmailHandler):
-    @web.asynchronous
     async def post(self):
 
         try:
@@ -444,7 +429,8 @@ class EmailLoginHandler(AbstractEmailHandler):
                 raise AuthenticationError('Podano błędne dane.')
 
             if not user_doc[fields.USER_EMAIL_CONFIRMED]:
-                raise AuthenticationError('Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
+                raise AuthenticationError(
+                    'Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
 
             token = {
                 'token': self.aes.encrypt(str(user_doc[fields.MONGO_ID])).decode(),
@@ -461,7 +447,6 @@ class EmailLoginHandler(AbstractEmailHandler):
 
 
 class EmailConfirmHandler(AuthenticationHandler):
-    @web.asynchronous
     async def get(self, token):
         try:
             user_id = self.aes.decrypt(token.encode()).decode()

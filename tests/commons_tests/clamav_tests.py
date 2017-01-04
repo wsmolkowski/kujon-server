@@ -46,5 +46,3 @@ class ClamAvTest(AbstractApplicationTestBase):
 
         # then
         self.assertIsNone(result)
-
-

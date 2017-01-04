@@ -6,19 +6,18 @@ from datetime import date, datetime
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
-from commons.UsosCaller import AsyncCaller
 from commons.constants import collections, fields
 from commons.errors import ApiError
 
-LIMIT_FIELDS_TERMS = ('name', 'start_date', 'end_date', 'finish_date')
-TERM_LIMIT_FIELDS = ('name', 'end_date', 'finish_date', 'start_date', 'term_id', fields.TERMS_ORDER_KEY)
+TERM_LIMIT_FIELDS = {'name': 1, 'end_date': 1, 'finish_date': 1, 'start_date': 1, fields.TERM_ID: 1,
+                     fields.TERMS_ORDER_KEY: 1, fields.MONGO_ID: 0}
 
 
 class ApiTermMixin(object):
     async def _api_term_task(self, term_id):
         term_doc = None
         try:
-            term_doc = await AsyncCaller(self._context).call_async(
+            term_doc = await self.asyncCall(
                 path='services/terms/term', arguments={'term_id': term_id}
             )
             term_doc[fields.TERM_ID] = term_doc.pop(fields.ID)
@@ -62,7 +61,6 @@ class ApiTermMixin(object):
                 term['active'] = True
             else:
                 term['active'] = False
-            del (term[fields.MONGO_ID])
 
         return terms_doc
 

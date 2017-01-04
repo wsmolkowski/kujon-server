@@ -6,7 +6,6 @@ from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
 from commons import usoshelper
-from commons.UsosCaller import UsosCaller, AsyncCaller
 from commons.constants import fields, collections
 from commons.errors import ApiError
 from commons.mixins.ApiUserMixin import ApiUserMixin
@@ -46,7 +45,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             pipeline, (fields.COURSE_EDITIONS,))
 
         if not courses_editions_doc:
-            courses_editions_doc = await UsosCaller(self._context).call(
+            courses_editions_doc = await self.usosCall(
                 path='services/courses/user',
                 arguments={
                     'fields': 'course_editions[course_id|course_name|term_id|course_units_ids|grades|lecturers|participants|coordinators]',
@@ -66,13 +65,13 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
     async def usos_course_edition(self, course_id, term_id, fetch_participants):
         if fetch_participants:
-            result = await UsosCaller(self._context).call(path='services/courses/course_edition', arguments={
+            result = await self.usosCall(path='services/courses/course_edition', arguments={
                 'fields': 'course_name|grades|participants|coordinators|course_units_ids|lecturers',
                 'course_id': course_id,
                 'term_id': term_id
             })
         else:
-            result = await AsyncCaller(self._context).call_async(path='services/courses/course_edition', arguments={
+            result = await self.asyncCall(path='services/courses/course_edition', arguments={
                 'fields': 'course_name|coordinators|course_units_ids|lecturers',
                 'course_id': course_id,
                 'term_id': term_id
@@ -192,7 +191,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return course_doc
 
     async def usos_course(self, course_id):
-        course_doc = await UsosCaller(self._context).call(
+        course_doc = await self.usosCall(
             path='services/courses/course',
             arguments={
                 'course_id': course_id,
@@ -299,8 +298,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
             {fields.MONGO_ID: False, fields.CREATED_TIME: False})
 
         if not classtypes:
-            classtypes = await AsyncCaller(self._context).call_async(path='services/courses/classtypes_index',
-                                                                     lang=False)
+            classtypes = await self.asyncCall(path='services/courses/classtypes_index',
+                                              lang=False)
             try:
                 await self.db_insert(collections.COURSES_CLASSTYPES, classtypes)
             except DuplicateKeyError as ex:
@@ -386,7 +385,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         for unit_doc in units_doc:
                             if int(unit) == unit_doc[fields.UNIT_ID]:
                                 grade[fields.CLASS_TYPE] = unit_doc[fields.CLASS_TYPE_ID]
-                                del (grade['unit'])
+                                if 'unit' in grade:
+                                    del(grade['unit'])
 
         return result
 
@@ -449,7 +449,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             return programme_doc
 
         try:
-            programme_doc = await AsyncCaller(self._context).call_async(
+            programme_doc = await self.asyncCall(
                 path='services/progs/programme',
                 arguments={
                     'fields': 'name|mode_of_studies|level_of_studies|duration|professional_status|faculty[id|name]',
@@ -460,7 +460,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             programme_doc[fields.PROGRAMME_ID] = programme_id
 
             try:
-                ects_used_sum = await UsosCaller(self._context).call(
+                ects_used_sum = await self.usosCall(
                     path='services/credits/used_sum',
                     arguments={
                         'programme_id': programme_id
@@ -482,7 +482,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             await self.exc(ex, finish=finish)
 
     async def usos_faculty(self, faculty_id):
-        faculty_doc = await AsyncCaller(self._context).call_async(
+        faculty_doc = await self.asyncCall(
             path='services/fac/faculty',
             arguments={
                 'fields': 'name|homepage_url|path[id|name]|phone_numbers|postal_address|stats[course_count|programme_count|staff_count]|static_map_urls|logo_urls[100x100]',
@@ -573,7 +573,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         if not unit_doc:
             try:
-                unit_doc = await AsyncCaller(self._context).call_async(
+                unit_doc = await self.asyncCall(
                     path='services/courses/unit',
                     arguments={
                         'fields': 'id|course_id|term_id|groups|classtype_id',
@@ -624,13 +624,17 @@ class ApiMixin(ApiUserMixin, MathMixin):
         group_doc = await self.db[collections.GROUPS].find_one(pipeline)
         if not group_doc:
             try:
-                group_doc = await AsyncCaller(self._context).call_async(
-                    path='services/groups/group',
-                    arguments={
-                        'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
-                        'course_unit_id': group_id,
-                        'group_number': 1,
-                    })
+                try:
+                    group_doc = await self.asyncCall(
+                        path='services/groups/group',
+                        arguments={
+                            'fields': 'course_unit_id|group_number|class_type_id|class_type|course_id|term_id|course_is_currently_conducted|course_assessment_criteria',
+                            'course_unit_id': group_id,
+                            'group_number': 1,
+                        })
+                except Exception as ex:
+                    if not group_doc:
+                        return None
 
                 classtypes = await self.get_classtypes()
                 group_doc['class_type'] = self.classtype_name(classtypes, group_doc[
@@ -655,7 +659,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             if not user_info:
                 user_info = await self.api_user_usos_info()
 
-            theses_doc = await UsosCaller(self._context).call(
+            theses_doc = await self.usosCall(
                 path='services/theses/user',
                 arguments={
                     'user_id': user_info[fields.ID],

@@ -1,14 +1,50 @@
 # coding=utf-8
 
-import base64
-import datetime
-import json
+# https://github.com/tornadoweb/tornado/blob/master/demos/file_upload/file_uploader.py
 
-from tornado import escape
+
+import mimetypes
+from functools import partial
+from uuid import uuid4
+
+from tornado import gen
+from tornado.httpclient import HTTPRequest
+from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
 
-from commons.constants import fields
+from commons.constants import config
 from tests.api_tests.base import AbstractApplicationTestBase
+from tests.base import USER_DOC, TOKEN_DOC
+
+
+@gen.coroutine
+def multipart_producer(boundary, filenames, write):
+    boundary_bytes = boundary.encode()
+
+    for filename in filenames:
+        filename_bytes = filename.encode()
+        write(b'--%s\r\n' % (boundary_bytes,))
+        write(b'Content-Disposition: form-data; name="%s"; filename="%s"\r\n' %
+              (filename_bytes, filename_bytes))
+
+        mtype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        write(b'Content-Type: %s\r\n' % (mtype.encode(),))
+        write(b'\r\n')
+        with open(filename, 'rb') as f:
+            while True:
+                # 16k at a time.
+                chunk = f.read(16 * 1024)
+                if not chunk:
+                    break
+                write(chunk)
+
+                # Let the IOLoop process its event queue.
+                yield gen.moment
+
+        write(b'\r\n')
+        yield gen.moment
+
+    write(b'--%s--\r\n' % (boundary_bytes,))
 
 
 class ApiFilesTest(AbstractApplicationTestBase):
@@ -17,191 +53,192 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.prepareDatabase(self.config)
         self.insert_user(config=self.config)
 
-        self.file_based64_with_eicar_encoded = "WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo="
-        self.file_based64_encoded = "dG8gamVzdCBwcnp5ayYjMzIyO2Fkb3d5IHBsaWsgZG8gdGVzdPN3IGJhc2U2NA=="
-        self.file_based64_decoded = "to jest przykładowy plik do testów base64"
-
-    @staticmethod
-    def generate_filename():
-        # filename
-        basename = "sample_upload"
-        suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        filename = "_".join([basename, suffix])
-        return filename
-
-    @gen_test(timeout=30)
-    def test_post_file_and_get_file_and_delete(self):
-
-        # filename
-        filename = self.generate_filename()
-
-        # get user sample course edition
-        response = yield self.fetch_assert(self.get_url('/courseseditions'))
-        json_body = escape.json_decode(response.body)
-        term_id = json_body['data'][0][fields.TERM_ID]
-        course_id = json_body['data'][0][fields.COURSE_ID]
-
-        # upload a file
-        file_json = json.dumps({
-            fields.TERM_ID: term_id,
-            fields.COURSE_ID: course_id,
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response(response)
-        file_upload_id = response[fields.FILE_UPLOAD_ID]
-
-        # download decode and check
-        download_uri = '/files/' + file_upload_id
-        response = yield self.http_client.fetch(self.get_url(download_uri), method="GET")
-        self.assert_api_response(response)
-        json_body = escape.json_decode(response.body)
-        file_decoded = base64.b64decode(json_body[fields.FILE_CONTENT])
-        self.asserEquals(self.file_based64_encoded, file_decoded)
-        self.asserEquals(json_body['data'][fields.FILE_NAME], filename)
-        self.asserEquals(json_body['data'][fields.COURSE_ID], course_id)
-        self.asserEquals(json_body['data'][fields.TERM_ID], term_id)
-
-        # delete file
-        delete_uri = '/files/' + json_body[fields.FILE_UPLOAD_ID]
-        response = yield self.http_client.fetch(self.get_url(delete_uri), method="DELETE", body=file_json)
-        self.assert_api_response(response)
-
-        # try to delete already deleted file
-        response = yield self.http_client.fetch(self.get_url(delete_uri), method="DELETE", body=file_json)
-        self.assert_api_response_fail(response)
-
-        # get deleted file
-        download_uri = '/files/' + file_upload_id
-        response = yield self.http_client.fetch(self.get_url(download_uri), method="GET")
-        self.assert_api_response_fail(response)
-
+        self.file_sample_with_eicar = 'WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo='
+        self.file_sample = bytes('to jest przykładowy plik do testów base64', 'utf-8')
+        self.file_name_upload = 'sample_post_file.txt'
 
     @gen_test(timeout=10)
-    def test_post_invalid_file(self):
+    def testUserFileEmptyList(self):
+        # when
+        result = yield self.assertOK(self.get_url('/files'), method='GET')
 
-        # filename
-        filename = self.generate_filename()
+        # then
+        self.assertEquals(0, len(result['data']))
+
+    @gen_test(timeout=10)
+    def testDeleteFileFailure(self):
+        # assume
+        delete_uri = '/files/123'
+
+        # when
+        result = yield self.assertFail(self.get_url(delete_uri), method='DELETE')
+
+        # then
+        self.assertEquals('Nie znaleziono pliku.', result['message'])
+
+    @gen_test(timeout=10)
+    def testUploadFailure(self):
+        # assume
+        delete_uri = self.get_url('/filesupload?course_id=123')  # mising term_id
+
+        # when
+        result = yield self.assertFail(delete_uri, method='POST', body=self.file_sample)
+
+        # then
+        self.assertEquals('Nie przekazano odpowiednich parametrów.', result['message'])
+
+    @gen_test(timeout=30)
+    def testIntegrationFilesApi(self):
+        '''
+            1. upload file
+            2. get file
+            3. delete file
+            4. list files
+        '''
+
+        # assume
+        term_id = '2015L'
+        course_id = '4018-KON317-CLASS'
+        upload_uri = self.get_url(
+            '/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.file_name_upload))
+
+        boundary = uuid4().hex
+        producer = partial(multipart_producer, boundary, [self.file_name_upload, ])
+
+        headers = HTTPHeaders({
+            config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
+            config.MOBILE_X_HEADER_TOKEN: TOKEN_DOC['token'],
+            config.MOBILE_X_HEADER_REFRESH: 'True',
+            'Content-Type': 'multipart/form-data; boundary=%s' % boundary
+        })
+
+        request = HTTPRequest(url=upload_uri,
+                              method='POST',
+                              headers=headers,
+                              body_producer=producer)
+
+        file_doc = yield self.client.fetch(request=request)
+
+        self.assertIsNotNone(file_doc['data'])  # upload ok
+
+    # @gen_test(timeout=30)
+    # def test_getUserFileList(self):
+    #
+    #     # get empty list
+    #     yield self.assertOK(self.get_url('/files'), method='GET')
+    #
+    #     # upload 2 files
+    #     course_id1, term_id1 = yield from self.getRandomCourseEdition()
+    #     # TODO: zmienić na uploadowanie multipartem
+    #     file1_doc = yield self.assertOK(self.get_url(
+    #         '/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id1, course_id1, self.file_name_upload)),
+    #                                     method='POST', body=self.file_sample, headers={'Content-Type': 'text/plain'})
+    #     if file1_doc and 'data' in file1_doc:
+    #         file1_id = file1_doc['data']
+    #
+    #     course_id2, term_id2 = yield from self.getRandomCourseEdition()
+    #     filename2 = self.generateRandomFilename()
+    #
+    #     # TODO: zmienić na uploadowanie multipartem
+    #     file2_doc = yield self.assertOK(self.get_url(
+    #         '/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id2, course_id2, filename2)),
+    #         method='POST', body=self.file_sample, headers={'Content-Type': 'text/plain'})
+    #     if file2_doc and 'data' in file2_doc:
+    #         file2_id = file2_doc['data']
+    #
+    #     # sleeping sec to finish clam
+    #     yield gen.sleep(1)
+    #
+    #     # get list with 2 files
+    #     get_uri = '/files'
+    #     list = yield self.assertOK(self.get_url(get_uri), method='GET')
+    #     self.assertEquals(len(list['data']), 2)
+
+    '''
+    @gen_test(timeout=30)
+    def testUploadFileWithEicar(self):
 
         # get user sample course edition
-        response = yield self.fetch_assert(self.get_url('/courseseditions'))
-        json_body = escape.json_decode(response.body)
-        term_id = json_body['data'][0][fields.TERM_ID]
-        course_id = json_body['data'][0][fields.COURSE_ID]
+        course_id, term_id = yield from self.getRandomCourseEdition()
 
-        # invalid json fileds
-        file_json = json.dumps({
-            fields.COURSE_ID: course_id,
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response_fail(response)
+        # upload a file with virus
+        # TODO: zmienić na uploadowanie multipartem
+        file_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.file_name_upload)),
+                                       method='POST', body=self.file_sample_with_eicar, headers={'Content-Type': 'text/plain'})
+        if file_doc and 'data' in file_doc:
+            file_id = file_doc['data']
 
-        # post file without base64 encoding
-        file_json = json.dumps({
-            fields.TERM_ID: term_id,
-            fields.COURSE_ID: course_id,
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_decoded
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response_fail(response)
+        # get file with virus
+        get_uri = '/files/' + file_id
+        yield self.assertFail(self.get_url(get_uri), method='GET')
 
-        # post a file with eicar
-        file_json = json.dumps({
-            fields.TERM_ID: "term_idXX",
-            fields.COURSE_ID: "course_idXXX",
-            fields.FILE_NAME: "test1123",
-            fields.FILE_CONTENT: self.file_based64_with_eicar_encoded
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response(response)
+    @gen_test(timeout=10)
+    def testUploadFileWithInvalidCourseedition(self):
 
-        # file with wirus shouldn't be able to download
-        file_upload_id = response[fields.FILE_UPLOAD_ID]
-        download_uri = '/files/' + file_upload_id
-        response = yield self.http_client.fetch(self.get_url(download_uri), method="GET")
-        self.assert_api_response_fail(response)
+        term_id = 'XX'
+        course_id = 'YY'
 
-    @gen_test(timeout=1)
-    def test_upload_file_from_invalid_courseedition(self):
-        # filename
-        filename = self.generate_filename()
+        # upload a file with invalid course and term_id
+        yield self.assertFail(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.file_name_upload)),
+                              method='POST', body=self.file_sample, headers={'Content-Type': 'text/plain'})
+
+    @gen_test(timeout=30)
+    def testUploadGetListDeleteFile(self):
 
         # get user sample course edition
-        response = yield self.fetch_assert(self.get_url('/courseseditions'))
-        json_body = escape.json_decode(response.body)
-        term_id = json_body['data'][0][fields.TERM_ID]
-        course_id = json_body['data'][0][fields.COURSE_ID]
+        course_id, term_id = yield from self.getRandomCourseEdition()
 
-        # check invalid course_id
-        file_json = json.dumps({
-            fields.TERM_ID: term_id,
-            fields.COURSE_ID: "BBBB",
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response_fail(response)
+        # upload
+        # TODO: zmienić na uploadowanie multipartem
+        file_doc = yield self.assertOK(self.get_url('/filesupload?term_id={0}&course_id={1}&file_name={2}'.format(term_id, course_id, self.file_name_upload)),
+                                       method='POST', body=self.file_sample, headers={'Content-Type': 'text/plain'})
+        if file_doc and 'data' in file_doc:
+            file_id = file_doc['data']
 
-        # check invalid term_id
-        file_json = json.dumps({
-            fields.TERM_ID: "AAAAX",
-            fields.COURSE_ID: course_id,
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response_fail(response)
+        # sleeping sec to finish clam
+        yield gen.sleep(1)
 
-        # check invalid course_id and term_id
-        file_json = json.dumps({
-            fields.TERM_ID: "ZZ",
-            fields.COURSE_ID: "YY",
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response_fail(response)
+        # get
+        get_uri = '/files/' + file_id
+        yield self.assertOK(self.get_url(get_uri), method='GET', contentType='text/plain')
 
-    @gen_test(timeout=1)
-    def test_get_and_delete_file_from_not_my_courseedition(self):
-        # filename
-        filename = self.generate_filename()
+        # list files for given course_id and term_id
+        get_uri = '/files?term_id={0}&course_id={1}'.format(term_id, course_id)
+        files_doc = yield self.assertOK(self.get_url(get_uri), method='GET')
+        self.assertEquals(len(files_doc['data']), 1)
+        self.assertEquals(files_doc['data'][0][fields.TERM_ID], term_id)
+        self.assertEquals(files_doc['data'][0][fields.COURSE_ID], course_id)
+        self.assertEquals(files_doc['data'][0][fields.FILE_NAME], self.file_name_upload)
+        self.assertIsNone(files_doc['data'][0][fields.FILE_USER_INFO])
 
-        # get user sample course edition
-        response = yield self.fetch_assert(self.get_url('/courseseditions'))
-        json_body = escape.json_decode(response.body)
-        term_id = json_body['data'][0][fields.TERM_ID]
-        course_id = json_body['data'][0][fields.COURSE_ID]
+        # delete
+        delete_uri = '/files/' + file_id
+        yield self.assertFail(self.get_url(delete_uri), method='DELETE')
 
-        # upload a file
-        file_json = json.dumps({
-            fields.TERM_ID: term_id,
-            fields.COURSE_ID: course_id,
-            fields.FILE_NAME: filename,
-            fields.FILE_CONTENT: self.file_based64_encoded,
-        })
-        response = yield self.http_client.fetch(self.get_url('/files'), method="POST", body=file_json)
-        self.assert_api_response(response)
-        file_upload_id = response[fields.FILE_UPLOAD_ID]
+    @gen_test(timeout=5)
+    def testGetAndDeleteFileFromNotMyCourseedition(self):
 
-        # switch to another user
-        # TODO: ???
+        # insert into mongo random course_id, term_id and file
+        file_doc = dict()
+        file_doc[fields.USER_ID] = 'xx'
+        file_doc[fields.USOS_ID] = 'DEMO'
+        file_doc[fields.TERM_ID] = 'XXXX'
+        file_doc[fields.COURSE_ID] = 'YYYY'
 
-        # download file that is not in my course_id/term_id
-        download_uri = '/files/' + file_upload_id
-        response = yield self.http_client.fetch(self.get_url(download_uri), method="GET")
-        self.assert_api_response_fail(response)
+        file_doc[fields.FILE_SIZE] = 999
+        file_doc[fields.FILE_STATUS] = UploadFileStatus.STORED.value
+        file_doc[fields.FILE_NAME] = self.file_name_upload
+        file_doc[fields.FILE_USER_INFO] = {'user_id': '1015146', 'first name': 'Ewa', 'last_name': 'Datoń-Pawłowicz'}
 
-        # try to delete not my file
-        download_uri = '/files/' + file_upload_id
-        response = yield self.http_client.fetch(self.get_url(download_uri), method="DELETE")
-        self.assert_api_response_fail(response)
+        config = Config(options.environment)
+        client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
+        file_id = client_db[collections.USERS].insert(file_doc)
 
+        # try to get document by id
+        get_uri = '/files/' + str(file_id)
+        yield self.assertFail(self.get_url(get_uri), method='GET')
 
-    @gen_test(timeout=1)
-    def test_get_list_of_files(self):
-        pass
+        # try to delete file by id
+        delete_uri = '/files/' + str(file_id)
+        yield self.assertFail(self.get_url(delete_uri), method='DELETE')
+    '''

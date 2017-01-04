@@ -13,13 +13,13 @@ class OneSignalTest(AbstractApplicationTestBase):
         super(OneSignalTest, self).setUp()
         self.config = Config(Environment.TESTS.value)
 
-    @gen_test(timeout=1)
+    @gen_test(timeout=3)
     def testOneSignalMessageSend(self):
         # assume
         osm = OneSignal(self.config)
 
         # when
-        result = yield osm.signal_message(message="test message",
+        result = yield osm.signal_message(message="test message from unit tests.",
                                           email_reciepient="wojciech.smolkowski@gmail.com")
 
         # then
