@@ -275,7 +275,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         return notification, message_title, message_body
 
     def _message_formater_crstests_user_grade(self, user_grade):
-        notification = "Ocena [GRADE] - sprawdzian z [COURSE_NAME] - [PASSED]"
+        notification = "Wystawiono ocenę [GRADE] (sprawdzian [COURSE_NAME]) - [PASSED]"
         message_title = "Powiadomienie - ocena [GRADE] - sprawdzian z [COURSE_NAME] - [PASSED]"
         message_body = 'Kujon przesyła powiadomienie o sprawdzianie:\n' \
                   'Ocena: [GRADE]\n' \
@@ -300,11 +300,11 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
 
     async def _user_event(self, user_id, node_id, usos_id, event_type):
         try:
-            user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
 
-            if not user_doc:
-                logging.debug("Nie znaleziono użytkownika dla którego jest obsługa eventu.")
-                # TODO: co jak nie uda się pobrać powiadomień bo USOS nie dostępny?
+            try:
+                user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
+            except Exception as ex:
+                logging.debug("Nie znaleziono użytkownika: {0} usos: {1} dla którego jest obsługa eventu.".format(user_id, usos_id))
                 return False
 
             await self._buildContext(user_doc[fields.MONGO_ID])
@@ -323,16 +323,11 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     user_point['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
                     notification, message_title, message_body = self._message_formater_crstests_user_grade(user_point)
-                    signal_point = await self._osm.signal_message(message=notification,
+                    onesignal_result = await self._osm.signal_message(message=notification,
                                                                   email_reciepient=user_doc[fields.USER_EMAIL])
-                    if signal_point:
-                        # todo: sprawdzić zawartość
-                        notified = True
-                    else:
-                        notified = False
                     await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
-                                               notified=notified)
-                    logging.debug('user_point signal_response: {0}'.format(signal_point))
+                                               notification_result=onesignal_result)
+                    logging.debug('onesignal_response: {0}, message title: {1}'.format(onesignal_result, message_title))
 
             elif event_type == 'crstests/user_grade':
 
@@ -348,16 +343,11 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     user_grade['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
                     notification, message_title, message_body = self._message_formater_crstests_user_grade(user_grade)
-                    signal_grade = await self._osm.signal_message(message=notification,
+                    onesignal_result = await self._osm.signal_message(message=notification,
                                                                   email_reciepient= user_doc[fields.USER_EMAIL])
-                    if signal_grade:
-                        # todo: sprawdzić zawartość
-                        notified = True
-                    else:
-                        notified = False
                     await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
-                                               notified=notified)
-                    logging.debug('user_point signal_response: {0}'.format(signal_grade))
+                                               notification_result=onesignal_result)
+                    logging.debug('onesignal_response: {0}, message title: {1}'.format(onesignal_result, message_title))
 
             else:
                 logging.error('nierozpoznany typ powiadomienia: {0}'.format(event_type))
