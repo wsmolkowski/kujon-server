@@ -76,6 +76,19 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # then
         self.assertEquals('Nie znaleziono pliku.', result['message'])
 
+
+    @gen_test(timeout=10)
+    def testGetFilesInvalidCourseEdition(self):
+        # assume
+        get_uri = '/files?course_id=YYY&term_id=XXXX'
+
+        # when
+        result = yield self.assertFail(self.get_url(get_uri), method='GET')
+
+        # then
+        self.assertEquals('Nie przekazano odpowiednich parametrów.', result['message'])
+
+
     @gen_test(timeout=10)
     def testUploadFailure(self):
         # assume
