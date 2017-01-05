@@ -326,7 +326,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     user_point['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
                     # format notification and send to onesignal
-                    notification, message_title, message_body = self._message_formater_crstests_user_grade(user_point, event_operation)
+                    notification, message_title, message_body = self._message_formater_crstests_user_point(user_point, event_operation)
                     onesignal_result = await self._osm.signal_message(message=notification,
                                                                   email_reciepient=user_doc[fields.USER_EMAIL])
                     await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
