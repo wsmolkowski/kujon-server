@@ -86,10 +86,6 @@ class AbstractFileHandler(ApiHandler):
 
     async def apiGetFiles(self, term_id, course_id):
 
-        # check if user is on given course_id & term_id
-        if not await self.api_course_edition(course_id, term_id):
-            return None
-
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id,
                     fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value}
         cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
@@ -185,6 +181,15 @@ class FilesHandler(AbstractFileHandler):
             term_id = self.get_argument('term_id', default=None)
 
             if course_id and term_id:
+
+                # check if user is on given course_id & term_id
+                try:
+                    result = await self.api_course_edition(course_id, term_id)
+                    if not result:
+                        return self.error('Nie przekazano odpowiednich parametrów.', code=400)
+                except Exception as ex:
+                    raise FilesError('Błędne parametry wywołania.')
+
                 files_doc = await self.apiGetFiles(term_id, course_id)
             else:
                 files_doc = await self.apiGetUserFiles()
@@ -208,8 +213,12 @@ class FileUploadHandler(AbstractFileHandler):
                 return self.error('Nie przekazano odpowiednich parametrów.', code=400)
 
             # check if user is on given course_id & term_id
-            if not await self.api_course_edition(course_id, term_id):
-                raise FilesError('Błędne parametry wywołania dla użytkownika.')
+            try:
+                result = await self.api_course_edition(course_id, term_id)
+                if not result:
+                    return self.error('Nie przekazano odpowiednich parametrów.', code=400)
+            except Exception as ex:
+                raise FilesError('Błędne parametry wywołania.')
 
             files_doc = list()
             for key, file in files.items():
