@@ -257,8 +257,7 @@ class DaoMixin(object):
         })
 
         if not user_doc:
-            raise DaoError('Nie znaleziono użytkownika na podstawie użytkownika usos: {0} dla usos: {1}'.format(
-                user_id, usos_id))
+            raise DaoError('Nie znaleziono użytkownika {0} dla usos: {1}'.format(user_id, usos_id))
 
         return user_doc
 
@@ -338,7 +337,7 @@ class DaoMixin(object):
             return user_doc[fields.USOS_USER_ID]
         return
 
-    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None):
+    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False, notification_result=False):
         if not message_type:
             message_type = 'email'
 
@@ -354,6 +353,8 @@ class DaoMixin(object):
             fields.FIELD_MESSAGE_FROM: from_whom,
             fields.FIELD_MESSAGE_TYPE: message_type,
             fields.FIELD_MESSAGE_TEXT: message,
+            fields.ONESIGNAL_NOTIFICATION_TEXT: notification_text,
+            fields.ONESIGNAL_NOTIFICATION_RESULT: notification_result,
         })
 
         logging.debug('user message saved for message_type: {0} with id: {1}'.format(message_type, msg_doc))

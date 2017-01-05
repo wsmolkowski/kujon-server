@@ -104,10 +104,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
             result[fields.USOS_ID] = self.getUsosId()
             logging.warning('found extra course_edition for : {0} {1} not saving'.format(course_id, term_id))
             return result
-        # except DuplicateKeyError as ex:
-        #    logging.warning(ex)
         except Exception as ex:
-            await self.exc(ex, finish=False)
+            logging.warning('exception during fetch course_id: {0} term_id: {1} ex: '.format(course_id, term_id, ex))
             return
 
     async def api_course_term(self, course_id, term_id, extra_fetch=True, log_exception=True, courses_editions=False):

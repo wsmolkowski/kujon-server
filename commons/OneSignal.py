@@ -60,8 +60,8 @@ class OneSignal(object):
                                                        proxy_port=self.config.PROXY_PORT
                                                        ))
 
-        logging.debug('signal_message response code: {0} reason: {1}'.format(response.code, response.reason))
         if response.code == 200 and 'application/json' in response.headers['Content-Type']:
+            logging.debug('onesignal response code: {0} reason: {1} body: {2}'.format(response.code, response.reason, response.body))
             return escape.json_decode(response.body)
         else:
             raise OneSignalError('OneSignal response Error code: {0} with body: {1} '.format(response.code, body))

@@ -17,6 +17,7 @@ FACULTY_ID = 'fac_id'
 FACULTY_NAME = 'name'
 TT_STARTDATE = 'start_date'
 COURSE_EDITIONS = 'course_editions'
+COURSE_EDITION = 'course_edition'
 CLASS_TYPE = 'class_type'
 CLASS_TYPE_ID = 'classtype_id'
 VALUE_DESCRIPTION = 'value_description'
@@ -94,6 +95,8 @@ GRADE_FINAL = 'Końcowa'
 FIELD_MESSAGE_FROM = 'from'
 FIELD_MESSAGE_TYPE = 'typ'
 FIELD_MESSAGE_TEXT = 'text'
+ONESIGNAL_NOTIFICATION_TEXT = 'onesignal_text'
+ONESIGNAL_NOTIFICATION_RESULT = 'onesignal_result'
 
 COOKIE_FIELDS = (ID, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, USOS_ID, USOS_PAIRED, USER_EMAIL, USER_NAME, USER_PICTURE,
                  GOOGLE, FACEBOOK, USOS_USER_ID)
