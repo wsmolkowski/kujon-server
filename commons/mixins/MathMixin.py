@@ -7,8 +7,8 @@ from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = "2.0"
-NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "nk", "nzal"]
-POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "zal"]
+NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "nk", "nzal", "NB", "nb", "BO"]
+POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "zal", "Zal", "za"]
 
 
 class MathMixin(object):
@@ -65,7 +65,7 @@ class MathMixin(object):
                     value_symbols.append(float(grade_value))
 
                 except (ValueError, TypeError):
-                    logging.error("Nieprawidłowa ocena: %s ", grade_value)
+                    logging.error("Nieprawidłowa ocena - wyjątek: %s ", grade_value)
                     continue
 
         if not value_symbols:
