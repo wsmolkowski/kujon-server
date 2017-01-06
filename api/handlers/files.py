@@ -15,6 +15,10 @@ from commons.constants import fields, collections
 from commons.enumerators import UploadFileStatus
 from commons.errors import FilesError
 
+USER_FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
+                      fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
+                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1, fields.FILE_USERS_IDS: 1}
+
 FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                       fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
                       fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1}
@@ -74,7 +78,7 @@ class AbstractFileHandler(ApiHandler):
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId(),
                     fields.FILE_STATUS: UploadFileStatus.STORED.value}
-        cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
+        cursor = self.db[collections.FILES].find(pipeline, USER_FILES_LIMIT_FIELDS)
         files_doc = await cursor.to_list(None)
 
         # change file id from _id to fields.FILE_ID
@@ -88,7 +92,9 @@ class AbstractFileHandler(ApiHandler):
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id,
                     fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value}
+
         cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
+
         files_doc = await cursor.to_list(None)
 
         # change file id from _id to fields.FILE_ID
@@ -114,7 +120,7 @@ class AbstractFileHandler(ApiHandler):
             if not courseedition:
                 raise FilesError("nierozpoznane parametry kursu.")
         except Exception as ex:
-            raise FilesError("nierozpoznane parametry kursu.")
+            raise FilesError(ex)
 
         # check if given users_ids are in this courseedition
         try:
@@ -127,7 +133,7 @@ class AbstractFileHandler(ApiHandler):
                 if not set(user_ids) <= set(participant_ids):
                     raise FilesError("nierozpoznani użytkownicy.")
         except Exception as ex:
-            raise FilesError("nierozpoznani użytkownicy.")
+            raise FilesError(ex)
 
         # dodawanie inforamcji o użytkowniku
         user_info = await self.api_user_usos_info()
