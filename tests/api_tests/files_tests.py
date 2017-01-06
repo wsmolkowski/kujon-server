@@ -191,13 +191,14 @@ class ApiFilesTest(AbstractApplicationTestBase):
     @gen_test(timeout=10)
     def testDownloadNotForMe(self):
 
-        # assume - insert into mongo not for me
+        # assume - insert into mongo not for me with defined shared_user_usos_ids
 
         # whet get file list
 
-        # then should have right to download
+        # then should have right to get ant to download
 
         pass
+
 
     def testUploadwithSameName(self):
 
