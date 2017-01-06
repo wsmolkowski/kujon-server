@@ -251,20 +251,40 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         return text.replace(tag, replacement)
 
     def _message_formater_crstests_user_point(self, user_point, event_operation):
-        notification = "[OPERATION] punty [POINTS] ze sprawdzianu ([COURSE_NAME])"
-        message_title = "Powiadomienie - [OPERATION] [POINTS] punktów ze sprawdzianu ([COURSE_NAME])"
+        notification = "[OPERATION] punty: [POINTS] ze sprawdzianu ([COURSE_NAME])"
+        message_title = "Powiadomienie - [OPERATION] punkty: [POINTS] ze sprawdzianu ([COURSE_NAME])"
         message_body = 'Kujon przesyła powiadomienie - [OPERATION] punkty ze sprawdzianu:\n' \
-                  'Punkty: [POINTS]\n'\
-                  'Przedmiot: [COURSE_NAME]\n' \
-                  'Komentarz: [PUBLIC_COMMENT]\n'\
-                  'Wpisane przez: [LECTURER]\n'
+                       'Punkty: [POINTS]\n' \
+                       'Przedmiot: [COURSE_NAME]\n' \
+                       'Komentarz: [PUBLIC_COMMENT]\n' \
+                       'Wpisane przez: [LECTURER]\n'
 
-        tags = {'[OPERATION]': 'Wpisano' if event_operation == 'create' else 'Usunięto',
+        # check empty values
+        if fields.COURSE_NAME not in user_point:
+            user_point[fields.COURSE_NAME] = 'brak'
+        if 'points' not in user_point:
+            user_point['points'] = 'brak'
+        if 'grader' not in user_point:
+            user_point['grader'] = 'brak'
+        if 'comment' not in user_point:
+            user_point['comment'] = '-'
+
+        # check operation
+        if event_operation == 'create':
+            operation = 'Wpisano'
+        elif event_operation == 'update':
+            operation = 'Zaktualizowano'
+        elif event_operation == 'update':
+            operation = 'Usunięto'
+        else:
+            operation = 'brak'
+
+        tags = {'[OPERATION]': operation,
                 '[COURSE_NAME]': str(user_point[fields.COURSE_NAME]) if user_point[fields.COURSE_NAME] else 'brak',
                 '[POINTS]': str(user_point['points']) if user_point['points'] else 'brak',
                 '[PUBLIC_COMMENT]': str(user_point['comment']) if user_point['comment'] else '-',
                 '[LECTURER]': str(user_point['grader']) if user_point['grader'] else '-'
-        }
+                }
         for key, value in tags.items():
             notification = notification.replace(key, value)
             message_title = message_title.replace(key, value)
@@ -273,22 +293,46 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         return notification, message_title, message_body
 
     def _message_formater_crstests_user_grade(self, user_grade, event_operation):
-        notification = "[OPERATION] ocenę [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
-        message_title = "Powiadomienie - [OPERATION] ocenę [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
+        notification = "[OPERATION] ocenę: [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
+        message_title = "Powiadomienie - [OPERATION] ocenę: [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
         message_body = 'Kujon przesyła powiadomienie - [OPERATION] ocenę ze sprawdzianu:\n' \
-                  'Ocena: [GRADE]\n' \
-                  'Zaliczone: tak\n' \
-                  'Przedmiot: [COURSE_NAME]\n' \
-                  'Komentarz: [PUBLIC_COMMENT]\n' \
-                  'Wpisane przez: [LECTURER]\n'
+                       'Ocena: [GRADE]\n' \
+                       'Zaliczone: tak\n' \
+                       'Przedmiot: [COURSE_NAME]\n' \
+                       'Komentarz: [PUBLIC_COMMENT]\n' \
+                       'Wpisane przez: [LECTURER]\n'
 
-        tags = {'[OPERATION]': 'Wpisano' if event_operation == 'create' else 'Usunięto',
-                '[COURSE_NAME]':  str(user_grade[fields.COURSE_NAME]) if user_grade[fields.COURSE_NAME] else 'brak',
-                '[GRADE]': str(user_grade['grade']['decimal_value']) if user_grade['grade']['decimal_value'] else 'brak',
+        # check empty values
+        if fields.COURSE_NAME not in user_grade:
+            user_grade[fields.COURSE_NAME] = 'brak'
+        if 'grade' not in user_grade or 'decimal_value' not in user_grade['grade'] or 'passes' not in user_grade[
+            'grade']:
+            user_grade['grade'] = dict()
+            user_grade['grade']['decimal_value'] = 'brak'
+            user_grade['grade']['passes'] = 'brak'
+        if 'grader' not in user_grade:
+            user_grade['grader'] = 'brak'
+        if 'public_comment' not in user_grade:
+            user_grade['public_comment'] = '-'
+
+        # check operation
+        if event_operation == 'create':
+            operation = 'Wpisano'
+        elif event_operation == 'update':
+            operation = 'Zaktualizowano'
+        elif event_operation == 'update':
+            operation = 'Usunięto'
+        else:
+            operation = 'brak'
+
+        tags = {'[OPERATION]': operation,
+                '[COURSE_NAME]': str(user_grade[fields.COURSE_NAME]) if user_grade[fields.COURSE_NAME] else 'brak',
+                '[GRADE]': str(user_grade['grade']['decimal_value']) if user_grade['grade'][
+                    'decimal_value'] else 'brak',
                 '[PUBLIC_COMMENT]': str(user_grade['public_comment']) if user_grade['public_comment'] else '-',
                 '[LECTURER]': str(user_grade['grader']) if user_grade['grader'] else '[brak]',
-                '[PASSED]': 'zaliczony' if user_grade['grade']['passes'] else 'nie zaliczony',
-        }
+                '[PASSED]': 'zalicza' if user_grade['grade']['passes'] else 'nie zalicza',
+                }
         for key, value in tags.items():
             notification = notification.replace(key, value)
             message_title = message_title.replace(key, value)
@@ -301,7 +345,9 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
             try:
                 user_doc = await self.db_find_user_by_usos_id(user_id, usos_id)
             except Exception as ex:
-                logging.debug("Nie znaleziono użytkownika: {0} usos: {1} dla którego jest obsługa eventu.".format(user_id, usos_id))
+                logging.debug(
+                    "Nie znaleziono użytkownika: {0} usos: {1} dla którego jest obsługa eventu.".format(user_id,
+                                                                                                        usos_id))
                 return False
 
             await self._buildContext(user_doc[fields.MONGO_ID])
@@ -312,13 +358,13 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                 logging.debug('user_point: {0}'.format(user_point))
 
                 if user_point:
-
                     # get info about course_edition
                     root_id_doc = await self.usosCall(path='services/crstests/root_node',
-                                                       arguments={'node_id': node_id, 'fields': 'root_id'})
+                                                      arguments={'node_id': node_id, 'fields': 'root_id'})
 
                     course_edition_doc = await self.usosCall(path='services/crstests/root_node',
-                                                       arguments={'node_id': root_id_doc['root_id'], 'fields': 'course_edition'})
+                                                             arguments={'node_id': root_id_doc['root_id'],
+                                                                        'fields': 'course_edition'})
                     user_point[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
 
                     # get grader data
@@ -326,25 +372,27 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     user_point['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
                     # format notification and send to onesignal
-                    notification, message_title, message_body = self._message_formater_crstests_user_point(user_point, event_operation)
+                    notification, message_title, message_body = self._message_formater_crstests_user_point(user_point,
+                                                                                                           event_operation)
                     onesignal_result = await self._osm.signal_message(message=notification,
-                                                                  email_reciepient=user_doc[fields.USER_EMAIL])
+                                                                      email_reciepient=user_doc[fields.USER_EMAIL])
                     await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
                                                notification_text=notification, notification_result=onesignal_result)
-
+                    return 'crstest/user_point notified'
+                return 'No notification for type: crstest/user_point'.format(user_id, usos_id)
             elif event_type == 'crstests/user_grade':
 
                 user_grade = await self.usosCall(path='services/crstests/user_grade', arguments={'node_id': node_id})
                 logging.debug('user_grade: {0}'.format(user_grade))
 
                 if user_grade:
-
                     # get info about course_edition
                     root_id_doc = await self.usosCall(path='services/crstests/root_node',
-                                                       arguments={'node_id': node_id, 'fields': 'root_id'})
+                                                      arguments={'node_id': node_id, 'fields': 'root_id'})
 
                     course_edition_doc = await self.usosCall(path='services/crstests/root_node',
-                                                       arguments={'node_id': root_id_doc['root_id'], 'fields': 'course_edition'})
+                                                             arguments={'node_id': root_id_doc['root_id'],
+                                                                        'fields': 'course_edition'})
                     user_grade[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
 
                     # get grader data
@@ -352,14 +400,17 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                     user_grade['grader'] = grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
                     # format notification and send to onesignal
-                    notification, message_title, message_body = self._message_formater_crstests_user_grade(user_grade, event_operation)
+                    notification, message_title, message_body = self._message_formater_crstests_user_grade(user_grade,
+                                                                                                           event_operation)
                     onesignal_result = await self._osm.signal_message(message=notification,
-                                                                  email_reciepient= user_doc[fields.USER_EMAIL])
+                                                                      email_reciepient=user_doc[fields.USER_EMAIL])
                     await self.db_save_message(message_body, from_whom=message_title, message_type='powiadomienie',
                                                notification_text=notification, notification_result=onesignal_result)
+                    return 'crstest/user_grade notified'
+                return 'No notification for type: crstest/user_grade'.format(user_id, usos_id)
             else:
                 logging.error('nierozpoznany typ powiadomienia: {0}'.format(event_type))
-                return False
+                return event_type
 
         except Exception as ex:
             logging.error(
@@ -372,7 +423,8 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
 
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
-                await self._user_event(user_id, entry['node_id'], event[fields.USOS_ID], event['event_type'], entry['operation'])
+                await self._user_event(user_id, entry['node_id'], event[fields.USOS_ID], event['event_type'],
+                                       entry['operation'])
 
     async def notifier_status(self):
         # unused

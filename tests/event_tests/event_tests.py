@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-
+from tornado.testing import gen_test
 import motor.motor_tornado
 
 from commons import utils
@@ -12,6 +12,8 @@ from commons.constants import config, fields
 from commons.enumerators import Environment
 from event.server import get_application
 from tests.base import BaseTestClass
+from crawler.UsosCrawler import UsosCrawler
+
 
 USER_DOC = {"access_token_secret": "cjFPyKjDk5GNTcqpxeEsfWuhd9bLApbaw7ECfqHv",
             "access_token_key": "VkyGQdtREPCvULQnQ4uF",
@@ -64,7 +66,7 @@ class EventTest(BaseTestClass):
         self._app.settings[config.APPLICATION_CONFIG] = self.config
         self._app.settings[config.APPLICATION_AES] = self.aes
 
-    # @gen_test(timeout=50)
+    @gen_test(timeout=10)
     def testEvent(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'

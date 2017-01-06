@@ -47,8 +47,8 @@ GRADES_BY_TERM = [
                 "class_type": "Brak danych",
                 "exam_id": 36691,
                 "exam_session_number": 1,
-                "value_description": "bardzo dobry",
-                "value_symbol": "5"
+                "value_description": "Zaliczone",
+                "value_symbol": "Zal"
             }
         ],
         "term_id": "2015/16-2"

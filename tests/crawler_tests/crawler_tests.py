@@ -28,39 +28,40 @@ class CrawlerTest(AsyncTestCase):
         self.assertNotEqual(0, self.client_db[collections.USOSINSTANCES].count())
 
         self.user_id = self.client_db[collections.USERS].insert(USER_DOC)
+        self.usos_id = USER_DOC['usos_id']
         logging.info(self.user_id)
 
     def tearDown(self):
         super(CrawlerTest, self).tearDown()
         self.stop()
 
-    @gen_test(timeout=300)
-    def testInitialUserCrawl(self):
-        # assume - run crawler
-        yield UsosCrawler(self.config).initial_user_crawl(self.user_id)
-
-        # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
-        self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
-        self.assertNotEqual(0, self.client_db[collections.THESES].count())
-        self.assertNotEqual(0, self.client_db[collections.TERMS].count())
-        # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
-        self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
-        self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
-
-    @gen_test(timeout=300)
-    def testInitialUserCrawlRefresh(self):
-        # assume - run crawler
-        yield UsosCrawler(self.config).initial_user_crawl(self.user_id, refresh=True)
-
-        # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
-        self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
-        self.assertNotEqual(0, self.client_db[collections.THESES].count())
-        self.assertNotEqual(0, self.client_db[collections.TERMS].count())
-        # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
-        self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
-        self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
+    # @gen_test(timeout=300)
+    # def testInitialUserCrawl(self):
+    #     # assume - run crawler
+    #     yield UsosCrawler(self.config).initial_user_crawl(self.user_id)
+    #
+    #     # then - check if tables are filled
+    #     self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
+    #     self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
+    #     self.assertNotEqual(0, self.client_db[collections.THESES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.TERMS].count())
+    #     # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
+    #
+    # @gen_test(timeout=300)
+    # def testInitialUserCrawlRefresh(self):
+    #     # assume - run crawler
+    #     yield UsosCrawler(self.config).initial_user_crawl(self.user_id, refresh=True)
+    #
+    #     # then - check if tables are filled
+    #     self.assertNotEqual(0, self.client_db[collections.USERS_INFO].count())
+    #     self.assertNotEqual(0, self.client_db[collections.COURSES_EDITIONS].count())
+    #     self.assertNotEqual(0, self.client_db[collections.THESES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.TERMS].count())
+    #     # self.assertNotEqual(0, self.client_db[collections.COURSES_CLASSTYPES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.FACULTIES].count())
+    #     self.assertNotEqual(0, self.client_db[collections.PROGRAMMES].count())
 
     @gen_test(timeout=10)
     def testArchiveUser(self):
@@ -76,21 +77,84 @@ class CrawlerTest(AsyncTestCase):
         # assume - run crawler
         yield UsosCrawler(self.config).subscribe(self.user_id)
 
+        # when check in mongo for expeption from usos
+        result = self.client_db[collections.EXCEPTIONS].find_one({"function_name": "subscribe"})
+
         # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[collections.SUBSCRIPTIONS].count())
+        self.asserEqual('subscribe', result['function_name'])
 
     @gen_test(timeout=10)
     def testProcessEvent(self):
-        event = {u'entry': [
-            {u'operation': u'update', u'node_id': 62109, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-            {u'operation': u'update', u'node_id': 58746, u'related_user_ids': [u'1279833'], u'time': 1467979077},
-            {u'operation': u'update', u'node_id': 55001, u'related_user_ids': [u'1279833'], u'time': 1467979077}
-        ],
-            u'event_type': u'crstests/user_point', u'usos_id': u'DEMO'}
-        # await crawler.process_event(event)
 
-        # assume - run crawler
-        yield UsosCrawler(self.config).process_event(event)
+        # assume - not notification to get
+        event1 = {'operation': 'update', 'node_id': 62109, 'related_user_ids': '1015146', 'time': 1467979077}
 
-        # then - check if tables are filled
-        self.assertNotEqual(0, self.client_db[collections.MESSAGES].count())
+        # when
+        result1 = yield UsosCrawler(self.config)._user_event(event1['related_user_ids'], event1['node_id'], self.usos_id,
+                                                   'crstests/user_grade', event1['operation'])
+        # then
+        self.assertEqual(result1, 'No notification for type: crstest/user_grade')
+
+        # assume user not exist
+        event2 = {'operation': 'update', 'node_id': 58746, 'related_user_ids': 'XXX', 'time': 1467979077}
+        # when
+        result2 = yield UsosCrawler(self.config)._user_event(event2['related_user_ids'], event2['node_id'], self.usos_id,
+                                                   'crstests/user_point', event2['operation'])
+        # then should return False
+        self.assertEqual(False, result2)
+
+        # assume - not notification to get
+        event2['related_user_ids'] = '1015146'
+        # when
+        result2 = yield UsosCrawler(self.config)._user_event(event2['related_user_ids'], event2['node_id'], self.usos_id,
+                                                   'crstests/user_point', event2['operation'])
+        # then should return False
+        self.assertEqual(result2, 'No notification for type: crstest/user_point')
+
+    @gen_test(timeout=5)
+    def testNotificationMessageFormaterGrades(self):
+
+        # assume -
+        user_grade = {'node_id': 23348, 'private_comment': '', 'course_name': 'Hydraulika i hydrologia',
+                      'grader': 'Szymon Firląg', 'grader_id': 92803, 'student_id': 1100392, 'public_comment': '',
+                      'grade': {'symbol': '4,5', 'order_key': 2,
+                                'name': 'cztery i pół', 'passes': True, 'decimal_value': '4.5'},
+                      'last_changed': '2017-01-02 13:57:08'}
+
+        empty_user_grade = dict()
+
+        # when try - empty values
+        UsosCrawler(self.config)._message_formater_crstests_user_grade(empty_user_grade, 'create')
+
+        # when
+        notif, title, mess  = UsosCrawler(self.config)._message_formater_crstests_user_grade(user_grade, 'create')
+
+        # then
+        self.assertEquals(notif, "Wpisano ocenę: 4.5 ze sprawdzianu (Hydraulika i hydrologia) - zalicza")
+        self.assertEquals(title, "Powiadomienie - Wpisano ocenę: 4.5 ze sprawdzianu (Hydraulika i hydrologia) - zalicza")
+
+    def testNotificationMessageFormaterPoints(self):
+        # assume -
+
+        user_points = {'grader': 'Magdalena Skolimowska-Kulig', 'points': 10.0, 'comment': '',
+                       'last_changed': '2017-01-03 23:10:35', 'student_id': 191953, 'grader_id': 1437,
+                       'node_id': 26160, 'course_name': 'Elementy matematyki w ekonomii'}
+
+        empty_user_points = dict()
+
+        # when try - empty values
+        UsosCrawler(self.config)._message_formater_crstests_user_point(empty_user_points, 'create')
+
+        # when
+        notif, title, mess = UsosCrawler(self.config)._message_formater_crstests_user_point(user_points, 'create')
+
+        # then
+        self.assertEquals(notif, "Wpisano punty: 10.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
+        self.assertEquals(title, "Powiadomienie - Wpisano punkty: 10.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
+
+    def testCrstestPointsNotification(self):
+        pass
+
+    def testCrstestGradesNotification(self):
+        pass
+
