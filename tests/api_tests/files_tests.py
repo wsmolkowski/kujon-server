@@ -11,8 +11,12 @@ from tornado import gen, escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
+from tornado.options import options
 
-from commons.constants import config, fields
+from pymongo import MongoClient
+from commons.enumerators import UploadFileStatus
+from commons.config import Config
+from commons.constants import config, fields, collections
 from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC, TOKEN_DOC
 
@@ -59,6 +63,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testUserFileEmptyList(self):
+
         # when
         result = yield self.assertOK(self.get_url('/files'), method='GET')
 
@@ -67,7 +72,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testDeleteFileFailure(self):
-        # assume
+
+        # assume fake file_id
         delete_uri = '/files/123'
 
         # when
@@ -79,7 +85,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testGetFilesInvalidCourseEdition(self):
-        # assume
+
+        # assume fake course_id and term_id
         get_uri = '/files?course_id=YYY&term_id=XXXX'
 
         # when
@@ -91,8 +98,9 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testUploadFailure(self):
-        # assume
-        delete_uri = self.get_url('/filesupload?course_id=123')  # mising term_id
+
+        # assume missing term_id
+        delete_uri = self.get_url('/filesupload?course_id=123')
 
         # when
         result = yield self.assertFail(delete_uri, method='POST', body=self.file_sample)
@@ -145,9 +153,60 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         self.assertEquals(1, len(result['data']))
 
-        @gen_test(timeout=30)
-        def testUploadForSelectedUsers(self):
-            pass
+    @gen_test(timeout=10)
+    def testUploadForSelectedUsers(self):
 
+        # assume - upload for selected user not me
+        term_id = '2015L'
+        course_id = '4018-KON317-CLASS'
+
+        file_doc = dict()
+        file_doc[fields.USER_ID] = USER_DOC[fields.USOS_USER_ID]
+        file_doc[fields.USOS_ID] = "DEMO"
+        file_doc[fields.TERM_ID] = term_id
+        file_doc[fields.COURSE_ID] = course_id
+
+        file_doc[fields.FILE_SIZE] = 999
+        file_doc[fields.FILE_STATUS] = UploadFileStatus.STORED.value
+        file_doc[fields.FILE_NAME] = "samplename"
+        file_doc[fields.FILE_USER_USOS] = {"user_usos_id": "123", "first name": "Ewa", "last_name": "Datoń-Pawłowicz"}
+        file_doc[fields.FILE_SHARED_TO] = list('414')
+
+        # TODO: nie wiem dlaczego defaultowo przy testowach odpala development
+        config = Config("tests")
+        client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
+        file_id = client_db[collections.FILES].insert(file_doc)
+
+        # when try to get document by id
+        get_uri = '/files/' + str(file_id)
+
+        # then
+        yield self.assertFail(self.get_url(get_uri), method="GET")
+
+        # when try to delete file by id
+        delete_uri = '/files/' + str(file_id)
+        yield self.assertFail(self.get_url(delete_uri), method="DELETE")
+
+
+    @gen_test(timeout=10)
+    def testDownloadNotForMe(self):
+
+        # assume - insert into mongo not for me
+
+        # whet get file list
+
+        # then should have right to download
+
+        pass
+
+    def testUploadwithSameName(self):
+
+        # assume upload file with name
+
+        # when upload second time with same name into same course_id and term_id
+
+        # then should no be able to do it
+
+        pass
 
 

@@ -16,12 +16,13 @@ from commons.enumerators import UploadFileStatus
 from commons.errors import FilesError
 
 USER_FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
-                      fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
-                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1, fields.FILE_USERS_IDS: 1}
+                           fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
+                           fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1,
+                           fields.FILE_SHARED_TO: 1, 'first_name': 1, 'last_name': 1}
 
 FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                       fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
-                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.FILE_USER_INFO: 1}
+                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1}
 
 FILE_SCAN_RESULT_OK = 'file_clean'
 
@@ -75,9 +76,13 @@ class AbstractFileHandler(ApiHandler):
         return await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
 
     async def apiGetUserFiles(self):
+        # TODO: czy to zapytanie jest potrzebne czy skądś można to wyciągnąć?
+        user_info = await self.api_user_usos_info()
 
-        pipeline = {fields.USOS_ID: self.getUsosId(), fields.USER_ID: self.getUserId(),
-                    fields.FILE_STATUS: UploadFileStatus.STORED.value}
+        pipeline = {fields.USOS_ID: self.getUsosId(),
+                    fields.FILE_STATUS: UploadFileStatus.STORED.value,
+                    '$or': [{fields.FILE_SHARED_TO: user_info[fields.ID]}, {fields.USER_ID: self.getUserId()}]}
+
         cursor = self.db[collections.FILES].find(pipeline, USER_FILES_LIMIT_FIELDS)
         files_doc = await cursor.to_list(None)
 
@@ -89,11 +94,17 @@ class AbstractFileHandler(ApiHandler):
         return files_doc
 
     async def apiGetFiles(self, term_id, course_id):
+        # TODO: czy to zapytanie jest potrzebne czy skądś można to wyciągnąć?
+        user_info = await self.api_user_usos_info()
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id,
-                    fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value}
+                    fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value,
+                    '$or': [{fields.FILE_SHARED_TO: user_info[fields.ID]}, {fields.FILE_SHARED_TO: { '$gt': []}}]}
 
         cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
+
+        # TODO: for each file return if it is my file or public file or private
+
 
         files_doc = await cursor.to_list(None)
 
@@ -102,13 +113,26 @@ class AbstractFileHandler(ApiHandler):
             file[fields.FILE_ID] = file[fields.MONGO_ID]
             file.pop(fields.MONGO_ID)
 
+
+
         return files_doc
 
     async def apiGetFile(self, file_id):
-        pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id)}
-        return await self.db[collections.FILES].find_one(pipeline)
 
-    async def apiStorefile(self, term_id, course_id, file_name, file_content, user_ids):
+        pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id)}
+
+        file_doc = await self.db[collections.FILES].find_one(pipeline)
+        if not file_doc:
+            return False
+
+        # TODO: checking if can download
+        # checking if belongs to me
+        # checking if on my course_edition
+        # check if it is for every one
+
+        return file_doc
+
+    async def apiStorefile(self, term_id, course_id, file_name, file_content, shared_to_user_usos_ids):
 
         # get user info
         file_doc = dict()
@@ -122,24 +146,35 @@ class AbstractFileHandler(ApiHandler):
         except Exception as ex:
             raise FilesError(ex)
 
+        # check if such a file exists
+        try:
+            pipeline = {fields.USOS_ID: self.getUsosId(), fields.TERM_ID: term_id, fields.COURSE_ID: course_id,
+                        fields.FILE_NAME: file_name}
+            exising_file_doc = await self.db[collections.FILES].find_one(pipeline)
+            if exising_file_doc:
+                raise FilesError("plik o podanej nazwie już istnieje.")
+        except Exception as ex:
+            raise FilesError(ex)
+
         # check if given users_ids are in this courseedition
         try:
-            if user_ids:
-                user_ids = user_ids.replace(" ", "").split(',')
+            if shared_to_user_usos_ids:
+                shared_to_user_usos_ids = shared_to_user_usos_ids.replace(" ", "").split(',')
                 participant_ids = list()
                 for participant in courseedition[fields.PARTICIPANTS]:
                     participant_ids.append(participant[fields.USER_ID])
 
-                if not set(user_ids) <= set(participant_ids):
+                if not set(shared_to_user_usos_ids) <= set(participant_ids):
                     raise FilesError("nierozpoznani użytkownicy.")
         except Exception as ex:
             raise FilesError(ex)
 
-        # dodawanie inforamcji o użytkowniku
+        # dodawanie informacji o użytkowniku
         user_info = await self.api_user_usos_info()
-        file_doc[fields.FILE_USER_INFO] = {fields.USER_ID: user_info[fields.ID],
-                                           'first_name': user_info['first_name'],
-                                           'last_name': user_info['last_name']}
+        file_doc[fields.USER_ID] = self.getUserId()
+        file_doc[fields.USOS_USER_ID] = user_info[fields.ID]
+        file_doc['first_name'] = user_info['first_name']
+        file_doc['last_name'] = user_info['last_name']
 
         file_doc[fields.USOS_ID] = self.getUsosId()
         file_doc[fields.TERM_ID] = term_id
@@ -155,7 +190,7 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.FILE_NAME] = file_name
 
         # dodanie pola komu udostępniay
-        file_doc[fields.FILE_USERS_IDS] = user_ids
+        file_doc[fields.FILE_SHARED_TO] = shared_to_user_usos_ids
 
         # rozpoznawanie rodzaju contentu
         try:
@@ -187,19 +222,20 @@ class FileHandler(AbstractFileHandler):
     @decorators.authenticated
     async def delete(self, file_id):
         try:
-            file_doc = await self.db[collections.FILES].find_one({fields.FILE_ID: file_id,
-                                                                  fields.FILE_STATUS: UploadFileStatus.STORED.value,
-                                                                  fields.USER_ID: self.getUserId(),
-                                                                  fields.USOS_ID: self.getUsosId()})
+            pipeline = {fields.MONGO_ID: ObjectId(file_id), fields.FILE_STATUS: UploadFileStatus.STORED.value,
+                        fields.USER_ID: self.getUserId(), fields.USOS_ID: self.getUsosId()}
+            file_doc = await self.db[collections.FILES].find_one(pipeline)
 
             if not file_doc:
                 self.error('Nie znaleziono pliku.', code=404)
                 return
 
-            file_doc[fields.FILE_STATUS] = UploadFileStatus.DELETED.value
-            file_id = await self.db[collections.FILES].update({fields.FILE_ID: file_doc[fields.FILE_ID]}, file_doc)
-
-            self.success(file_id)
+            deleted = {fields.FILE_STATUS: UploadFileStatus.DELETED.value}
+            result = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)}, deleted)
+            if result:
+                self.success(file_id)
+            else:
+                self.error('Bład podczas usuwania pliku.', code=500)
         except Exception as ex:
             await self.exc(ex)
 
@@ -208,8 +244,8 @@ class FilesHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self):
         try:
-            course_id = self.get_argument('course_id', default=None)
-            term_id = self.get_argument('term_id', default=None)
+            course_id = self.get_argument(fields.COURSE_ID, default=None)
+            term_id = self.get_argument(fields.TERM_ID, default=None)
 
             if course_id and term_id:
 
@@ -236,9 +272,9 @@ class FileUploadHandler(AbstractFileHandler):
     async def post(self):
         try:
 
-            course_id = self.get_argument('course_id', default=None)
-            term_id = self.get_argument('term_id', default=None)
-            user_ids = self.get_argument('user_ids', default=list())
+            course_id = self.get_argument(fields.COURSE_ID, default=None)
+            term_id = self.get_argument(fields.TERM_ID, default=None)
+            shared_to_user_usos_ids = self.get_argument(fields.FILE_SHARED_TO, default=list())
             files = self.request.files
 
             if not term_id or not course_id or not files:  # or 'files' not in files
@@ -249,13 +285,13 @@ class FileUploadHandler(AbstractFileHandler):
                 if isinstance(file, list):
                     file = file[0]  # ['files']
                 try:
-                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], user_ids)
+                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], shared_to_user_usos_ids)
                 except Exception as ex:
                     self.error("Błąd podczas zapisu pliku: {0}".format(ex))
                     return
                 files_doc.append({fields.FILE_ID: file_id,
                                   fields.FILE_NAME: file['filename'],
-                                  fields.FILE_USERS_IDS: user_ids})
+                                  fields.FILE_SHARED_TO: shared_to_user_usos_ids})
 
             self.success(files_doc)
         except Exception as ex:
