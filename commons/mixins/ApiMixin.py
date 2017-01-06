@@ -105,7 +105,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
             logging.warning('found extra course_edition for : {0} {1} not saving'.format(course_id, term_id))
             return result
         except Exception as ex:
-            logging.warning('exception during fetch course_id: {0} term_id: {1} ex: '.format(course_id, term_id, ex))
+            logging.warning('exception duting fetch course_id: {0} term_id: {1} ex: '.format(course_id, term_id, ex))
             return
 
     async def api_course_term(self, course_id, term_id, extra_fetch=True, log_exception=True, courses_editions=False):

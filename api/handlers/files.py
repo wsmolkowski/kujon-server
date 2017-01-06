@@ -102,10 +102,32 @@ class AbstractFileHandler(ApiHandler):
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id)}
         return await self.db[collections.FILES].find_one(pipeline)
 
-    async def apiStorefile(self, term_id, course_id, file_name, file_content):
+    async def apiStorefile(self, term_id, course_id, file_name, file_content, user_ids):
 
+        # get user info
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
+
+        # check if user is on given course_id & term_id
+        try:
+            courseedition = await self.api_course_edition(course_id, term_id)
+            if not courseedition:
+                raise FilesError("nierozpoznane parametry kursu.")
+        except Exception as ex:
+            raise FilesError("nierozpoznane parametry kursu.")
+
+        # check if given users_ids are in this courseedition
+        try:
+            if user_ids:
+                user_ids = user_ids.replace(" ", "").split(',')
+                participant_ids = list()
+                for participant in courseedition[fields.PARTICIPANTS]:
+                    participant_ids.append(participant[fields.USER_ID])
+
+                if not set(user_ids) <= set(participant_ids):
+                    raise FilesError("nierozpoznani użytkownicy.")
+        except Exception as ex:
+            raise FilesError("nierozpoznani użytkownicy.")
 
         # dodawanie inforamcji o użytkowniku
         user_info = await self.api_user_usos_info()
@@ -125,6 +147,9 @@ class AbstractFileHandler(ApiHandler):
 
         file_doc[fields.FILE_STATUS] = UploadFileStatus.NEW.value
         file_doc[fields.FILE_NAME] = file_name
+
+        # dodanie pola komu udostępniay
+        file_doc[fields.FILE_USERS_IDS] = user_ids
 
         # rozpoznawanie rodzaju contentu
         try:
@@ -207,25 +232,24 @@ class FileUploadHandler(AbstractFileHandler):
 
             course_id = self.get_argument('course_id', default=None)
             term_id = self.get_argument('term_id', default=None)
+            user_ids = self.get_argument('user_ids', default=list())
             files = self.request.files
 
             if not term_id or not course_id or not files:  # or 'files' not in files
-                return self.error('Nie przekazano odpowiednich parametrów.', code=400)
-
-            # check if user is on given course_id & term_id
-            try:
-                result = await self.api_course_edition(course_id, term_id)
-                if not result:
-                    return self.error('Nie przekazano odpowiednich parametrów.', code=400)
-            except Exception as ex:
-                raise FilesError('Błędne parametry wywołania.')
+                return self.error('Nie przekazano odpowiednich parametrów #1.', code=400)
 
             files_doc = list()
             for key, file in files.items():
                 if isinstance(file, list):
                     file = file[0]  # ['files']
-                file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'])
-                files_doc.append({fields.FILE_ID: file_id, fields.FILE_NAME: file['filename']})
+                try:
+                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], user_ids)
+                except Exception as ex:
+                    self.error("Błąd podczas zapisu pliku: {0}".format(ex))
+                    return
+                files_doc.append({fields.FILE_ID: file_id,
+                                  fields.FILE_NAME: file['filename'],
+                                  fields.FILE_USERS_IDS: user_ids})
 
             self.success(files_doc)
         except Exception as ex:

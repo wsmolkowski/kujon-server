@@ -144,3 +144,10 @@ class ApiFilesTest(AbstractApplicationTestBase):
         result = yield self.assertOK(self.get_url('/files'), method='GET')
 
         self.assertEquals(1, len(result['data']))
+
+        @gen_test(timeout=30)
+        def testUploadForSelectedUsers(self):
+            pass
+
+
+
