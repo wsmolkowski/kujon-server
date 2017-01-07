@@ -285,7 +285,7 @@ class FileUploadHandler(AbstractFileHandler):
                 if isinstance(file, list):
                     file = file[0]  # ['files']
                 try:
-                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], shared_to_user_usos_ids)
+                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], )
                 except Exception as ex:
                     self.error("Błąd podczas zapisu pliku: {0}".format(ex))
                     return

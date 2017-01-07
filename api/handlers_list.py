@@ -17,7 +17,7 @@ from api.handlers.search import SearchUsersApi, SearchCoursesApi, SearchFacultie
 from api.handlers.subscriptions import SubscriptionsHandler
 from api.handlers.terms import TermsApi, TermApi
 from api.handlers.theses import ThesesApi
-from api.handlers.tt import TTApi, TTLecturerApi
+from api.handlers.tt import TTApi, TTLecturerApi, TTUserApi
 from api.handlers.user import UsersInfoApi, UsersInfoAllApi, UsersInfoByIdApi, UsersInfoPhotoApi
 
 HANDLERS = [
@@ -68,6 +68,7 @@ HANDLERS = [
 
     (r"/tt/([^/]+)", TTApi),
     (r"/ttlecturers/([^/]+)/([^/]+)", TTLecturerApi),
+    (r"/ttusers/([^/]+)", TTUserApi),
 
     (r"/programmes", ProgrammesApi),
     (r"/programmes/([^/]+)", ProgrammesByIdApi),

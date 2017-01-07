@@ -3,27 +3,155 @@
 import logging
 from datetime import date, timedelta, datetime
 
-from tornado import web
-
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
 
 
-class TTLecturerApi(ApiHandler):
+def _get_last_day_of_month(year, month):
+    """ Work out the last day of the month """
+    last_days = [31, 30, 29, 28, 27]
+    for i in last_days:
+        try:
+            end = datetime(year, month, i)
+        except ValueError:
+            continue
+        else:
+            return end.date()
+    return None
 
-    def _get_last_day_of_month(self, year, month):
-        """ Work out the last day of the month """
-        last_days = [31, 30, 29, 28, 27]
-        for i in last_days:
+
+class TTUserApi(ApiHandler):
+
+    async def _lecturers_info(self, lecturer_ids):
+        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
+
+        lecturers_infos = list()
+        for lecturer_id in lecturer_ids:
             try:
-                end = datetime(year, month, i)
-            except ValueError:
-                continue
-            else:
-                return end.date()
-        return None
+                lecturer_info = await self.api_user_info(lecturer_id)
+                if lecturers_infos:
+                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
+                    lecturers_infos.append(lecturer_info)
+
+            except Exception as ex:
+                await self.exc(ex, finish=False)
+
+        return lecturers_infos
+
+
+    async def api_ttmonth(self, given_date, lecturers_info=None):
+        '''
+
+        :param given_date: A date string, yyyy-mm-dd format
+        :param lecturers_info: if True then extra data will be feched from USUS for each lecturer_id
+        :param full_mobth: if None then next 7 days will be feched from USUS if true - full month
+        :return:
+        '''
+        days = 7 # max usos value
+
+        try:
+            if isinstance(given_date, str):
+                given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
+
+            first_day_of_month = date(given_date.year, given_date.month, 1)
+            last_day_of_month = _get_last_day_of_month(given_date.year, given_date.month)
+
+            second_week = first_day_of_month + timedelta(days=days)
+            third_week = second_week + timedelta(days=days)
+            fourth_week = third_week + timedelta(days=days)
+
+            weeks = [first_day_of_month, second_week, third_week, fourth_week]
+
+            if last_day_of_month.day > 28:
+                fifth_week = fourth_week + timedelta(days=days)
+                fifth_week_days = last_day_of_month.day - 28
+
+        except Exception:
+            raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+
+        if self.do_refresh():
+            await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})
+
+        tt_doc = await self.db[collections.TT].find_one({fields.USER_ID: self.getUserId(),
+                                                         fields.TT_STARTDATE: str(first_day_of_month)})
+        if not tt_doc:
+
+            tt_doc = dict()
+            tt_doc['tts'] = list()
+            tt_doc[fields.TT_STARTDATE] = str(first_day_of_month)
+            tt_doc[fields.USER_ID] = self.getUserId()
+
+            try:
+                for week in weeks:
+                    tt_response = await self.usosCall(
+                        path='services/tt/user',
+                        arguments={
+                            'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
+                            'start': week,
+                            'days': days,
+                        })
+
+                    if not tt_response:
+                        logging.debug("Brak wydarzeń w kalendarzu dla {0}".format(week))
+                    else:
+                        for elem in tt_response:
+                            tt_doc['tts'].append(elem)
+
+                if last_day_of_month.day > 28:
+                    tt_response = await self.usosCall(
+                        path='services/tt/user',
+                        arguments={
+                            'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number|lecturer_ids',
+                            'start': fifth_week,
+                            'days': fifth_week_days,
+                        })
+                    if not tt_response:
+                        logging.debug("Brak wydarzeń w kalendarzu dla {0}".format(fifth_week))
+                    else:
+                        for elem in tt_response:
+                            tt_doc['tts'].append(elem)
+
+                if tt_doc['tts']:
+                    for tt_data in tt_doc['tts']:
+                        if tt_data['type'] == 'classgroup' or tt_data['type'] == 'classgroup2':
+                            tt_data['type'] = 'zajęcia'
+                        elif tt_data['type'] == 'exam':
+                            tt_data['type'] = 'egzamin'
+
+                    if 'lecturer_ids' in tt_data:
+                        if lecturers_info:
+                            tt_data['lecturers'] = await self._lecturers_info(tt_data['lecturer_ids'])
+                        else:
+                            tt_data['lecturers'] = len(tt_data['lecturer_ids'])
+                    else:
+                        tt_data['lecturers'] = list()
+
+                    # insert only if exists
+                    await self.db_insert(collections.TT, tt_doc)
+
+            except Exception as ex:
+                logging.debug(ex)
+                raise ApiError("Bład podczas pobierania planu miesiąca dla użytkownika.")
+
+        return tt_doc['tts']
+
+    @decorators.authenticated
+    async def get(self, given_date):
+
+        lecturers_info = self.get_argument('lecturers_info', default=True)
+        if lecturers_info == 'False':
+            lecturers_info = False  # whatever is passed than convert to True
+
+        try:
+            tt_doc = await self.api_ttmonth(given_date, lecturers_info)
+            self.success(tt_doc, cache_age=config.SECONDS_2WEEKS)
+        except Exception as ex:
+            self.error(message=ex, code=500)
+
+
+class TTLecturerApi(ApiHandler):
 
 
     async def api_tt_lecturers(self, lecturer_id, given_date):
@@ -33,19 +161,21 @@ class TTLecturerApi(ApiHandler):
         :return: full month
         '''
 
+        days = 7 # max usos value
+
         try:
             if isinstance(given_date, str):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
 
             first_day_of_month = date(given_date.year, given_date.month, 1)
-            last_day_of_month = self._get_last_day_of_month(given_date.year, given_date.month)
+            last_day_of_month = _get_last_day_of_month(given_date.year, given_date.month)
 
-            second_week = first_day_of_month + timedelta(days=7)
-            third_week = second_week + timedelta(days=7)
-            fourth_week = third_week + timedelta(days=7)
+            second_week = first_day_of_month + timedelta(days=days)
+            third_week = second_week + timedelta(days=days)
+            fourth_week = third_week + timedelta(days=days)
 
             if last_day_of_month.day > 28:
-                fifth_week = fourth_week + timedelta(days=7)
+                fifth_week = fourth_week + timedelta(days=days)
                 fifth_week_days = last_day_of_month.day - 28
 
         except Exception as ex:
@@ -96,14 +226,14 @@ class TTLecturerApi(ApiHandler):
                         for elem in tt_response:
                             tt_doc['tts'].append(elem)
 
-                for tt_data in tt_doc['tts']:
-                    if tt_data['type'] == 'classgroup':
-                        tt_data['type'] = 'zajęcia'
-                    elif tt_data['type'] == 'exam':
-                        tt_data['type'] = 'egzamin'
+                if tt_doc['tts']:
+                    for tt_data in tt_doc['tts']:
+                        if tt_data['type'] == 'classgroup':
+                            tt_data['type'] = 'zajęcia'
+                        elif tt_data['type'] == 'exam':
+                            tt_data['type'] = 'egzamin'
 
-                # TODO do przemyślenia czy to wstawiać czy nie
-                # await self.db_insert(collections.TT_LECTURERS, tt_doc)
+                    await self.db_insert(collections.TT_LECTURERS, tt_doc)
 
             except Exception as ex:
                 raise ApiError("Bład podczas pobierania planu dla wykładowcy.")
@@ -217,3 +347,4 @@ class TTApi(ApiHandler):
             self.success(list())
         except Exception as ex:
             await self.exc(ex)
+
