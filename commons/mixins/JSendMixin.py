@@ -37,7 +37,7 @@ class JSendMixin(object):
 
     def fail(self, message, code=501):
         if message:
-            message = message
+            message = str(message)
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'fail', 'message': message, 'code': code})
@@ -52,7 +52,7 @@ class JSendMixin(object):
 
     def error(self, message, data=None, code=None):
 
-        result = {'status': 'error', 'message': message}
+        result = {'status': 'error', 'message': str(message)}
         if data:
             result['data'] = data
 

@@ -1,7 +1,7 @@
 # coding=UTF-8
 
 import logging
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from tornado import web
 
@@ -9,6 +9,119 @@ from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
+
+
+class TTLecturerApi(ApiHandler):
+
+    def _get_last_day_of_month(self, year, month):
+        """ Work out the last day of the month """
+        last_days = [31, 30, 29, 28, 27]
+        for i in last_days:
+            try:
+                end = datetime(year, month, i)
+            except ValueError:
+                continue
+            else:
+                return end.date()
+        return None
+
+
+    async def api_tt_lecturers(self, lecturer_id, given_date):
+        '''
+
+        :param given_date: A date string, yyyy-mm-dd format will be geting only current month
+        :return: full month
+        '''
+
+        try:
+            if isinstance(given_date, str):
+                given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
+
+            first_day_of_month = date(given_date.year, given_date.month, 1)
+            last_day_of_month = self._get_last_day_of_month(given_date.year, given_date.month)
+
+            second_week = first_day_of_month + timedelta(days=7)
+            third_week = second_week + timedelta(days=7)
+            fourth_week = third_week + timedelta(days=7)
+
+            if last_day_of_month.day > 28:
+                fifth_week = fourth_week + timedelta(days=7)
+                fifth_week_days = last_day_of_month.day - 28
+
+        except Exception as ex:
+            raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+
+        if self.do_refresh():
+            await self.db_remove(collections.TT_LECTURERS, {fields.USER_ID: self.getUserId()})
+
+        tt_doc = await self.db[collections.TT_LECTURERS].find_one({fields.USER_ID: self.getUserId(),
+                                                         fields.TT_STARTDATE: str(first_day_of_month)})
+        if not tt_doc:
+
+            tt_doc = dict()
+            tt_doc['tts'] = list()
+            tt_doc[fields.TT_STARTDATE] = str(first_day_of_month)
+            tt_doc[fields.USER_ID] = self.getUserId()
+
+            try:
+                for week in [first_day_of_month, second_week, third_week, fourth_week]:
+
+                    tt_response = await self.usosCall(
+                        path='services/tt/staff',
+                        arguments={
+                            'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number',
+                            'start': week,
+                            'days': 7,
+                            'user_id': lecturer_id
+                        })
+
+                    if not tt_response:
+                        logging.debug("Brak wydarzeń w kalendarzu dla {0}".format(week))
+                    else:
+                        for elem in tt_response:
+                            tt_doc['tts'].append(elem)
+
+                if last_day_of_month.day > 28:
+                    tt_response = await self.usosCall(
+                        path='services/tt/staff',
+                        arguments={
+                            'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number',
+                            'start': fifth_week,
+                            'days': fifth_week_days,
+                            'user_id': lecturer_id
+                        })
+                    if not tt_response:
+                        logging.debug("Brak wydarzeń w kalendarzu dla {0}".format(fifth_week))
+                    else:
+                        for elem in tt_response:
+                            tt_doc['tts'].append(elem)
+
+                for tt_data in tt_doc['tts']:
+                    if tt_data['type'] == 'classgroup':
+                        tt_data['type'] = 'zajęcia'
+                    elif tt_data['type'] == 'exam':
+                        tt_data['type'] = 'egzamin'
+
+                # TODO do przemyślenia czy to wstawiać czy nie
+                # await self.db_insert(collections.TT_LECTURERS, tt_doc)
+
+            except Exception as ex:
+                raise ApiError("Bład podczas pobierania planu dla wykładowcy.")
+
+        return tt_doc['tts']
+
+
+    @decorators.authenticated
+    async def get(self, lecturer_id, given_date):
+
+        try:
+            if not lecturer_id or not given_date:
+                self.error("Niepoprawne parametry wywołania.")
+                return
+            tt_doc = await self.api_tt_lecturers(lecturer_id, given_date)
+            self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
+        except Exception as ex:
+            self.error(message=ex, code=500)
 
 
 class TTApi(ApiHandler):
@@ -88,7 +201,6 @@ class TTApi(ApiHandler):
         return tt_doc['tts']
 
     @decorators.authenticated
-    @web.asynchronous
     async def get(self, given_date):
 
         lecturers_info = self.get_argument('lecturers_info', default=True)
