@@ -24,23 +24,6 @@ def _get_last_day_of_month(year, month):
 
 class TTUserApi(ApiHandler):
 
-    async def _lecturers_info(self, lecturer_ids):
-        lecturer_keys = ['id', 'first_name', 'last_name', 'titles']
-
-        lecturers_infos = list()
-        for lecturer_id in lecturer_ids:
-            try:
-                lecturer_info = await self.api_user_info(lecturer_id)
-                if lecturers_infos:
-                    lecturer_info = dict([(key, lecturer_info[key]) for key in lecturer_keys])
-                    lecturers_infos.append(lecturer_info)
-
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
-        return lecturers_infos
-
-
     async def api_ttmonth(self, given_date, lecturers_info=None):
         '''
 
@@ -119,14 +102,6 @@ class TTUserApi(ApiHandler):
                             tt_data['type'] = 'zajęcia'
                         elif tt_data['type'] == 'exam':
                             tt_data['type'] = 'egzamin'
-
-                    if 'lecturer_ids' in tt_data:
-                        if lecturers_info:
-                            tt_data['lecturers'] = await self._lecturers_info(tt_data['lecturer_ids'])
-                        else:
-                            tt_data['lecturers'] = len(tt_data['lecturer_ids'])
-                    else:
-                        tt_data['lecturers'] = list()
 
                     # insert only if exists
                     await self.db_insert(collections.TT, tt_doc)
