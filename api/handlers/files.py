@@ -176,7 +176,7 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.FILE_NAME] = file_name
 
         # dodanie pola komu udostępniay
-        file_doc[fields.FILE_SHARED_TO] = None
+        file_doc[fields.FILE_SHARED_TO] = list()
 
         # rozpoznawanie rodzaju contentu
         try:
