@@ -110,8 +110,6 @@ class AbstractFileHandler(ApiHandler):
             file[fields.FILE_ID] = file[fields.MONGO_ID]
             file.pop(fields.MONGO_ID)
 
-
-
         return files_doc
 
     async def apiGetFile(self, file_id):
