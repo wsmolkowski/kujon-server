@@ -9,7 +9,7 @@ from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
 
 
-def _get_last_day_of_month(year, month):
+def _last_day_of_month(year, month):
     """ Work out the last day of the month """
     last_days = [31, 30, 29, 28, 27]
     for i in last_days:
@@ -39,7 +39,7 @@ class TTUserApi(ApiHandler):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
 
             first_day_of_month = date(given_date.year, given_date.month, 1)
-            last_day_of_month = _get_last_day_of_month(given_date.year, given_date.month)
+            last_day_of_month = _last_day_of_month(given_date.year, given_date.month)
 
             second_week = first_day_of_month + timedelta(days=days)
             third_week = second_week + timedelta(days=days)
@@ -143,7 +143,7 @@ class TTLecturerApi(ApiHandler):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
 
             first_day_of_month = date(given_date.year, given_date.month, 1)
-            last_day_of_month = _get_last_day_of_month(given_date.year, given_date.month)
+            last_day_of_month = _last_day_of_month(given_date.year, given_date.month)
 
             second_week = first_day_of_month + timedelta(days=days)
             third_week = second_week + timedelta(days=days)

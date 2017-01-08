@@ -8,7 +8,6 @@ from datetime import datetime
 import pyclamd
 from bson.objectid import ObjectId
 from tornado.ioloop import IOLoop
-
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
@@ -76,7 +75,6 @@ class AbstractFileHandler(ApiHandler):
         return await self.db[collections.FILES].update({fields.MONGO_ID: file_id}, file_doc)
 
     async def apiGetUserFiles(self):
-        # TODO: czy to zapytanie jest potrzebne czy skądś można to wyciągnąć?
         user_info = await self.api_user_usos_info()
 
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.FILE_STATUS: UploadFileStatus.STORED.value,
@@ -131,7 +129,7 @@ class AbstractFileHandler(ApiHandler):
 
         return file_doc
 
-    async def apiStorefile(self, term_id, course_id, file_name, file_content):
+    async def apiStoreFile(self, term_id, course_id, file_name, file_content):
 
         # get user info
         file_doc = dict()
@@ -253,7 +251,7 @@ class FilesHandler(AbstractFileHandler):
             await self.exc(ex)
 
 
-class FileUploadHandler(AbstractFileHandler):
+class FilesUploadHandler(AbstractFileHandler):
     @decorators.authenticated
     async def post(self):
         try:
@@ -270,7 +268,7 @@ class FileUploadHandler(AbstractFileHandler):
                 if isinstance(file, list):
                     file = file[0]  # ['files']
                 try:
-                    file_id = await self.apiStorefile(term_id, course_id, file['filename'], file['body'], )
+                    file_id = await self.apiStoreFile(term_id, course_id, file['filename'], file['body'], )
                 except Exception as ex:
                     self.error("Błąd podczas zapisu pliku: {0}".format(ex), code=409)
                     return
@@ -283,18 +281,84 @@ class FileUploadHandler(AbstractFileHandler):
             await self.exc(ex)
 
 
-#             shared_to_user_usos_ids = self.get_argument(fields.FILE_SHARED_TO, default=list())
+class FilesShareHandler(AbstractFileHandler):
 
+    async def apiShareFile(self, file_id, share_to_user_info_ids):
 
-        # # check if given users_ids are in this courseedition
-        # try:
-        #     if shared_to_user_usos_ids:
-        #         shared_to_user_usos_ids = shared_to_user_usos_ids.replace(" ", "").split(',')
-        #         participant_ids = list()
-        #         for participant in courseedition[fields.PARTICIPANTS]:
-        #             participant_ids.append(participant[fields.USER_ID])
-        #
-        #         if not set(shared_to_user_usos_ids) <= set(participant_ids):
-        #             raise FilesError("nierozpoznani użytkownicy.")
-        # except Exception as ex:
-        #     raise FilesError(ex)
+        # get file
+        try:
+            file_doc = await self.apiGetFile(file_id)
+        except Exception as ex:
+            raise FilesError("Nie znalezio pliku.")
+
+        # check if it is my file
+        if not file_doc or file_doc[fields.USER_ID] != self.getUserId():
+            raise FilesError("Nie znalezio pliku.")
+
+        # get courseediton
+        try:
+            courseedition = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
+            if not courseedition:
+                raise FilesError("Nierozpoznane parametry kursu.")
+        except Exception as ex:
+            raise FilesError(ex)
+
+        # check if given share_to are in this courseedition
+        try:
+            if share_to_user_info_ids is not None:
+                participant_ids = list()
+                for participant in courseedition[fields.PARTICIPANTS]:
+                    participant_ids.append(participant[fields.USER_ID])
+        except Exception as ex:
+            raise FilesError(ex)
+            return
+
+        if not set(share_to_user_info_ids) <= set(participant_ids):
+            raise FilesError("Nierozpoznani użytkownicy.")
+
+        # share
+        file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
+                                                         {'$set': {fields.FILE_SHARED_TO: share_to_user_info_ids}})
+        if file_update_doc:
+            return dict({file_id: share_to_user_info_ids})
+        else:
+            raise FilesError("Błąd podczas udostępniania pliku.")
+
+    @decorators.authenticated
+    async def post(self):
+
+        files = dict()
+        try:
+            args = self.request.arguments
+            for key in args:
+                share_to = None
+                try:
+                    file_id = ObjectId(key)
+                except Exception:
+                    raise FilesError("Zły identyfikator pliku.")
+                share_list = args[key]
+                if str(share_list[0]) == '':
+                    share_to = None
+                else:
+                    share_to = share_list[0].decode("utf-8").replace(" ", "").split(',')
+                    # remove empty strings
+                    share_to = [x for x in share_to if x != '']
+                files[file_id] = share_to
+        except Exception as ex:
+            self.error(ex)
+            return
+
+        files_doc = list()
+
+        try:
+
+            for key in files.keys():
+                shared_file_id = await self.apiShareFile(key, files[key])
+                if shared_file_id:
+                    files_doc.append({fields.FILE_ID: str(key), fields.FILE_SHARED_TO: files[key]})
+                else:
+                    raise Exception("Bład podczas Błąd podczas udostępniania pliku. ")
+            self.success(files_doc)
+        except Exception as ex:
+            self.error(ex)
+            return
