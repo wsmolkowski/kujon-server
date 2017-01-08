@@ -208,14 +208,7 @@ class FileHandler(AbstractFileHandler):
     @decorators.authenticated
     async def delete(self, file_id):
         try:
-
-            try:
-                file_id_obj = ObjectId(file_id)
-            except Exception:
-                self.error('Nie znaleziono pliku.', code=404)
-                return
-
-            pipeline = {fields.MONGO_ID: file_id_obj, fields.FILE_STATUS: UploadFileStatus.STORED.value,
+            pipeline = {fields.MONGO_ID: ObjectId(file_id), fields.FILE_STATUS: UploadFileStatus.STORED.value,
                         fields.USER_ID: self.getUserId(), fields.USOS_ID: self.getUsosId()}
             file_doc = await self.db[collections.FILES].find_one(pipeline)
 
@@ -223,8 +216,8 @@ class FileHandler(AbstractFileHandler):
                 self.error('Nie znaleziono pliku.', code=404)
                 return
 
-            deleted = {fields.FILE_STATUS: UploadFileStatus.DELETED.value}
-            result = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)}, deleted)
+            result = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
+                                                             {fields.FILE_STATUS: UploadFileStatus.DELETED.value})
             if result:
                 self.success(file_id)
             else:
