@@ -21,7 +21,7 @@ USER_FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.F
 
 FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                       fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
-                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1}
+                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1, fields.FILE_SHARED_TO: 1}
 
 FILE_SCAN_RESULT_OK = 'file_clean'
 
@@ -98,7 +98,7 @@ class AbstractFileHandler(ApiHandler):
         pipeline = {fields.USOS_ID: self.getUsosId(), fields.COURSE_ID: course_id,
                     fields.TERM_ID: term_id, fields.FILE_STATUS: UploadFileStatus.STORED.value,
                     '$or': [{fields.FILE_SHARED_TO: user_info[fields.ID]},
-                            {fields.FILE_SHARED_TO: { '$gt': []}},
+                            {fields.FILE_SHARED_TO: '*'},
                             {fields.USER_ID: ObjectId(self.getUserId())}]}
 
         cursor = self.db[collections.FILES].find(pipeline, FILES_LIMIT_FIELDS)
@@ -113,17 +113,18 @@ class AbstractFileHandler(ApiHandler):
         return files_doc
 
     async def apiGetFile(self, file_id):
+        user_info = await self.api_user_usos_info()
 
-        pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id)}
+        pipeline = {fields.USOS_ID: self.getUsosId(), fields.MONGO_ID: ObjectId(file_id),
+                    fields.FILE_STATUS: UploadFileStatus.STORED.value,
+                    '$or': [{fields.FILE_SHARED_TO: user_info[fields.ID]},
+                            {fields.FILE_SHARED_TO: '*'},
+                            {fields.USER_ID: ObjectId(self.getUserId())}]
+                    }
 
         file_doc = await self.db[collections.FILES].find_one(pipeline)
         if not file_doc:
             return False
-
-        # TODO: checking if can download
-        # checking if belongs to me
-        # checking if on my course_edition
-        # check if it is for every one
 
         return file_doc
 
@@ -192,6 +193,15 @@ class FileHandler(AbstractFileHandler):
     async def get(self, file_id):
         try:
             file_doc = await self.apiGetFile(file_id)
+
+            # check if in my course_edition
+            try:
+                result = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
+                if not result:
+                    return self.error('Nie jesteś na tej edycji kursu.', code=400)
+            except Exception as ex:
+                raise FilesError('Bład podczas sprawdzanie edycji kursu.')
+
             if file_doc:
                 self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
                 self.write(file_doc[fields.FILE_CONTENT])
@@ -272,7 +282,7 @@ class FilesUploadHandler(AbstractFileHandler):
                     return
                 files_doc.append({fields.FILE_ID: file_id,
                                   fields.FILE_NAME: file['filename'],
-                                  fields.FILE_SHARED_TO: None})
+                                  fields.FILE_SHARED_TO: list()})
 
             self.success(files_doc)
         except Exception as ex:
@@ -302,17 +312,18 @@ class FilesShareHandler(AbstractFileHandler):
             raise FilesError(ex)
 
         # check if given share_to are in this courseedition
-        try:
-            if share_to_user_info_ids is not None:
-                participant_ids = list()
-                for participant in courseedition[fields.PARTICIPANTS]:
-                    participant_ids.append(participant[fields.USER_ID])
-        except Exception as ex:
-            raise FilesError(ex)
-            return
+        if not share_to_user_info_ids or share_to_user_info_ids is not '*':
+            try:
+                if share_to_user_info_ids is not None:
+                    participant_ids = list()
+                    for participant in courseedition[fields.PARTICIPANTS]:
+                        participant_ids.append(participant[fields.USER_ID])
+            except Exception as ex:
+                raise FilesError(ex)
+                return
 
-        if not set(share_to_user_info_ids) <= set(participant_ids):
-            raise FilesError("Nierozpoznani użytkownicy.")
+            if not set(share_to_user_info_ids) <= set(participant_ids):
+                raise FilesError("Nierozpoznani użytkownicy.")
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
@@ -329,7 +340,6 @@ class FilesShareHandler(AbstractFileHandler):
         try:
             args = self.request.arguments
             for key in args:
-                share_to = None
                 try:
                     file_id = ObjectId(key)
                 except Exception:
@@ -337,6 +347,8 @@ class FilesShareHandler(AbstractFileHandler):
                 share_list = args[key]
                 if str(share_list[0]) == '':
                     share_to = None
+                elif str(share_list[0].decode("utf-8")) == '*':
+                    share_to = '*'
                 else:
                     share_to = share_list[0].decode("utf-8").replace(" ", "").split(',')
                     # remove empty strings
