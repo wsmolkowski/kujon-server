@@ -102,7 +102,7 @@ class BaseTestClass(AsyncHTTPTestCase):
         self._app.settings[config.APPLICATION_FS] = self.fs
 
     @gen.coroutine
-    def _assertFetch(self, url, method, body, contentType, headers):
+    def _assertFetch(self, url, method, body, contentType, headers, body_producer):
 
         header = {
             config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
@@ -114,7 +114,8 @@ class BaseTestClass(AsyncHTTPTestCase):
             for key in headers:
                 header[key] = headers[key]
 
-        response = yield self.client.fetch(url, method=method, body=body, headers=header)
+        response = yield self.client.fetch(url, method=method, body=body, headers=header, body_producer=body_producer,
+                                           allow_nonstandard_methods=True)
 
         logging.debug(response.body)
 
@@ -123,9 +124,9 @@ class BaseTestClass(AsyncHTTPTestCase):
         return response
 
     @gen.coroutine
-    def assertOK(self, url, method='GET', body=None, contentType='application/json', headers=None):
+    def assertOK(self, url, method='GET', body=None, contentType='application/json', headers=None, body_producer=None):
 
-        response = yield self._assertFetch(url, method, body, contentType, headers)
+        response = yield self._assertFetch(url, method, body, contentType, headers, body_producer)
 
         if contentType == 'application/json':
             json_body = escape.json_decode(response.body)
@@ -137,9 +138,9 @@ class BaseTestClass(AsyncHTTPTestCase):
             pass
 
     @gen.coroutine
-    def assertFail(self, url, method='GET', body=None, contentType='application/json', headers=None):
+    def assertFail(self, url, method='GET', body=None, contentType='application/json', headers=None, body_producer=None):
 
-        response = yield self._assertFetch(url, method, body, contentType, headers)
+        response = yield self._assertFetch(url, method, body, contentType, headers, body_producer)
 
         if contentType == 'application/json':
             json_body = escape.json_decode(response.body)

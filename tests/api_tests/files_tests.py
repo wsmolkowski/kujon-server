@@ -2,13 +2,12 @@
 
 # https://github.com/tornadoweb/tornado/blob/master/demos/file_upload/file_uploader.py
 
-
+import logging
 import mimetypes
 from functools import partial
 from uuid import uuid4
 
-from tornado import gen, escape
-from tornado.httpclient import HTTPRequest
+from tornado import gen
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
 from tornado.options import options
@@ -21,36 +20,6 @@ from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC, TOKEN_DOC
 
 
-@gen.coroutine
-def multipart_producer(boundary, filenames, write):
-    boundary_bytes = boundary.encode()
-
-    for filename in filenames:
-        filename_bytes = filename.encode()
-        write(b'--%s\r\n' % (boundary_bytes,))
-        write(b'Content-Disposition: form-data; name="%s"; filename="%s"\r\n' %
-              (filename_bytes, filename_bytes))
-
-        mtype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        write(b'Content-Type: %s\r\n' % (mtype.encode(),))
-        write(b'\r\n')
-        with open(filename, 'rb') as f:
-            while True:
-                # 16k at a time.
-                chunk = f.read(16 * 1024)
-                if not chunk:
-                    break
-                write(chunk)
-
-                # Let the IOLoop process its event queue.
-                yield gen.moment
-
-        write(b'\r\n')
-        yield gen.moment
-
-    write(b'--%s--\r\n' % (boundary_bytes,))
-
-
 class ApiFilesTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiFilesTest, self).setUp()
@@ -60,6 +29,48 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.file_sample_with_eicar = 'WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo='
         self.file_sample = bytes('to jest przykładowy plik do testów base64', 'utf-8')
         self.file_name_upload = 'sample_post_file.txt'
+        self.course_id = '4018-KON317-CLASS'
+        self.term_id = '2015L'
+
+    @gen.coroutine
+    def multipart_producer(self, boundary, filenames, write):
+        boundary_bytes = boundary.encode()
+
+        for filename in filenames:
+            filename_bytes = filename.encode()
+            write(b'--%s\r\n' % (boundary_bytes,))
+            write(b'Content-Disposition: form-data; name="%s"; filename="%s"\r\n' %
+                  (filename_bytes, filename_bytes))
+
+            mtype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            write(b'Content-Type: %s\r\n' % (mtype.encode(),))
+            write(b'\r\n')
+            with open(filename, 'rb') as f:
+                while True:
+                    # 16k at a time.
+                    chunk = f.read(16 * 1024)
+                    if not chunk:
+                        break
+                    write(chunk)
+
+                    # Let the IOLoop process its event queue.
+                    yield gen.moment
+
+            write(b'\r\n')
+            yield gen.moment
+
+        write(b'--%s--\r\n' % (boundary_bytes,))
+
+    @gen.coroutine
+    def _prepare_multipart(self, file_name_upload):
+        boundary = uuid4().hex
+        producer = partial(self.multipart_producer, boundary, [file_name_upload, ])
+        headers = HTTPHeaders({
+            'Content-Type': 'multipart/form-data; boundary=%s' % boundary
+        })
+        return headers, producer
+
+
 
     @gen_test(timeout=10)
     def testUserFileEmptyList(self):
@@ -100,114 +111,112 @@ class ApiFilesTest(AbstractApplicationTestBase):
     def testUploadFailure(self):
 
         # assume missing term_id
-        delete_uri = self.get_url('/filesupload?course_id=123')
+        upload_uri = self.get_url('/filesupload?course_id=123&course_id=X&files=Y')
 
         # when
-        result = yield self.assertFail(delete_uri, method='POST', body=self.file_sample)
+        result = yield self.assertFail(upload_uri, method='POST', body=self.file_sample)
 
         # then
-        self.assertEquals('Nie przekazano odpowiednich parametrów.', result['message'])
+        self.assertEquals('Nie przekazano odpowiednich parametrów #1.', result['message'])
+
 
     @gen_test(timeout=30)
-    def testIntegrationFilesApi(self):
-        '''
-            1. upload file
-            2. get file
-            3. delete file
-            4. list files   - Watch that CLAMD service must be started
-        '''
+    def testUploadAndGetFilesApi(self):
 
         # assume
-        term_id = '2015L'
-        course_id = '4018-KON317-CLASS'
-        upload_uri = self.get_url(
-            '/filesupload?term_id={0}&course_id={1}'.format(term_id, course_id))
-
-        boundary = uuid4().hex
-        producer = partial(multipart_producer, boundary, [self.file_name_upload, ])
-
-        headers = HTTPHeaders({
-            config.MOBILE_X_HEADER_EMAIL: USER_DOC['email'],
-            config.MOBILE_X_HEADER_TOKEN: TOKEN_DOC['token'],
-            config.MOBILE_X_HEADER_REFRESH: 'True',
-            'Content-Type': 'multipart/form-data; boundary=%s' % boundary
-        })
-
-        request = HTTPRequest(url=upload_uri,
-                              method='POST',
-                              headers=headers,
-                              body_producer=producer)
+        upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        headers, producer = yield self._prepare_multipart(self.file_name_upload)
 
         # when
-        response = yield self.client.fetch(request=request)
+        file_doc = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
 
         # then
-        file_doc = escape.json_decode(response.body)
         self.assertEquals('success', file_doc['status'])  # upload ok
         self.assertEquals(self.file_name_upload, file_doc['data'][0][fields.FILE_NAME])
 
-        yield gen.sleep(5)
+        yield gen.sleep(2)
 
         # check if file can be retrieved
-        result = yield self.assertOK(self.get_url('/files'), method='GET')
+        files_doc = yield self.assertOK(self.get_url('/files'), method='GET')
+        self.assertEquals(1, len(files_doc['data']))
 
-        self.assertEquals(1, len(result['data']))
-
-    @gen_test(timeout=10)
-    def testUploadForSelectedUsers(self):
-
-        # assume - upload for selected user not me
-        term_id = '2015L'
-        course_id = '4018-KON317-CLASS'
-
-        file_doc = dict()
-        file_doc[fields.USER_ID] = USER_DOC[fields.USOS_USER_ID]
-        file_doc[fields.USOS_ID] = "DEMO"
-        file_doc[fields.TERM_ID] = term_id
-        file_doc[fields.COURSE_ID] = course_id
-
-        file_doc[fields.FILE_SIZE] = 999
-        file_doc[fields.FILE_STATUS] = UploadFileStatus.STORED.value
-        file_doc[fields.FILE_NAME] = "samplename"
-        file_doc[fields.FILE_USER_USOS] = {"user_usos_id": "123", "first name": "Ewa", "last_name": "Datoń-Pawłowicz"}
-        file_doc[fields.FILE_SHARED_TO] = list('414')
-
-        # TODO: nie wiem dlaczego defaultowo przy testowach odpala development
-        config = Config("tests")
-        client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
-        file_id = client_db[collections.FILES].insert(file_doc)
-
-        # when try to get document by id
-        get_uri = '/files/' + str(file_id)
-
-        # then
-        yield self.assertFail(self.get_url(get_uri), method="GET")
-
-        # when try to delete file by id
-        delete_uri = '/files/' + str(file_id)
-        yield self.assertFail(self.get_url(delete_uri), method="DELETE")
-
-
-    @gen_test(timeout=10)
-    def testDownloadNotForMe(self):
-
-        # assume - insert into mongo not for me with defined shared_user_usos_ids
-
-        # whet get file list
-
-        # then should have right to get ant to download
-
+        # check if it is not shared
+        self.assertIsNone(files_doc['data'][0][fields.FILE_SHARED_TO])
         pass
 
-
-    def testUploadwithSameName(self):
+    @gen_test(timeout=15)
+    def testUploadFailurewithSameFilename(self):
 
         # assume upload file with name
+        upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        headers, producer = yield self._prepare_multipart(self.file_name_upload)
+        result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        logging.debug("waiting for result: {0}".format(result))
 
         # when upload second time with same name into same course_id and term_id
+        headers2, producer2 = yield self._prepare_multipart(self.file_name_upload)
 
         # then should no be able to do it
-
+        result = yield self.assertFail(self.get_url(upload_uri), method='POST', headers=headers2, body_producer=producer2)
         pass
 
+    @gen_test(timeout=15)
+    def testShareFileToEveryone(self):
 
+        # assume upload file
+        upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        headers, producer = yield self._prepare_multipart(self.file_name_upload)
+        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        # when share to all users
+
+        # then it should be selected for them after get
+
+    @gen_test(timeout=10)
+    def testShareFileToSelectedUsers(self):
+
+        # assume that file is uploaded
+        upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        headers, producer = yield self._prepare_multipart(self.file_name_upload)
+        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        # when share to selected users
+
+        # than it should be only shared for selected users
+
+    @gen_test(timeout=10)
+    def testSharedDownloadFileNotForMe(self):
+
+        # assume - upload a file
+        upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        headers, producer = yield self._prepare_multipart(self.file_name_upload)
+        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        # whet updating in mongo that it is not my file and not shared for me
+
+        # then I shouldn't have right to download it
+
+
+    @gen_test(timeout=10)
+    def testShareChangeSharing(self):
+
+        # assume - upload files
+        # upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
+        # headers, producer = yield self._prepare_multipart(self.file_name_upload)
+        # yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        pass
+
+        # assume - shared to selected user
+
+        # when geting after share change
+
+        # then it should contains only changed users
+
+        # when share to everyone
+
+        # then it should contains everyone tag
+
+        # when revoke sharing
+
+        # then it should not contains any share permissions
