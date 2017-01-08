@@ -10,14 +10,10 @@ from uuid import uuid4
 from tornado import gen
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
-from tornado.options import options
 
-from pymongo import MongoClient
-from commons.enumerators import UploadFileStatus
-from commons.config import Config
-from commons.constants import config, fields, collections
+from commons.constants import fields
 from tests.api_tests.base import AbstractApplicationTestBase
-from tests.base import USER_DOC, TOKEN_DOC
+from tests.base import USER_DOC
 
 
 class ApiFilesTest(AbstractApplicationTestBase):
@@ -162,16 +158,31 @@ class ApiFilesTest(AbstractApplicationTestBase):
         pass
 
     @gen_test(timeout=15)
-    def testShareFileToEveryone(self):
+    def testShareFileToEveryoneAndRevoke(self):
 
         # assume upload file
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
-        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
 
         # when share to all users
+        file_doc = result['data'][0]
+        share_uri = '/filesshare?{0}=*'.format(file_doc[fields.FILE_ID])
+        yield self.assertOK(self.get_url(share_uri), method='POST')
 
-        # then it should be selected for them after get
+        # then it should be shared for all users
+        download_uri = '/files/{0}'.format(file_doc[fields.FILE_ID])
+        yield self.assertOK(self.get_url(download_uri), method='GET', contentType='text/plain')
+
+        # when revoke sharing
+        file_doc = result['data'][0]
+        share_uri = '/filesshare?{0}='.format(file_doc[fields.FILE_ID])
+        yield self.assertOK(self.get_url(share_uri), method='POST')
+
+        # then sharing should be revoked
+        download_uri = '/files'
+        result = yield self.assertOK(self.get_url(download_uri), method='GET')
+        self.assertEquals(len(result['data'][0][fields.FILE_SHARED_TO]), 0)
 
     @gen_test(timeout=10)
     def testShareFileToSelectedUsers(self):
@@ -179,11 +190,15 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # assume that file is uploaded
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
-        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
 
         # when share to selected users
+        file_doc = result['data'][0]
+        share_uri = '/filesshare?{0}={1}'.format(file_doc[fields.FILE_ID], USER_DOC[fields.USOS_USER_ID])
+        result = yield self.assertOK(self.get_url(share_uri), method='POST')
 
         # than it should be only shared for selected users
+        self.assertEquals(result['data'][0][fields.FILE_SHARED_TO][0], USER_DOC[fields.USOS_USER_ID])
 
     @gen_test(timeout=10)
     def testSharedDownloadFileNotForMe(self):
@@ -198,25 +213,5 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # then I shouldn't have right to download it
 
 
-    @gen_test(timeout=10)
-    def testShareChangeSharing(self):
 
-        # assume - upload files
-        # upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
-        # headers, producer = yield self._prepare_multipart(self.file_name_upload)
-        # yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
-        pass
 
-        # assume - shared to selected user
-
-        # when geting after share change
-
-        # then it should contains only changed users
-
-        # when share to everyone
-
-        # then it should contains everyone tag
-
-        # when revoke sharing
-
-        # then it should not contains any share permissions
