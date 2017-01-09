@@ -8,6 +8,7 @@ from datetime import datetime
 import pyclamd
 from bson.objectid import ObjectId
 from tornado.ioloop import IOLoop
+
 from api.handlers.base import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
@@ -122,11 +123,7 @@ class AbstractFileHandler(ApiHandler):
                             {fields.USER_ID: ObjectId(self.getUserId())}]
                     }
 
-        file_doc = await self.db[collections.FILES].find_one(pipeline)
-        if not file_doc:
-            return False
-
-        return file_doc
+        return await self.db[collections.FILES].find_one(pipeline)
 
     async def apiStoreFile(self, term_id, course_id, file_name, file_content):
 
@@ -138,7 +135,7 @@ class AbstractFileHandler(ApiHandler):
         try:
             courseedition = await self.api_course_edition(course_id, term_id)
             if not courseedition:
-                raise FilesError("nierozpoznane parametry kursu.")
+                raise FilesError('nierozpoznane parametry kursu.')
         except Exception as ex:
             raise FilesError(ex)
 
@@ -148,7 +145,7 @@ class AbstractFileHandler(ApiHandler):
                         fields.FILE_NAME: file_name}
             exising_file_doc = await self.db[collections.FILES].find_one(pipeline)
             if exising_file_doc:
-                raise FilesError("plik o podanej nazwie już istnieje.")
+                raise FilesError('plik o podanej nazwie już istnieje.')
         except Exception as ex:
             raise FilesError(ex)
 
@@ -195,18 +192,15 @@ class FileHandler(AbstractFileHandler):
             file_doc = await self.apiGetFile(file_id)
 
             # check if in my course_edition
-            try:
-                result = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
-                if not result:
-                    return self.error('Nie jesteś na tej edycji kursu.', code=400)
-            except Exception as ex:
-                raise FilesError('Bład podczas sprawdzanie edycji kursu.')
+            result = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
+            if not result:
+                raise FilesError('Nie jesteś na tej edycji kursu.')
 
             if file_doc:
                 self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
                 self.write(file_doc[fields.FILE_CONTENT])
             else:
-                self.error('Nie znaleziono pliku.', code=404)
+                raise FilesError('Nie znaleziono pliku.')
 
         except Exception as ex:
             await self.exc(ex)
@@ -219,15 +213,14 @@ class FileHandler(AbstractFileHandler):
             file_doc = await self.db[collections.FILES].find_one(pipeline)
 
             if not file_doc:
-                self.error('Nie znaleziono pliku.', code=404)
-                return
+                raise FilesError('Nie znaleziono pliku.')
 
             result = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
                                                              {fields.FILE_STATUS: UploadFileStatus.DELETED.value})
             if result:
                 self.success(file_id)
             else:
-                self.error('Bład podczas usuwania pliku.', code=500)
+                raise FilesError('Bład podczas usuwania pliku.')
         except Exception as ex:
             await self.exc(ex)
 
@@ -242,12 +235,9 @@ class FilesHandler(AbstractFileHandler):
             if course_id and term_id:
 
                 # check if user is on given course_id & term_id
-                try:
-                    result = await self.api_course_edition(course_id, term_id)
-                    if not result:
-                        return self.error('Nie przekazano odpowiednich parametrów.', code=400)
-                except Exception as ex:
-                    raise FilesError('Błędne parametry wywołania.')
+                result = await self.api_course_edition(course_id, term_id)
+                if not result:
+                    raise FilesError('Nie przekazano odpowiednich parametrów.')
 
                 files_doc = await self.apiGetFiles(term_id, course_id)
             else:
@@ -269,17 +259,15 @@ class FilesUploadHandler(AbstractFileHandler):
             files = self.request.files
 
             if not term_id or not course_id or not files:  # or 'files' not in files
-                return self.error('Nie przekazano odpowiednich parametrów #1.', code=400)
+                raise FilesError('Nie przekazano odpowiednich parametrów #1.')
 
             files_doc = list()
             for key, file in files.items():
                 if isinstance(file, list):
                     file = file[0]  # ['files']
-                try:
-                    file_id = await self.apiStoreFile(term_id, course_id, file['filename'], file['body'], )
-                except Exception as ex:
-                    self.error("Błąd podczas zapisu pliku: {0}".format(ex), code=409)
-                    return
+
+                file_id = await self.apiStoreFile(term_id, course_id, file['filename'], file['body'], )
+
                 files_doc.append({fields.FILE_ID: file_id,
                                   fields.FILE_NAME: file['filename'],
                                   fields.FILE_SHARED_TO: list()})
@@ -290,85 +278,67 @@ class FilesUploadHandler(AbstractFileHandler):
 
 
 class FilesShareHandler(AbstractFileHandler):
-
     async def apiShareFile(self, file_id, share_to_user_info_ids):
 
-        # get file
-        try:
-            file_doc = await self.apiGetFile(file_id)
-        except Exception as ex:
-            raise FilesError("Nie znalezio pliku.")
+        file_doc = await self.apiGetFile(file_id)
 
         # check if it is my file
         if not file_doc or file_doc[fields.USER_ID] != self.getUserId():
-            raise FilesError("Nie znalezio pliku.")
+            raise FilesError('Nie znalezio pliku.')
 
-        # get courseediton
-        try:
-            courseedition = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
-            if not courseedition:
-                raise FilesError("Nierozpoznane parametry kursu.")
-        except Exception as ex:
-            raise FilesError(ex)
+        courseedition = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
+        if not courseedition:
+            raise FilesError('Błędne parametry kursu.')
 
         # check if given share_to are in this courseedition
         if not share_to_user_info_ids or share_to_user_info_ids is not '*':
-            try:
-                if share_to_user_info_ids is not None:
-                    participant_ids = list()
-                    for participant in courseedition[fields.PARTICIPANTS]:
-                        participant_ids.append(participant[fields.USER_ID])
-            except Exception as ex:
-                raise FilesError(ex)
-                return
+            if share_to_user_info_ids is not None:
+                participant_ids = list()
+                for participant in courseedition[fields.PARTICIPANTS]:
+                    participant_ids.append(participant[fields.USER_ID])
 
             if not set(share_to_user_info_ids) <= set(participant_ids):
-                raise FilesError("Nierozpoznani użytkownicy.")
+                raise FilesError('Nie udało się rozpoznać użytkowników.')
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
-                                                         {'$set': {fields.FILE_SHARED_TO: share_to_user_info_ids}})
+                                                                  {'$set': {
+                                                                      fields.FILE_SHARED_TO: share_to_user_info_ids}})
         if file_update_doc:
             return dict({file_id: share_to_user_info_ids})
         else:
-            raise FilesError("Błąd podczas udostępniania pliku.")
+            raise FilesError('Błąd podczas udostępniania pliku.')
 
     @decorators.authenticated
     async def post(self):
 
-        files = dict()
         try:
+
+            files = dict()
             args = self.request.arguments
             for key in args:
                 try:
                     file_id = ObjectId(key)
                 except Exception:
-                    raise FilesError("Zły identyfikator pliku.")
+                    raise FilesError('Błędny identyfikator pliku.')
+                
                 share_list = args[key]
                 if str(share_list[0]) == '':
                     share_to = None
-                elif str(share_list[0].decode("utf-8")) == '*':
+                elif str(share_list[0].decode('utf-8')) == '*':
                     share_to = '*'
                 else:
-                    share_to = share_list[0].decode("utf-8").replace(" ", "").split(',')
+                    share_to = share_list[0].decode('utf-8').replace(' ', '').split(',')
                     # remove empty strings
                     share_to = [x for x in share_to if x != '']
                 files[file_id] = share_to
-        except Exception as ex:
-            self.error(ex)
-            return
 
-        files_doc = list()
-
-        try:
+            files_doc = list()
 
             for key in files.keys():
                 shared_file_id = await self.apiShareFile(key, files[key])
-                if shared_file_id:
-                    files_doc.append({fields.FILE_ID: str(key), fields.FILE_SHARED_TO: files[key]})
-                else:
-                    raise Exception("Bład podczas Błąd podczas udostępniania pliku. ")
+                files_doc.append({fields.FILE_ID: str(key), fields.FILE_SHARED_TO: files[key]})
             self.success(files_doc)
+
         except Exception as ex:
-            self.error(ex)
-            return
+            await self.exc(ex)
