@@ -563,6 +563,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return self.filterNone(faculties)
 
     async def api_unit(self, unit_id, finish=False):
+
         pipeline = {fields.UNIT_ID: int(unit_id), fields.USOS_ID: self.getUsosId()}
         if self.do_refresh():
             await self.db_remove(collections.COURSES_UNITS, pipeline)

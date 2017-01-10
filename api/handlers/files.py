@@ -200,7 +200,7 @@ class FileHandler(AbstractFileHandler):
             # check if in my course_edition
             result = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
             if not result:
-                raise FilesError('Nie jesteś na tej edycji kursu.')
+                return self.error('Nie jesteś na tej edycji kursu.')
 
             self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
             self.write(file_doc[fields.FILE_CONTENT])
@@ -215,14 +215,14 @@ class FileHandler(AbstractFileHandler):
             file_doc = await self.db[collections.FILES].find_one(pipeline)
 
             if not file_doc:
-                raise FilesError('Nie znaleziono pliku.')
+                return self.error('Nie znaleziono pliku.')
 
             result = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
                                                              {fields.FILE_STATUS: UploadFileStatus.DELETED.value})
             if result:
                 self.success(file_id)
             else:
-                raise FilesError('Bład podczas usuwania pliku.')
+                return self.error('Bład podczas usuwania pliku.')
         except Exception as ex:
             await self.exc(ex)
 
@@ -239,7 +239,7 @@ class FilesHandler(AbstractFileHandler):
                 # check if user is on given course_id & term_id
                 result = await self.api_course_edition(course_id, term_id)
                 if not result:
-                    raise FilesError('Nie przekazano odpowiednich parametrów.')
+                    return self.error('Nie przekazano odpowiednich parametrów.')
 
                 files_doc = await self.apiGetFiles(term_id, course_id)
             else:
@@ -261,7 +261,7 @@ class FilesUploadHandler(AbstractFileHandler):
             files = self.request.files
 
             if not term_id or not course_id or not files:  # or 'files' not in files
-                raise FilesError('Nie przekazano odpowiednich parametrów #1.')
+                return self.error('Nie przekazano odpowiednich parametrów #1.')
 
             files_doc = list()
             for key, file in files.items():
@@ -286,11 +286,11 @@ class FilesShareHandler(AbstractFileHandler):
 
         # check if it is my file
         if file_doc[fields.USER_ID] != self.getUserId():
-            raise FilesError('Nie znalezio pliku.')
+            return self.error('Nie znalezio pliku.')
 
         courseedition = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
         if not courseedition:
-            raise FilesError('Błędne parametry kursu.')
+            return self.error('Błędne parametry kursu.')
 
         # check if given share_to are in this courseedition
         if not share_to_user_info_ids or share_to_user_info_ids is not '*':
@@ -300,7 +300,7 @@ class FilesShareHandler(AbstractFileHandler):
                     participant_ids.append(participant[fields.USER_ID])
 
             if not set(share_to_user_info_ids) <= set(participant_ids):
-                raise FilesError('Nie udało się rozpoznać użytkowników.')
+                return self.error('Nie udało się rozpoznać użytkowników.')
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
@@ -309,7 +309,7 @@ class FilesShareHandler(AbstractFileHandler):
         if file_update_doc:
             return dict({file_id: share_to_user_info_ids})
         else:
-            raise FilesError('Błąd podczas udostępniania pliku.')
+            return self.error('Błąd podczas udostępniania pliku.')
 
     @decorators.authenticated
     async def post(self):
@@ -323,10 +323,13 @@ class FilesShareHandler(AbstractFileHandler):
 
         try:
 
-            share_doc = escape.json_decode(self.request.body)
+            try:
+                share_doc = escape.json_decode(self.request.body)
+            except Exception as ex:
+                return self.error('Błędne parametry wywołania.')
 
             if 'file_id' not in share_doc or 'share_with' not in share_doc:
-                raise FilesError('Błędne parametry wywołania.')
+                return self.error('Błędne parametry wywołania.')
 
             files = dict()
 
@@ -344,7 +347,7 @@ class FilesShareHandler(AbstractFileHandler):
 
             files_doc = list()
             for key in files.keys():
-                shared_file_id = await self.apiShareFile(key, files[key])
+                await self.apiShareFile(key, files[key])
                 files_doc.append({fields.FILE_ID: str(key), fields.FILE_SHARED_WITH: files[key]})
             self.success(files_doc)
 
