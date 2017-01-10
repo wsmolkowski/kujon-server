@@ -11,7 +11,7 @@ from tornado.httpclient import HTTPError
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes
 from commons.enumerators import JobStatus, JobType
-from commons.errors import ApiError, AuthenticationError, CallerError
+from commons.errors import ApiError, AuthenticationError, CallerError, FilesError
 from commons.errors import DaoError
 
 
@@ -60,8 +60,8 @@ class DaoMixin(object):
             await self.db_insert(collections.EXCEPTIONS, exc_doc, update=False)
 
         if finish:
-            if isinstance(exception, ApiError):
-                self.error(message=str(exception))
+            if isinstance(exception, ApiError) or isinstance(exception, FilesError):
+                self.error(message=str(exception), code=500)
             elif isinstance(exception, AuthenticationError):
                 self.error(message=str(exception), code=401)
             elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
