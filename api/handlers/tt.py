@@ -52,7 +52,7 @@ class TTUserApi(ApiHandler):
                 fifth_week_days = last_day_of_month.day - 28
 
         except Exception:
-            raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+            return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
             await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})
@@ -154,7 +154,7 @@ class TTLecturerApi(ApiHandler):
                 fifth_week_days = last_day_of_month.day - 28
 
         except Exception as ex:
-            raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+            return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
             await self.db_remove(collections.TT_LECTURERS, {fields.USER_ID: self.getUserId()})
@@ -210,8 +210,8 @@ class TTLecturerApi(ApiHandler):
 
                     await self.db_insert(collections.TT_LECTURERS, tt_doc)
 
-            except Exception as ex:
-                raise ApiError("Bład podczas pobierania planu dla wykładowcy.")
+            except Exception:
+                return self.error("Bład podczas pobierania planu dla wykładowcy.")
 
         return tt_doc['tts']
 
@@ -263,7 +263,7 @@ class TTApi(ApiHandler):
                 given_date = date(int(given_date[0:4]), int(given_date[5:7]), int(given_date[8:10]))
             monday = given_date - timedelta(days=(given_date.weekday()) % 7)
         except Exception:
-            raise ApiError("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+            return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
             await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})

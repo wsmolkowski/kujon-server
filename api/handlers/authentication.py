@@ -375,18 +375,17 @@ class EmailRegisterHandler(AbstractEmailHandler):
                     or fields.USER_PASSWORD not in json_data \
                     or fields.USER_DEVICE_TYPE not in json_data \
                     or fields.USER_DEVICE_ID not in json_data:
-                raise AuthenticationError('Nie przekazano odpowiednich parametrów.')
+                return self.error('Nie przekazano odpowiednich parametrów.')
 
             if 'password2' in json_data and json_data[fields.USER_PASSWORD] != json_data['password2']:
-                raise AuthenticationError('Podane hasła nie zgadzają się.')
+                return self.error('Podane hasła nie zgadzają się.')
 
             if len(json_data[fields.USER_PASSWORD]) < 8:
-                raise AuthenticationError('Podane hasło jest zbyt krótkie.')
+                return self.error('Podane hasło jest zbyt krótkie, musi mieć min. 8 znaków.')
 
             user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
             if user_doc:
-                raise AuthenticationError(
-                    'Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
+                return self.error('Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
 
             user_doc = dict()
             user_doc[fields.USER_TYPE] = UserTypes.EMAIL.value
@@ -426,10 +425,10 @@ class EmailLoginHandler(AbstractEmailHandler):
             if not user_doc or user_doc[fields.USER_TYPE] != UserTypes.EMAIL.value or \
                             json_data[fields.USER_PASSWORD] != self.aes.decrypt(
                         user_doc[fields.USER_PASSWORD]).decode():
-                raise AuthenticationError('Podano błędne dane.')
+                return self.error('Podano błędne dane do logowania.')
 
             if not user_doc[fields.USER_EMAIL_CONFIRMED]:
-                raise AuthenticationError(
+                return self.error(
                     'Adres email nie został jeszcze potwierdzony, kliknij na link który Ci wysłaliśmy mailem.')
 
             token = {
