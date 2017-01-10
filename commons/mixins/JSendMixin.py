@@ -25,7 +25,7 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class JSendMixin(object):
-    def success(self, data, cache_age=None):
+    def success(self, data, cache_age=None, code=200):
         if not cache_age:
             self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         else:
@@ -33,7 +33,7 @@ class JSendMixin(object):
                 self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
             else:
                 self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json({'status': 'success', 'data': data})
+        self.__write_json({'status': 'success', 'data': data, 'code': code})
 
     def fail(self, message, code=501):
         if message:
