@@ -2,6 +2,7 @@
 
 # https://github.com/tornadoweb/tornado/blob/master/demos/file_upload/file_uploader.py
 
+import json
 import logging
 import mimetypes
 from functools import partial
@@ -66,8 +67,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         })
         return headers, producer
 
-
-
     @gen_test(timeout=10)
     def testUserFileEmptyList(self):
 
@@ -89,7 +88,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # then
         self.assertEquals('Nie znaleziono pliku.', result['message'])
 
-
     @gen_test(timeout=10)
     def testGetFilesInvalidCourseEdition(self):
 
@@ -102,7 +100,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # then
         self.assertEquals('Nie przekazano odpowiednich parametrów.', result['message'])
 
-
     @gen_test(timeout=10)
     def testUploadFailure(self):
 
@@ -114,7 +111,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # then
         self.assertEquals('Nie przekazano odpowiednich parametrów #1.', result['message'])
-
 
     @gen_test(timeout=30)
     def testUploadAndGetFilesApi(self):
@@ -137,7 +133,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.assertEquals(1, len(files_doc['data']))
 
         # check if it is not shared
-        self.assertIsNone(files_doc['data'][0][fields.FILE_SHARED_TO])
+        self.assertIsNone(files_doc['data'][0][fields.FILE_SHARED_WITH])
         pass
 
     @gen_test(timeout=15)
@@ -154,7 +150,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
         headers2, producer2 = yield self._prepare_multipart(self.file_name_upload)
 
         # then should no be able to do it
-        result = yield self.assertFail(self.get_url(upload_uri), method='POST', headers=headers2, body_producer=producer2)
+        result = yield self.assertFail(self.get_url(upload_uri), method='POST', headers=headers2,
+                                       body_producer=producer2)
         pass
 
     @gen_test(timeout=15)
@@ -167,8 +164,13 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # when share to all users
         file_doc = result['data'][0]
-        share_uri = '/filesshare?{0}=*'.format(file_doc[fields.FILE_ID])
-        yield self.assertOK(self.get_url(share_uri), method='POST')
+        share_uri = '/filesshare'
+        yield self.assertOK(self.get_url(share_uri),
+                            method='POST',
+                            body=json.dumps({
+                                'file_id': file_doc[fields.FILE_ID],
+                                'share_with': '*'
+                            }))
 
         # then it should be shared for all users
         download_uri = '/files/{0}'.format(file_doc[fields.FILE_ID])
@@ -176,15 +178,20 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # when revoke sharing
         file_doc = result['data'][0]
-        share_uri = '/filesshare?{0}='.format(file_doc[fields.FILE_ID])
-        yield self.assertOK(self.get_url(share_uri), method='POST')
+        share_uri = '/filesshare'
+        yield self.assertOK(self.get_url(share_uri),
+                            method='POST',
+                            body=json.dumps({
+                                'file_id': file_doc[fields.FILE_ID],
+                                'share_with': '*'
+                            }))
 
         # then sharing should be revoked
         download_uri = '/files'
         result = yield self.assertOK(self.get_url(download_uri), method='GET')
-        self.assertEquals(len(result['data'][0][fields.FILE_SHARED_TO]), 0)
+        self.assertEquals(len(result['data'][0][fields.FILE_SHARED_WITH]), 0)
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=20)
     def testShareFileToSelectedUsers(self):
 
         # assume that file is uploaded
@@ -194,11 +201,15 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # when share to selected users
         file_doc = result['data'][0]
-        share_uri = '/filesshare?{0}={1}'.format(file_doc[fields.FILE_ID], USER_DOC[fields.USOS_USER_ID])
-        result = yield self.assertOK(self.get_url(share_uri), method='POST')
+        result = yield self.assertOK(self.get_url('/filesshare'),
+                                     method='POST',
+                                     body=json.dumps({
+                                         'file_id': file_doc[fields.FILE_ID],
+                                         'share_with': USER_DOC[fields.USOS_USER_ID] + ';'
+                                     }))
 
         # than it should be only shared for selected users
-        self.assertEquals(result['data'][0][fields.FILE_SHARED_TO][0], USER_DOC[fields.USOS_USER_ID])
+        self.assertEquals(result['data'][0][fields.FILE_SHARED_WITH][0], USER_DOC[fields.USOS_USER_ID])
 
     @gen_test(timeout=10)
     def testSharedDownloadFileNotForMe(self):
@@ -206,12 +217,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # assume - upload a file
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
-        yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        response = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
 
-        # whet updating in mongo that it is not my file and not shared for me
+        # when updating in mongo that it is not my file and not shared for me
 
         # then I shouldn't have right to download it
-
-
-
-

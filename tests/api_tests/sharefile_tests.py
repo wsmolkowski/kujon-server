@@ -1,18 +1,17 @@
 # coding=utf-8
 
-import mimetypes
 from functools import partial
 from uuid import uuid4
 
+from pymongo import MongoClient
 from tornado import gen, escape
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
 
-from pymongo import MongoClient
-from commons.enumerators import UploadFileStatus
 from commons.config import Config
 from commons.constants import config, fields, collections
+from commons.enumerators import UploadFileStatus
 from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC, TOKEN_DOC
 
@@ -139,7 +138,7 @@ class ApiShareFileTest(AbstractApplicationTestBase):
         file_doc[fields.FILE_STATUS] = UploadFileStatus.STORED.value
         file_doc[fields.FILE_NAME] = "samplename"
         file_doc[fields.FILE_USER_USOS] = {"user_usos_id": "123", "first name": "Ewa", "last_name": "Datoń-Pawłowicz"}
-        file_doc[fields.FILE_SHARED_TO] = list('414')
+        file_doc[fields.FILE_SHARED_WITH] = list('414')
 
         # TODO: nie wiem dlaczego defaultowo przy testowach odpala development
         config = Config("tests")
