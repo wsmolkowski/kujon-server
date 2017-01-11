@@ -102,7 +102,10 @@ class EmailMixin(object):
             msg.attach(MIMEText(text, 'plain'))
             msg.attach(MIMEText(html, 'html'))
 
-            smtp.sendmail(to_addrs, to_addrs, msg.as_string())
+            if not isinstance(to_addrs, list):
+                to_addrs = [to_addrs, ]
+
+            smtp.sendmail(from_addr, to_addrs, msg.as_string())
 
             msg_doc = await self.db[collections.MESSAGES].insert({
                 fields.USER_ID: self.getUserId(return_object_id=True),
@@ -126,7 +129,7 @@ class EmailMixin(object):
         return await self.__send_email(
             subject=subject,
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=[self.config.SMTP_EMAIL],
+            to_addrs=self.config.SMTP_EMAIL,
             text=self.__email_contact(message, email, user_id),
             html=self.__email_contact(message, email, user_id, html=True)
         )
@@ -135,7 +138,7 @@ class EmailMixin(object):
         return await self.__send_email(
             subject='Usunęliśmy Twoje konto',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=recipient if type(recipient) is list else [recipient],
+            to_addrs=recipient,
             text=self.__email_archive(),
             html=self.__email_archive(html=True),
         )
@@ -149,7 +152,7 @@ class EmailMixin(object):
         return await self.__send_email(
             subject='Rejestracja w Kujon.mobi',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=recipient if type(recipient) is list else [recipient],
+            to_addrs=recipient,
             text=self.__email_register_info(),
             html=self.__email_register_info(html=True),
         )
@@ -162,7 +165,7 @@ class EmailMixin(object):
         return await self.__send_email(
             subject='Dokończ rejestrację konta',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=email if type(email) is list else [email],
+            to_addrs=email,
             text=self.__email_register(confirmation_url),
             html=self.__email_register(confirmation_url, html=True),
         )

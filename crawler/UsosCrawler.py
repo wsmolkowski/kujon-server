@@ -166,7 +166,6 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                 skip_collections = [collections.USERS, collections.JOBS_QUEUE,
                                     collections.JOBS_LOG, collections.MESSAGES,
                                     collections.SEARCH, collections.TOKENS,
-                                    collections.EMAIL_QUEUE, collections.EMAIL_QUEUE_LOG,
                                     collections.EXCEPTIONS, collections.SUBSCRIPTIONS,
                                     collections.REMOTE_IP_HISTORY]
 
