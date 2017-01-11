@@ -154,7 +154,7 @@ class TTLecturerApi(ApiHandler):
                 fifth_week_days = last_day_of_month.day - 28
 
         except Exception as ex:
-            return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
+            raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
             await self.db_remove(collections.TT_LECTURERS, {fields.USER_ID: self.getUserId()})
@@ -177,7 +177,7 @@ class TTLecturerApi(ApiHandler):
                             'fields': 'start_time|end_time|name|type|course_id|course_name|building_name|room_number|group_number',
                             'start': week,
                             'days': 7,
-                            'user_id': lecturer_id
+                            'user_id': int(lecturer_id)
                         })
 
                     if not tt_response:
@@ -203,15 +203,15 @@ class TTLecturerApi(ApiHandler):
 
                 if tt_doc['tts']:
                     for tt_data in tt_doc['tts']:
-                        if tt_data['type'] == 'classgroup':
+                        if tt_data['type'] == 'classgroup' or tt_data['type'] == 'classgroup2':
                             tt_data['type'] = 'zajęcia'
                         elif tt_data['type'] == 'exam':
                             tt_data['type'] = 'egzamin'
 
                     await self.db_insert(collections.TT_LECTURERS, tt_doc)
 
-            except Exception:
-                return self.error("Bład podczas pobierania planu dla wykładowcy.")
+            except Exception as ex:
+                raise ApiError("Bład podczas pobierania planu dla wykładowcy.")
 
         return tt_doc['tts']
 
@@ -224,9 +224,12 @@ class TTLecturerApi(ApiHandler):
                 self.error("Niepoprawne parametry wywołania.")
                 return
             tt_doc = await self.api_tt_lecturers(lecturer_id, given_date)
-            self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
+            if tt_doc:
+                return self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
+            else:
+                return self.success(list())
         except Exception as ex:
-            self.error(message=ex, code=500)
+            await self.exc(ex)
 
 
 class TTApi(ApiHandler):
