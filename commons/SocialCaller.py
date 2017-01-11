@@ -3,6 +3,7 @@
 from tornado import escape
 
 from commons import utils
+from commons.errors import AuthenticationError
 
 
 class SocialCaller(object):
@@ -25,7 +26,7 @@ class SocialCaller(object):
                 raise Exception('Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
-            return self.error('Błąd werifikacji tokenu Google+ {0}'.format(ex))
+            raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex))
         else:
             return result
 
@@ -41,6 +42,6 @@ class SocialCaller(object):
                 raise Exception('Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
-            return self.error('Błąd werifikacji tokenu Facebook {0}'.format(ex))
+            raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex))
         else:
             return result
