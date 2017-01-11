@@ -85,7 +85,7 @@ class EmailMixin(object):
             'Nowa wiadomość od użytkownik: email: {0} mongo_id: {1} \nwiadomość:\n{2}\n'.format(email, user_id,
                                                                                                 contact_msg))
 
-    async def __send_email(self, from_addr, to_addrs, smtp_to, text, html):
+    async def __send_email(self, subject, from_addr, to_addrs, smtp_to, text, html):
         try:
             logging.debug('__send_email from_addr:{0} to_addrs:{1}'.format(from_addr, to_addrs))
 
@@ -95,7 +95,7 @@ class EmailMixin(object):
 
             msg = MIMEMultipart('alternative')
 
-            msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, from_addr)
+            msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, subject)
             msg['From'] = to_addrs
             msg['To'] = ','.join(smtp_to)
 
