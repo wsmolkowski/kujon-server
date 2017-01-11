@@ -164,8 +164,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # when share to all users
         file_doc = result['data'][0]
-        share_uri = '/filesshare'
-        yield self.assertOK(self.get_url(share_uri),
+        yield self.assertOK(self.get_url('/filesshare'),
                             method='POST',
                             body=json.dumps({
                                 'file_id': file_doc[fields.FILE_ID],
@@ -213,6 +212,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
     @gen_test(timeout=10)
     def testSharedDownloadFileNotForMe(self):
+        # assume
+
 
         # assume - upload a file
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)

@@ -27,7 +27,7 @@ class ArchiveHandler(ApiHandler):
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            await self.email_archive_user(user_doc[fields.USER_EMAIL])
+            IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')
         except Exception as ex:
@@ -342,11 +342,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
-                    await self.email_registration(user_doc)
+                    IOLoop.current().spawn_callback(self.email_registration, user_doc)
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.debug('Finish register WWW OK')
-                    await self.email_registration(user_doc)
+                    IOLoop.current().spawn_callback(self.email_registration, user_doc)
                     self.redirect(self.config.DEPLOY_WEB)
             else:
                 self.redirect(self.config.DEPLOY_WEB)
@@ -402,7 +402,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             user_id = await self.db_insert_user(user_doc)
             self.reset_user_cookie(user_id)
 
-            await self.email_confirmation(json_data[fields.USER_EMAIL], user_id)
+            IOLoop.current().spawn_callback(self.email_confirmation, json_data[fields.USER_EMAIL], user_id)
 
             logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
                 user_id, json_data[fields.USER_EMAIL]))
