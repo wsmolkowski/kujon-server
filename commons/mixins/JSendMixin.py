@@ -35,7 +35,7 @@ class JSendMixin(object):
                 self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'success', 'data': data, 'code': code})
 
-    def fail(self, message, data=dict(), code=501):
+    def fail(self, message, data=None, code=501):
         if message:
             message = str(message)
 
@@ -43,14 +43,14 @@ class JSendMixin(object):
         self.__write_json({'status': 'fail', 'message': message, 'data': data, 'code': code})
 
     def usos(self):
-        result = {'status': 'usos',
-                  'message': 'Przerwa w dostępie do USOS. Spróbuj ponownie za jakiś czas :)',
-                  'code': 504
-                  }
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json(result)
+        self.__write_json({'status': 'usos',
+                           'message': 'Przerwa w dostępie do USOS. Spróbuj ponownie za jakiś czas :)',
+                           'code': 504,
+                           'data': None
+                           })
 
-    def error(self, message, data=dict(), code=500):
+    def error(self, message, data=None, code=500):
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.__write_json({'status': 'error', 'message': message, 'data': data, 'code': code})
