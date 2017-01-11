@@ -87,6 +87,8 @@ class EmailMixin(object):
 
     async def __send_email(self, from_addr, to_addrs, smtp_to, text, html):
         try:
+            logging.debug('__send_email from_addr:{0} to_addrs:{1}'.format(from_addr, to_addrs))
+
             smtp = smtplib.SMTP()
             smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
             smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
@@ -102,8 +104,6 @@ class EmailMixin(object):
 
             smtp.sendmail(to_addrs, smtp_to, msg.as_string())
 
-            logging.debug('email sent to {0}'.format(smtp_to))
-
             msg_doc = await self.db[collections.MESSAGES].insert({
                 fields.USER_ID: self.getUserId(return_object_id=True),
                 fields.CREATED_TIME: datetime.now(),
@@ -112,7 +112,8 @@ class EmailMixin(object):
                 fields.JOB_MESSAGE: text
             })
 
-            logging.debug(msg_doc)
+            logging.debug('__send_email from_addr:{0} to_addrs:{1} resulted in: {2}'.format(
+                from_addr, to_addrs, msg_doc))
 
             smtp.quit()
 
