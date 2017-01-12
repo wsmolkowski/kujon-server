@@ -13,7 +13,7 @@ from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.constants import config as config_constants
 from commons.handlers import DefaultErrorHandler
-from event.handlers import EventHandler
+from event.handlers.event import EventHandler
 
 define('environment', default='development')
 
@@ -22,7 +22,7 @@ def get_application(config):
     class Application(tornado.web.Application):
         def __init__(self):
             __handlers = [
-                (r"/([^/]+)", EventHandler),
+                (r"/([^/]+)/([^/]+)", EventHandler),
             ]
 
             __settings = dict(

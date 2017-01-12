@@ -22,7 +22,6 @@ class JobType(Abstract):
     UPDATE_USER_CRAWL = 'update_user_crawl'
     SUBSCRIBE_USOS = 'subscribe_usos'
     UNSUBSCRIBE_USOS = 'unsubscribe_usos'
-    SUBSCRIPTION_EVENT = 'subscription_event'
 
 
 class Environment(Abstract):
