@@ -14,7 +14,7 @@ class EventHandler(EventAbstractHandler):
     @web.asynchronous
     async def get(self, usos_id, user_usos_id):
         try:
-            self._buildContext(usos_id, user_usos_id)
+            await self._buildContext(usos_id, user_usos_id)
 
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
@@ -40,7 +40,7 @@ class EventHandler(EventAbstractHandler):
     @web.asynchronous
     async def post(self, usos_id, user_usos_id):
         try:
-            self._buildContext(usos_id, user_usos_id)
+            await self._buildContext(usos_id, user_usos_id)
 
             body = self.request.body
             if isinstance(body, bytes):
