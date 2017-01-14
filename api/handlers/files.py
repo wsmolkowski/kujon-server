@@ -107,6 +107,12 @@ class AbstractFileHandler(ApiHandler):
 
         files_doc = await cursor.to_list(None)
 
+        # attach uploading person
+        for file_doc in files_doc:
+            user_info = await self.api_user_info(file_doc[fields.USOS_USER_ID])
+            file_doc['first_name'] = user_info['first_name']
+            file_doc['last_name'] = user_info['last_name']
+
         # change file id from _id to fields.FILE_ID
         for file in files_doc:
             file[fields.FILE_ID] = file[fields.MONGO_ID]
@@ -194,6 +200,10 @@ class FileHandler(AbstractFileHandler):
 
     @decorators.authenticated
     async def get(self, file_id):
+        '''
+        :param file_id: file_id do pobrania
+        :return:
+        '''
         try:
             file_doc = await self.apiGetFile(file_id)
 
@@ -203,12 +213,17 @@ class FileHandler(AbstractFileHandler):
                 return self.error('Nie jesteś na tej edycji kursu.')
 
             self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
+            # self.set_header('Content-Disposition', 'attachment; filename={0}'.format(file_doc[fields.FILE_NAME]))
             self.write(file_doc[fields.FILE_CONTENT])
         except Exception as ex:
             await self.exc(ex)
 
     @decorators.authenticated
     async def delete(self, file_id):
+        '''
+        :param file_id: identyfikat pliku do skasowania
+        :return:
+        '''
         try:
             pipeline = {fields.MONGO_ID: ObjectId(file_id), fields.FILE_STATUS: UploadFileStatus.STORED.value,
                         fields.USER_ID: self.getUserId(), fields.USOS_ID: self.getUsosId()}
@@ -230,6 +245,11 @@ class FileHandler(AbstractFileHandler):
 class FilesHandler(AbstractFileHandler):
     @decorators.authenticated
     async def get(self):
+        '''
+        :param: course_id
+                term_idcours
+        :return:
+        '''
         try:
             course_id = self.get_argument(fields.COURSE_ID, default=None)
             term_id = self.get_argument(fields.TERM_ID, default=None)
@@ -254,6 +274,26 @@ class FilesHandler(AbstractFileHandler):
 class FilesUploadHandler(AbstractFileHandler):
     @decorators.authenticated
     async def post(self):
+        '''
+            send params in multipart POST
+
+            'files': [] #lista plików dołaczona multiparem
+            'course_id': 'E-1IZ2-1003-s1', # id kursu na które uploadujacy uczeszcza i chce umiescic plik
+            'term_id': '2013/14-1' # '*' # term_id związane z course_id
+
+        :return:
+        {
+          "code": 200,
+          "data": [    #lista plików
+            {
+              "file_id": "5879b81ef296ff0b4e10a492", #id pliku który wgrywaliśmy
+              "file_name": "dodawanie do kujona.png",
+              "file_shared_with": []        # pusta lista oznacza żę plik nie jest wyszerowany
+            }
+          ],
+          "status": "success"
+        }
+        '''
         try:
 
             course_id = self.get_argument(fields.COURSE_ID, default=None)
@@ -293,6 +333,7 @@ class FilesShareHandler(AbstractFileHandler):
             return self.error('Błędne parametry kursu.')
 
         # check if given share_to are in this courseedition
+        participant_ids = list()
         if not share_to_user_info_ids or share_to_user_info_ids is not '*':
             if share_to_user_info_ids is not None:
                 participant_ids = list()
@@ -314,11 +355,23 @@ class FilesShareHandler(AbstractFileHandler):
     @decorators.authenticated
     async def post(self):
         '''
+        :body
+            json file
             {
-                'file_id': '123',
-                'share_with': '*'
-            } 
-        :return:
+                'file_id': '123', # file_id które się dostaje podczas uploadu
+                'share_with': '*' # '*' # '*' oznacza wszystkich użytkowników null nikgo (plik nie wyszerowany) a lista użytkowników do sharpowania [123,1233,48444] gdzie poszczególne numery to id_usera.
+            }
+        :return: json file
+        {
+          "code": 200,
+          "data": [
+            {
+              "file_id": "123",
+              "file_shared_with": "*"
+            }
+          ],
+          "status": "success"
+        }
         '''
 
         try:
