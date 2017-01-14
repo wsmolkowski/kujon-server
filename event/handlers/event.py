@@ -13,9 +13,10 @@ from event.handlers.abstract import EventAbstractHandler
 
 class EventHandler(EventAbstractHandler):
     @web.asynchronous
-    async def get(self, usos_id):
+    async def get(self, user_id):
         try:
-            self._context.usos_doc = await self.db_get_usos(usos_id)
+            user_id = self.aes.decrypt(user_id.encode()).decode()
+            self._buildContext(user_id)
 
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)

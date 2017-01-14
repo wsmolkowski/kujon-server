@@ -341,7 +341,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
 
         await self._unsubscribe_usos()
 
-        callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT, self.getUsosId(), self.getUserId())
+        callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getEncryptedUserId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
