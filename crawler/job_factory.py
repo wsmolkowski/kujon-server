@@ -25,10 +25,6 @@ def refresh_user_job(user_id):
     return user_job(user_id, JobType.REFRESH_USER_CRAWL.value)
 
 
-def update_user_job(user_id):
-    return user_job(user_id, JobType.UPDATE_USER_CRAWL.value)
-
-
 def subscribe_user_job(user_id):
     return user_job(user_id, JobType.SUBSCRIBE_USOS.value)
 
