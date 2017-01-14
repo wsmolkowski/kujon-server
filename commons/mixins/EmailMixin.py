@@ -108,7 +108,7 @@ class EmailMixin(object):
             smtp.sendmail(from_addr, to_addrs, msg.as_string())
 
             msg_doc = await self.db[collections.MESSAGES].insert({
-                fields.USER_ID: self.getUserId(return_object_id=True),
+                fields.USER_ID: self.getUserId(),
                 fields.CREATED_TIME: datetime.now(),
                 fields.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
                 fields.FIELD_MESSAGE_TYPE: 'email',
@@ -125,7 +125,7 @@ class EmailMixin(object):
             logging.exception(ex)
 
     async def email_contact(self, subject, message, email):
-        user_id = self.getUserId(return_object_id=True)
+        user_id = self.getUserId()
         return await self.__send_email(
             subject=subject,
             from_addr=self.config.SMTP_EMAIL,

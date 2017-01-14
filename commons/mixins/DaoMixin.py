@@ -128,11 +128,12 @@ class DaoMixin(object):
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
         return doc
 
-    async def db_remove(self, collection, pipeline):
+    async def db_remove(self, collection, pipeline, force=False):
         pipeline_remove = pipeline.copy()
 
-        pipeline_remove[fields.CREATED_TIME] = {
-            '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
+        if not force:
+            pipeline_remove[fields.CREATED_TIME] = {
+                '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
 
         result = await self.db[collection].remove(pipeline_remove)
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))

@@ -12,13 +12,13 @@ from commons import decorators
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
+from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
-from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
-    async def remove_user_data(self, skip_collections=None, user_id=None):
+    async def _removeUserData(self, skip_collections=None, user_id=None):
         if not user_id:
             user_id = self.getUserId()
 
@@ -51,7 +51,9 @@ class ArchiveHandler(ApiHandler):
 
             await self.db_insert(collections.USERS_ARCHIVE, user_doc)
 
-            await self.db_remove(collections.USERS, {fields.MONGO_ID: self.getUserId(return_object_id=True)})
+            await self.db_remove(collections.USERS,
+                                 {fields.MONGO_ID: user_doc[fields.USER_ID]},
+                                 force=True)
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
@@ -60,7 +62,7 @@ class ArchiveHandler(ApiHandler):
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
-            IOLoop.current().spawn_callback(self.remove_user_data, [collections.USERS_ARCHIVE, ], self.getUserId())
+            IOLoop.current().spawn_callback(self._removeUserData, [collections.USERS_ARCHIVE, ], self.getUserId())
             IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')
@@ -73,7 +75,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
     def on_finish(self):
         IOLoop.current().spawn_callback(self.db_insert, collections.REMOTE_IP_HISTORY, {
-            fields.USER_ID: self.getUserId(return_object_id=True),
+            fields.USER_ID: self.getUserId(),
             fields.CREATED_TIME: datetime.now(),
             'host': self.request.host,
             'method': self.request.method,
@@ -305,12 +307,56 @@ class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
                 await self.exc(ex)
 
 
-class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    async def _create_jobs(self, user_doc):
-        await self.db_insert(collections.JOBS_QUEUE,
-                             job_factory.subscribe_user_job(user_doc[fields.MONGO_ID]))
-        await self.db_insert(collections.JOBS_QUEUE,
-                             job_factory.initial_user_job(user_doc[fields.MONGO_ID]))
+class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin, ApiHandler):
+    async def __process_crstests(self):
+        crstests_doc = await self.api_crstests()
+
+        grade_points = []
+        for crstest in crstests_doc['tests']:
+            grade_points.append(self.api_crstests_grades(crstest['node_id']))
+            grade_points.append(self.api_crstests_points(crstest['node_id']))
+
+        await gen.multi(grade_points)
+
+    async def _user_crawl(self):
+        try:
+            user_doc = await self.api_user_usos_info()
+            await self.api_thesis(user_info=user_doc)
+            await self.api_terms()
+            await self.api_programmes(user_info=user_doc)
+            await self.api_faculties(user_info=user_doc)
+            await self.__process_crstests()
+
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+
+    async def _unsubscribe_usos(self):
+        try:
+            await self.usosCall(path='services/events/unsubscribe')
+            await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+        except Exception as ex:
+            logging.warning(ex)
+
+    async def _subscribe_usos(self):
+
+        await self._unsubscribe_usos()
+
+        callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT, self.getUsosId(), self.getUserId())
+
+        for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
+            try:
+                subscribe_doc = await self.usosCall(path='services/events/subscribe_event',
+                                                    arguments={
+                                                        'event_type': event_type,
+                                                        'callback_url': callback_url,
+                                                        'verify_token': self.getEncryptedUserId()
+                                                    })
+                subscribe_doc['event_type'] = event_type
+                subscribe_doc[fields.USER_ID] = self.getUserId()
+
+                await self.db_insert(collections.SUBSCRIPTIONS, subscribe_doc)
+            except Exception as ex:
+                await self.exc(ex, finish=False)
 
     async def get(self):
         oauth_token_key = self.get_argument('oauth_token', default=None)
@@ -367,7 +413,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
-                await self._create_jobs(user_doc)
+                await self._buildContext()
+                IOLoop.current().spawn_callback(self._subscribe_usos, )
+                IOLoop.current().spawn_callback(self._user_crawl, )
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 

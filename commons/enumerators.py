@@ -16,7 +16,6 @@ class JobStatus(Abstract):
 
 
 class JobType(Abstract):
-    INITIAL_USER_CRAWL = 'initial_user_crawl'
     REFRESH_USER_CRAWL = 'refresh_user_crawl'
     SUBSCRIBE_USOS = 'subscribe_usos'
 

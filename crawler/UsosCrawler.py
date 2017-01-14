@@ -2,10 +2,8 @@
 
 import logging
 from datetime import datetime
-from datetime import timedelta, date
 
 from bson.objectid import ObjectId
-from tornado import gen
 
 from commons.AESCipher import AESCipher
 from commons.OneSignal import OneSignal
@@ -74,90 +72,6 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
     async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
         return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
 
-    async def __process_courses_editions(self):
-        courses_editions = await self.api_courses_editions()
-        if not courses_editions:
-            logging.error('Empty response from: api_courses_editions() Not processing.')
-            return
-
-        # users_ids = list()
-        courses_terms = list()
-        # course_units_ids = list()
-
-        for term, courses in list(courses_editions[fields.COURSE_EDITIONS].items()):
-            for course in courses:
-
-                try:
-                    courses_terms.append(self.api_course_term(course[fields.COURSE_ID],
-                                                              course[fields.TERM_ID],
-                                                              extra_fetch=False))
-                except Exception as ex:
-                    logging.exception(ex)
-                    continue
-
-                    # for lecturer in course[fields.LECTURERS]:
-                    #     if fields.USER_ID in lecturer and lecturer[fields.USER_ID] not in users_ids:
-                    #         users_ids.append(lecturer[fields.USER_ID])
-                    #     if fields.ID in lecturer and lecturer[fields.ID] not in users_ids:
-                    #         users_ids.append(lecturer[fields.ID])
-                    # for participant in course[fields.PARTICIPANTS]:
-                    #     if fields.USER_ID in participant and participant[fields.USER_ID] not in users_ids:
-                    #         users_ids.append(participant[fields.USER_ID])
-                    #     if fields.ID in participant and participant[fields.ID] not in users_ids:
-                    #         users_ids.append(participant[fields.ID])
-                    # for coordinator in course[fields.COORDINATORS]:
-                    #     if fields.USER_ID in coordinator and coordinator[fields.USER_ID] not in users_ids:
-                    #         users_ids.append(coordinator[fields.USER_ID])
-                    #     if fields.ID in coordinator and coordinator[fields.ID] not in users_ids:
-                    #         users_ids.append(coordinator[fields.ID])
-                    #
-                    # for course_unit in course['course_units_ids']:
-                    #     if course_unit not in course_units_ids:
-                    #         course_units_ids.append(course_unit)
-
-        try:
-            await gen.multi(courses_terms)
-        except Exception as ex:
-            await self.exc(ex, finish=False)
-
-            # api_user_infos = list()
-            # for user_id in users_ids:
-            #     api_user_infos.append(self.api_user_info(user_id))
-            #
-            # try:
-            #     await api_user_infos
-            # except Exception as ex:
-            #     await self.exc(ex, finish=False)
-            #
-            # units_groups = list()
-            # for unit in course_units_ids:
-            #     units_groups.append(self.api_unit(unit))
-            #     units_groups.append(self.api_group(unit))
-            #
-            # try:
-            #     await units_groups
-            # except Exception as ex:
-            #     await self.exc(ex, finish=False)
-
-    async def __process_crstests(self):
-        crstests_doc = await self.api_crstests()
-
-        grade_points = []
-        for crstest in crstests_doc['tests']:
-            grade_points.append(self.api_crstests_grades(crstest['node_id']))
-            grade_points.append(self.api_crstests_points(crstest['node_id']))
-
-        await gen.multi(grade_points)
-
-    @staticmethod
-    def __get_next_monday(monday):
-        return monday + timedelta(days=7)
-
-    @staticmethod
-    def __get_monday():
-        today = date.today()
-        return today - timedelta(days=(today.weekday()) % 7)
-
     async def initial_user_crawl(self, user_id, refresh=False):
         try:
             await self._buildContext(user_id)
@@ -176,11 +90,9 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
             await self._buildContext(user_id)
 
             await self.api_thesis(user_info=user_doc)
-            await self.__process_courses_editions()
             await self.api_terms()
             await self.api_programmes(user_info=user_doc)
             await self.api_faculties(user_info=user_doc)
-            await self.__process_crstests()
 
         except Exception as ex:
             await self.exc(ex, finish=False)
@@ -217,7 +129,6 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
                 await self.db_insert(collections.SUBSCRIPTIONS, subscribe_doc)
             except Exception as ex:
                 await self.exc(ex, finish=False)
-
 
     async def notifier_status(self):
         # unused

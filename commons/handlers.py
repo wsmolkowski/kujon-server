@@ -1,6 +1,5 @@
 # coding=UTF-8
 
-from bson import ObjectId
 from tornado import web
 from tornado.ioloop import IOLoop
 
@@ -44,8 +43,7 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
     async def _prepare_user(self):
         return
 
-    async def prepare(self):
-
+    async def _buildContext(self):
         self._context = Context(self.config, remote_ip=self.get_remote_ip(),
                                 io_loop=IOLoop.current())
 
@@ -66,6 +64,9 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         self._context.settings = await self.db_settings(self.getUserId())
         self._context.setUp()
 
+    async def prepare(self):
+        await self._buildContext()
+
     def get_current_user(self):
         if hasattr(self, '_context'):
             return self._context.user_doc
@@ -74,11 +75,10 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         if hasattr(self, '_context') and self._context.usos_doc:
             return self._context.usos_doc[fields.USOS_ID]
 
-    def getUserId(self, return_object_id=True):
-        if self.get_current_user():
-            if return_object_id:
-                return ObjectId(self.get_current_user()[fields.MONGO_ID])
-            return self.get_current_user()[fields.MONGO_ID]
+    def getUserId(self):
+        user_doc = self.get_current_user()
+        if user_doc:
+            return user_doc[fields.MONGO_ID]
 
     def reset_user_cookie(self, user_id):
         self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
@@ -99,6 +99,9 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
 
     async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
         return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
+
+    def getEncryptedUserId(self):
+        return self.aes.encrypt(str(self.getUserId())).decode()
 
 
 class DefaultErrorHandler(AbstractHandler):

@@ -74,9 +74,7 @@ class MongoDbQueue(object):
                 job[fields.MONGO_ID], job[fields.JOB_TYPE], self.queue.qsize()))
             yield self.update_job(job, JobStatus.START.value)
 
-            if job[fields.JOB_TYPE] == JobType.INITIAL_USER_CRAWL.value:
-                yield UsosCrawler(self.config).initial_user_crawl(job[fields.USER_ID])
-            elif job[fields.JOB_TYPE] == JobType.REFRESH_USER_CRAWL.value:
+            if job[fields.JOB_TYPE] == JobType.REFRESH_USER_CRAWL.value:
                 yield UsosCrawler(self.config).initial_user_crawl(job[fields.USER_ID], refresh=True)
             elif job[fields.JOB_TYPE] == JobType.SUBSCRIBE_USOS.value:
                 yield UsosCrawler(self.config).subscribe(job[fields.USER_ID])
