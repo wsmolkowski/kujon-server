@@ -37,7 +37,7 @@ class EventAbstractHandler(AbstractHandler):
 
         user_doc = await self.db_get_user(user_id)
         if not user_doc:
-            raise EventError('Nierozpoznay parametr użytkownika.')
+            raise EventError('Nierozpoznany parametr użytkownika.')
 
         usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
         self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc)
