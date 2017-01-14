@@ -32,6 +32,3 @@ def update_user_job(user_id):
 def subscribe_user_job(user_id):
     return user_job(user_id, JobType.SUBSCRIBE_USOS.value)
 
-
-def unsubscribe_user_job(user_id):
-    return user_job(user_id, JobType.UNSUBSCRIBE_USOS.value)

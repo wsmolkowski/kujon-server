@@ -80,8 +80,6 @@ class MongoDbQueue(object):
                 yield UsosCrawler(self.config).initial_user_crawl(job[fields.USER_ID], refresh=True)
             elif job[fields.JOB_TYPE] == JobType.SUBSCRIBE_USOS.value:
                 yield UsosCrawler(self.config).subscribe(job[fields.USER_ID])
-            elif job[fields.JOB_TYPE] == JobType.UNSUBSCRIBE_USOS.value:
-                yield UsosCrawler(self.config).unsubscribe(job[fields.USER_ID])
             else:
                 raise Exception("could not process job with unknown job type: {0}".format(job[fields.JOB_TYPE]))
             yield self.update_job(job, JobStatus.FINISH.value)

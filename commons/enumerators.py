@@ -20,7 +20,6 @@ class JobType(Abstract):
     REFRESH_USER_CRAWL = 'refresh_user_crawl'
     UPDATE_USER_CRAWL = 'update_user_crawl'
     SUBSCRIBE_USOS = 'subscribe_usos'
-    UNSUBSCRIBE_USOS = 'unsubscribe_usos'
 
 
 class Environment(Abstract):
