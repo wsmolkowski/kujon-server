@@ -320,13 +320,12 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
 
     async def _user_crawl(self):
         try:
-            user_doc = await self.api_user_usos_info()
+            user_doc = self.get_current_user()
             await self.api_thesis(user_info=user_doc)
             await self.api_terms()
             await self.api_programmes(user_info=user_doc)
             await self.api_faculties(user_info=user_doc)
             await self.__process_crstests()
-
         except Exception as ex:
             await self.exc(ex, finish=False)
 
@@ -340,8 +339,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
     async def _subscribe_usos(self):
 
         await self._unsubscribe_usos()
-
-        callback_url = '{0}/{1}'.format(self.config.DEPLOY_EVENT, self.getEncryptedUserId())
+        callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT, self.getUsosId(), self.getUsosUserId())
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
@@ -414,6 +412,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
                 self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
                 await self._buildContext()
+
+                # gather user data from USOS and update context with usos_user_id needed for subscription
+                await self.api_user_usos_info()
+                await self._buildContext()
+
                 IOLoop.current().spawn_callback(self._subscribe_usos, )
                 IOLoop.current().spawn_callback(self._user_crawl, )
 
@@ -485,9 +488,6 @@ class EmailRegisterHandler(AbstractEmailHandler):
             self.reset_user_cookie(user_id)
 
             IOLoop.current().spawn_callback(self.email_confirmation, json_data[fields.USER_EMAIL], user_id)
-
-            logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
-                user_id, json_data[fields.USER_EMAIL]))
 
             self.success(
                 'Aby aktywować konto należy kliknąć w link który został Ci wysłany mailem.'.format(

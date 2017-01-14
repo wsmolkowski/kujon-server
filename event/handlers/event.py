@@ -6,17 +6,15 @@ import logging
 from tornado import web
 from tornado.ioloop import IOLoop
 
-from commons.constants import fields, config
-from commons.errors import AuthenticationError
+from commons.constants import collections, fields, config
 from event.handlers.abstract import EventAbstractHandler
 
 
 class EventHandler(EventAbstractHandler):
     @web.asynchronous
-    async def get(self, user_id):
+    async def get(self, usos_id, user_usos_id):
         try:
-            user_id = self.aes.decrypt(user_id.encode()).decode()
-            self._buildContext(user_id)
+            self._buildContext(usos_id, user_usos_id)
 
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
@@ -39,17 +37,10 @@ class EventHandler(EventAbstractHandler):
         except Exception as ex:
             await self.exc(ex)
 
-
     @web.asynchronous
-    async def post(self, usos_id, user_id):
+    async def post(self, usos_id, user_usos_id):
         try:
-
-            self._context.usos_doc = await self.db_get_usos(usos_id)
-
-            if not self.getUsosId():
-                raise AuthenticationError('Nieznany USOS {0}'.format(usos_id))
-
-            self._buildContext(user_id)
+            self._buildContext(usos_id, user_usos_id)
 
             body = self.request.body
             if isinstance(body, bytes):
@@ -57,7 +48,9 @@ class EventHandler(EventAbstractHandler):
 
             event_data = json.loads(body)
             event_data[fields.USOS_ID] = self.getUsosId()
+            event_data[fields.USER_ID] = self.getUserId()
 
+            IOLoop.current().spawn_callback(self.db_insert, collections.EVENTS_USOS, event_data)
             IOLoop.current().spawn_callback(self.process_event, event_data)
 
             self.success(data='event consumed')

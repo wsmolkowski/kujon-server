@@ -103,6 +103,11 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
     def getEncryptedUserId(self):
         return self.aes.encrypt(str(self.getUserId())).decode()
 
+    def getUsosUserId(self):
+        user_doc = self.get_current_user()
+        if user_doc:
+            return user_doc[fields.USOS_USER_ID]
+
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous

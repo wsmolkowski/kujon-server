@@ -31,15 +31,14 @@ class EventAbstractHandler(AbstractHandler):
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
         # X-Hub-Signature validation
 
-    async def _buildContext(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
+    async def _buildContext(self, usos_id, user_usos_id):
 
-        user_doc = await self.db_get_user(user_id)
+        user_doc = await self.db[collections.USERS].find_one({fields.USOS_ID: usos_id,
+                                                              fields.USOS_USER_ID: user_usos_id})
         if not user_doc:
-            raise EventError('Nierozpoznany parametr użytkownika.')
+            raise EventError('Nierozpoznany użytkownik na podstawie USOS oraz numer.')
 
-        usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
+        usos_doc = await self.db_get_usos(usos_id)
         self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc)
         self._context.settings = await self.db_settings(self.getUserId())
 

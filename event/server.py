@@ -22,7 +22,7 @@ def get_application(config):
     class Application(tornado.web.Application):
         def __init__(self):
             __handlers = [
-                (r"/([^/]+)", EventHandler),
+                (r"/([^/]+)/([^/]+)", EventHandler),
             ]
 
             __settings = dict(
