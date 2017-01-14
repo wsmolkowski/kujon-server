@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import ObjectId
-from tornado import auth, escape
+from tornado import auth, escape, gen
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
@@ -18,15 +18,49 @@ from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
+    async def remove_user_data(self, skip_collections=None, user_id=None):
+        if not user_id:
+            user_id = self.getUserId()
+
+        if not skip_collections:
+            skip_collections = list()
+
+        try:
+            collections = await self.db.collection_names(include_system_collections=False)
+            remove_tasks = list()
+            for collection in collections:
+
+                if collection in skip_collections:
+                    continue
+
+                exists = await self.db[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
+                if exists:
+                    remove_tasks.append(self.db[collection].remove({fields.USER_ID: user_id}))
+
+            result = await gen.multi(remove_tasks)
+            logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
+        except Exception as ex:
+            logging.exception(ex)
+
     @decorators.authenticated
     async def post(self):
         try:
             user_doc = self.get_current_user()
 
-            await self.db_archive_user(user_doc[fields.MONGO_ID])
+            user_doc[fields.USER_ID] = user_doc.pop(fields.MONGO_ID)
+
+            await self.db_insert(collections.USERS_ARCHIVE, user_doc)
+
+            await self.db_remove(collections.USERS, {fields.MONGO_ID: self.getUserId(return_object_id=True)})
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
+            try:
+                await self.usosCall(path='services/events/unsubscribe')
+            except Exception as ex:
+                await self.exc(ex, finish=False)
+
+            IOLoop.current().spawn_callback(self.remove_user_data, [collections.USERS_ARCHIVE, ], self.getUserId())
             IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')

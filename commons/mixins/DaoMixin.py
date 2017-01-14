@@ -10,7 +10,6 @@ from tornado.httpclient import HTTPError
 
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes
-from commons.enumerators import JobStatus, JobType
 from commons.errors import ApiError, AuthenticationError, CallerError, FilesError
 from commons.errors import DaoError
 
@@ -217,27 +216,6 @@ class DaoMixin(object):
         return await self.db[collections.USERS_ARCHIVE].find_one(
             {fields.USER_ID: user_id, fields.USOS_PAIRED: True})
 
-    async def db_archive_user(self, user_id):
-        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
-
-        if not user_doc:
-            logging.warning('cannot archive user which does not exists {0}'.format(user_id))
-            return
-
-        user_doc[fields.USER_ID] = user_doc.pop(fields.MONGO_ID)
-
-        await self.db_insert(collections.USERS_ARCHIVE, user_doc)
-
-        await self.db_remove(collections.USERS, {fields.MONGO_ID: user_id})
-        if user_doc[fields.USOS_PAIRED]:
-            await self.db_insert(collections.JOBS_QUEUE,
-                                 {fields.USER_ID: user_id,
-                                  fields.CREATED_TIME: datetime.now(),
-                                  fields.UPDATE_TIME: None,
-                                  fields.JOB_MESSAGE: None,
-                                  fields.JOB_STATUS: JobStatus.PENDING.value,
-                                  fields.JOB_TYPE: JobType.ARCHIVE_USER.value})
-
     async def db_find_user(self):
         return await self.db[collections.USERS].find_one({fields.MONGO_ID: self.getUserId()})
 
@@ -337,7 +315,8 @@ class DaoMixin(object):
             return user_doc[fields.USOS_USER_ID]
         return
 
-    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False, notification_result=False):
+    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False,
+                              notification_result=False):
         if not message_type:
             message_type = 'email'
 

@@ -78,8 +78,6 @@ class MongoDbQueue(object):
                 yield UsosCrawler(self.config).initial_user_crawl(job[fields.USER_ID])
             elif job[fields.JOB_TYPE] == JobType.REFRESH_USER_CRAWL.value:
                 yield UsosCrawler(self.config).initial_user_crawl(job[fields.USER_ID], refresh=True)
-            elif job[fields.JOB_TYPE] == JobType.ARCHIVE_USER.value:
-                yield UsosCrawler(self.config).archive_user(job[fields.USER_ID])
             elif job[fields.JOB_TYPE] == JobType.SUBSCRIBE_USOS.value:
                 yield UsosCrawler(self.config).subscribe(job[fields.USER_ID])
             elif job[fields.JOB_TYPE] == JobType.UNSUBSCRIBE_USOS.value:

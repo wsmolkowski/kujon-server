@@ -218,33 +218,6 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
             except Exception as ex:
                 await self.exc(ex, finish=False)
 
-    async def archive_user(self, user_id):
-        await self._buildContext(user_id)
-
-        await self.unsubscribe()
-
-        await self.remove_user_data([collections.USERS_ARCHIVE, ])
-
-    async def remove_user_data(self, skip_collections=None):
-        if not skip_collections:
-            skip_collections = list()
-
-        try:
-            collections = await self.db.collection_names(include_system_collections=False)
-            remove_tasks = list()
-            for collection in collections:
-
-                if collection in skip_collections:
-                    continue
-
-                exists = await self.db[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
-                if exists:
-                    remove_tasks.append(self.db[collection].remove({fields.USER_ID: self.getUserId()}))
-
-            result = await gen.multi(remove_tasks)
-            logging.info('removed user data for user_id: {0} resulted in: {1}'.format(self.getUserId(), result))
-        except Exception as ex:
-            logging.exception(ex)
 
     async def notifier_status(self):
         # unused
