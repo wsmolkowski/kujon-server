@@ -17,7 +17,6 @@ class EventAbstractHandler(AbstractHandler):
     EXCEPTION_TYPE = ExceptionTypes.EVENT.value
 
     async def prepare(self):
-        await super(EventAbstractHandler, self).prepare()
 
         verify_token = self.get_argument('hub.verify_token', default=None)
         if verify_token:
