@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import json
 import logging
 import sys
 
@@ -46,9 +47,7 @@ async def main():
     cursor = db[collections.USERS].find({fields.USOS_PAIRED: True})
     async for user_doc in cursor:
         processed += 1
-        logging.info('#' * 50)
-        logging.info('processing {0} out of {1}'.format(processed, total))
-        logging.info('#' * 50)
+        logging.info('{0} processing {1} out of {2}'.format('#' * 50, processed, total))
 
         try:
             logging.info('re subscribe start for user: {0}'.format(user_doc[fields.MONGO_ID]))
@@ -62,7 +61,8 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
-                if current_subscriptions:
+                if current_subscriptions and isinstance(list, current_subscriptions):
+                    current_subscriptions = json.dumps(current_subscriptions)
                     current_subscriptions = escape.json_decode(current_subscriptions)
 
                 logging.info(
@@ -98,7 +98,7 @@ async def main():
                                                                   })
                     logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
 
-                    await gen.sleep(1)
+                    await gen.sleep(2)
 
                 except HTTPError as ex:
                     logging.error('subscribe user: {0} event_type {1} result error: {2}'.format(
