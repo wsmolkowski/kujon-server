@@ -12,7 +12,7 @@ class ApiUserTest(AbstractApplicationTestBase):
         self.prepareDatabase(self.config)
         self.insert_user(config=self.config)
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=20)
     def testUsers(self):
         yield self.assertOK(self.get_url('/users'))
 
@@ -24,13 +24,13 @@ class ApiUserTest(AbstractApplicationTestBase):
     def testUsersWithFakeId(self):
         yield self.assertFail(self.get_url('/users/Fake'))
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=20)
     def testUsersInfoPhotosById(self):
         user_doc = yield self.assertOK(self.get_url('/users'))
         # get photo_id from PHOTO_URL field
         photo_id = user_doc['data'][fields.PHOTO_URL].split('/', 4)[4]
         yield self.assertOK(self.get_url('/users_info_photos/{0}'.format(photo_id)), contentType='image/jpeg')
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=20)
     def testUsersInfoAll(self):
         yield self.assertOK(self.get_url('/usersinfoall'))
