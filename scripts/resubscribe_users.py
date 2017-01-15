@@ -58,6 +58,8 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
+                logging.info(
+                    'current subscriptions user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
             except Exception as ex:
                 logging.exception(ex)
                 current_subscriptions = list()
@@ -72,6 +74,9 @@ async def main():
                         'unsubscribe user: {0} result error: {1}'.format(user_doc[fields.MONGO_ID], buildMessage(ex)))
                 except Exception as ex:
                     logging.exception(ex)
+            else:
+                logging.warning(
+                    'skiping unsubscribe user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
 
             callback_url = '{0}/{1}/{2}'.format(config.DEPLOY_EVENT, user_doc[fields.USOS_ID],
                                                 user_doc[fields.USOS_USER_ID])
