@@ -145,7 +145,7 @@ class BaseTestClass(AsyncHTTPTestCase):
         if contentType == 'application/json':
             json_body = escape.json_decode(response.body)
             self.assertIsNotNone(json_body)
-            self.assertEqual('error', json_body['status'])
+            self.assertTrue(json_body['status'] in ('usos', 'error',))
             self.assertNotEqual(200, json_body['code'])
             return json_body
         else:
