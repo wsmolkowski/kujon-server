@@ -114,7 +114,7 @@ class EventAbstractHandler(AbstractHandler):
             elif event_type == constants.EVENT_TYPE_USER_GRADE:
 
                 user_grade = await self.usosCall(path='services/crstests/user_grade', arguments={'node_id': node_id})
-                logging.debug('{0} user_grade: {1}'.format(constants.EVENT_TYPE_USER_GRADE, user_grade))
+                logging.info('{0} user_grade: {1}'.format(constants.EVENT_TYPE_USER_GRADE, user_grade))
 
                 if not user_grade:
                     raise EventError(

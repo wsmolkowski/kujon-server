@@ -562,28 +562,36 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         return self.filterNone(faculties)
 
-    async def api_unit(self, unit_id, finish=False):
+    async def api_unit(self, unit_ids, finish=False):
 
-        pipeline = {fields.UNIT_ID: int(unit_id), fields.USOS_ID: self.getUsosId()}
+        pipeline = {fields.UNIT_ID: {"$in": list(map(int, unit_ids))}, fields.USOS_ID: self.getUsosId()}
         if self.do_refresh():
             await self.db_remove(collections.COURSES_UNITS, pipeline)
 
-        unit_doc = await self.db[collections.COURSES_UNITS].find_one(pipeline)
+        units_doc = await self.db[collections.COURSES_UNITS].find_one(pipeline)
 
-        if not unit_doc:
+        if not units_doc:
+            pipe_separated_untit_ids = '|'.join(unit_ids)
             try:
-                unit_doc = await self.asyncCall(
-                    path='services/courses/unit',
+                units_doc = await self.asyncCall(
+                    path='services/courses/units',
                     arguments={
-                        'fields': 'id|course_id|term_id|groups|classtype_id',
-                        'unit_id': unit_id,
+                        'fields': 'id|course_id|term_id|classtype_id',
+                        'unit_ids': pipe_separated_untit_ids,
                     })
-
-                unit_doc[fields.UNIT_ID] = unit_doc.pop(fields.ID)
-                unit_doc = await self.db_insert(collections.COURSES_UNITS, unit_doc)
+                if units_doc:
+                    for unit_doc in units_doc:
+                        units_doc[unit_doc][fields.UNIT_ID] = units_doc[unit_doc].pop(fields.ID)
+                        # remove unnecessary fields because method fields doesn't work - submited to usos team
+                        no_needed_fiels = ["course_name", "topics", "learning_outcomes", "teaching_methods", "assessment_criteria", "profile_url", "homepage_url", "bibliography"]
+                        for field in no_needed_fiels:
+                            if field in units_doc[unit_doc]:
+                                units_doc[unit_doc].pop(field)
+                        unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc], update=False)
             except Exception as ex:
-                await self.exc(ex, finish=finish)
-        return unit_doc
+                logging.warning("Błąd podczas pobierania unitu: {0} dla usos: {1}: {2}".format(unit_ids, self.getUsosId(), ex))
+                return None
+        return units_doc
 
     async def api_units(self, units_id, finish=False):
         pipeline = {fields.UNIT_ID: {"$in": list(map(int, units_id))},
@@ -604,10 +612,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
         # fetch missing units
         if len(missing_units) > 0:
             try:
-                tasks_units = list()
-                for unit_id in missing_units:
-                    tasks_units.append(self.api_unit(unit_id))
-                await gen.multi(tasks_units)
+                await self.api_unit(missing_units)
                 cursor.rewind()
                 units_doc = await cursor.to_list(None)
             except Exception as ex:
@@ -640,7 +645,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     'class_type_id'])  # changing class_type_id to name
                 group_doc.pop('class_type_id')
 
-                await self.db_insert(collections.GROUPS, group_doc)
+                await self.db_insert(collections.GROUPS, group_doc, update=False)
             except Exception as ex:
                 await self.exc(ex, finish=finish)
 
