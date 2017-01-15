@@ -37,7 +37,7 @@ class BaseHandler(AbstractHandler):
         header_token = self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False)
 
         if header_email and header_token:
-            user_doc = await self.db_find_user_email(header_email)
+            user_doc = await self.findUserByEmail(header_email)
 
             if not user_doc or fields.USER_TYPE not in user_doc:
                 return
