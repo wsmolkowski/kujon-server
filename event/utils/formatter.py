@@ -3,7 +3,7 @@
 from commons.constants import fields
 
 
-def format_user_point(self, user_point, event_operation):
+def format_user_point(user_point, event_operation):
     notification = "[OPERATION] punty: [POINTS] ze sprawdzianu ([COURSE_NAME])"
     message_title = "Powiadomienie - [OPERATION] punkty: [POINTS] ze sprawdzianu ([COURSE_NAME])"
     message_body = 'Kujon przesyła powiadomienie - [OPERATION] punkty ze sprawdzianu:\n' \
@@ -46,7 +46,7 @@ def format_user_point(self, user_point, event_operation):
     return notification, message_title, message_body
 
 
-def format_user_grade(self, user_grade, event_operation):
+def format_user_grade(user_grade, event_operation):
     notification = "[OPERATION] ocenę: [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
     message_title = "Powiadomienie - [OPERATION] ocenę: [GRADE] ze sprawdzianu ([COURSE_NAME]) - [PASSED]"
     message_body = 'Kujon przesyła powiadomienie - [OPERATION] ocenę ze sprawdzianu:\n' \
