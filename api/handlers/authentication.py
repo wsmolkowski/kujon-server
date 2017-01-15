@@ -84,6 +84,18 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
             'remote_ip': self._context.remote_ip
         })
 
+    async def db_cookie_user_id(self, user_id):
+        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
+
+        if fields.GOOGLE in user_doc:
+            user_doc[fields.PICTURE] = user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE]
+            del (user_doc[fields.GOOGLE])
+
+        if fields.FACEBOOK in user_doc:
+            user_doc[fields.PICTURE] = user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE]
+            del (user_doc[fields.FACEBOOK])
+
+        return user_doc
 
 class LogoutHandler(AuthenticationHandler):
     async def remove_token(self):
@@ -112,7 +124,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 code=self.get_argument('code'),
                 extra_fields={'email', 'id'})
 
-            user_doc = await self.db_find_user_email(access['email'])
+            user_doc = await self.findUserByEmail(access['email'])
 
             if not user_doc:
                 user_doc = dict()
@@ -175,7 +187,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
 
-            user_doc = await self.db_find_user_email(user['email'])
+            user_doc = await self.findUserByEmail(user['email'])
             if not user_doc:
                 user_doc = dict()
                 user_doc[fields.USER_TYPE] = UserTypes.GOOGLE.value
@@ -252,7 +264,7 @@ class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
             self.oauth_set_up(usos_doc)
 
             if email:
-                user_doc = await self.db_find_user_email(email)
+                user_doc = await self.findUserByEmail(email)
                 if not user_doc:
                     user_doc = dict()
                     new_user = True
@@ -468,7 +480,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             if len(json_data[fields.USER_PASSWORD]) < 8:
                 raise AuthenticationError('Podane hasło jest zbyt krótkie, musi mieć min. 8 znaków.')
 
-            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
+            user_doc = await self.findUserByEmail(json_data[fields.USER_EMAIL])
             if user_doc:
                 raise AuthenticationError('Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
 
@@ -502,7 +514,7 @@ class EmailLoginHandler(AbstractEmailHandler):
         try:
             json_data = escape.json_decode(self.request.body)
 
-            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
+            user_doc = await self.findUserByEmail(json_data[fields.USER_EMAIL])
 
             if not user_doc or user_doc[fields.USER_TYPE] != UserTypes.EMAIL.value or \
                             json_data[fields.USER_PASSWORD] != self.aes.decrypt(

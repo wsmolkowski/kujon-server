@@ -4,7 +4,7 @@ from tornado import web
 from tornado.ioloop import IOLoop
 
 from commons import utils
-from commons.constants import config, fields
+from commons.constants import config, fields, collections
 from commons.context import Context
 from commons.mixins.DaoMixin import DaoMixin
 from commons.mixins.EmailMixin import EmailMixin
@@ -108,6 +108,11 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
         if user_doc:
             return user_doc[fields.USOS_USER_ID]
 
+    async def findUserByEmail(self, email):
+        if not isinstance(email, str):
+            email = str(email)
+
+        return await self.db[collections.USERS].find_one({fields.USER_EMAIL: email.lower()})
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous

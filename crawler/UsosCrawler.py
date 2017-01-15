@@ -31,7 +31,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
 
-        user_doc = await self.db_get_user(user_id)
+        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
         if not user_doc:
             user_doc = await self.db_get_archive_user(user_id)
 
