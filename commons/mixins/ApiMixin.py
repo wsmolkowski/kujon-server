@@ -119,24 +119,15 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         if not course_doc:
             try:
-                course_doc = await self.usos_course(course_id)
-                if not course_doc:
-                    return
+                await self.usos_course(course_id)
                 await self.db_insert(collections.COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
                 course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
-            except Exception as ex:
-                if log_exception:
-                    await self.exc(ex, finish=False)
-                return
 
         course_doc[fields.TERM_ID] = term_id
 
         course_edition = await self.api_course_edition(course_id, term_id, courses_editions)
-
-        if not course_edition:
-            return
 
         try:
             participants = list()
@@ -191,7 +182,6 @@ class ApiMixin(ApiUserMixin, MathMixin):
         return course_doc
 
     async def usos_course(self, course_id):
-        course_doc = None
         try:
             course_doc = await self.usosCall(
                 path='services/courses/course',
@@ -202,9 +192,9 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
             course_doc[fields.COURSE_NAME] = course_doc.pop('name')
             course_doc[fields.COURSE_ID] = course_id
+            return course_doc
         except Exception as ex:
-            logging.error("Błąd podczas pobierania informacji o kursie {0} : {1}".format(course_id, ex))
-        return course_doc
+            raise ApiError("Błąd podczas pobierania informacji o kursie {0} : {1}".format(course_id, ex))
 
     async def api_course(self, course_id):
 

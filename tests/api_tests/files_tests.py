@@ -86,7 +86,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         result = yield self.assertFail(self.get_url(delete_uri), method='DELETE')
 
         # then
-        self.assertEquals('Nie znaleziono pliku.', result['message'])
+        self.assertEquals('Błedny identyfikator pliku.', result['message'])
 
     @gen_test(timeout=10)
     def testGetFilesInvalidCourseEdition(self):
@@ -110,7 +110,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         result = yield self.assertFail(upload_uri, method='POST', body=self.file_sample)
 
         # then
-        self.assertEquals('Nie przekazano odpowiednich parametrów #1.', result['message'])
+        self.assertEquals('Nie przekazano odpowiednich parametrów.', result['message'])
 
     @gen_test(timeout=30)
     def testUploadAndGetFilesApi(self):
@@ -133,7 +133,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
         self.assertEquals(1, len(files_doc['data']))
 
         # check if it is not shared
-        self.assertIsNone(files_doc['data'][0][fields.FILE_SHARED_WITH])
+        self.assertEqual(len(files_doc['data'][0][fields.FILE_SHARED_WITH]), 0)
         pass
 
     @gen_test(timeout=15)
@@ -143,8 +143,9 @@ class ApiFilesTest(AbstractApplicationTestBase):
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
         result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
-
         logging.debug("waiting for result: {0}".format(result))
+
+        yield gen.sleep(2)
 
         # when upload second time with same name into same course_id and term_id
         headers2, producer2 = yield self._prepare_multipart(self.file_name_upload)
@@ -152,7 +153,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # then should no be able to do it
         result = yield self.assertFail(self.get_url(upload_uri), method='POST', headers=headers2,
                                        body_producer=producer2)
-        pass
 
     @gen_test(timeout=15)
     def testShareFileToEveryoneAndRevoke(self):
@@ -161,6 +161,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
         result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        yield gen.sleep(2)
 
         # when share to all users
         file_doc = result['data'][0]
@@ -197,6 +199,8 @@ class ApiFilesTest(AbstractApplicationTestBase):
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
         result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+
+        yield gen.sleep(2)
 
         # when share to selected users
         file_doc = result['data'][0]
