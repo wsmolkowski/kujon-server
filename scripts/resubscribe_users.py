@@ -61,7 +61,7 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
-                if current_subscriptions and isinstance(list, current_subscriptions):
+                if current_subscriptions and isinstance(current_subscriptions, list):
                     current_subscriptions = json.dumps(current_subscriptions)
                     current_subscriptions = escape.json_decode(current_subscriptions)
 
