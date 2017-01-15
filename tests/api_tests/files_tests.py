@@ -182,7 +182,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
                             method='POST',
                             body=json.dumps({
                                 'file_id': file_doc[fields.FILE_ID],
-                                'share_with': '*'
+                                'share_with': ''
                             }))
 
         # then sharing should be revoked

@@ -225,7 +225,12 @@ class FileHandler(AbstractFileHandler):
         :return:
         '''
         try:
-            pipeline = {fields.MONGO_ID: ObjectId(file_id), fields.FILE_STATUS: UploadFileStatus.STORED.value,
+            try:
+                file_id = ObjectId(file_id)
+            except Exception as ex:
+                return self.error('Nie znaleziono pliku.')
+
+            pipeline = {fields.MONGO_ID: file_id, fields.FILE_STATUS: UploadFileStatus.STORED.value,
                         fields.USER_ID: self.getUserId(), fields.USOS_ID: self.getUsosId()}
             file_doc = await self.db[collections.FILES].find_one(pipeline)
 
@@ -340,8 +345,10 @@ class FilesShareHandler(AbstractFileHandler):
                 for participant in courseedition[fields.PARTICIPANTS]:
                     participant_ids.append(participant[fields.USER_ID])
 
-            if not set(share_to_user_info_ids) <= set(participant_ids):
-                return self.error('Nie udało się rozpoznać użytkowników.')
+                if not set(share_to_user_info_ids) <= set(participant_ids):
+                    return self.error('Nie udało się rozpoznać użytkowników.')
+            else:
+                share_to_user_info_ids = list() # empty share_to list
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
