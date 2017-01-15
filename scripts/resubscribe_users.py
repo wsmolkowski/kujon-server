@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import json
 import logging
 import sys
 
@@ -62,6 +63,7 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
+                current_subscriptions = json.loads(current_subscriptions)
                 logging.info(
                     'current subscriptions user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
             except Exception as ex:
