@@ -28,9 +28,7 @@ class DaoMixin(object):
             self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
         return self._db[self.config.MONGODB_NAME]
 
-    async def exc(self, exception, finish=True):
-        logging.exception(exception)
-
+    async def _log_db(self, exception):
         exc_doc = {
             'exception': str(exception)
         }
@@ -57,6 +55,13 @@ class DaoMixin(object):
 
         if not isinstance(exception, AuthenticationError):
             await self.db_insert(collections.EXCEPTIONS, exc_doc, update=False)
+
+    async def exc(self, exception, finish=True, log_file=True, log_db=True):
+        if log_file:
+            logging.exception(exception)
+
+        if log_db:
+            await self._log_db(exception)
 
         if finish:
             if isinstance(exception, ApiError) or isinstance(exception, FilesError):
