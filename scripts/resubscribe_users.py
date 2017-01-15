@@ -38,6 +38,7 @@ async def main():
     logging.info(aes)
 
     http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
+    logging.info(http_client)
 
     total = await db[collections.USERS].find({fields.USOS_PAIRED: True}).count()
     processed = 0
