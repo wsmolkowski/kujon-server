@@ -62,14 +62,16 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
-                current_subscriptions = escape.json_decode(current_subscriptions)
+                if current_subscriptions:
+                    current_subscriptions = escape.json_decode(current_subscriptions)
+
                 logging.info(
                     'current subscriptions user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
             except Exception as ex:
                 logging.exception(ex)
                 current_subscriptions = list()
 
-            if not current_subscriptions:
+            if current_subscriptions:
                 try:
                     unsubscribe_doc = await context.usosCaller.call(path='services/events/unsubscribe')
                     logging.info(
