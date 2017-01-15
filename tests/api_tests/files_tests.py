@@ -7,12 +7,17 @@ import logging
 import mimetypes
 from functools import partial
 from uuid import uuid4
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from tornado import gen
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
 
-from commons.constants import fields
+from commons.constants import fields, collections
+from commons.config import Config
+from tornado.options import options
+
 from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC
 
@@ -134,7 +139,11 @@ class ApiFilesTest(AbstractApplicationTestBase):
 
         # check if it is not shared
         self.assertEqual(len(files_doc['data'][0][fields.FILE_SHARED_WITH]), 0)
-        pass
+
+        # check if can download file
+    #     TODO:
+
+
 
     @gen_test(timeout=15)
     def testUploadFailurewithSameFilename(self):
@@ -199,7 +208,6 @@ class ApiFilesTest(AbstractApplicationTestBase):
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
         result = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
-
         yield gen.sleep(2)
 
         # when share to selected users
@@ -214,16 +222,25 @@ class ApiFilesTest(AbstractApplicationTestBase):
         # than it should be only shared for selected users
         self.assertEquals(result['data'][0][fields.FILE_SHARED_WITH][0], USER_DOC[fields.USOS_USER_ID])
 
-    @gen_test(timeout=10)
+    @gen_test(timeout=15)
     def testSharedDownloadFileNotForMe(self):
-        # assume
-
 
         # assume - upload a file
         upload_uri = '/filesupload?term_id={0}&course_id={1}'.format(self.term_id, self.course_id)
         headers, producer = yield self._prepare_multipart(self.file_name_upload)
-        response = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        file_doc = yield self.assertOK(self.get_url(upload_uri), method='POST', headers=headers, body_producer=producer)
+        file_id = file_doc['data'][0][fields.FILE_ID]
+        yield gen.sleep(2)
 
         # when updating in mongo that it is not my file and not shared for me
+        # insert into mongo random user_id
+        config = Config('tests')
+        client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
+        pipline = {'$set': {fields.USER_ID: ObjectId(file_id)}}
+        result = client_db[collections.FILES].update({}, pipline)
 
         # then I shouldn't have right to download it
+        download_uri = '/files/{0}'.format(file_id)
+        yield self.assertFail(self.get_url(download_uri), method='GET')
+
+

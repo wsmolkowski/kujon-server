@@ -127,7 +127,7 @@ class AbstractFileHandler(ApiHandler):
 
         pipeline = {fields.USOS_ID: self.getUsosId(),
                     fields.MONGO_ID: ObjectId(file_id),
-                    # fields.FILE_STATUS: UploadFileStatus.STORED.value,
+                    fields.FILE_STATUS: UploadFileStatus.STORED.value,
                     '$or': [{fields.FILE_SHARED_WITH: user_info[fields.ID]},
                             {fields.FILE_SHARED_WITH: '*'},
                             {fields.USER_ID: ObjectId(self.getUserId())}]
