@@ -137,7 +137,7 @@ class AbstractFileHandler(ApiHandler):
         if file_doc:
             return file_doc
 
-        raise FilesError('Nie znalezio pliku.')
+        raise FilesError('Nie znaleziono pliku.')
 
     async def apiStoreFile(self, term_id, course_id, file_name, file_content):
 
