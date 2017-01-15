@@ -87,7 +87,9 @@ class EmailMixin(object):
 
     async def __send_email(self, subject, from_addr, to_addrs, text, html):
         try:
-            logging.debug('__send_email from_addr:{0} to_addrs:{1}'.format(from_addr, to_addrs))
+            logging.debug('__send_email from_addr: {0} to_addrs: {1}'.format(from_addr, to_addrs))
+
+            to_addrs = to_addrs if type(to_addrs) is list else[to_addrs]
 
             smtp = smtplib.SMTP()
             smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
@@ -96,14 +98,11 @@ class EmailMixin(object):
             msg = MIMEMultipart('alternative')
 
             msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, subject)
-            msg['From'] = to_addrs
+            msg['From'] = from_addr
             msg['To'] = ','.join(to_addrs)
 
             msg.attach(MIMEText(text, 'plain'))
             msg.attach(MIMEText(html, 'html'))
-
-            if not isinstance(to_addrs, list):
-                to_addrs = [to_addrs, ]
 
             smtp.sendmail(from_addr, to_addrs, msg.as_string())
 
@@ -115,7 +114,7 @@ class EmailMixin(object):
                 fields.JOB_MESSAGE: text
             })
 
-            logging.debug('__send_email from_addr:{0} to_addrs:{1} resulted in: {2}'.format(
+            logging.debug('__send_email from_addr: {0} to_addrs: {1} resulted in: {2}'.format(
                 from_addr, to_addrs, msg_doc))
 
             smtp.quit()
