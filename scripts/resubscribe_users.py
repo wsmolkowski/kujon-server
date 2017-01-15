@@ -4,6 +4,7 @@ import logging
 import sys
 
 import motor.motor_tornado
+from tornado import gen
 from tornado.httpclient import HTTPError
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define
@@ -57,6 +58,9 @@ async def main():
                                                                       'verify_token': encrypted_user_id
                                                                   })
                     logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
+
+                    await gen.sleep(2)
+
                 except HTTPError as ex:
                     logging.error('subscribe user: {0} event_type {1} result error: {2}'.format(
                         user_doc[fields.MONGO_ID], event_type, str(ex.response.body)))
