@@ -148,6 +148,8 @@ class BaseTestClass(AsyncHTTPTestCase):
             self.assertTrue(json_body['status'] in ('usos', 'error', 'fail'))
             self.assertNotEqual(200, json_body['code'])
             return json_body
+        if collections == 'text/plain':
+            return response.body
         else:
-            # not json, e.g. image notihing to test
+            # not json, e.g. image nothing to test
             pass
