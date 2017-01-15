@@ -102,10 +102,17 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
             await self._buildContext(user_id)
 
         try:
-            await self.usosCall(path='services/events/unsubscribe')
-            await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+            current_subscriptions = await self.usosCall(path='services/events/subscriptions')
         except Exception as ex:
-            logging.warning(ex)
+            logging.exception(ex)
+            current_subscriptions = None
+
+        if current_subscriptions:
+            try:
+                await self.usosCall(path='services/events/unsubscribe')
+                await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+            except Exception as ex:
+                logging.warning(ex)
 
     async def subscribe(self, user_id):
 
