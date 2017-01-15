@@ -55,6 +55,8 @@ class EventHandler(EventAbstractHandler):
             IOLoop.current().spawn_callback(self.process_event, event_data)
 
             self.success(data='event consumed')
+        except EventError as ex:
+            await self.exc(ex, log_db=False)
         except Exception as ex:
             logging.exception(self.request.body)
             await self.exc(ex)
