@@ -320,11 +320,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
 
     async def _user_crawl(self):
         try:
-            user_doc = self.get_current_user()
-            await self.api_thesis(user_info=user_doc)
+            user_info = await self.api_user_usos_info()
+            await self.api_thesis(user_info=user_info)
             await self.api_terms()
-            await self.api_programmes(user_info=user_doc)
-            await self.api_faculties(user_info=user_doc)
+            await self.api_programmes(user_info=user_info)
+            await self.api_faculties(user_info=user_info)
             await self.__process_crstests()
         except Exception as ex:
             await self.exc(ex, finish=False)
