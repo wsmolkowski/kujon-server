@@ -122,6 +122,19 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinSearch, JSendMixin, ApiUserMixin
 
         return False
 
+    async def _unsubscribe_usos(self):
+        try:
+            current_subscriptions = await self.usosCall(path='services/events/subscriptions')
+        except Exception as ex:
+            logging.exception(ex)
+            current_subscriptions = None
+
+        if current_subscriptions:
+            try:
+                await self.usosCall(path='services/events/unsubscribe')
+                await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+            except Exception as ex:
+                logging.warning(ex)
 
 class UsosesAllApi(BaseHandler, JSendMixin):
     @web.asynchronous

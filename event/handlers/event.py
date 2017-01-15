@@ -7,6 +7,7 @@ from tornado import web
 from tornado.ioloop import IOLoop
 
 from commons.constants import collections, fields, config
+from commons.errors import EventError
 from event.handlers.abstract import EventAbstractHandler
 
 
@@ -21,8 +22,7 @@ class EventHandler(EventAbstractHandler):
             verify_token = self.get_argument('hub.verify_token', default=None)
 
             if not mode or not challenge or not verify_token:
-                logging.error('Required parameters not passed.')
-                self.error(code=400, message='Required parameters not passed.')
+                raise EventError('Required parameters not passed.')
             else:
                 # if not self.get_current_user():
                 #     logging.error('Token verification failure for verify_token (user_id): {0}'.format(verify_token))
@@ -33,7 +33,8 @@ class EventHandler(EventAbstractHandler):
 
                 self.write(challenge)
                 self.finish()
-
+        except EventError as ex:
+            await self.exc(ex, log_db=False)
         except Exception as ex:
             await self.exc(ex)
 
@@ -54,6 +55,8 @@ class EventHandler(EventAbstractHandler):
             IOLoop.current().spawn_callback(self.process_event, event_data)
 
             self.success(data='event consumed')
+        except EventError as ex:
+            await self.exc(ex, log_db=False)
         except Exception as ex:
             logging.exception(self.request.body)
             await self.exc(ex)

@@ -57,11 +57,7 @@ class ArchiveHandler(ApiHandler):
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            try:
-                await self.usosCall(path='services/events/unsubscribe')
-            except Exception as ex:
-                await self.exc(ex, finish=False)
-
+            IOLoop.current().spawn_callback(self._unsubscribe_usos, )
             IOLoop.current().spawn_callback(self._removeUserData, [collections.USERS_ARCHIVE, ], self.getUserId())
             IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
@@ -341,12 +337,6 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
         except Exception as ex:
             await self.exc(ex, finish=False)
 
-    async def _unsubscribe_usos(self):
-        try:
-            await self.usosCall(path='services/events/unsubscribe')
-            await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
-        except Exception as ex:
-            logging.warning(ex)
 
     async def _subscribe_usos(self):
 
