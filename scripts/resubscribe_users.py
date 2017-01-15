@@ -37,6 +37,8 @@ async def main():
     aes = AESCipher(config.AES_SECRET)
     logging.info(aes)
 
+    http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
+
     total = await db[collections.USERS].find({fields.USOS_PAIRED: True}).count()
     processed = 0
 
@@ -51,7 +53,8 @@ async def main():
             logging.info('re subscribe start for user: {0}'.format(user_doc[fields.MONGO_ID]))
             usos_doc = await db[collections.USOSINSTANCES].find_one({fields.USOS_ID: user_doc[fields.USOS_ID]})
 
-            context = Context(config, user_doc=user_doc, usos_doc=usos_doc, io_loop=IOLoop.current())
+            context = Context(config, user_doc=user_doc, usos_doc=usos_doc, io_loop=IOLoop.current(),
+                              http_client=http_client)
             context.setUp()
 
             encrypted_user_id = aes.encrypt(str(user_doc[fields.MONGO_ID])).decode()
