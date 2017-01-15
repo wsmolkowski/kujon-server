@@ -57,5 +57,5 @@ class JSendMixin(object):
 
     def __write_json(self, data):
         self.set_header('Content-Type', 'application/json; charset={0}'.format(config.ENCODING))
-        self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder))
+        self.write(json.dumps(data, sort_keys=True, indent=4, cls=CustomEncoder, ensure_ascii=False))
         self.finish()

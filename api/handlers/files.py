@@ -4,7 +4,7 @@ import logging
 import mimetypes
 import sys
 from datetime import datetime
-
+import urllib.parse
 import pyclamd
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
@@ -212,7 +212,7 @@ class FileHandler(AbstractFileHandler):
                 raise FilesError('Nie znaleziono edycji kursu.')
 
             self.set_header('Content-Type', file_doc[fields.FILE_CONTENT_TYPE])
-            # self.set_header('Content-Disposition', 'attachment; filename={0}'.format(file_doc[fields.FILE_NAME]))
+            self.set_header('Content-Disposition', u'attachment; filename={utf_filename}'.format(utf_filename=urllib.parse.quote(file_doc[fields.FILE_NAME].encode('utf-8'))))
             self.write(file_doc[fields.FILE_CONTENT])
         except FilesError as ex:
             await self.exc(ex, log_db=False, log_file=False)
@@ -317,11 +317,11 @@ class FilesUploadHandler(AbstractFileHandler):
             for key, file in files.items():
                 if isinstance(file, list):
                     file = file[0]  # ['files']
-
-                file_id = await self.apiStoreFile(term_id, course_id, file['filename'], file['body'], )
+                filename = file['filename']
+                file_id = await self.apiStoreFile(term_id, course_id, filename, file['body'])
 
                 files_doc.append({fields.FILE_ID: file_id,
-                                  fields.FILE_NAME: file['filename'],
+                                  fields.FILE_NAME: filename,
                                   fields.FILE_SHARED_WITH: list()})
 
             self.success(files_doc)
