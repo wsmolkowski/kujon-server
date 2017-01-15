@@ -1,11 +1,10 @@
 # coding=utf-8
 
-import json
 import logging
 import sys
 
 import motor.motor_tornado
-from tornado import gen
+from tornado import gen, escape
 from tornado.httpclient import HTTPError
 from tornado.ioloop import IOLoop
 from tornado.options import parse_command_line, define
@@ -63,7 +62,7 @@ async def main():
 
             try:
                 current_subscriptions = await context.usosCaller.call(path='services/events/subscriptions')
-                current_subscriptions = json.loads(current_subscriptions)
+                current_subscriptions = escape.json_decode(current_subscriptions)
                 logging.info(
                     'current subscriptions user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
             except Exception as ex:
