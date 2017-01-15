@@ -11,18 +11,23 @@ class ApiTTTest(AbstractApplicationTestBase):
         self.prepareDatabase(self.config)
         self.insert_user(config=self.config)
 
-    @gen_test(timeout=10)
-    def testTT(self):
-        yield self.assertOK(self.get_url('/tt/2015-05-05'))
+    # new TT endpoint test
 
-    @gen_test(timeout=10)
-    def testTTLecturersFalse(self):
-        yield self.assertOK(self.get_url('/tt/2015-05-05?lecturers_info=False'))
+    @gen_test(timeout=20)
+    def testTTMonth(self):
+        yield self.assertOK(self.get_url('/ttusers/2017-01-20'))
 
-    @gen_test(timeout=10)
-    def testTTDays(self):
-        yield self.assertOK(self.get_url('/tt/2015-05-05?days=1'))
-
-    @gen_test(timeout=10)
+    @gen_test(timeout=20)
     def testTTFake(self):
-        yield self.assertOK(self.get_url('/tt/Fake'))
+        yield self.assertFail(self.get_url('/ttusers/Fake'))
+
+    # lecturers
+
+    @gen_test(timeout=20)
+    def testTTLecturersFake(self):
+        yield self.assertFail(self.get_url('/ttlecturers/Fake/Fake'))
+
+    @gen_test(timeout=20)
+    def testTTLecturers(self):
+        yield self.assertOK(self.get_url('/ttlecturers/1/2017-01-20'))
+

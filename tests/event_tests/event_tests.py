@@ -1,9 +1,11 @@
 # coding=utf-8
 
+import json
 import logging
 from datetime import datetime
 
 import motor.motor_tornado
+from tornado.testing import gen_test
 
 from commons import utils
 from commons.AESCipher import AESCipher
@@ -64,8 +66,11 @@ class EventTest(BaseTestClass):
         self._app.settings[config.APPLICATION_CONFIG] = self.config
         self._app.settings[config.APPLICATION_AES] = self.aes
 
-    # @gen_test(timeout=50)
-    def testEvent(self):
+        self.prepareDatabase(self.config)
+        self.insert_user(config=self.config, user_doc=USER_DOC)
+
+    @gen_test(timeout=10)
+    def testEventSubscribe(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'
         self.prepareDatabase(self.config)
@@ -89,3 +94,18 @@ class EventTest(BaseTestClass):
 
         # then
         self.assertEquals(bytes(challange, encoding=config.ENCODING), result.body)
+
+    @gen_test(timeout=10)
+    def testProcessEvent(self):
+        # assume - not notification to get
+        event = {'operation': 'update', 'node_id': 62109, 'related_user_ids': '1279833', 'time': 1467979077}
+
+        event_url = '/{0}/{1}'.format(USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID])
+
+        # when
+        result = yield self.assertOK(self.get_url(event_url),
+                                     method='POST',
+                                     body=json.dumps(event))
+
+        # then
+        self.assertEqual('event consumed', result['data'])

@@ -4,6 +4,7 @@ import logging
 
 from bson import ObjectId
 from cryptography.fernet import InvalidToken
+from tornado.ioloop import IOLoop
 
 from commons.constants import fields, collections
 from commons.enumerators import ExceptionTypes
@@ -114,9 +115,10 @@ class ContactHandler(BaseHandler):
                 logging.debug('received contact request from user:{0} subject: {1} message: {2}'.format(
                     self.getUserId(), subject, message))
 
-                message_id = await self.email_contact(subject, message, self.get_current_user()[fields.USER_EMAIL])
+                IOLoop.current().spawn_callback(self.email_contact,
+                                                subject, message, self.get_current_user()[fields.USER_EMAIL])
 
-                self.success(data='Wiadomość otrzymana. Numer referencyjny: {0}'.format(str(message_id)))
+                self.success(data='Wiadomość otrzymana')
         except Exception as ex:
             logging.exception(ex)
             self.error(message=ex.message, data=ex.message, code=501)

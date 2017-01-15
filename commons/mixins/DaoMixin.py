@@ -10,8 +10,7 @@ from tornado.httpclient import HTTPError
 
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes
-from commons.enumerators import JobStatus, JobType
-from commons.errors import ApiError, AuthenticationError, CallerError
+from commons.errors import ApiError, AuthenticationError, CallerError, FilesError
 from commons.errors import DaoError
 
 
@@ -29,9 +28,7 @@ class DaoMixin(object):
             self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
         return self._db[self.config.MONGODB_NAME]
 
-    async def exc(self, exception, finish=True):
-        logging.exception(exception)
-
+    async def _log_db(self, exception):
         exc_doc = {
             'exception': str(exception)
         }
@@ -59,9 +56,16 @@ class DaoMixin(object):
         if not isinstance(exception, AuthenticationError):
             await self.db_insert(collections.EXCEPTIONS, exc_doc, update=False)
 
+    async def exc(self, exception, finish=True, log_file=True, log_db=True):
+        if log_file:
+            logging.exception(exception)
+
+        if log_db:
+            await self._log_db(exception)
+
         if finish:
-            if isinstance(exception, ApiError):
-                self.error(message=str(exception))
+            if isinstance(exception, ApiError) or isinstance(exception, FilesError):
+                self.error(message=str(exception), code=500)
             elif isinstance(exception, AuthenticationError):
                 self.error(message=str(exception), code=401)
             elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
@@ -106,11 +110,6 @@ class DaoMixin(object):
         return await self.db[collections.USERS_INFO].find_one({fields.USER_ID: user_id,
                                                                fields.USOS_ID: usos})
 
-    async def db_get_user(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-        return await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
-
     async def db_get_usos(self, usos_id):
         return await self.db[collections.USOSINSTANCES].find_one({
             'enabled': True, fields.USOS_ID: usos_id
@@ -129,66 +128,16 @@ class DaoMixin(object):
         logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
         return doc
 
-    async def db_remove(self, collection, pipeline):
+    async def db_remove(self, collection, pipeline, force=False):
         pipeline_remove = pipeline.copy()
 
-        pipeline_remove[fields.CREATED_TIME] = {
-            '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
+        if not force:
+            pipeline_remove[fields.CREATED_TIME] = {
+                '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
 
         result = await self.db[collection].remove(pipeline_remove)
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         return result
-
-    async def db_users_info_programmes(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-        programmes = []
-        data = await self.db[collections.USERS_INFO].find_one({fields.USER_ID: user_id})
-        if data:
-            programmes = data['student_programmes']
-        return programmes
-
-    async def db_programme(self, programme_id, usos_id):
-        return await self.db[collections.PROGRAMMES].find_one({fields.PROGRAMME_ID: programme_id,
-                                                               fields.USOS_ID: usos_id})
-
-    async def db_courses_editions(self, user_id):
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
-
-        result = list()
-        data = await self.db[collections.COURSES_EDITIONS].find_one({fields.USER_ID: user_id})
-        if not data:
-            return result
-
-        for term_data in data['course_editions'].values():
-            for term in term_data:
-                tc = {fields.TERM_ID: term[fields.TERM_ID], fields.COURSE_ID: term[fields.COURSE_ID]}
-                if tc not in result:
-                    result.append(tc)
-
-        return result
-
-    async def db_courses(self, usos_id):
-        cursor = self.db[collections.COURSES].find({fields.USOS_ID: usos_id})
-        courses = await cursor.to_list(None)
-        return courses
-
-    async def db_terms(self, user_id):
-        terms = list()
-        data = await self.db[collections.COURSES_EDITIONS].find_one({fields.USER_ID: user_id})
-        for term in data['course_editions'].keys():
-            if term not in terms:
-                terms.append(term)
-        return terms
-
-    async def db_term(self, term_id, usos_id):
-        return await self.db[collections.TERMS].find_one({fields.TERM_ID: term_id,
-                                                          fields.USOS_ID: usos_id})
-
-    async def db_faculty(self, fac_id, usos_id):
-        return await self.db[collections.FACULTIES].find_one({fields.FACULTY_ID: fac_id,
-                                                              fields.USOS_ID: usos_id})
 
     async def db_users(self):
         cursor = self.db[collections.USERS].find({fields.USOS_PAIRED: True},
@@ -200,43 +149,9 @@ class DaoMixin(object):
         users = await cursor.to_list(None)
         return users
 
-    async def db_courses_conducted(self, user_id):
-        course_editions_conducted = await self.db[collections.USERS_INFO].find_one(
-            {fields.USER_ID: user_id}, ('course_editions_conducted',))
-
-        if course_editions_conducted and 'course_editions_conducted' in course_editions_conducted:
-            return course_editions_conducted['course_editions_conducted']
-
-        return list()
-
-    async def db_users_info(self, user_id, usos_id):
-        return await self.db[collections.USERS_INFO].find_one({fields.ID: user_id,
-                                                               fields.USOS_ID: usos_id})
-
     async def db_get_archive_user(self, user_id):
         return await self.db[collections.USERS_ARCHIVE].find_one(
             {fields.USER_ID: user_id, fields.USOS_PAIRED: True})
-
-    async def db_archive_user(self, user_id):
-        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
-
-        if not user_doc:
-            logging.warning('cannot archive user which does not exists {0}'.format(user_id))
-            return
-
-        user_doc[fields.USER_ID] = user_doc.pop(fields.MONGO_ID)
-
-        await self.db_insert(collections.USERS_ARCHIVE, user_doc)
-
-        await self.db_remove(collections.USERS, {fields.MONGO_ID: user_id})
-        if user_doc[fields.USOS_PAIRED]:
-            await self.db_insert(collections.JOBS_QUEUE,
-                                 {fields.USER_ID: user_id,
-                                  fields.CREATED_TIME: datetime.now(),
-                                  fields.UPDATE_TIME: None,
-                                  fields.JOB_MESSAGE: None,
-                                  fields.JOB_STATUS: JobStatus.PENDING.value,
-                                  fields.JOB_TYPE: JobType.ARCHIVE_USER.value})
 
     async def db_find_user(self):
         return await self.db[collections.USERS].find_one({fields.MONGO_ID: self.getUserId()})
@@ -260,25 +175,6 @@ class DaoMixin(object):
             raise DaoError('Nie znaleziono użytkownika {0} dla usos: {1}'.format(user_id, usos_id))
 
         return user_doc
-
-    async def db_cookie_user_id(self, user_id):
-        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
-
-        if fields.GOOGLE in user_doc:
-            user_doc[fields.PICTURE] = user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE]
-            del (user_doc[fields.GOOGLE])
-
-        if fields.FACEBOOK in user_doc:
-            user_doc[fields.PICTURE] = user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE]
-            del (user_doc[fields.FACEBOOK])
-
-        return user_doc
-
-    async def db_find_user_email(self, email):
-        if not isinstance(email, str):
-            email = str(email)
-
-        return await self.db[collections.USERS].find_one({fields.USER_EMAIL: email.lower()})
 
     async def db_update(self, collection, _id, document):
         updated = await self.db[collection].update({fields.MONGO_ID: _id}, document)
@@ -318,26 +214,14 @@ class DaoMixin(object):
             await self.db_update(collections.TOKENS, token_doc[fields.MONGO_ID], token_doc)
         return token_doc
 
-    async def db_subscriptions(self, pipeline):
-        cursor = self.db[collections.SUBSCRIPTIONS].find(pipeline)
-        return await cursor.to_list(None)
-
-    async def db_messages(self, pipeline):
-        cursor = self.db[collections.MESSAGES].find(pipeline, {fields.MONGO_ID: 0,
-                                                               "typ": 1,
-                                                               "from": 1,
-                                                               fields.CREATED_TIME: 1,
-                                                               fields.JOB_MESSAGE: 1}
-                                                    )
-        return await cursor.to_list(None)
-
     async def db_user_usos_id(self):
         user_doc = await self.db_find_user()
         if user_doc and fields.USOS_USER_ID in user_doc:
             return user_doc[fields.USOS_USER_ID]
         return
 
-    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False, notification_result=False):
+    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False,
+                              notification_result=False):
         if not message_type:
             message_type = 'email'
 

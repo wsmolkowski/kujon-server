@@ -25,7 +25,7 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class JSendMixin(object):
-    def success(self, data, cache_age=None):
+    def success(self, data, cache_age=None, code=200):
         if not cache_age:
             self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         else:
@@ -33,34 +33,27 @@ class JSendMixin(object):
                 self.set_header('Cache-Control', 'public, max-age={0}'.format(cache_age))
             else:
                 self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json({'status': 'success', 'data': data})
+        self.__write_json({'status': 'success', 'data': data, 'code': code})
 
-    def fail(self, message, code=501):
+    def fail(self, message, data=None, code=501):
         if message:
-            message = message
+            message = str(message)
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json({'status': 'fail', 'message': message, 'code': code})
+        self.__write_json({'status': 'fail', 'message': message, 'data': data, 'code': code})
 
     def usos(self):
-        result = {'status': 'usos',
-                  'message': 'Przerwa w dostępie do USOS. Spróbuj ponownie za jakiś czas :)',
-                  'code': 504
-                  }
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json(result)
+        self.__write_json({'status': 'usos',
+                           'message': 'Przerwa w dostępie do USOS. Spróbuj ponownie za jakiś czas :)',
+                           'code': 504,
+                           'data': None
+                           })
 
-    def error(self, message, data=None, code=None):
-
-        result = {'status': 'error', 'message': message}
-        if data:
-            result['data'] = data
-
-        if code:
-            result['code'] = code
+    def error(self, message, data=None, code=500):
 
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        self.__write_json(result)
+        self.__write_json({'status': 'error', 'message': message, 'data': data, 'code': code})
 
     def __write_json(self, data):
         self.set_header('Content-Type', 'application/json; charset={0}'.format(config.ENCODING))

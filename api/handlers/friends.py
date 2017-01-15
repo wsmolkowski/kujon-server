@@ -67,7 +67,7 @@ class AbstractFriendHandler(ApiHandler):
 
         try:
             if not user_info:
-                raise CallerError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
+                raise ApiError("Wystąpił problem z dostępem do usług USOS API. Spróbuj ponownie za chwilę.")
 
             courses_editions_doc = await self.api_courses_editions()
             if not courses_editions_doc:

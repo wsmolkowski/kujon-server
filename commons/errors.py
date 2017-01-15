@@ -33,3 +33,8 @@ class CallerError(Exception):
 class FilesError(Exception):
     """Base error for this module."""
     pass
+
+
+class EventError(Exception):
+    """Base error for this module."""
+    pass

@@ -23,8 +23,7 @@ class SocialCaller(object):
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
             else:
-                raise Exception(
-                    'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
+                raise Exception('Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
             raise AuthenticationError('Błąd werifikacji tokenu Google+ {0}'.format(ex))
@@ -40,8 +39,7 @@ class SocialCaller(object):
             if tokeninfo.code == 200 and 'application/json' in tokeninfo.headers['Content-Type']:
                 result = escape.json_decode(tokeninfo.body)
             else:
-                raise Exception(
-                    'Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
+                raise Exception('Token validation {0} status {1} body {2}'.format(tokeninfo.reason, tokeninfo.code, tokeninfo.body))
 
         except Exception as ex:
             raise AuthenticationError('Błąd werifikacji tokenu Facebook {0}'.format(ex))

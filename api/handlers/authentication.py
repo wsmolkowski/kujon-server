@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 
 from bson import ObjectId
-from tornado import auth, escape
+from tornado import auth, escape, gen
 from tornado.ioloop import IOLoop
 
 from api.handlers.base import BaseHandler, ApiHandler
@@ -12,22 +12,54 @@ from commons import decorators
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
+from commons.mixins.CrsTestsMixin import CrsTestsMixin
 from commons.mixins.JSendMixin import JSendMixin
 from commons.mixins.OAuth2Mixin import OAuth2Mixin
-from crawler import job_factory
 
 
 class ArchiveHandler(ApiHandler):
+    async def _removeUserData(self, skip_collections=None, user_id=None):
+        if not user_id:
+            user_id = self.getUserId()
+
+        if not skip_collections:
+            skip_collections = list()
+
+        try:
+            collections = await self.db.collection_names(include_system_collections=False)
+            remove_tasks = list()
+            for collection in collections:
+
+                if collection in skip_collections:
+                    continue
+
+                exists = await self.db[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
+                if exists:
+                    remove_tasks.append(self.db[collection].remove({fields.USER_ID: user_id}))
+
+            result = await gen.multi(remove_tasks)
+            logging.info('removed user data for user_id: {0} resulted in: {1}'.format(user_id, result))
+        except Exception as ex:
+            logging.exception(ex)
+
     @decorators.authenticated
     async def post(self):
         try:
             user_doc = self.get_current_user()
 
-            await self.db_archive_user(user_doc[fields.MONGO_ID])
+            user_doc[fields.USER_ID] = user_doc.pop(fields.MONGO_ID)
+
+            await self.db_insert(collections.USERS_ARCHIVE, user_doc)
+
+            await self.db_remove(collections.USERS,
+                                 {fields.MONGO_ID: user_doc[fields.USER_ID]},
+                                 force=True)
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            await self.email_archive_user(user_doc[fields.USER_EMAIL])
+            IOLoop.current().spawn_callback(self._unsubscribe_usos, )
+            IOLoop.current().spawn_callback(self._removeUserData, [collections.USERS_ARCHIVE, ], self.getUserId())
+            IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
             self.success('Dane użytkownika usunięte.')
         except Exception as ex:
@@ -39,7 +71,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
     def on_finish(self):
         IOLoop.current().spawn_callback(self.db_insert, collections.REMOTE_IP_HISTORY, {
-            fields.USER_ID: self.getUserId(return_object_id=True),
+            fields.USER_ID: self.getUserId(),
             fields.CREATED_TIME: datetime.now(),
             'host': self.request.host,
             'method': self.request.method,
@@ -48,6 +80,18 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
             'remote_ip': self._context.remote_ip
         })
 
+    async def db_cookie_user_id(self, user_id):
+        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: user_id})
+
+        if fields.GOOGLE in user_doc:
+            user_doc[fields.PICTURE] = user_doc[fields.GOOGLE][fields.GOOGLE_PICTURE]
+            del (user_doc[fields.GOOGLE])
+
+        if fields.FACEBOOK in user_doc:
+            user_doc[fields.PICTURE] = user_doc[fields.FACEBOOK][fields.FACEBOOK_PICTURE]
+            del (user_doc[fields.FACEBOOK])
+
+        return user_doc
 
 class LogoutHandler(AuthenticationHandler):
     async def remove_token(self):
@@ -76,7 +120,7 @@ class FacebookOAuth2LoginHandler(AuthenticationHandler, auth.FacebookGraphMixin)
                 code=self.get_argument('code'),
                 extra_fields={'email', 'id'})
 
-            user_doc = await self.db_find_user_email(access['email'])
+            user_doc = await self.findUserByEmail(access['email'])
 
             if not user_doc:
                 user_doc = dict()
@@ -139,7 +183,7 @@ class GoogleOAuth2LoginHandler(AuthenticationHandler, auth.GoogleOAuth2Mixin):
                 'https://www.googleapis.com/oauth2/v1/userinfo',
                 access_token=access['access_token'])
 
-            user_doc = await self.db_find_user_email(user['email'])
+            user_doc = await self.findUserByEmail(user['email'])
             if not user_doc:
                 user_doc = dict()
                 user_doc[fields.USER_TYPE] = UserTypes.GOOGLE.value
@@ -216,7 +260,7 @@ class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
             self.oauth_set_up(usos_doc)
 
             if email:
-                user_doc = await self.db_find_user_email(email)
+                user_doc = await self.findUserByEmail(email)
                 if not user_doc:
                     user_doc = dict()
                     new_user = True
@@ -271,12 +315,48 @@ class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
                 await self.exc(ex)
 
 
-class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
-    async def _create_jobs(self, user_doc):
-        await self.db_insert(collections.JOBS_QUEUE,
-                             job_factory.subscribe_user_job(user_doc[fields.MONGO_ID]))
-        await self.db_insert(collections.JOBS_QUEUE,
-                             job_factory.initial_user_job(user_doc[fields.MONGO_ID]))
+class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin, ApiHandler):
+    async def __process_crstests(self):
+        crstests_doc = await self.api_crstests()
+
+        grade_points = []
+        for crstest in crstests_doc['tests']:
+            grade_points.append(self.api_crstests_grades(crstest['node_id']))
+            grade_points.append(self.api_crstests_points(crstest['node_id']))
+
+        await gen.multi(grade_points)
+
+    async def _user_crawl(self):
+        try:
+            user_info = await self.api_user_usos_info()
+            await self.api_thesis(user_info=user_info)
+            await self.api_terms()
+            await self.api_programmes(user_info=user_info)
+            await self.api_faculties(user_info=user_info)
+            await self.__process_crstests()
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+
+
+    async def _subscribe_usos(self):
+
+        await self._unsubscribe_usos()
+        callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT, self.getUsosId(), self.getUsosUserId())
+
+        for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
+            try:
+                subscribe_doc = await self.usosCall(path='services/events/subscribe_event',
+                                                    arguments={
+                                                        'event_type': event_type,
+                                                        'callback_url': callback_url,
+                                                        'verify_token': self.getEncryptedUserId()
+                                                    })
+                subscribe_doc['event_type'] = event_type
+                subscribe_doc[fields.USER_ID] = self.getUserId()
+
+                await self.db_insert(collections.SUBSCRIPTIONS, subscribe_doc)
+            except Exception as ex:
+                await self.exc(ex, finish=False)
 
     async def get(self):
         oauth_token_key = self.get_argument('oauth_token', default=None)
@@ -333,7 +413,14 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 self.reset_user_cookie(user_doc[fields.MONGO_ID])
 
-                await self._create_jobs(user_doc)
+                await self._buildContext()
+
+                # gather user data from USOS and update context with usos_user_id needed for subscription
+                await self.api_user_usos_info()
+                await self._buildContext()
+
+                IOLoop.current().spawn_callback(self._subscribe_usos, )
+                IOLoop.current().spawn_callback(self._user_crawl, )
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)
 
@@ -342,11 +429,11 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin):
 
                 if header_email or header_token:
                     logging.debug('Finish register MOBI OK')
-                    await self.email_registration(user_doc)
+                    IOLoop.current().spawn_callback(self.email_registration, user_doc)
                     self.success('Udało się sparować konto USOS')
                 else:
                     logging.debug('Finish register WWW OK')
-                    await self.email_registration(user_doc)
+                    IOLoop.current().spawn_callback(self.email_registration, user_doc)
                     self.redirect(self.config.DEPLOY_WEB)
             else:
                 self.redirect(self.config.DEPLOY_WEB)
@@ -381,12 +468,11 @@ class EmailRegisterHandler(AbstractEmailHandler):
                 raise AuthenticationError('Podane hasła nie zgadzają się.')
 
             if len(json_data[fields.USER_PASSWORD]) < 8:
-                raise AuthenticationError('Podane hasło jest zbyt krótkie.')
+                raise AuthenticationError('Podane hasło jest zbyt krótkie, musi mieć min. 8 znaków.')
 
-            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
+            user_doc = await self.findUserByEmail(json_data[fields.USER_EMAIL])
             if user_doc:
-                raise AuthenticationError(
-                    'Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
+                raise AuthenticationError('Podany adres email: {0} jest zajęty.'.format(json_data[fields.USER_EMAIL]))
 
             user_doc = dict()
             user_doc[fields.USER_TYPE] = UserTypes.EMAIL.value
@@ -403,10 +489,7 @@ class EmailRegisterHandler(AbstractEmailHandler):
             user_id = await self.db_insert_user(user_doc)
             self.reset_user_cookie(user_id)
 
-            await self.email_confirmation(json_data[fields.USER_EMAIL], user_id)
-
-            logging.debug('send confirmation email to new EMAIL user with id: {0} and email: {1}'.format(
-                user_id, json_data[fields.USER_EMAIL]))
+            IOLoop.current().spawn_callback(self.email_confirmation, json_data[fields.USER_EMAIL], user_id)
 
             self.success(
                 'Aby aktywować konto należy kliknąć w link który został Ci wysłany mailem.'.format(
@@ -421,12 +504,12 @@ class EmailLoginHandler(AbstractEmailHandler):
         try:
             json_data = escape.json_decode(self.request.body)
 
-            user_doc = await self.db_find_user_email(json_data[fields.USER_EMAIL])
+            user_doc = await self.findUserByEmail(json_data[fields.USER_EMAIL])
 
             if not user_doc or user_doc[fields.USER_TYPE] != UserTypes.EMAIL.value or \
                             json_data[fields.USER_PASSWORD] != self.aes.decrypt(
                         user_doc[fields.USER_PASSWORD]).decode():
-                raise AuthenticationError('Podano błędne dane.')
+                raise AuthenticationError('Podano błędne dane do logowania.')
 
             if not user_doc[fields.USER_EMAIL_CONFIRMED]:
                 raise AuthenticationError(

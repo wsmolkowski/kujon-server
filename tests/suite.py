@@ -14,6 +14,8 @@ from tests.commons_tests.context_tests import ContextTest
 from tests.commons_tests.onesignal_tests import OneSignalTest
 from tests.commons_tests.usos_caller_tests import UsosCallerTest
 from tests.crawler_tests.crawler_tests import CrawlerTest
+from tests.event_tests.event_tests import EventTest
+from tests.event_tests.event_utils_tests import EventUtilsTest
 from tests.scripts_tests.dbutilts_tests import DbUtilsTest
 
 
@@ -38,6 +40,10 @@ def build_suite():
 
     # crawler
     test_suite.addTest(unittest.makeSuite(CrawlerTest))
+
+    # events
+    test_suite.addTest(unittest.makeSuite(EventUtilsTest))
+    test_suite.addTest(unittest.makeSuite(EventTest))
 
     # scripts
     test_suite.addTest(unittest.makeSuite(DbUtilsTest))

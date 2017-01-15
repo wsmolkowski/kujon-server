@@ -37,7 +37,7 @@ class BaseHandler(AbstractHandler):
         header_token = self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False)
 
         if header_email and header_token:
-            user_doc = await self.db_find_user_email(header_email)
+            user_doc = await self.findUserByEmail(header_email)
 
             if not user_doc or fields.USER_TYPE not in user_doc:
                 return
@@ -122,6 +122,19 @@ class ApiHandler(BaseHandler, ApiMixin, ApiMixinSearch, JSendMixin, ApiUserMixin
 
         return False
 
+    async def _unsubscribe_usos(self):
+        try:
+            current_subscriptions = await self.usosCall(path='services/events/subscriptions')
+        except Exception as ex:
+            logging.exception(ex)
+            current_subscriptions = None
+
+        if current_subscriptions:
+            try:
+                await self.usosCall(path='services/events/unsubscribe')
+                await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+            except Exception as ex:
+                logging.warning(ex)
 
 class UsosesAllApi(BaseHandler, JSendMixin):
     @web.asynchronous

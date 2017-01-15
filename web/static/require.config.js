@@ -12,7 +12,7 @@ var require = {
         "moment":               "/static/bower_components/moment/min/moment.min",
         "jquery-cookie":        "/static/bower_components/jquery.cookie/jquery.cookie",
         "fullcalendar":         "/static/bower_components/fullcalendar/dist/fullcalendar.min",
-        "fullcalendarpl":       "/static/bower_components/fullcalendar/dist/lang/pl",
+        "fullcalendarpl":       "/static/bower_components/fullcalendar/dist/locale/pl",
         "cookiebar":            "/static/bower_components/cookiebar/dist/cookiebar.min",
         "nice-select":          "/static/bower_components/jquery-nice-select/js/jquery.nice-select.min",
         "bootstrap-table":      "/static/bower_components/bootstrap-table/dist/bootstrap-table.min",

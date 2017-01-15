@@ -1,10 +1,12 @@
 # coding=utf-8
 
 import logging
+import smtplib
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from commons.constants import fields, collections
-from commons.enumerators import JobStatus
 
 HEADER = 'Cześć,'
 FOOTER = '''
@@ -24,21 +26,6 @@ SMTP_CHARSET = 'charset'
 
 
 class EmailMixin(object):
-    def __email_job(self, subject, from_addr, to_addrs, text, html, mime_type='plain', charset='utf-8', user_id=None):
-        return {
-            fields.CREATED_TIME: datetime.now(),
-            fields.UPDATE_TIME: None,
-            fields.JOB_STATUS: JobStatus.PENDING.value,
-            fields.USER_ID: user_id,
-            SMTP_SUBJECT: subject,
-            SMTP_FROM: from_addr,
-            SMTP_TO: to_addrs,
-            SMTP_TEXT: text,
-            SMTP_HTML: html,
-            SMTP_MIME_TYPE: mime_type,
-            SMTP_CHARSET: charset,
-        }
-
     def __build_text_email(self, message):
         return '{0}\n{1}\n{2}'.format(HEADER, message,
                                       FOOTER.format(self.config.PROJECT_TITLE, self.config.PROJECT_TITLE,
@@ -98,29 +85,62 @@ class EmailMixin(object):
             'Nowa wiadomość od użytkownik: email: {0} mongo_id: {1} \nwiadomość:\n{2}\n'.format(email, user_id,
                                                                                                 contact_msg))
 
-    async def email_contact(self, subject, message, email, user_id):
-        email_job = self.__email_job(
+    async def __send_email(self, subject, from_addr, to_addrs, text, html):
+        try:
+            logging.debug('__send_email from_addr: {0} to_addrs: {1}'.format(from_addr, to_addrs))
+
+            to_addrs = to_addrs if type(to_addrs) is list else[to_addrs]
+
+            smtp = smtplib.SMTP()
+            smtp.connect(self.config.SMTP_HOST, self.config.SMTP_PORT)
+            smtp.login(self.config.SMTP_USER, self.config.SMTP_PASSWORD)
+
+            msg = MIMEMultipart('alternative')
+
+            msg['Subject'] = '[{0}] {1}'.format(self.config.PROJECT_TITLE, subject)
+            msg['From'] = from_addr
+            msg['To'] = ','.join(to_addrs)
+
+            msg.attach(MIMEText(text, 'plain'))
+            msg.attach(MIMEText(html, 'html'))
+
+            smtp.sendmail(from_addr, to_addrs, msg.as_string())
+
+            msg_doc = await self.db[collections.MESSAGES].insert({
+                fields.USER_ID: self.getUserId(),
+                fields.CREATED_TIME: datetime.now(),
+                fields.FIELD_MESSAGE_FROM: self.config.PROJECT_TITLE,
+                fields.FIELD_MESSAGE_TYPE: 'email',
+                fields.JOB_MESSAGE: text
+            })
+
+            logging.debug('__send_email from_addr: {0} to_addrs: {1} resulted in: {2}'.format(
+                from_addr, to_addrs, msg_doc))
+
+            smtp.quit()
+
+            return msg_doc
+        except Exception as ex:
+            logging.exception(ex)
+
+    async def email_contact(self, subject, message, email):
+        user_id = self.getUserId()
+        return await self.__send_email(
             subject=subject,
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=[self.config.SMTP_EMAIL],
+            to_addrs=self.config.SMTP_EMAIL,
             text=self.__email_contact(message, email, user_id),
-            html=self.__email_contact(message, email, user_id, html=True),
-            user_id=self.getUserId(return_object_id=True)
+            html=self.__email_contact(message, email, user_id, html=True)
         )
-
-        return await self.db[collections.EMAIL_QUEUE].insert(email_job)
 
     async def email_archive_user(self, recipient):
-        email_job = self.__email_job(
+        return await self.__send_email(
             subject='Usunęliśmy Twoje konto',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=recipient if type(recipient) is list else [recipient],
+            to_addrs=recipient,
             text=self.__email_archive(),
             html=self.__email_archive(html=True),
-            user_id=self.getUserId(return_object_id=True)
         )
-
-        return await self.db_insert(collections.EMAIL_QUEUE, email_job)
 
     async def email_registration(self, user_doc=None):
         if not user_doc:
@@ -128,29 +148,23 @@ class EmailMixin(object):
 
         recipient = user_doc[fields.USER_EMAIL]
 
-        email_job = self.__email_job(
+        return await self.__send_email(
             subject='Rejestracja w Kujon.mobi',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=recipient if type(recipient) is list else [recipient],
+            to_addrs=recipient,
             text=self.__email_register_info(),
             html=self.__email_register_info(html=True),
-            user_id=self.getUserId(return_object_id=True)
         )
-
-        return await self.db_insert(collections.EMAIL_QUEUE, email_job)
 
     async def email_confirmation(self, email, user_id):
         confirmation_url = '{0}/authentication/email_confim/{1}'.format(self.config.DEPLOY_API,
                                                                         self.aes.encrypt(str(user_id)).decode())
         logging.debug('confirmation_url: {0}'.format(confirmation_url))
 
-        email_job = self.__email_job(
+        return await self.__send_email(
             subject='Dokończ rejestrację konta',
             from_addr=self.config.SMTP_EMAIL,
-            to_addrs=email if type(email) is list else [email],
+            to_addrs=email,
             text=self.__email_register(confirmation_url),
             html=self.__email_register(confirmation_url, html=True),
-            user_id=self.getUserId(return_object_id=True)
         )
-
-        return await self.db_insert(collections.EMAIL_QUEUE, email_job)
