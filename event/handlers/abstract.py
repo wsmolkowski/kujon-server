@@ -84,7 +84,9 @@ class EventAbstractHandler(AbstractHandler):
             return EventError('Błędnie przeprocesowane wysłanie wiadomosci OneSignal')
 
     async def _user_event(self, node_id, usos_id, event_type, event_operation):
+
         logging.debug('_user_event: {0} {1} {2} {3}'.format(node_id, usos_id, event_type, event_operation))
+
         try:
 
             if event_type == constants.EVENT_TYPE_USER_POINT:
