@@ -86,7 +86,10 @@ class EventAbstractHandler(AbstractHandler):
                                        notification_text=notification,
                                        notification_result=onesignal_result)
         else:
-            return EventError('Błędnie przeprocesowane wysłanie wiadomosci OneSignal')
+            return EventError('Błędnie przeprocesowane wysłanie wiadomosci OneSignal '
+                              'notification: {0} message_title: {1} message_body: {2}'.format(
+                notification, message_title, message_body
+            ))
 
     async def _user_event(self, node_id, usos_id, event_type, event_operation):
 
