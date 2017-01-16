@@ -119,11 +119,15 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         if not course_doc:
             try:
-                await self.usos_course(course_id)
+                course_doc = await self.usos_course(course_id)
                 await self.db_insert(collections.COURSES, course_doc)
             except DuplicateKeyError as ex:
                 logging.debug(ex)
                 course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
+            except Exception as ex:
+                if log_exception:
+                    await self.exc(ex, finish=False)
+                return
 
         course_doc[fields.TERM_ID] = term_id
 
