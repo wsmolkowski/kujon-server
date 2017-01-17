@@ -29,7 +29,8 @@ class EventHandler(EventAbstractHandler):
             verify_token_doc = await self.db[collections.EVENTS_VERIFY_TOKENS].find_one(
                 {fields.MONGO_ID: ObjectId(verify_token)})
 
-            if not verify_token_doc or verify_token_doc[fields.USER_ID] != self.getUserId():
+            # or str(verify_token_doc[fields.USER_ID]) != str(self.getUserId())
+            if not verify_token_doc:
                 logging.debug('verify_token_doc: {0} user_id: {1}'.format(verify_token_doc, self.getUserId()))
                 raise EventError('Required parameters not valid.')
 
