@@ -139,7 +139,7 @@ class AbstractFileHandler(ApiHandler):
 
         raise FilesError('Nie znaleziono pliku.')
 
-    async def apiStoreFile(self, term_id, course_id, file_name, file_content):
+    async def apiStoreFile(self, term_id, course_id, file_name, file_content, share_with):
 
         # get user info
         file_doc = dict()
@@ -181,7 +181,7 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.FILE_NAME] = file_name
 
         # dodanie pola komu udostępniay
-        file_doc[fields.FILE_SHARED_WITH] = list()
+        file_doc[fields.FILE_SHARED_WITH] = share_with
 
         # rozpoznawanie rodzaju contentu
         try:
@@ -239,10 +239,11 @@ class FileHandler(AbstractFileHandler):
                 raise FilesError('Nie znaleziono pliku.')
 
             file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
-                                                                      {
-                                                                          fields.FILE_STATUS: UploadFileStatus.DELETED.value})
+                                                                      {fields.FILE_STATUS: UploadFileStatus.DELETED.value})
             if file_update_doc['ok'] != 1:
                 raise FilesError('Bład podczas usuwania pliku.')
+            else:
+                self.success(file_id)
 
         except FilesError as ex:
             await self.exc(ex, log_db=False, log_file=False)
@@ -289,7 +290,8 @@ class FilesUploadHandler(AbstractFileHandler):
 
             'files': [] #lista plików dołaczona multiparem
             'course_id': 'E-1IZ2-1003-s1', # id kursu na które uploadujacy uczeszcza i chce umiescic plik
-            'term_id': '2013/14-1' # '*' # term_id związane z course_id
+            'term_id': '2013/14-1' # term_id związane z course_id
+            'file_share_with': [] lub '*' lub [123, 4334, 123123, 33]
 
         :return:
         {
@@ -308,21 +310,33 @@ class FilesUploadHandler(AbstractFileHandler):
 
             course_id = self.get_argument(fields.COURSE_ID, default=None)
             term_id = self.get_argument(fields.TERM_ID, default=None)
+            file_shared_with = self.get_argument(fields.FILE_SHARED_WITH, default=None)
             files = self.request.files
 
-            if not term_id or not course_id or not files:  # or 'files' not in files
+            if not term_id or not course_id or not files or not file_shared_with:  # or 'files' not in files
                 raise FilesError('Nie przekazano odpowiednich parametrów.')
+
+            share_list = file_shared_with.replace(' ', '')
+            if share_list == '':
+                share_with = None
+            elif share_list == '*':
+                share_with = '*'
+            else:
+                share_with = share_list.split(FILES_SHARE_WITH_SEPARATOR)
+                # remove empty strings
+                share_with = [x for x in share_with if x != '']
+
 
             files_doc = list()
             for key, file in files.items():
                 if isinstance(file, list):
                     file = file[0]  # ['files']
                 filename = file['filename']
-                file_id = await self.apiStoreFile(term_id, course_id, filename, file['body'])
+                file_id = await self.apiStoreFile(term_id, course_id, filename, file['body'], share_with)
 
                 files_doc.append({fields.FILE_ID: file_id,
                                   fields.FILE_NAME: filename,
-                                  fields.FILE_SHARED_WITH: list()})
+                                  fields.FILE_SHARED_WITH: share_with})
 
             self.success(files_doc)
         except FilesError as ex:

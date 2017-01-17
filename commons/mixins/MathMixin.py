@@ -7,8 +7,8 @@ from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = "2.0"
-NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "nk", "nzal", "NB", "nb", "BO"]
-POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "zal", "Zal", "za"]
+NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "NB", "BO"]
+POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "ZA", "ZAL.", "ZWOL LEK.", "ZW-LEK"]
 
 
 class MathMixin(object):
@@ -49,23 +49,21 @@ class MathMixin(object):
 
                     grade_value = grade[fields.VALUE_SYMBOL].replace(',', '.')
 
-                    if grade_value in NEGATIVE_GRADES_DESCRIPTIONS:
+                    if grade_value.upper() in NEGATIVE_GRADES_DESCRIPTIONS:
                         grade_value = DEFAULT_NEGATIVE_GRADE
 
-                    if grade_value in POSITIVE_GRADES_DESCRIPTIONS:
+                    if grade_value.upper() in POSITIVE_GRADES_DESCRIPTIONS:
                         continue
 
-                    # get only integer &decimal numbers somtimes grdes are in such format "5,0 (bdb)"
+                    # get only integer &decimal numbers somtimes grades are in such format "5,0 (bdb)"
                     tmp = re.search('(?:\d*\.)?\d+', grade_value)
                     if tmp:
                         grade_value = tmp.group(0)
-                    else:
-                        logging.error("Nieprawidłowa ocena: %s ", grade_value)
 
                     value_symbols.append(float(grade_value))
 
                 except (ValueError, TypeError):
-                    logging.error("Nieprawidłowa ocena - wyjątek: %s ", grade_value)
+                    logging.error("Liczenie średniej - nieprawidłowa ocena: %s ", grade_value)
                     continue
 
         if not value_symbols:

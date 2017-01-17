@@ -3,6 +3,7 @@
 import json
 import logging
 
+from bson import ObjectId
 from tornado import web
 from tornado.ioloop import IOLoop
 
@@ -14,29 +15,35 @@ from event.handlers.abstract import EventAbstractHandler
 class EventHandler(EventAbstractHandler):
     @web.asynchronous
     async def get(self, usos_id, user_usos_id):
+        challenge = None
         try:
-            await self._buildContext(usos_id, user_usos_id)
-
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
             verify_token = self.get_argument('hub.verify_token', default=None)
 
+            await self._buildContext(usos_id, user_usos_id)
+
             if not mode or not challenge or not verify_token:
                 raise EventError('Required parameters not passed.')
-            else:
-                # if not self.get_current_user():
-                #     logging.error('Token verification failure for verify_token (user_id): {0}'.format(verify_token))
-                #     self.fail(message='Token verification failure.')
 
-                logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
-                    mode, challenge, verify_token))
+            verify_token_doc = await self.db[collections.EVENTS_VERIFY_TOKENS].find_one(
+                {fields.MONGO_ID: ObjectId(verify_token)})
 
-                self.write(challenge)
-                self.finish()
+            # or str(verify_token_doc[fields.USER_ID]) != str(self.getUserId())
+            if not verify_token_doc:
+                logging.debug('verify_token_doc: {0} user_id: {1}'.format(verify_token_doc, self.getUserId()))
+                raise EventError('Required parameters not valid.')
+
+            logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
+                mode, challenge, verify_token))
+
         except EventError as ex:
-            await self.exc(ex, log_db=False)
+            await self.exc(ex, log_db=False, finish=False)
         except Exception as ex:
-            await self.exc(ex)
+            await self.exc(ex, finish=False)
+        finally:
+            self.write(challenge)
+            self.finish()
 
     @web.asynchronous
     async def post(self, usos_id, user_usos_id):
