@@ -77,7 +77,7 @@ class EventTest(BaseTestClass):
     def testEventSubscribe(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'
-        event_type = events_constants.EVENT_TYPE_USER_POINT.replace('/', '_')
+        event_type = events_constants.EVENT_TYPE_USER_POINT
         self.prepareDatabase(self.config)
 
         result = self.insert_user(user_doc=USER_DOC)
@@ -90,8 +90,8 @@ class EventTest(BaseTestClass):
 
         verify_token = str(verify_token)
 
-        event_url = '/{0}/{1}/{2}?hub.mode=subscribe&hub.challenge={3}&hub.verify_token={4}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], event_type, challange, verify_token)
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
 
         # when
         result = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url), method='GET'))
@@ -103,7 +103,7 @@ class EventTest(BaseTestClass):
     def testProcessEventUserPoint(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'
-        event_type = events_constants.EVENT_TYPE_USER_POINT.replace('/', '_')
+        event_type = events_constants.EVENT_TYPE_USER_POINT
         self.prepareDatabase(self.config)
 
         result = self.insert_user(user_doc=USER_DOC)
@@ -123,8 +123,8 @@ class EventTest(BaseTestClass):
                 {'node_id': 21123, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484646806},
                 {'node_id': 21123, 'related_user_ids': ['1101468'], 'operation': 'create', 'time': 1484646806}]}
 
-        event_url = '/{0}/{1}/{2}?hub.mode=subscribe&hub.challenge={3}&hub.verify_token={4}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], event_type, challange, verify_token)
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
 
         # when
         response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
@@ -142,7 +142,7 @@ class EventTest(BaseTestClass):
     def testProcessEventUserGrade(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'
-        event_type = events_constants.EVENT_TYPE_USER_GRADE.replace('/', '_')
+        event_type = events_constants.EVENT_TYPE_USER_GRADE
         self.prepareDatabase(self.config)
 
         result = self.insert_user(user_doc=USER_DOC)
@@ -160,8 +160,8 @@ class EventTest(BaseTestClass):
             'event_type': events_constants.EVENT_TYPE_USER_GRADE,
             'entry': [{'node_id': 24614, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484643370}]}
 
-        event_url = '/{0}/{1}/{2}?hub.mode=subscribe&hub.challenge={3}&hub.verify_token={4}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], event_type, challange, verify_token)
+        event_url = '/{0}/{1}/?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
 
         # when
         response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
@@ -179,7 +179,7 @@ class EventTest(BaseTestClass):
     def testProcessEventFailureFakeVerifyToken(self):
         # assume
         challange = 'BKHeL7VXuPDttqDVzWne'
-        event_type = events_constants.EVENT_TYPE_USER_GRADE.replace('/', '_')
+        event_type = events_constants.EVENT_TYPE_USER_GRADE
         self.prepareDatabase(self.config)
 
         result = self.insert_user(user_doc=USER_DOC)
@@ -192,8 +192,8 @@ class EventTest(BaseTestClass):
 
         verify_token = str(verify_token)
 
-        event_url = '/{0}/{1}/{2}?hub.mode=subscribe&hub.challenge={3}&hub.verify_token={4}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], 'fake_event_type', challange, verify_token)
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
 
         # when
         result = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url), method='GET'))

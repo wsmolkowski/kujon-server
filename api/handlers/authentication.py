@@ -345,10 +345,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
-                callback_url = '{0}/{1}/{2}/{3}'.format(self.config.DEPLOY_EVENT,
-                                                        self.getUsosId(),
-                                                        self.getUsosUserId(),
-                                                        event_type.replace('/', '_'))
+                callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT,
+                                                    self.getUsosId(),
+                                                    self.getUsosUserId())
 
                 verify_token = await self.db[collections.EVENTS_VERIFY_TOKENS].insert({
                     fields.USER_ID: self.getUserId(),
