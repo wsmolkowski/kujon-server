@@ -160,7 +160,7 @@ class EventTest(BaseTestClass):
             'event_type': events_constants.EVENT_TYPE_USER_GRADE,
             'entry': [{'node_id': 24614, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484643370}]}
 
-        event_url = '/{0}/{1}/?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
             USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
 
         # when
