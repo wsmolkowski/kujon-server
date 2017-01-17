@@ -51,18 +51,16 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class BaseTestClass(AsyncHTTPTestCase):
-    @staticmethod
-    def insert_user(config, user_doc=None, token_doc=None):
+    def insert_user(self, user_doc=None, token_doc=None):
 
         if not user_doc:
             user_doc = USER_DOC
 
-        client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
-
+        client_db = MongoClient(self.config.MONGODB_URI)[self.config.MONGODB_NAME]
         user_id = client_db[collections.USERS].insert(user_doc)
 
         if not token_doc:
-            aes = AESCipher(config.AES_SECRET)
+            aes = AESCipher(self.config.AES_SECRET)
             TOKEN_DOC['token'] = aes.encrypt(str(user_id)).decode()
             token_doc = TOKEN_DOC
 
@@ -82,6 +80,7 @@ class BaseTestClass(AsyncHTTPTestCase):
 
         logging.info("Preparing tests for class: {0}".format(self.__name__))
         self.config = Config(Environment.TESTS.value)
+        # client_db = MongoClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
     def setUp(self):
         super(BaseTestClass, self).setUp()
@@ -114,8 +113,7 @@ class BaseTestClass(AsyncHTTPTestCase):
             for key in headers:
                 header[key] = headers[key]
 
-        response = yield self.client.fetch(url, method=method, body=body, headers=header, body_producer=body_producer,
-                                           allow_nonstandard_methods=True)
+        response = yield self.client.fetch(url, method=method, body=body, headers=header, body_producer=body_producer)
 
         logging.debug(response.body)
 

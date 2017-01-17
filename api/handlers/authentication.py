@@ -341,15 +341,26 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
     async def _subscribe_usos(self):
 
         await self._unsubscribe_usos()
-        callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT, self.getUsosId(), self.getUsosUserId())
+
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
+                callback_url = '{0}/{1}/{2}/{3}'.format(self.config.DEPLOY_EVENT,
+                                                        self.getUsosId(),
+                                                        self.getUsosUserId(),
+                                                        event_type.replace('/', '_'))
+
+                verify_token = await self.db[collections.EVENTS_VERIFY_TOKENS].insert({
+                    fields.USER_ID: self.getUserId(),
+                    fields.EVENT_TYPE: event_type,
+                    fields.CREATED_TIME: datetime.now()
+                })
+
                 subscribe_doc = await self.usosCall(path='services/events/subscribe_event',
                                                     arguments={
                                                         'event_type': event_type,
                                                         'callback_url': callback_url,
-                                                        'verify_token': self.getEncryptedUserId()
+                                                        'verify_token': str(verify_token)
                                                     })
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[fields.USER_ID] = self.getUserId()

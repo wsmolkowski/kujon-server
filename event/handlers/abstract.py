@@ -2,8 +2,7 @@
 
 import logging
 
-from bson.objectid import ObjectId
-from cryptography.fernet import InvalidToken, InvalidSignature
+from bson.objectid import ObjectId, InvalidId
 
 from commons.constants import fields, collections, config
 from commons.context import Context
@@ -22,11 +21,18 @@ class EventAbstractHandler(AbstractHandler):
         verify_token = self.get_argument('hub.verify_token', default=None)
         if verify_token:
             try:
-                verify_token = self.aes.decrypt(verify_token.encode()).decode()
-                user_doc = await self.db[collections.USERS].find_one(
+                verify_token_doc = await self.db[collections.EVENTS_VERIFY_TOKENS].find_one(
                     {fields.MONGO_ID: ObjectId(verify_token)})
-            except (InvalidToken, InvalidSignature) as ex:
+                if not verify_token_doc:
+                    raise EventError('Wrong parameter verify_token.')
+
+            except InvalidId as ex:
                 raise EventError(str(ex))
+
+            user_doc = await self.db[collections.USERS].find_one(
+                {fields.MONGO_ID: verify_token_doc[fields.USER_ID]})
+            if not user_doc:
+                raise EventError('Unknown user for given verify_token.')
 
             usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
             self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc)
@@ -154,8 +160,7 @@ class EventAbstractHandler(AbstractHandler):
         for entry in event['entry']:
             for user_id in entry['related_user_ids']:
                 if user_id == self._context.user_doc[fields.USOS_USER_ID]:
-                    await self._user_event(user_id,
-                                           entry['node_id'],
+                    await self._user_event(entry['node_id'],
                                            event[fields.USOS_ID],
                                            event['event_type'],
                                            entry['operation'])
