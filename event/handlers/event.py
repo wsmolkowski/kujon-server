@@ -30,6 +30,7 @@ class EventHandler(EventAbstractHandler):
                 {fields.MONGO_ID: ObjectId(verify_token)})
 
             if not verify_token_doc or verify_token_doc[fields.USER_ID] != self.getUserId():
+                logging.debug('verify_token_doc: {0} user_id: {1}'.format(verify_token_doc, self.getUserId()))
                 raise EventError('Required parameters not valid.')
 
             logging.debug('Event subscription verification ok for: mode:{0} challenge:{1} verify_token:{2}'.format(
