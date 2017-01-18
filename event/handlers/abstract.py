@@ -31,6 +31,7 @@ class EventAbstractHandler(AbstractHandler):
 
             user_doc = await self.db[collections.USERS].find_one(
                 {fields.MONGO_ID: verify_token_doc[fields.USER_ID]})
+
             if not user_doc:
                 raise EventError('Unknown user for given verify_token.')
 
@@ -43,14 +44,13 @@ class EventAbstractHandler(AbstractHandler):
         logging.debug('header_hub_signature: {0}'.format(header_hub_signature))
         # X-Hub-Signature validation
 
-    async def _buildContext(self, usos_id, user_usos_id):
+    async def _buildContext(self, user_id):
 
-        user_doc = await self.db[collections.USERS].find_one({fields.USOS_ID: usos_id,
-                                                              fields.USOS_USER_ID: user_usos_id})
+        user_doc = await self.db[collections.USERS].find_one({fields.MONGO_ID: ObjectId(user_id)})
         if not user_doc:
-            raise EventError('Nierozpoznany użytkownik na podstawie USOS oraz numer.')
+            raise EventError('Nierozpoznany użytkownik na podstawie podanych danych.')
 
-        usos_doc = await self.db_get_usos(usos_id)
+        usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
         self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc)
         self._context.settings = await self.db_settings(self.getUserId())
 

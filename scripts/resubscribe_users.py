@@ -67,8 +67,8 @@ async def subscribe_user(config, db, user_doc, http_client):
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 callback_url = '{0}/{1}/{2}'.format(config.DEPLOY_EVENT,
-                                                    user_doc[fields.USOS_ID],
-                                                    user_doc[fields.USOS_USER_ID])
+                                                    str(user_doc[fields.USOS_ID]),
+                                                    event_type.split('/')[-1])
 
                 verify_token = await db[collections.EVENTS_VERIFY_TOKENS].insert({
                     fields.USER_ID: user_doc[fields.MONGO_ID],
@@ -112,13 +112,16 @@ async def main():
         processed += 1
         logging.info('{0} processing {1} out of {2}'.format('#' * 50, processed, total))
 
+        if user_doc[fields.USOS_ID] == 'UL':
+            continue
+
         user_jobs.append(subscribe_user(config, db, user_doc, http_client))
-        if len(user_jobs) > 10:
-            result = await gen.multi(user_jobs)
+        if len(user_jobs) > 20:
+            await gen.multi(user_jobs)
             user_jobs = list()
 
     if len(user_jobs) > 0:
-        result = await gen.multi(user_jobs)
+        await gen.multi(user_jobs)
 
 
 if __name__ == '__main__':
