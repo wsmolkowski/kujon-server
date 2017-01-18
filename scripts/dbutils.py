@@ -10,6 +10,7 @@ import pymongo
 from commons import usosinstances, utils
 from commons.AESCipher import AESCipher
 from commons.config import Config
+from commons.constants import config as constants_config
 from commons.constants import fields, collections
 from commons.enumerators import Environment
 from commons.enumerators import ExceptionTypes
@@ -73,8 +74,9 @@ class DbUtils(object):
                     except Exception as ex:
                         logging.exception(ex)
 
-        self._ttl_index(collections.TOKENS, fields.CREATED_TIME, fields.SECONDS_HOUR)
-        self._ttl_index(collections.COURSES_CLASSTYPES, fields.CREATED_TIME, fields.SECONDS_DAY)
+        self._ttl_index(collections.TOKENS, fields.CREATED_TIME, constants_config.SECONDS_HOUR)
+        self._ttl_index(collections.COURSES_CLASSTYPES, fields.CREATED_TIME, constants_config.SECONDS_DAY)
+        self._ttl_index(collections.EVENTS_VERIFY_TOKENS, fields.CREATED_TIME, 120)
 
         self._unique_indexes()
 

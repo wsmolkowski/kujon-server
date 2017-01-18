@@ -3,7 +3,7 @@
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import motor.motor_tornado
 from tornado import gen, escape
@@ -18,6 +18,9 @@ from commons.context import Context
 
 define('environment', default='development')
 
+MAX_CONCURENT_JOBS = 10
+USOS_SUBSCRIBE_TIMEOUT = 61
+
 
 def buildMessage(error):
     if hasattr(error, 'response') and hasattr(error.response, 'body') and error.response.body:
@@ -26,6 +29,25 @@ def buildMessage(error):
 
 
 async def subscribe_user(config, db, user_doc, http_client):
+    async def callUnitilSuccess(arguments, context):
+
+        # zakladam ze w rownoleglych watkach sa uzytkownicy z tego samego usos-a
+        try_until = datetime.now() + timedelta(seconds=MAX_CONCURENT_JOBS * USOS_SUBSCRIBE_TIMEOUT)
+
+        while True:
+            try:
+                subscribe_doc = await context.usosCaller.call(
+                    path='services/events/subscribe_event',
+                    arguments=arguments)
+
+                return subscribe_doc
+
+            except Exception as ex:
+                if datetime.now() < try_until:
+                    await gen.sleep(2)
+                    continue
+                raise ex
+
     try:
         logging.info('re subscribe start for user: {0}'.format(user_doc[fields.MONGO_ID]))
         usos_doc = await db[collections.USOSINSTANCES].find_one({fields.USOS_ID: user_doc[fields.USOS_ID]})
@@ -83,8 +105,8 @@ async def subscribe_user(config, db, user_doc, http_client):
                 }
                 logging.info(arguments)
 
-                subscribe_doc = await context.usosCaller.call(path='services/events/subscribe_event',
-                                                              arguments=arguments)
+                subscribe_doc = await callUnitilSuccess(arguments, context)
+
                 logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
 
             except HTTPError as ex:
@@ -100,7 +122,7 @@ async def subscribe_user(config, db, user_doc, http_client):
 
 async def main():
     config = Config(sys.argv[1])
-    utils.initialize_logging('resubscribe users', log_dir=config.LOG_DIR)
+    utils.initialize_logging('resubscribe_users', log_dir=config.LOG_DIR)
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
     http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
@@ -119,7 +141,7 @@ async def main():
             continue
 
         user_jobs.append(subscribe_user(config, db, user_doc, http_client))
-        if len(user_jobs) > 20:
+        if len(user_jobs) > MAX_CONCURENT_JOBS:
             await gen.multi(user_jobs)
             user_jobs = list()
 
