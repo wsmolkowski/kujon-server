@@ -67,7 +67,7 @@ async def subscribe_user(config, db, user_doc, http_client):
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 callback_url = '{0}/{1}/{2}'.format(config.DEPLOY_EVENT,
-                                                    str(user_doc[fields.USOS_ID]),
+                                                    str(user_doc[fields.MONGO_ID]),
                                                     event_type.split('/')[-1])
 
                 verify_token = await db[collections.EVENTS_VERIFY_TOKENS].insert({
@@ -76,12 +76,15 @@ async def subscribe_user(config, db, user_doc, http_client):
                     fields.CREATED_TIME: datetime.now()
                 })
 
+                arguments = {
+                    'event_type': event_type,
+                    'callback_url': callback_url,
+                    'verify_token': str(verify_token)
+                }
+                logging.info(arguments)
+
                 subscribe_doc = await context.usosCaller.call(path='services/events/subscribe_event',
-                                                              arguments={
-                                                                  'event_type': event_type,
-                                                                  'callback_url': callback_url,
-                                                                  'verify_token': str(verify_token)
-                                                              })
+                                                              arguments=arguments)
                 logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
 
             except HTTPError as ex:
