@@ -75,6 +75,7 @@ class DbUtils(object):
 
         self._ttl_index(collections.TOKENS, fields.CREATED_TIME, fields.SECONDS_HOUR)
         self._ttl_index(collections.COURSES_CLASSTYPES, fields.CREATED_TIME, fields.SECONDS_DAY)
+        self._ttl_index(collections.EVENTS_VERIFY_TOKENS, fields.CREATED_TIME, 120)
 
         self._unique_indexes()
 
