@@ -91,7 +91,7 @@ class EventTest(BaseTestClass):
         verify_token = str(verify_token)
 
         event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
+            result[0], event_type.split('/')[-1], challange, verify_token)
 
         # when
         result = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url), method='GET'))
@@ -124,7 +124,7 @@ class EventTest(BaseTestClass):
                 {'node_id': 21123, 'related_user_ids': ['1101468'], 'operation': 'create', 'time': 1484646806}]}
 
         event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
+            result[0], event_type.split('/')[-1], challange, verify_token)
 
         # when
         response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
@@ -161,7 +161,7 @@ class EventTest(BaseTestClass):
             'entry': [{'node_id': 24614, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484643370}]}
 
         event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
+            result[0], event_type.split('/')[-1], challange, verify_token)
 
         # when
         response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
@@ -193,7 +193,7 @@ class EventTest(BaseTestClass):
         verify_token = str(verify_token)
 
         event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
-            USER_DOC[fields.USOS_ID], USER_DOC[fields.USOS_USER_ID], challange, verify_token)
+            result[0], event_type.split('/')[-1], challange, verify_token)
 
         # when
         result = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url), method='GET'))

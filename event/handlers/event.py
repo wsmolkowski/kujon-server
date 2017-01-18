@@ -14,14 +14,18 @@ from event.handlers.abstract import EventAbstractHandler
 
 class EventHandler(EventAbstractHandler):
     @web.asynchronous
-    async def get(self, usos_id, user_usos_id):
+    async def get(self, user_id, event_type):
         challenge = None
         try:
             mode = self.get_argument('hub.mode', default=None)
             challenge = self.get_argument('hub.challenge', default=None)
             verify_token = self.get_argument('hub.verify_token', default=None)
 
-            await self._buildContext(usos_id, user_usos_id)
+            logging.debug(
+                'user_id {0} event_type {1} mode {2} challenge {3} verify_token {4}'.format(user_id, event_type, mode,
+                                                                                            challenge, verify_token))
+
+            await self._buildContext(user_id)
 
             if not mode or not challenge or not verify_token:
                 raise EventError('Required parameters not passed.')
@@ -46,13 +50,15 @@ class EventHandler(EventAbstractHandler):
             self.finish()
 
     @web.asynchronous
-    async def post(self, usos_id, user_usos_id):
+    async def post(self, user_id, event_type):
         try:
-            await self._buildContext(usos_id, user_usos_id)
+            await self._buildContext(user_id)
 
             body = self.request.body
             if isinstance(body, bytes):
                 body = str(body, config.ENCODING)
+
+            logging.debug('user_id {0} event_type {1} body {2}'.format(user_id, event_type, body))
 
             event_data = json.loads(body)
             event_data[fields.USOS_ID] = self.getUsosId()
