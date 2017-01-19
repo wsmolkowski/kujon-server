@@ -134,7 +134,7 @@ async def main():
     total = await db[collections.USERS].find({fields.USOS_PAIRED: True}).count()
     processed = 0
 
-    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True}, {fields.USOS_ID: {'$ne': 'UL'}})
+    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True, fields.USOS_ID: {'$ne': 'UL'}})
     users_docs = await cursor.to_list(None)
     for user_doc in users_docs:
         processed += 1
