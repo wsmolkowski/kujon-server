@@ -110,5 +110,6 @@ FILE_CONTENT = 'file_content'
 FILE_SCAN_RESULT = 'file_scan_result'
 FILE_ID = 'file_id'
 FILE_SHARED_WITH = 'file_shared_with'
+FILE_SHARED_WITH_IDS = 'file_shared_with_ids'
 
 EVENT_TYPE = 'event_type'

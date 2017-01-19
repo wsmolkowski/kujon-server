@@ -18,8 +18,8 @@ from commons.context import Context
 
 define('environment', default='development')
 
-MAX_CONCURENT_JOBS = 10
-USOS_SUBSCRIBE_TIMEOUT = 61
+# MAX_CONCURENT_JOBS = 10
+USOS_SUBSCRIBE_TIMEOUT = 60
 
 
 def buildMessage(error):
@@ -31,8 +31,7 @@ def buildMessage(error):
 async def subscribe_user(config, db, user_doc, http_client):
     async def callUnitilSuccess(arguments, context):
 
-        # zakladam ze w rownoleglych watkach sa uzytkownicy z tego samego usos-a
-        try_until = datetime.now() + timedelta(seconds=MAX_CONCURENT_JOBS * USOS_SUBSCRIBE_TIMEOUT)
+        try_until = datetime.now() + timedelta(seconds=USOS_SUBSCRIBE_TIMEOUT + 2)
 
         while True:
             try:
@@ -44,7 +43,8 @@ async def subscribe_user(config, db, user_doc, http_client):
 
             except Exception as ex:
                 if datetime.now() < try_until:
-                    await gen.sleep(2)
+                    logging.warning('waiting for executing: {0}'.format(arguments))
+                    await gen.sleep(USOS_SUBSCRIBE_TIMEOUT)
                     continue
                 raise ex
 
@@ -82,6 +82,8 @@ async def subscribe_user(config, db, user_doc, http_client):
             logging.warning(
                 'skiping unsubscribe user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
 
+        await db[collections.SUBSCRIPTIONS].remove({fields.USER_ID: user_doc[fields.MONGO_ID]})
+
         if fields.USOS_USER_ID not in user_doc:
             logging.error('nieznany {0} dla {1}'.format(fields.USOS_USER_ID, user_doc))
             return
@@ -103,9 +105,10 @@ async def subscribe_user(config, db, user_doc, http_client):
                     'callback_url': callback_url,
                     'verify_token': str(verify_token)
                 }
-                logging.info(arguments)
 
                 subscribe_doc = await callUnitilSuccess(arguments, context)
+                subscribe_doc[fields.USOS_ID] = user_doc[fields.MONGO_ID]
+                await db[collections.SUBSCRIPTIONS].insert(subscribe_doc)
 
                 logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
 
@@ -131,22 +134,13 @@ async def main():
     total = await db[collections.USERS].find({fields.USOS_PAIRED: True}).count()
     processed = 0
 
-    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True})
-    user_jobs = list()
-    async for user_doc in cursor:
+    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True, fields.USOS_ID: {'$ne': 'UL'}})
+    users_docs = await cursor.to_list(None)
+    for user_doc in users_docs:
         processed += 1
         logging.info('{0} processing {1} out of {2}'.format('#' * 50, processed, total))
 
-        if user_doc[fields.USOS_ID] == 'UL':
-            continue
-
-        user_jobs.append(subscribe_user(config, db, user_doc, http_client))
-        if len(user_jobs) > MAX_CONCURENT_JOBS:
-            await gen.multi(user_jobs)
-            user_jobs = list()
-
-    if len(user_jobs) > 0:
-        await gen.multi(user_jobs)
+        await subscribe_user(config, db, user_doc, http_client)
 
 
 if __name__ == '__main__':
