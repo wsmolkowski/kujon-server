@@ -129,7 +129,7 @@ class AbstractFileHandler(ApiHandler):
                     fields.MONGO_ID: ObjectId(file_id),
                     fields.FILE_STATUS: UploadFileStatus.STORED.value,
                     '$or': [{fields.FILE_SHARED_WITH: user_info[fields.ID]},
-                            {fields.FILE_SHARED_WITH: '*'},
+                            {fields.FILE_SHARED_WITH: 'All'},
                             {fields.USER_ID: ObjectId(self.getUserId())}]
                     }
 
@@ -139,7 +139,7 @@ class AbstractFileHandler(ApiHandler):
 
         raise FilesError('Nie znaleziono pliku.')
 
-    async def apiStoreFile(self, term_id, course_id, file_name, file_content, share_with):
+    async def apiStoreFile(self, term_id, course_id, file_name, file_content, file_shared_with, file_shared_with_ids):
 
         # get user info
         file_doc = dict()
@@ -181,7 +181,8 @@ class AbstractFileHandler(ApiHandler):
         file_doc[fields.FILE_NAME] = file_name
 
         # dodanie pola komu udostępniay
-        file_doc[fields.FILE_SHARED_WITH] = share_with
+        file_doc[fields.FILE_SHARED_WITH] = file_shared_with
+        file_doc[fields.FILE_SHARED_WITH_IDS] = file_shared_with_ids
 
         # rozpoznawanie rodzaju contentu
         try:
@@ -239,7 +240,7 @@ class FileHandler(AbstractFileHandler):
                 raise FilesError('Nie znaleziono pliku.')
 
             file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
-                                                                      {fields.FILE_STATUS: UploadFileStatus.DELETED.value})
+                                                                      {'$set': {fields.FILE_STATUS: UploadFileStatus.DELETED.value}})
             if file_update_doc['ok'] != 1:
                 raise FilesError('Bład podczas usuwania pliku.')
             else:
@@ -311,20 +312,25 @@ class FilesUploadHandler(AbstractFileHandler):
             course_id = self.get_argument(fields.COURSE_ID, default=None)
             term_id = self.get_argument(fields.TERM_ID, default=None)
             file_shared_with = self.get_argument(fields.FILE_SHARED_WITH, default=None)
+            file_shared_with_ids = self.get_argument(fields.FILE_SHARED_WITH_IDS, default=None)
             files = self.request.files
 
             if not term_id or not course_id or not files or not file_shared_with:  # or 'files' not in files
                 raise FilesError('Nie przekazano odpowiednich parametrów.')
 
-            share_list = file_shared_with.replace(' ', '')
-            if share_list == '':
-                share_with = None
-            elif share_list == '*':
-                share_with = '*'
-            else:
-                share_with = share_list.split(FILES_SHARE_WITH_SEPARATOR)
-                # remove empty strings
-                share_with = [x for x in share_with if x != '']
+            try:
+                if file_shared_with == 'List':
+                    file_shared_with_ids = file_shared_with_ids.replace(' ', '')
+                    file_shared_with_ids = file_shared_with_ids.split(FILES_SHARE_WITH_SEPARATOR)
+                    file_shared_with_ids = [x for x in file_shared_with_ids if x != '']
+            except Exception:
+                raise FilesError('Nie przekazano odpowiednich parametrów sharepowania listy.')
+
+            if file_shared_with not in ['All', 'None', 'List']:
+                raise FilesError('Nie przekazano odpowiednich parametrów sharepowania.')
+
+            if file_shared_with in ['All', 'None']:
+                file_shared_with_ids = list()
 
 
             files_doc = list()
@@ -332,11 +338,12 @@ class FilesUploadHandler(AbstractFileHandler):
                 if isinstance(file, list):
                     file = file[0]  # ['files']
                 filename = file['filename']
-                file_id = await self.apiStoreFile(term_id, course_id, filename, file['body'], share_with)
+                file_id = await self.apiStoreFile(term_id, course_id, filename, file['body'], file_shared_with, file_shared_with_ids)
 
                 files_doc.append({fields.FILE_ID: file_id,
                                   fields.FILE_NAME: filename,
-                                  fields.FILE_SHARED_WITH: share_with})
+                                  fields.FILE_SHARED_WITH: file_shared_with,
+                                  fields.FILE_SHARED_WITH_IDS: file_shared_with_ids})
 
             self.success(files_doc)
         except FilesError as ex:
@@ -346,7 +353,7 @@ class FilesUploadHandler(AbstractFileHandler):
 
 
 class FilesShareHandler(AbstractFileHandler):
-    async def apiShareFile(self, file_id, share_to_user_info_ids):
+    async def apiShareFile(self, file_id, file_shared_with, file_shared_with_ids):
 
         file_doc = await self.apiGetFile(file_id)
 
@@ -360,20 +367,19 @@ class FilesShareHandler(AbstractFileHandler):
 
         # check if given share_to are in this courseedition
         participant_ids = list()
-        if not share_to_user_info_ids or share_to_user_info_ids is not '*':
-            if share_to_user_info_ids is not None:
-                for participant in courseedition[fields.PARTICIPANTS]:
-                    participant_ids.append(participant[fields.USER_ID])
+        if file_shared_with is 'List':
+            for participant in courseedition[fields.PARTICIPANTS]:
+                participant_ids.append(participant[fields.USER_ID])
 
-                if not set(share_to_user_info_ids) <= set(participant_ids):
-                    raise FilesError('Nie udało się rozpoznać użytkowników.')
-            else:
-                share_to_user_info_ids = list()  # empty share_to list
+            if not set(file_shared_with_ids) <= set(participant_ids):
+                raise FilesError('Nie udało się rozpoznać użytkowników.')
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
                                                                   {'$set': {
-                                                                      fields.FILE_SHARED_WITH: share_to_user_info_ids}})
+                                                                      fields.FILE_SHARED_WITH: file_shared_with,
+                                                                      fields.FILE_SHARED_WITH_IDS: file_shared_with_ids
+                                                                  }})
         if file_update_doc['ok'] != 1:
             raise FilesError('Błąd podczas udostępniania pliku.')
 
@@ -392,7 +398,7 @@ class FilesShareHandler(AbstractFileHandler):
           "data": [
             {
               "file_id": "123",
-              "file_shared_with": "*"
+              "file_shared_with": "All" "None" "List"
             }
           ],
           "status": "success"
@@ -400,34 +406,22 @@ class FilesShareHandler(AbstractFileHandler):
         '''
 
         try:
-
-            share_doc = escape.json_decode(self.request.body)
-
-            if 'file_id' not in share_doc or 'share_with' not in share_doc:
-                raise FilesError('Błędne parametry wywołania.')
-
-            files = dict()
-
-            share_list = share_doc['share_with'].replace(' ', '')
-            if share_list == '':
-                share_to = None
-            elif share_list == '*':
-                share_to = '*'
-            else:
-                share_to = share_list.split(FILES_SHARE_WITH_SEPARATOR)
-                # remove empty strings
-                share_to = [x for x in share_to if x != '']
-
             try:
-                files[ObjectId(share_doc['file_id'])] = share_to
-            except InvalidId:
-                raise FilesError('Niepoprawna identyfikator pliku.')
+                args_doc = escape.json_decode(self.request.body)
+            except ValueError:
+                raise FilesError("Błędne parametry wywołania.")
 
-            files_doc = list()
-            for key in files.keys():
-                await self.apiShareFile(key, files[key])
-                files_doc.append({fields.FILE_ID: str(key), fields.FILE_SHARED_WITH: files[key]})
-            self.success(files_doc)
+            result_doc = list()
+            for file_doc in args_doc:
+
+                if file_doc[fields.FILE_SHARED_WITH] in ['All', 'None']:
+                    file_doc[fields.FILE_SHARED_WITH_IDS] = list()
+
+                await self.apiShareFile(file_doc[fields.FILE_ID], file_doc[fields.FILE_SHARED_WITH], file_doc[fields.FILE_SHARED_WITH_IDS])
+                result_doc.append({fields.FILE_ID: file_doc[fields.FILE_ID],
+                                   fields.FILE_SHARED_WITH: file_doc[fields.FILE_SHARED_WITH],
+                                   fields.FILE_SHARED_WITH_IDS: file_doc[fields.FILE_SHARED_WITH_IDS]})
+            self.success(file_doc)
 
         except FilesError as ex:
             await self.exc(ex, log_db=False, log_file=False)
