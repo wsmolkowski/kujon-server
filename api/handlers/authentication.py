@@ -93,6 +93,7 @@ class AuthenticationHandler(BaseHandler, JSendMixin):
 
         return user_doc
 
+
 class LogoutHandler(AuthenticationHandler):
     async def remove_token(self):
         user_doc = self.get_current_user()
@@ -337,11 +338,33 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
         except Exception as ex:
             await self.exc(ex, finish=False)
 
-
     async def _subscribe_usos(self):
 
         await self._unsubscribe_usos()
 
+        async def callUnitilSuccess(event_type, callback_url, verify_token):
+
+            try_until = datetime.now() + timedelta(seconds=60 + 2)  # 60 usos subscribe timeout
+
+            while True:
+                try:
+                    subscribe_doc = await self.usosCall(
+                        path='services/events/subscribe_event',
+                        arguments={
+                            'event_type': event_type,
+                            'callback_url': callback_url,
+                            'verify_token': str(verify_token)
+                        })
+
+                    return subscribe_doc
+
+                except Exception as ex:
+                    if datetime.now() < try_until:
+                        logging.warning(
+                            'waiting for executing: {0} {1} {2}'.format(event_type, callback_url, verify_token))
+                        await gen.sleep(60)
+                        continue
+                    raise ex
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
@@ -355,12 +378,8 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
                     fields.CREATED_TIME: datetime.now()
                 })
 
-                subscribe_doc = await self.usosCall(path='services/events/subscribe_event',
-                                                    arguments={
-                                                        'event_type': event_type,
-                                                        'callback_url': callback_url,
-                                                        'verify_token': str(verify_token)
-                                                    })
+                subscribe_doc = await callUnitilSuccess(event_type, callback_url, str(verify_token))
+
                 subscribe_doc['event_type'] = event_type
                 subscribe_doc[fields.USER_ID] = self.getUserId()
 
