@@ -47,7 +47,7 @@ async def subscribe_user(config, db, user_doc, http_client):
 
             except Exception as ex:
                 if datetime.now() < try_until:
-                    logging.warning('waiting for executing: {0}'.format(arguments))
+                    logging.warning('waiting for executing: {0} {1} {2}'.format(event_type, callback_url, verify_token))
                     await gen.sleep(USOS_SUBSCRIBE_TIMEOUT)
                     continue
                 raise ex
