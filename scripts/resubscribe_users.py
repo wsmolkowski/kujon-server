@@ -29,7 +29,7 @@ def buildMessage(error):
 
 
 async def subscribe_user(config, db, user_doc, http_client):
-    async def callUnitilSuccess(arguments, context):
+    async def callUnitilSuccess(context, event_type, callback_url, verify_token):
 
         try_until = datetime.now() + timedelta(seconds=USOS_SUBSCRIBE_TIMEOUT + 2)
 
@@ -37,7 +37,11 @@ async def subscribe_user(config, db, user_doc, http_client):
             try:
                 subscribe_doc = await context.usosCaller.call(
                     path='services/events/subscribe_event',
-                    arguments=arguments)
+                    arguments={
+                        'event_type': event_type,
+                        'callback_url': callback_url,
+                        'verify_token': str(verify_token)
+                    })
 
                 return subscribe_doc
 
@@ -100,13 +104,7 @@ async def subscribe_user(config, db, user_doc, http_client):
                     fields.CREATED_TIME: datetime.now()
                 })
 
-                arguments = {
-                    'event_type': event_type,
-                    'callback_url': callback_url,
-                    'verify_token': str(verify_token)
-                }
-
-                subscribe_doc = await callUnitilSuccess(arguments, context)
+                subscribe_doc = await callUnitilSuccess(context, event_type, callback_url, verify_token)
                 subscribe_doc[fields.USOS_ID] = user_doc[fields.MONGO_ID]
                 await db[collections.SUBSCRIPTIONS].insert(subscribe_doc)
 
