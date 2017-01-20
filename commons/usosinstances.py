@@ -33,7 +33,7 @@ USOSINSTANCES = [
       'contact': 'mariusz.ruszkowski@uni.lodz.pl, pawel.dziuba@uni.lodz.pl, konrad.maksymowicz@uni.lodz.pl, dso-logi@uni.lodz.pl, karol.kornatka@uni.lodz.pl',
       'enabled': True,
       'validate_ssl_certificate': True,
-      'comment': '',
+      'comment': 'OK',
       },
     {'usos_id': 'UMK',
      'name': 'Uniwersytet Mikołaja Kopernika w Toruniu',

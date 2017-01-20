@@ -157,16 +157,18 @@ class TTLecturerApi(ApiHandler):
             raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
         if self.do_refresh():
-            await self.db_remove(collections.TT_LECTURERS, {fields.USER_ID: self.getUserId()})
+            await self.db_remove(collections.TT_LECTURERS, {fields.USOS_USER_ID: lecturer_id,
+                                                            fields.USOS_ID: self.getUsosId()})
 
-        tt_doc = await self.db[collections.TT_LECTURERS].find_one({fields.USER_ID: self.getUserId(),
-                                                         fields.TT_STARTDATE: str(first_day_of_month)})
+        tt_doc = await self.db[collections.TT_LECTURERS].find_one({fields.USER_ID: lecturer_id,
+                                                                   fields.USOS_ID: self.getUsosId(),
+                                                                   fields.TT_STARTDATE: str(first_day_of_month)})
         if not tt_doc:
 
             tt_doc = dict()
             tt_doc['tts'] = list()
             tt_doc[fields.TT_STARTDATE] = str(first_day_of_month)
-            tt_doc[fields.USER_ID] = self.getUserId()
+            tt_doc[fields.USOS_USER_ID] = lecturer_id
 
             try:
                 for week in [first_day_of_month, second_week, third_week, fourth_week]:
