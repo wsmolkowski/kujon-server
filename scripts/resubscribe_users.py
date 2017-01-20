@@ -105,7 +105,7 @@ async def subscribe_user(config, db, user_doc, http_client):
                 })
 
                 subscribe_doc = await callUnitilSuccess(context, event_type, callback_url, verify_token)
-                subscribe_doc[fields.USOS_ID] = user_doc[fields.MONGO_ID]
+                subscribe_doc[fields.USER_ID] = user_doc[fields.MONGO_ID]
                 await db[collections.SUBSCRIPTIONS].insert(subscribe_doc)
 
                 logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
