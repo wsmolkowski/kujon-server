@@ -156,7 +156,7 @@ class AbstractFileHandler(ApiHandler):
                         fields.TERM_ID: term_id,
                         fields.COURSE_ID: course_id,
                         fields.FILE_NAME: file_name,
-                        fields.FILE_STATUS: {'$nin': [UploadFileStatus.STORED.value, UploadFileStatus.NEW.value]}}
+                        fields.FILE_STATUS: {'$in': [UploadFileStatus.STORED.value, UploadFileStatus.NEW.value]}}
             exising_file_doc = await self.db[collections.FILES].find_one(pipeline)
             if exising_file_doc:
                 raise FilesError('plik o podanej nazwie już istnieje.')
