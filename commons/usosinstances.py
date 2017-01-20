@@ -406,7 +406,7 @@ USOSINSTANCES = [
   'consumer_key': 'U6QNrwUauDRNM54KHQZz',
   'consumer_secret': 'gGa59kNEQYeCYUnY66RfvAHHCdFDFVuHmm9UzPGJ',
   'contact': 'mariusz.ruszkowski@uni.lodz.pl, pawel.dziuba@uni.lodz.pl, konrad.maksymowicz@uni.lodz.pl, dso-logi@uni.lodz.pl, karol.kornatka@uni.lodz.pl',
-  'enabled': False,
+  'enabled': True,
   'validate_ssl_certificate': True,
   'comment': 'Czekamy na dostęp dla Kujona do Uniwersytetu Łódzkiego.',
   },
