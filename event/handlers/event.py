@@ -63,9 +63,10 @@ class EventHandler(EventAbstractHandler):
             event_data = json.loads(body)
             event_data[fields.USOS_ID] = self.getUsosId()
             event_data[fields.USER_ID] = self.getUserId()
+            event_data[fields.EVENT_STATUS] = 'new'
 
-            IOLoop.current().spawn_callback(self.db_insert, collections.EVENTS_USOS, event_data)
-            IOLoop.current().spawn_callback(self.process_event, event_data)
+            event_id = await self.db_insert(collections.EVENTS_USOS, event_data)
+            IOLoop.current().spawn_callback(self.process_event, event_id)
 
             self.success(data='event consumed')
         except EventError as ex:

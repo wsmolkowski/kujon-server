@@ -113,3 +113,4 @@ FILE_SHARED_WITH = 'file_shared_with'
 FILE_SHARED_WITH_IDS = 'file_shared_with_ids'
 
 EVENT_TYPE = 'event_type'
+EVENT_STATUS = 'event_status'
