@@ -54,6 +54,10 @@ class EventAbstractHandler(AbstractHandler):
         self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc)
         self._context.settings = await self.db_settings(self.getUserId())
 
+    async def _updateStatus(self, event_id, status):
+        await self.db[collections.EVENTS_USOS].update({fields.MONGO_ID: event_id},
+                                                      {'$set': {fields.EVENT_STATUS: status}})
+
     async def _grader(self, grader_id):
         '''
             get grader data
@@ -101,68 +105,75 @@ class EventAbstractHandler(AbstractHandler):
 
         logging.debug('_user_event: {0} {1} {2} {3}'.format(node_id, usos_id, event_type, event_operation))
 
-        try:
+        if event_type == constants.EVENT_TYPE_USER_POINT:
 
-            if event_type == constants.EVENT_TYPE_USER_POINT:
-
+            try:
                 user_point = await self.usosCall(path='services/crstests/user_point',
                                                  arguments={'node_id': node_id})
-                logging.debug('{0} user_point: {1}'.format(constants.EVENT_TYPE_USER_POINT, user_point))
 
-                if not user_point:
-                    raise EventError(
-                        'No notification for type: {0} {1}'.format(constants.EVENT_TYPE_USER_POINT, usos_id))
+            except Exception as ex:
+                logging.exception(ex)
+                raise EventError('No notification for type: {0} {1}'.format(constants.EVENT_TYPE_USER_POINT, usos_id))
 
-                # get info about course_edition
-                root_id_doc = await self.usosCall(path='services/crstests/root_node',
-                                                  arguments={'node_id': node_id, 'fields': 'root_id'})
+            logging.debug('{0} user_point: {1}'.format(constants.EVENT_TYPE_USER_POINT, user_point))
 
-                course_edition_doc = await self.usosCall(path='services/crstests/root_node',
-                                                         arguments={'node_id': root_id_doc['root_id'],
-                                                                    'fields': 'course_edition'})
+            root_id_doc = await self.usosCall(path='services/crstests/root_node',
+                                              arguments={'node_id': node_id, 'fields': 'root_id'})
 
-                user_point[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
-                user_point[constants.GRADER] = await self._grader(user_point['grader_id'])
+            course_edition_doc = await self.usosCall(path='services/crstests/root_node',
+                                                     arguments={'node_id': root_id_doc['root_id'],
+                                                                'fields': 'course_edition'})
 
-                await self._one_signal(constants.EVENT_TYPE_USER_POINT, user_point, event_operation,
-                                       self._context.user_doc[fields.USER_EMAIL])
+            user_point[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
+            user_point[constants.GRADER] = await self._grader(user_point['grader_id'])
 
-            elif event_type == constants.EVENT_TYPE_USER_GRADE:
+            await self._one_signal(constants.EVENT_TYPE_USER_POINT, user_point, event_operation,
+                                   self._context.user_doc[fields.USER_EMAIL])
 
+        elif event_type == constants.EVENT_TYPE_USER_GRADE:
+
+            try:
                 user_grade = await self.usosCall(path='services/crstests/user_grade', arguments={'node_id': node_id})
-                logging.info('{0} user_grade: {1}'.format(constants.EVENT_TYPE_USER_GRADE, user_grade))
+            except Exception as ex:
+                logging.exception(ex)
+                raise EventError('No notification for type: {0} {1}'.format(constants.EVENT_TYPE_USER_GRADE, usos_id))
 
-                if not user_grade:
-                    raise EventError(
-                        'No notification for type: {0} {1}'.format(constants.EVENT_TYPE_USER_GRADE, usos_id))
+            logging.info('{0} user_grade: {1}'.format(constants.EVENT_TYPE_USER_GRADE, user_grade))
 
-                # get info about course_edition
-                root_id_doc = await self.usosCall(path='services/crstests/root_node',
-                                                  arguments={'node_id': node_id, 'fields': 'root_id'})
+            root_id_doc = await self.usosCall(path='services/crstests/root_node',
+                                              arguments={'node_id': node_id, 'fields': 'root_id'})
 
-                course_edition_doc = await self.usosCall(path='services/crstests/root_node',
-                                                         arguments={'node_id': root_id_doc['root_id'],
-                                                                    'fields': 'course_edition'})
+            course_edition_doc = await self.usosCall(path='services/crstests/root_node',
+                                                     arguments={'node_id': root_id_doc['root_id'],
+                                                                'fields': 'course_edition'})
 
-                user_grade[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
+            user_grade[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
 
-                user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'])
+            user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'])
 
-                await self._one_signal(constants.EVENT_TYPE_USER_GRADE, user_grade, event_operation,
-                                       self._context.user_doc[fields.USER_EMAIL])
+            await self._one_signal(constants.EVENT_TYPE_USER_GRADE, user_grade, event_operation,
+                                   self._context.user_doc[fields.USER_EMAIL])
 
-            raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
+        raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
 
+    async def process_event(self, event_id):
+
+        try:
+            event_doc = await self.db[collections.EVENTS_USOS].find_one({fields.MONGO_ID: event_id})
+
+            for entry in event_doc['entry']:
+                for user_id in entry['related_user_ids']:
+                    if user_id == self._context.user_doc[fields.USOS_USER_ID]:
+                        await self._user_event(
+                            event_id,
+                            entry['node_id'],
+                            event_doc[fields.USOS_ID],
+                            event_doc['event_type'],
+                            entry['operation'])
+
+                        await self._updateStatus(event_id, 'one signal send.')
+                    else:
+                        logging.debug('not processing events for someone else: {0}'.format(event_doc))
         except Exception as ex:
-            await self.exc(ex, finish=False)
-
-    async def process_event(self, event):
-        for entry in event['entry']:
-            for user_id in entry['related_user_ids']:
-                if user_id == self._context.user_doc[fields.USOS_USER_ID]:
-                    await self._user_event(entry['node_id'],
-                                           event[fields.USOS_ID],
-                                           event['event_type'],
-                                           entry['operation'])
-                else:
-                    logging.debug('not processing events for someone else: {0}'.format(event))
+            await self._updateStatus(event_id, 'processing failed')
+            logging.exception(ex)

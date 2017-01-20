@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 import motor.motor_tornado
-from tornado import escape
+from tornado import escape, gen
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
@@ -138,6 +138,50 @@ class EventTest(BaseTestClass):
         result = escape.json_decode(response.body)
         self.assertEqual('event consumed', result['data'])
 
+    @gen_test(timeout=110)
+    def testProcessEventUserPoint2(self):
+        # assume
+        challange = 'BKHeL7VXuPDttqDVzWne'
+        event_type = events_constants.EVENT_TYPE_USER_POINT
+        self.prepareDatabase(self.config)
+
+        result = self.insert_user(user_doc=USER_DOC)
+
+        # assume - not notification to get
+        verify_token = yield self.db[collections.EVENTS_VERIFY_TOKENS].insert({
+            fields.USER_ID: result[0],
+            fields.EVENT_TYPE: event_type,
+            fields.CREATED_TIME: datetime.now()
+        })
+
+        verify_token = str(verify_token)
+
+        event = {
+            'event_type': 'crstests/user_point',
+            'entry': [{
+                'node_id': 21123,
+                'related_user_ids': ['1279833'],
+                'operation': 'create',
+                'time': 1484646806},
+                {'node_id': 21123, 'related_user_ids': ['1101468']}]}
+
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            result[0], event_type.split('/')[-1], challange, verify_token)
+
+        # when
+        response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
+                                                       headers=HTTPHeaders({
+                                                           'Content-type': 'application/json',
+                                                           'Accept': 'text/plain'}),
+                                                       method='POST',
+                                                       body=json.dumps(event)))
+
+        # then
+        result = escape.json_decode(response.body)
+
+        yield gen.sleep(10)
+        self.assertEqual('event consumed', result['data'])
+
     @gen_test(timeout=20)
     def testProcessEventUserGrade(self):
         # assume
@@ -158,6 +202,45 @@ class EventTest(BaseTestClass):
 
         event = {
             'event_type': events_constants.EVENT_TYPE_USER_GRADE,
+            'entry': [{'node_id': 24614, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484643370}]}
+
+        event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(
+            result[0], event_type.split('/')[-1], challange, verify_token)
+
+        # when
+        response = yield self.client.fetch(HTTPRequest(url=self.get_url(event_url),
+                                                       headers=HTTPHeaders({
+                                                           'Content-type': 'application/json',
+                                                           'Accept': 'text/plain'}),
+                                                       method='POST',
+                                                       body=json.dumps(event)))
+
+        yield gen.sleep(10)
+
+        # then
+        result = escape.json_decode(response.body)
+        self.assertEqual('event consumed', result['data'])
+
+    @gen_test(timeout=20)
+    def testProcessEventUserGrade2(self):
+        # assume
+        challange = 'BKHeL7VXuPDttqDVzWne'
+        event_type = events_constants.EVENT_TYPE_USER_GRADE
+        self.prepareDatabase(self.config)
+
+        result = self.insert_user(user_doc=USER_DOC)
+
+        # assume - not notification to get
+        verify_token = yield self.db[collections.EVENTS_VERIFY_TOKENS].insert({
+            fields.USER_ID: result[0],
+            fields.EVENT_TYPE: event_type,
+            fields.CREATED_TIME: datetime.now()
+        })
+
+        verify_token = str(verify_token)
+
+        event = {
+            'event_type': 'crstests/user_grade',
             'entry': [{'node_id': 24614, 'related_user_ids': ['1279833'], 'operation': 'create', 'time': 1484643370}]}
 
         event_url = '/{0}/{1}?hub.mode=subscribe&hub.challenge={2}&hub.verify_token={3}'.format(

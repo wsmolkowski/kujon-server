@@ -3,11 +3,12 @@
 import logging
 import mimetypes
 import sys
-from datetime import datetime
 import urllib.parse
+from datetime import datetime
+
 import pyclamd
-from bson.objectid import ObjectId
 from bson.errors import InvalidId
+from bson.objectid import ObjectId
 from tornado import escape
 from tornado.ioloop import IOLoop
 
@@ -20,11 +21,12 @@ from commons.errors import FilesError
 USER_FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                            fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
                            fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1,
-                           fields.FILE_SHARED_WITH: 1, 'first_name': 1, 'last_name': 1}
+                           fields.FILE_SHARED_WITH: 1, 'first_name': 1, 'last_name': 1, fields.FILE_SHARED_WITH_IDS: 1}
 
 FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_SIZE: 1,
                       fields.FILE_CONTENT_TYPE: 1, fields.TERM_ID: 1,
-                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1, fields.FILE_SHARED_WITH: 1}
+                      fields.COURSE_ID: 1, fields.MONGO_ID: 1, fields.USOS_USER_ID: 1, fields.FILE_SHARED_WITH: 1,
+                      fields.FILE_SHARED_WITH_IDS: 1}
 
 FILE_SCAN_RESULT_OK = 'file_clean'
 FILES_SHARE_WITH_SEPARATOR = ';'
@@ -152,8 +154,11 @@ class AbstractFileHandler(ApiHandler):
 
         # check if such a file exists
         try:
-            pipeline = {fields.USOS_ID: self.getUsosId(), fields.TERM_ID: term_id, fields.COURSE_ID: course_id,
-                        fields.FILE_NAME: file_name}
+            pipeline = {fields.USOS_ID: self.getUsosId(),
+                        fields.TERM_ID: term_id,
+                        fields.COURSE_ID: course_id,
+                        fields.FILE_NAME: file_name,
+                        fields.FILE_STATUS: {'$in': [UploadFileStatus.STORED.value, UploadFileStatus.NEW.value]}}
             exising_file_doc = await self.db[collections.FILES].find_one(pipeline)
             if exising_file_doc:
                 raise FilesError('plik o podanej nazwie już istnieje.')
