@@ -106,6 +106,7 @@ async def subscribe_user(config, db, user_doc, http_client):
 
                 subscribe_doc = await callUnitilSuccess(context, event_type, callback_url, verify_token)
                 subscribe_doc[fields.USER_ID] = user_doc[fields.MONGO_ID]
+                subscribe_doc[fields.CREATED_TIME] = datetime.now()
                 await db[collections.SUBSCRIPTIONS].insert(subscribe_doc)
 
                 logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
@@ -129,7 +130,7 @@ async def main():
     http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
     logging.info(http_client)
 
-    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True, fields.USOS_ID: {'$ne': 'UL'}})
+    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True})  # fields.USOS_ID: {'$ne': 'UL'}
     users_docs = await cursor.to_list(None)
     total = len(users_docs)
     processed = 0

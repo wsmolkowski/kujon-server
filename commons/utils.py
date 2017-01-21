@@ -11,6 +11,7 @@ import certifi
 from tornado import httpclient
 from tornado.httpclient import HTTPRequest
 from tornado.httputil import HTTPHeaders
+from tornado.log import LogFormatter
 
 from commons.constants import config
 
@@ -20,7 +21,7 @@ except ImportError:
     from httplib2 import socks
 
 LOGGING_MAX_BYTES = 5 * 1024 * 1024
-DEFAULT_FORMAT = '%%(asctime)s %%(levelname)s %s %%(module)s:%%(lineno)s %%(message)s'
+LOGGING_MAX_BACUP = 10
 
 log = logging.getLogger(__name__)
 
@@ -38,15 +39,11 @@ def mkdir(newdir):
             os.mkdir(newdir)
 
 
-def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
-    log_format = DEFAULT_FORMAT % logger_name
+def initialize_logging(logger_name, log_level=None, log_dir=None):
+    if not log_level:
+        log_level = logging.DEBUG
 
     try:
-        logging.basicConfig(
-            format=log_format,
-            level=log_level,
-        )
-
         # set up file loggers
         if not log_dir:
             log_dir = os.path.join(tempfile.gettempdir(), 'kujon.mobi')
@@ -58,19 +55,22 @@ def initialize_logging(logger_name, log_level='DEBUG', log_dir=None):
 
         log_file = os.path.join(log_dir, '{0}.log'.format(logger_name))
 
-        file_handler = handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=1)
-        formatter = logging.Formatter(log_format, config.DEFAULT_DATE_FORMAT)
-        file_handler.setFormatter(formatter)
+        file_handler = handlers.RotatingFileHandler(log_file, maxBytes=LOGGING_MAX_BYTES, backupCount=LOGGING_MAX_BACUP)
+        file_handler.setFormatter(LogFormatter())
 
-        root_log = logging.getLogger()
-        root_log.addHandler(file_handler)
+        if os.path.isfile(log_file):
+            file_handler.doRollover()
 
-    except Exception as e:
-        sys.stderr.write("Couldn't initialize logging: %s\n" % str(e))
+        logger = logging.getLogger()
+        logger.setLevel(log_level)
+        logger.addHandler(file_handler)
+
+    except Exception as ex:
+        sys.stderr.write("Couldn't initialize logging: %s\n" % str(ex))
         traceback.print_exc()
 
         # if config fails entirely, enable basic stdout logging as a fallback
-        logging.basicConfig(format=log_format, level=logging.INFO, )
+        logging.basicConfig(format=LogFormatter(), level=logging.INFO)
 
     # re-get the log after logging is initialized
     global log
