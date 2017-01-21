@@ -74,6 +74,10 @@ class EventAbstractHandler(AbstractHandler):
         :return:
         '''
 
+        logging.info('_one_signal event_type: {0} user_data: {1} event_operation: {2} email: {3}'.format(
+            event_type, user_data, event_operation, email
+        ))
+
         notification, message_title, message_body = None, None, None
 
         if event_type == constants.EVENT_TYPE_USER_POINT:
@@ -89,12 +93,17 @@ class EventAbstractHandler(AbstractHandler):
             onesignal_result = await self._osm.signal_message(message=notification,
                                                               email_reciepient=email)
 
+        logging.info('onesignal_result {0}'.format(onesignal_result))
+
         if notification and message_title and message_body:
-            await self.db_save_message(message=message_body,
-                                       from_whom=message_title,
-                                       message_type='powiadomienie',
-                                       notification_text=notification,
-                                       notification_result=onesignal_result)
+            message_doc = await self.db_save_message(message=message_body,
+                                                     from_whom=message_title,
+                                                     message_type='powiadomienie',
+                                                     notification_text=notification,
+                                                     notification_result=onesignal_result)
+
+            logging.info('saved message_doc: {0}'.format(message_doc))
+
         else:
             return EventError('Błędnie przeprocesowane wysłanie wiadomosci OneSignal '
                               'notification: {0} message_title: {1} message_body: {2}'.format(
@@ -103,7 +112,7 @@ class EventAbstractHandler(AbstractHandler):
 
     async def _user_event(self, node_id, usos_id, event_type, event_operation):
 
-        logging.debug('_user_event: {0} {1} {2} {3}'.format(node_id, usos_id, event_type, event_operation))
+        logging.info('_user_event: {0} {1} {2} {3}'.format(node_id, usos_id, event_type, event_operation))
 
         if event_type == constants.EVENT_TYPE_USER_POINT:
 
@@ -115,7 +124,7 @@ class EventAbstractHandler(AbstractHandler):
                 logging.exception(ex)
                 raise EventError('No notification for type: {0} {1}'.format(constants.EVENT_TYPE_USER_POINT, usos_id))
 
-            logging.debug('{0} user_point: {1}'.format(constants.EVENT_TYPE_USER_POINT, user_point))
+            logging.info('{0} user_point: {1}'.format(constants.EVENT_TYPE_USER_POINT, user_point))
 
             root_id_doc = await self.usosCall(path='services/crstests/root_node',
                                               arguments={'node_id': node_id, 'fields': 'root_id'})
@@ -123,6 +132,8 @@ class EventAbstractHandler(AbstractHandler):
             course_edition_doc = await self.usosCall(path='services/crstests/root_node',
                                                      arguments={'node_id': root_id_doc['root_id'],
                                                                 'fields': 'course_edition'})
+
+            logging.debug('{0} course_edition_doc: {1}'.format(constants.EVENT_TYPE_USER_POINT, course_edition_doc))
 
             user_point[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
             user_point[constants.GRADER] = await self._grader(user_point['grader_id'])
@@ -147,6 +158,8 @@ class EventAbstractHandler(AbstractHandler):
                                                      arguments={'node_id': root_id_doc['root_id'],
                                                                 'fields': 'course_edition'})
 
+            logging.debug('{0} course_edition_doc: {1}'.format(constants.EVENT_TYPE_USER_GRADE, course_edition_doc))
+
             user_grade[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
 
             user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'])
@@ -160,6 +173,7 @@ class EventAbstractHandler(AbstractHandler):
 
         try:
             event_doc = await self.db[collections.EVENTS_USOS].find_one({fields.MONGO_ID: event_id})
+            logging.info('processing event_doc: {0}'.format(event_doc))
 
             for entry in event_doc['entry']:
                 for user_id in entry['related_user_ids']:
@@ -173,7 +187,7 @@ class EventAbstractHandler(AbstractHandler):
 
                         await self._updateStatus(event_id, 'one signal send.')
                     else:
-                        logging.debug('not processing events for someone else: {0}'.format(event_doc))
+                        logging.info('not processing events for someone else: {0}'.format(event_doc))
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
             logging.exception(ex)

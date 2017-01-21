@@ -66,6 +66,8 @@ class EventHandler(EventAbstractHandler):
             event_data[fields.EVENT_STATUS] = 'new'
 
             event_id = await self.db_insert(collections.EVENTS_USOS, event_data)
+            logging.info('processing event_id: {0} for event_data: {1}'.format(event_id, event_data))
+
             IOLoop.current().spawn_callback(self.process_event, event_id)
 
             self.success(data='event consumed')
