@@ -20,7 +20,6 @@ sudo chmod -R g+w $APPDIR
 sudo chown -R appuser:appuser $LOGDIR
 sudo chmod -R g+w $LOGDIR
 
-
 echo 'recreating usosinstances...'
 cd $APPDIR
 python3.5 ./scripts/dbutils.py -r -e demo
