@@ -130,7 +130,7 @@ async def main():
     http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
     logging.info(http_client)
 
-    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True, fields.USOS_ID: {'$ne': 'UL'}})
+    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True})  # fields.USOS_ID: {'$ne': 'UL'}
     users_docs = await cursor.to_list(None)
     total = len(users_docs)
     processed = 0
