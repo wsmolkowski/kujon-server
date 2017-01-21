@@ -5,9 +5,7 @@ LOGDIR=/home/appuser/prod.kujon.mobi/log
 export PYTHONPATH=$PYTHONPATH:$APPDIR
 
 echo 'stopping services...'
-# sudo service nginx stop
 sudo supervisorctl stop kujon-prod:*
-echo 'services stopped'
 
 echo 'cloning code'
 sudo rm -rf $APPDIR
@@ -22,8 +20,11 @@ sudo chmod -R g+w $APPDIR
 sudo chown -R appuser:appuser $LOGDIR
 sudo chmod -R g+w $LOGDIR
 
+echo 'recreating usosinstances...'
+cd $APPDIR
+python3.5 ./scripts/dbutils.py -r -e production
+
 echo 'starting services...'
-#sudo service nginx start
 sudo supervisorctl start kujon-prod:*
 echo ""
 sudo supervisorctl status kujon-prod:*
