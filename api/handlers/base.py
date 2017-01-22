@@ -110,17 +110,26 @@ class BaseHandler(AbstractHandler):
             self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
             self.set_header("Access-Control-Allow-Credentials", "true")
 
-
-class ApiHandler(BaseHandler, ApiMixin, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
-    EXCEPTION_TYPE = ExceptionTypes.API.value
-
-    def do_refresh(self):  # overwrite from DaoMixin
-        if self.request.headers.get(config.MOBILE_X_HEADER_REFRESH, False):
+    async def _usosWorks(self):
+        try:
+            # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
+            await self.asyncCall(path='services/courses/classtypes_index')
             return True
+        except Exception as ex:
+            logging.warning(ex)
+            return False
+
+    async def doRefresh(self):
+        if self.request.headers.get(config.MOBILE_X_HEADER_REFRESH, False):
+            return await self._usosWorks()
         if self.config.ENVIRONMENT.lower() == Environment.DEMO.value:
             return True
 
         return False
+
+
+class ApiHandler(BaseHandler, ApiMixin, ApiMixinSearch, JSendMixin, ApiUserMixin, ApiTermMixin):
+    EXCEPTION_TYPE = ExceptionTypes.API.value
 
     async def _unsubscribe_usos(self):
         try:
@@ -166,15 +175,6 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
         for mobile and www use
     """
 
-    async def usos_works(self):
-        try:
-            # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
-            await self.asyncCall(path='services/courses/classtypes_index')
-            return True
-        except Exception as ex:
-            logging.exception(ex)
-            return False
-
     @web.asynchronous
     async def get(self):
         usos_works = False
@@ -186,7 +186,7 @@ class ApplicationConfigHandler(BaseHandler, JSendMixin):
                 usos_paired = user[fields.USOS_PAIRED]
 
             if usos_paired:
-                usos_works = await self.usos_works()
+                usos_works = await self._usosWorks()
 
             config = {
                 'PROJECT_TITLE': self.config.PROJECT_TITLE,

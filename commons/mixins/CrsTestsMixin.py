@@ -11,7 +11,8 @@ EXCLUDE_FIELDS = {fields.MONGO_ID: False, fields.CREATED_TIME: False, fields.UPD
 class CrsTestsMixin(ApiMixin):
     async def api_crstests(self):
         pipeline = {fields.USER_ID: self.get_current_user()[fields.MONGO_ID]}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.CRSTESTS, pipeline)
 
         crstests_doc = await self.db[collections.CRSTESTS].find_one(pipeline, EXCLUDE_FIELDS)
@@ -41,7 +42,7 @@ class CrsTestsMixin(ApiMixin):
     async def api_crstests_grades(self, node_id):
         pipeline = {fields.NODE_ID: node_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.CRSTESTS_GRADES, pipeline)
 
         crstests_doc = await self.db[collections.CRSTESTS_GRADES].find_one(pipeline)
@@ -64,7 +65,7 @@ class CrsTestsMixin(ApiMixin):
     async def api_crstests_points(self, node_id):
         pipeline = {fields.NODE_ID: node_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.CRSTESTS_POINTS, pipeline)
 
         crstests_doc = await self.db[collections.CRSTESTS_POINTS].find_one(pipeline)

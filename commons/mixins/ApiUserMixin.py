@@ -19,7 +19,8 @@ USER_INFO_SKIP_FIELDS = {'email_access': False,
 class ApiUserMixin(DaoMixin):
     async def api_photo(self, user_info_id):
         pipeline = {fields.ID: user_info_id}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.PHOTOS, pipeline)
 
         photo_doc = await self.db[collections.PHOTOS].find_one(pipeline)
@@ -169,7 +170,7 @@ class ApiUserMixin(DaoMixin):
         user_id = str(user_id)
         pipeline = {fields.ID: user_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh() and user_id:
+        if await self.doRefresh() and user_id:
             await self.db_remove(collections.USERS_INFO, pipeline)
 
         user_info_doc = await self.db[collections.USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)

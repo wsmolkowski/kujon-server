@@ -9,7 +9,7 @@ class ApiRestTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiRestTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.insert_user(config=self.config)
+        self.insert_user()
 
     @gen_test(timeout=5)
     def testConfig(self):
