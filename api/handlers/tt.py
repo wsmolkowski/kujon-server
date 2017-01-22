@@ -160,7 +160,7 @@ class TTLecturerApi(ApiHandler):
             await self.db_remove(collections.TT_LECTURERS, {fields.USOS_USER_ID: lecturer_id,
                                                             fields.USOS_ID: self.getUsosId()})
 
-        tt_doc = await self.db[collections.TT_LECTURERS].find_one({fields.USER_ID: lecturer_id,
+        tt_doc = await self.db[collections.TT_LECTURERS].find_one({fields.USOS_USER_ID: lecturer_id,
                                                                    fields.USOS_ID: self.getUsosId(),
                                                                    fields.TT_STARTDATE: str(first_day_of_month)})
         if not tt_doc:
@@ -212,7 +212,7 @@ class TTLecturerApi(ApiHandler):
 
                     await self.db_insert(collections.TT_LECTURERS, tt_doc)
 
-            except Exception as ex:
+            except Exception:
                 raise ApiError("Bład podczas pobierania planu dla wykładowcy.")
 
         return tt_doc['tts']
