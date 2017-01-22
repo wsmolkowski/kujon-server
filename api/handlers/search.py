@@ -40,10 +40,7 @@ class SearchUsersApi(AbstractSearch):
     async def get(self, query):
         try:
             result_doc = await self.api_search_users(query)
-            if result_doc['items']:
-                self.success(result_doc)
-            else:
-                self.error('Niestety nie znaleźliśmy danych.', code=404)
+            self.success(result_doc)
         except Exception as ex:
             await self.exc(ex)
 
@@ -53,10 +50,7 @@ class SearchCoursesApi(AbstractSearch):
     async def get(self, query):
         try:
             result_doc = await self.api_search_courses(query)
-            if result_doc['items']:
-                self.success(result_doc)
-            else:
-                self.error('Niestety nie znaleźliśmy danych.', code=404)
+            self.success(result_doc)
         except Exception as ex:
             await self.exc(ex)
 
@@ -66,10 +60,7 @@ class SearchFacultiesApi(AbstractSearch):
     async def get(self, query):
         try:
             result_doc = await self.api_search_faculties(query)
-            if result_doc['items']:
-                self.success(result_doc)
-            else:
-                self.error('Niestety nie znaleźliśmy danych.', code=404)
+            self.success(result_doc)
         except Exception as ex:
             await self.exc(ex)
 
@@ -79,10 +70,7 @@ class SearchProgrammesApi(AbstractSearch):
     async def get(self, query):
         try:
             result_doc = await self.api_search_programmes(query)
-            if result_doc['items']:
-                self.success(result_doc)
-            else:
-                self.error('Niestety nie znaleźliśmy danych.', code=404)
+            self.success(result_doc)
         except Exception as ex:
             await self.exc(ex)
 
@@ -92,9 +80,6 @@ class SearchThesesApi(AbstractSearch):
     async def get(self, query):
         try:
             result_doc = await self.api_search_theses(query)
-            if result_doc['items']:
-                self.success(result_doc)
-            else:
-                self.error('Niestety nie znaleźliśmy danych.', code=404)
+            self.success(result_doc)
         except Exception as ex:
             await self.exc(ex)

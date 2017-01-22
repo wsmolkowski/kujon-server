@@ -152,9 +152,19 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         self.__translate_currently_conducted(course_doc)
 
-        course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
-        course_doc['coordinators'] = course_edition['coordinators']
-        course_doc['course_units_ids'] = course_edition['course_units_ids']
+        if 'lecturers' in course_edition and len(course_edition['lecturers']) > 0:
+            course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
+        else:
+            course_doc['lecturers'] = list()
+
+        if 'coordinators' in course_edition and len(course_edition['coordinators']) > 0:
+            course_doc['coordinators'] = course_edition['coordinators']
+        else:
+            course_doc['coordinators'] = list()
+
+        if 'course_units_ids' in course_edition and len(course_edition['course_units_ids']) > 0:
+            course_doc['course_units_ids'] = course_edition['course_units_ids']
+
         if 'grades' in course_edition:
             course_doc['grades'] = course_edition['grades']
         else:
@@ -586,7 +596,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         for field in no_needed_fiels:
                             if field in units_doc[unit_doc]:
                                 units_doc[unit_doc].pop(field)
-                        unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc], update=False)
+                        unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc])
             except Exception as ex:
                 logging.warning("Błąd podczas pobierania unitu: {0} dla usos: {1}: {2}".format(unit_ids, self.getUsosId(), ex))
                 return None
@@ -644,7 +654,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     'class_type_id'])  # changing class_type_id to name
                 group_doc.pop('class_type_id')
 
-                await self.db_insert(collections.GROUPS, group_doc, update=False)
+                await self.db_insert(collections.GROUPS, group_doc)
             except Exception as ex:
                 await self.exc(ex, finish=finish)
 

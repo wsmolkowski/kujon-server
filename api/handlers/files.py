@@ -195,7 +195,7 @@ class AbstractFileHandler(ApiHandler):
         except Exception:
             file_doc[fields.FILE_CONTENT_TYPE] = 'application/octet-stream'
 
-        file_id = await self.db_insert(collections.FILES, file_doc, update=False)
+        file_id = await self.db_insert(collections.FILES, file_doc)
         IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
         return file_id
 

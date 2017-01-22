@@ -54,7 +54,7 @@ class DaoMixin(object):
         exc_doc[fields.CREATED_TIME] = datetime.now()
 
         if not isinstance(exception, AuthenticationError):
-            await self.db_insert(collections.EXCEPTIONS, exc_doc, update=False)
+            await self.db_insert(collections.EXCEPTIONS, exc_doc)
 
     async def exc(self, exception, finish=True, log_file=True, log_db=True):
         if log_file:
@@ -115,7 +115,7 @@ class DaoMixin(object):
             'enabled': True, fields.USOS_ID: usos_id
         })
 
-    async def db_insert(self, collection, document, update=True):
+    async def db_insert(self, collection, document, update=False):
         create_time = datetime.now()
         if self.getUsosId():
             document[fields.USOS_ID] = self.getUsosId()

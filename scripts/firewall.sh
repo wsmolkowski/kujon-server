@@ -73,6 +73,11 @@ ${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 25 -j ACCEPT
 #echo " * allowing pop3 on port 110"
 #${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 110 -j ACCEPT
 
+#echo " * allowing demo on ports 9000(api) 9002(web) 9004(event)"
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 9000 -j ACCEPT
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 9002 -j ACCEPT
+#${IPTABLES} -A INPUT -p tcp -m state --state NEW -m tcp --dport 9004 -j ACCEPT
+
 echo " * allowing ping responses"
 ${IPTABLES} -A INPUT -p ICMP --icmp-type 8 -j ACCEPT
 

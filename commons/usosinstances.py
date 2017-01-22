@@ -222,7 +222,7 @@ USOSINSTANCES = [
      'validate_ssl_certificate': True,
      'comment': 'OK',
      },
-    {'usos_id': 'CHAT',  # z palca dodane
+    {'usos_id': 'CHAT',
      'name': 'Chrześcijańska Akademia Teologiczna w Warszawie',
      'url': 'https://usosapps.chat.edu.pl/',
      'logo': '/static/img/logo/logo-chat-64x64.jpg',
