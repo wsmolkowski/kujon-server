@@ -596,7 +596,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                         for field in no_needed_fiels:
                             if field in units_doc[unit_doc]:
                                 units_doc[unit_doc].pop(field)
-                        unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc], update=False)
+                        unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc])
             except Exception as ex:
                 logging.warning("Błąd podczas pobierania unitu: {0} dla usos: {1}: {2}".format(unit_ids, self.getUsosId(), ex))
                 return None
@@ -654,7 +654,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     'class_type_id'])  # changing class_type_id to name
                 group_doc.pop('class_type_id')
 
-                await self.db_insert(collections.GROUPS, group_doc, update=False)
+                await self.db_insert(collections.GROUPS, group_doc)
             except Exception as ex:
                 await self.exc(ex, finish=finish)
 
