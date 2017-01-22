@@ -1,7 +1,7 @@
 # coding=UTF-8
 
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import fields, config
 

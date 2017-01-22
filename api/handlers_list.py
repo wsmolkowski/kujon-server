@@ -2,7 +2,7 @@
 
 from api.handlers import authentication
 from api.handlers import settings
-from api.handlers.base import UsosesApi, UsosesAllApi, ApplicationConfigHandler
+from api.handlers.base.base import UsosesApi, UsosesAllApi, ApplicationConfigHandler
 from api.handlers.courses import CoursesApi, CoursesEditionsApi, CourseEditionApi, CoursesEditionsByTermApi
 from api.handlers.crstests import CrsTestsApi, CrsTestsNodeApi
 from api.handlers.faculties import FacultyByIdApi, FacultiesApi

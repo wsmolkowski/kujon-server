@@ -7,17 +7,16 @@ from bson import ObjectId
 from tornado import auth, escape, gen
 from tornado.ioloop import IOLoop
 
-from api.handlers.base import BaseHandler, ApiHandler
+from api.handlers.base.api import ApiHandler
+from api.handlers.base.base import BaseHandler
+from api.mixins.OAuth2Mixin import OAuth2Mixin
 from commons import decorators
 from commons.constants import collections, fields, config
 from commons.enumerators import ExceptionTypes, UserTypes
 from commons.errors import AuthenticationError
-from commons.mixins.CrsTestsMixin import CrsTestsMixin
-from commons.mixins.JSendMixin import JSendMixin
-from commons.mixins.OAuth2Mixin import OAuth2Mixin
 
 
-class ArchiveHandler(ApiHandler):
+class ArchiveHandler(BaseHandler):
     async def _removeUserData(self, skip_collections=None, user_id=None):
         if not user_id:
             user_id = self.getUserId()
@@ -57,7 +56,7 @@ class ArchiveHandler(ApiHandler):
 
             self.clear_cookie(self.config.KUJON_SECURE_COOKIE, domain=self.config.SITE_DOMAIN)
 
-            IOLoop.current().spawn_callback(self._unsubscribe_usos, )
+            IOLoop.current().spawn_callback(self._unsubscribeUsos, )
             IOLoop.current().spawn_callback(self._removeUserData, [collections.USERS_ARCHIVE, ], self.getUserId())
             IOLoop.current().spawn_callback(self.email_archive_user, user_doc[fields.USER_EMAIL])
 
@@ -66,7 +65,7 @@ class ArchiveHandler(ApiHandler):
             await self.exc(ex)
 
 
-class AuthenticationHandler(BaseHandler, JSendMixin):
+class AuthenticationHandler(BaseHandler):
     EXCEPTION_TYPE = ExceptionTypes.AUTHENTICATION.value
 
     def on_finish(self):
@@ -316,7 +315,7 @@ class UsosRegisterHandler(AuthenticationHandler, OAuth2Mixin):
                 await self.exc(ex)
 
 
-class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin, ApiHandler):
+class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, ApiHandler):
     async def __process_crstests(self):
         crstests_doc = await self.api_crstests()
 
@@ -338,9 +337,9 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
         except Exception as ex:
             await self.exc(ex, finish=False)
 
-    async def _subscribe_usos(self):
+    async def _subscribeUsos(self):
 
-        await self._unsubscribe_usos()
+        await self._unsubscribeUsos()
 
         async def callUnitilSuccess(event_type, callback_url, verify_token):
 
@@ -448,7 +447,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, CrsTestsMixin,
                 await self.api_user_usos_info()
                 await self._buildContext()
 
-                IOLoop.current().spawn_callback(self._subscribe_usos, )
+                IOLoop.current().spawn_callback(self._subscribeUsos, )
                 IOLoop.current().spawn_callback(self._user_crawl, )
 
                 self.clear_cookie(self.config.KUJON_MOBI_REGISTER)

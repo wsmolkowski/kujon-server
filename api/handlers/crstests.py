@@ -1,12 +1,11 @@
 # coding=UTF-8
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import config
-from commons.mixins.CrsTestsMixin import CrsTestsMixin
 
 
-class CrsTestsApi(ApiHandler, CrsTestsMixin):
+class CrsTestsApi(ApiHandler):
     @decorators.authenticated
     async def get(self):
 
@@ -20,7 +19,7 @@ class CrsTestsApi(ApiHandler, CrsTestsMixin):
             await self.exc(ex)
 
 
-class CrsTestsNodeApi(ApiHandler, CrsTestsMixin):
+class CrsTestsNodeApi(ApiHandler):
     @decorators.authenticated
     async def get(self, node_id):
 

@@ -2,12 +2,12 @@
 
 from tornado import web
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.base import BaseHandler
 from commons import decorators
 from commons.constants import fields
 
 
-class SettingsHandler(ApiHandler):
+class SettingsHandler(BaseHandler):
     @decorators.authenticated
     @web.asynchronous
     async def get(self):
@@ -17,7 +17,7 @@ class SettingsHandler(ApiHandler):
             await self.exc(ex)
 
 
-class EventEnableHandler(ApiHandler):
+class EventEnableHandler(BaseHandler):
     @decorators.authenticated
     @web.asynchronous
     async def post(self):
@@ -30,7 +30,7 @@ class EventEnableHandler(ApiHandler):
             await self.exc(ex)
 
 
-class EventDisableHandler(ApiHandler):
+class EventDisableHandler(BaseHandler):
     @decorators.authenticated
     @web.asynchronous
     async def post(self):
@@ -42,7 +42,7 @@ class EventDisableHandler(ApiHandler):
             await self.exc(ex)
 
 
-class GoogleCallendarEnableHandler(ApiHandler):
+class GoogleCallendarEnableHandler(BaseHandler):
     @decorators.authenticated
     @web.asynchronous
     async def post(self):
@@ -54,7 +54,7 @@ class GoogleCallendarEnableHandler(ApiHandler):
             await self.exc(ex)
 
 
-class GoogleCallendarDisableHandler(ApiHandler):
+class GoogleCallendarDisableHandler(BaseHandler):
     @decorators.authenticated
     @web.asynchronous
     async def post(self):

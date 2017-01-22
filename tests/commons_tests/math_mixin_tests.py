@@ -1,7 +1,7 @@
 # coding=utf-8
 import unittest
 
-from commons.mixins.MathMixin import MathMixin
+from api.mixins.MathMixin import MathMixin
 
 GRADES_BY_TERM = [
     {

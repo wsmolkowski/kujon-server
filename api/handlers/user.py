@@ -4,7 +4,7 @@ from base64 import b64decode
 
 from bson.objectid import ObjectId
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons import usosinstances
 from commons.constants import fields, collections, config

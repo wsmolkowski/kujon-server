@@ -6,12 +6,10 @@ from tornado.ioloop import IOLoop
 from commons import utils
 from commons.constants import config, fields, collections
 from commons.context import Context
-from commons.mixins.DaoMixin import DaoMixin
-from commons.mixins.EmailMixin import EmailMixin
 from commons.mixins.JSendMixin import JSendMixin
 
 
-class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
+class AbstractHandler(web.RequestHandler, JSendMixin):
     SUPPORTED_METHODS = ('POST', 'OPTIONS', 'GET')
 
     def options(self, *args, **kwargs):
@@ -100,9 +98,6 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
     async def asyncCall(self, path, arguments=None, base_url=None, lang=True):
         return await self._context.asyncCaller.call_async(path, arguments, base_url, lang)
 
-    def getEncryptedUserId(self):
-        return self.aes.encrypt(str(self.getUserId())).decode()
-
     def getUsosUserId(self):
         user_doc = self.get_current_user()
         if user_doc:
@@ -113,6 +108,67 @@ class AbstractHandler(web.RequestHandler, JSendMixin, DaoMixin, EmailMixin):
             email = str(email)
 
         return await self.db[collections.USERS].find_one({fields.USER_EMAIL: email.lower()})
+
+    async def db_get_usos(self, usos_id):
+        return await self.db[collections.USOSINSTANCES].find_one({
+            'enabled': True, fields.USOS_ID: usos_id
+        })
+
+    async def db_settings(self, user_id):
+        '''
+        returns settings from COLLECTION_SETTINGS if not exists setts default settings
+        :param user_id:
+        :return:
+        '''
+        settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
+        if not settings:
+            await self.db_settings_update(self.getUserId(), fields.EVENT_ENABLE, False)
+            await self.db_settings_update(self.getUserId(), fields.GOOGLE_CALLENDAR_ENABLE, False)
+
+            settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
+
+        if fields.USER_ID in settings: del settings[fields.USER_ID]
+        if fields.MONGO_ID in settings: del settings[fields.MONGO_ID]
+        return settings
+
+    async def db_settings_update(self, user_id, key, value):
+        settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
+        if not settings:
+            return await self.db[collections.SETTINGS].insert({
+                fields.USER_ID: user_id,
+                key: value
+            })
+
+        settings[key] = value
+        return await self.db[collections.SETTINGS].update_one({fields.USER_ID: user_id},
+                                                              {'$set': {key: value}})
+
+    async def _manipulateUsoses(self, usoses_doc):
+        result = []
+        for usos in usoses_doc:
+            usos[fields.USOS_LOGO] = self.config.DEPLOY_WEB + usos[fields.USOS_LOGO]
+
+            if self.config.ENCRYPT_USOSES_KEYS:
+                usos = dict(self.aes.decrypt_usos(usos))
+
+            result.append(usos)
+        return result
+
+    async def db_usoses(self, enabled=True):
+        cursor = self.db[collections.USOSINSTANCES].find({'enabled': enabled})
+        usoses_doc = await cursor.to_list(None)
+        return await self._manipulateUsoses(usoses_doc)
+
+    async def db_all_usoses(self, limit_fields=True):
+        if limit_fields:
+            cursor = self.db[collections.USOSINSTANCES].find(
+                {},
+                {fields.MONGO_ID: 0, "contact": 1, "enabled": 1, "logo": 1, "name": 1, "phone": 1,
+                 "url": 1, "usos_id": 1, "comment": 1, "comment": 1})
+        else:
+            cursor = self.db[collections.USOSINSTANCES].find()
+        usoses_doc = await cursor.to_list(None)
+        return await self._manipulateUsoses(usoses_doc)
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous

@@ -2,15 +2,12 @@
 
 import logging
 import sys
-from datetime import datetime
 
 import pymongo
 
 from commons import utils
 from commons.config import Config
 from commons.constants import fields, collections
-from commons.enumerators import JobStatus
-from commons.enumerators import JobType
 
 
 def main(arguments):
@@ -36,13 +33,13 @@ def main(arguments):
         logging.info('removed user data by email: {0} resulted in {1}'.format(user_email, result))
 
         if fields.USOS_PAIRED in user_doc and user_doc[fields.USOS_PAIRED]:
-            result = db[collections.JOBS_QUEUE].insert_one({
-                fields.USER_ID: user_doc[fields.MONGO_ID],
-                fields.CREATED_TIME: datetime.now(),
-                fields.UPDATE_TIME: None,
-                fields.JOB_MESSAGE: None,
-                fields.JOB_STATUS: JobStatus.PENDING.value,
-                fields.JOB_TYPE: JobType.ARCHIVE_USER.value})
+            # result = db[collections.JOBS_QUEUE].insert_one({
+            #     fields.USER_ID: user_doc[fields.MONGO_ID],
+            #     fields.CREATED_TIME: datetime.now(),
+            #     fields.UPDATE_TIME: None,
+            #     fields.JOB_MESSAGE: None,
+            #     fields.JOB_STATUS: JobStatus.PENDING.value,
+            #     fields.JOB_TYPE: JobType.ARCHIVE_USER.value})
 
             logging.info('created job for cleaning user USOS data resulted in {0}'.format(result))
 

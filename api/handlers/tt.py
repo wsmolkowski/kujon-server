@@ -3,7 +3,7 @@
 import logging
 from datetime import date, timedelta, datetime
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError

@@ -2,7 +2,7 @@
 
 from tornado import web
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import fields, config
 
