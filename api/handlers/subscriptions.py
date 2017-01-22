@@ -2,12 +2,12 @@
 
 from tornado import web
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.base import BaseHandler
 from commons import decorators
 from commons.constants import fields, collections
 
 
-class SubscriptionsHandler(ApiHandler):
+class SubscriptionsHandler(BaseHandler):
     """
         displays user subscriptions, not casched in db, request go directly to usos api
     """

@@ -14,7 +14,6 @@ from commons.constants import config as constants_config
 from commons.constants import fields, collections
 from commons.enumerators import Environment
 from commons.enumerators import ExceptionTypes
-from crawler import job_factory
 
 
 class DbUtils(object):
@@ -171,11 +170,6 @@ class DbUtils(object):
 
             logging.info('collection: {0} updated: {1}'.format(collections.USERS, updated))
 
-            self.db_to[collections.JOBS_QUEUE].insert(
-                job_factory.refresh_user_job(user_to_doc[fields.MONGO_ID]))
-
-            logging.info('created refresh task for updated user')
-
         finally:
             if self.client_from:
                 self.client_from.close()
@@ -205,37 +199,6 @@ class DbUtils(object):
                 self.client[collections.EXCEPTIONS].remove({fields.USER_ID: user_id})
                 logging.info('removed exception data for user_id {0}'.format(user_id))
 
-                self.client[collections.JOBS_QUEUE].insert(job_factory.refresh_user_job(user_id))
-                logging.info('created refresh task for user_id {0}'.format(user_id))
-
-        except Exception as ex:
-            logging.exception(ex)
-
-    def recall_subscribe(self):
-        '''
-            for each paired user check if subscription collection is filled otherwise subscribe job is created
-        :return:
-        '''
-
-        try:
-            user_ids = self.client[collections.USERS].find({fields.USOS_PAIRED: True})
-
-            for user_id in user_ids:
-                if not user_id:
-                    continue
-
-                logging.info('processing: {0}'.format(user_id[fields.MONGO_ID]))
-
-                subsctiption_count = self.client[collections.SUBSCRIPTIONS].find(
-                    {fields.USER_ID: user_id[fields.MONGO_ID]}).count()
-
-                if subsctiption_count == 3:  # 'crstests/user_grade', 'grades/grade', 'crstests/user_point'
-                    continue
-
-                self.client[collections.JOBS_QUEUE].insert(
-                    job_factory.subscribe_user_job(user_id[fields.MONGO_ID]))
-                logging.info('created subscribe task for user_id {0}'.format(user_id[fields.MONGO_ID]))
-
         except Exception as ex:
             logging.exception(ex)
 
@@ -258,8 +221,6 @@ parser.add_argument('-e', '--environment', action='store', dest='environment',
                     help="environment [development, production, demo] - default development", default='development')
 parser.add_argument('-f', '--refresh_failures', action='store_const', dest='option', const='refresh_failures',
                     help="create refresh jobs for users with failure USOS API calls", default='development')
-parser.add_argument('-s', '--subscribe', action='store_const', dest='option', const='subscribe',
-                    help="create subscribe jobs for all paired users", default='development')
 
 
 def main():
@@ -286,9 +247,6 @@ def main():
 
     elif args.option == 'refresh_failures':
         dbutils.refresh_failures()
-
-    elif args.option == 'subscribe':
-        dbutils.recall_subscribe()
     else:
         parser.print_help()
         sys.exit(1)

@@ -7,17 +7,15 @@ import logging
 import mimetypes
 from functools import partial
 from uuid import uuid4
-from pymongo import MongoClient
-from bson.objectid import ObjectId
 
+from bson.objectid import ObjectId
+from pymongo import MongoClient
 from tornado import gen
 from tornado.httputil import HTTPHeaders
 from tornado.testing import gen_test
 
-from commons.constants import fields, collections
 from commons.config import Config
-from tornado.options import options
-
+from commons.constants import fields, collections
 from tests.api_tests.base import AbstractApplicationTestBase
 from tests.base import USER_DOC
 
@@ -26,7 +24,7 @@ class ApiFilesTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiFilesTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.insert_user(config=self.config)
+        self.insert_user()
 
         self.file_sample_with_eicar = 'WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo='
         self.file_sample = bytes('to jest przykładowy plik do testów base64', 'utf-8')

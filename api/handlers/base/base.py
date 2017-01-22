@@ -4,29 +4,130 @@ import logging
 import traceback
 from datetime import datetime, timedelta
 
-import motor
 from bson.objectid import ObjectId
+from cryptography.fernet import InvalidToken
+from tornado import web
 from tornado.httpclient import HTTPError
 
 from commons.constants import collections, fields, config
+from commons.enumerators import Environment, UserTypes
 from commons.enumerators import ExceptionTypes
 from commons.errors import ApiError, AuthenticationError, CallerError, FilesError
 from commons.errors import DaoError
+from commons.handlers import AbstractHandler
+from commons.mixins.EmailMixin import EmailMixin
+from commons.mixins.JSendMixin import JSendMixin
 
 
-class DaoMixin(object):
-    EXCEPTION_TYPE = ExceptionTypes.DAO.value
+class BaseHandler(AbstractHandler, EmailMixin):
+    EXCEPTION_TYPE = ExceptionTypes.DEFAULT.value
 
-    def do_refresh(self):
+    async def _prepare_user(self):
+        cookie_encrypted = self.get_secure_cookie(self.config.KUJON_SECURE_COOKIE)
+        if cookie_encrypted:
+            try:
+                cookie_decrypted = self.aes.decrypt(cookie_encrypted).decode()
+                user_doc = await self.db[collections.USERS].find_one(
+                    {fields.MONGO_ID: ObjectId(cookie_decrypted)})
+                if user_doc:
+                    return user_doc
+            except InvalidToken as ex:
+                logging.exception(ex)
+                self.clear_cookie(self.config.KUJON_SECURE_COOKIE)
+
+        header_email = self.request.headers.get(config.MOBILE_X_HEADER_EMAIL, False)
+        header_token = self.request.headers.get(config.MOBILE_X_HEADER_TOKEN, False)
+
+        if header_email and header_token:
+            user_doc = await self.findUserByEmail(header_email)
+
+            if not user_doc or fields.USER_TYPE not in user_doc:
+                return
+
+            if user_doc[fields.USER_TYPE].upper() == UserTypes.GOOGLE.value:
+                token_exists = await self.db_find_token(header_email, UserTypes.GOOGLE.value)
+                if not token_exists:
+                    google_token = await self._context.socialCaller.google_token(header_token)
+                    google_token[fields.USER_TYPE] = UserTypes.GOOGLE.value
+                    await self.db_insert_token(google_token)
+                return user_doc
+
+            elif user_doc[fields.USER_TYPE].upper() == UserTypes.FACEBOOK.value:
+                token_exists = await self.db_find_token(header_email, UserTypes.FACEBOOK.value)
+                if not token_exists:
+                    facebook_token = await self._context.socialCaller.facebook_token(header_token)
+                    facebook_token[fields.USER_TYPE] = UserTypes.FACEBOOK.value
+                    await self.db_insert_token(facebook_token)
+                return user_doc
+
+            elif user_doc[fields.USER_TYPE].upper() == UserTypes.EMAIL.value:
+                token_exists = await self.db_find_token(header_email, UserTypes.EMAIL.value)
+                if not token_exists:
+                    raise AuthenticationError(
+                        "Token wygasł dla: {0} oraz typu użytkownika {1}. Prośba o zalogowanie.".format(
+                            header_email, user_doc[fields.USER_TYPE]))
+
+                try:
+                    decrypted_token = self.aes.decrypt(header_token.encode()).decode()
+                except InvalidToken:
+                    raise AuthenticationError(
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
+                            header_email, user_doc[fields.USER_TYPE]))
+
+                if decrypted_token == str(user_doc[fields.MONGO_ID]):
+                    return user_doc
+                else:
+                    raise AuthenticationError(
+                        "Bład weryfikacji tokenu dla: {0} oraz typu użytkownika {1}".format(
+                            header_email, user_doc[fields.USER_TYPE]))
+            else:
+                raise AuthenticationError('Nieznany typ użytkownika: {0}'.format(user_doc[fields.USER_TYPE]))
+        return
+
+    def isRegistered(self):
+        if not self._context:
+            return False
+
+        if self._context.user_doc:
+            return False
+
+        if not self._context.user_doc:
+            return False
+
+        if fields.ACCESS_TOKEN_KEY not in self._context.user_doc and \
+                        fields.ACCESS_TOKEN_SECRET not in self._context.user_doc:
+            return False
+
+        return True
+
+    def set_default_headers(self):
+        super(BaseHandler, self).set_default_headers()
+
+        self.set_header('Access-Control-Allow-Methods', ', '.join(self.SUPPORTED_METHODS))
+
+        if self.isMobileRequest():
+            self.set_header("Access-Control-Allow-Origin", "*")
+        else:
+            # web client access
+            self.set_header("Access-Control-Allow-Origin", self.config.DEPLOY_WEB)
+            self.set_header("Access-Control-Allow-Credentials", "true")
+
+    async def _usosWorks(self):
+        try:
+            # await AsyncCaller(self._context).call_async(path='services/events/notifier_status')
+            await self.asyncCall(path='services/courses/classtypes_index')
+            return True
+        except Exception as ex:
+            logging.warning(ex)
+            return False
+
+    async def doRefresh(self):
+        if self.request.headers.get(config.MOBILE_X_HEADER_REFRESH, False):
+            return await self._usosWorks()
+        if self.config.ENVIRONMENT.lower() == Environment.DEMO.value:
+            return True
+
         return False
-
-    _db = None
-
-    @property
-    def db(self):
-        if not self._db:
-            self._db = motor.motor_tornado.MotorClient(self.config.MONGODB_URI)
-        return self._db[self.config.MONGODB_NAME]
 
     async def _log_db(self, exception):
         exc_doc = {
@@ -56,6 +157,20 @@ class DaoMixin(object):
         if not isinstance(exception, AuthenticationError):
             await self.db_insert(collections.EXCEPTIONS, exc_doc)
 
+    async def _unsubscribeUsos(self):
+        try:
+            current_subscriptions = await self.usosCall(path='services/events/subscriptions')
+        except Exception as ex:
+            logging.exception(ex)
+            current_subscriptions = None
+
+        if current_subscriptions:
+            try:
+                await self.usosCall(path='services/events/unsubscribe')
+                await self.db_remove(collections.SUBSCRIPTIONS, {fields.USER_ID: self.getUserId()})
+            except Exception as ex:
+                logging.warning(ex)
+
     async def exc(self, exception, finish=True, log_file=True, log_db=True):
         if log_file:
             logging.exception(exception)
@@ -73,47 +188,11 @@ class DaoMixin(object):
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
 
-    async def _manipulate_usoses(self, usoses_doc):
-        result = []
-        for usos in usoses_doc:
-            usos[fields.USOS_LOGO] = self.config.DEPLOY_WEB + usos[fields.USOS_LOGO]
-
-            if self.config.ENCRYPT_USOSES_KEYS:
-                usos = dict(self.aes.decrypt_usos(usos))
-
-            result.append(usos)
-        return result
-
-    async def get_usos_instances(self):
-        usoses_doc = await self.db_usoses()
-        return usoses_doc
-
-    async def db_usoses(self, enabled=True):
-        cursor = self.db[collections.USOSINSTANCES].find({'enabled': enabled})
-        usoses_doc = await cursor.to_list(None)
-        return await self._manipulate_usoses(usoses_doc)
-
-    async def db_all_usoses(self, limit_fields=True):
-        if limit_fields:
-            cursor = self.db[collections.USOSINSTANCES].find(
-                {},
-                {fields.MONGO_ID: 0, "contact": 1, "enabled": 1, "logo": 1, "name": 1, "phone": 1,
-                 "url": 1, "usos_id": 1, "comment": 1, "comment": 1})
-        else:
-            cursor = self.db[collections.USOSINSTANCES].find()
-        usoses_doc = await cursor.to_list(None)
-        return await self._manipulate_usoses(usoses_doc)
-
     async def db_users_info_by_user_id(self, user_id, usos):
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
         return await self.db[collections.USERS_INFO].find_one({fields.USER_ID: user_id,
                                                                fields.USOS_ID: usos})
-
-    async def db_get_usos(self, usos_id):
-        return await self.db[collections.USOSINSTANCES].find_one({
-            'enabled': True, fields.USOS_ID: usos_id
-        })
 
     async def db_insert(self, collection, document, update=False):
         create_time = datetime.now()
@@ -245,31 +324,67 @@ class DaoMixin(object):
 
         return msg_doc
 
-    async def db_settings(self, user_id):
-        '''
-        returns settings from COLLECTION_SETTINGS if not exists setts default settings
-        :param user_id:
-        :return:
-        '''
-        settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
-        if not settings:
-            await self.db_settings_update(self.getUserId(), fields.EVENT_ENABLE, False)
-            await self.db_settings_update(self.getUserId(), fields.GOOGLE_CALLENDAR_ENABLE, False)
 
-            settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
+class UsosesAllApi(BaseHandler):
+    @web.asynchronous
+    async def get(self):
+        try:
+            usoses = await self.db_all_usoses(limit_fields=True)
+            self.success(usoses, cache_age=config.SECONDS_HOUR)
+        except Exception as ex:
+            await self.exc(ex)
 
-        if fields.USER_ID in settings: del settings[fields.USER_ID]
-        if fields.MONGO_ID in settings: del settings[fields.MONGO_ID]
-        return settings
 
-    async def db_settings_update(self, user_id, key, value):
-        settings = await self.db[collections.SETTINGS].find_one({fields.USER_ID: user_id})
-        if not settings:
-            return await self.db[collections.SETTINGS].insert({
-                fields.USER_ID: user_id,
-                key: value
-            })
+class UsosesApi(BaseHandler):
+    @web.asynchronous
+    async def get(self):
+        try:
+            result = list()
+            usoses = await self.db_usoses()
+            for usos in usoses:
+                wanted_keys = [fields.USOS_LOGO, fields.USOS_ID, fields.USOS_NAME, fields.USOS_URL]
+                result.append(dict((k, usos[k]) for k in wanted_keys if k in usos))
 
-        settings[key] = value
-        return await self.db[collections.SETTINGS].update_one({fields.USER_ID: user_id},
-                                                              {'$set': {key: value}})
+            self.success(result, cache_age=config.SECONDS_HOUR)
+        except Exception as ex:
+            await self.exc(ex)
+
+
+class ApplicationConfigHandler(BaseHandler, JSendMixin):
+    """
+        for mobile and www use
+    """
+
+    @web.asynchronous
+    async def get(self):
+        usos_works = False
+        usos_paired = False
+
+        try:
+            user = self.get_current_user()
+            if user and fields.USOS_PAIRED in user.keys():
+                usos_paired = user[fields.USOS_PAIRED]
+
+            if usos_paired:
+                usos_works = await self._usosWorks()
+
+            config = {
+                'PROJECT_TITLE': self.config.PROJECT_TITLE,
+                'API_URL': self.config.DEPLOY_API,
+                'USOS_PAIRED': usos_paired,
+                'USER_LOGGED': True if user else False,
+                'USOS_WORKS': usos_works
+            }
+
+            self.success(data=config)
+
+        except Exception as ex:
+            logging.exception(ex)
+            config = {
+                'PROJECT_TITLE': self.config.PROJECT_TITLE,
+                'API_URL': self.config.DEPLOY_API,
+                'USOS_PAIRED': usos_paired,
+                'USER_LOGGED': False,
+                'USOS_WORKS': usos_works
+            }
+            self.success(data=config)

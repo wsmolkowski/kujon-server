@@ -42,7 +42,7 @@ class ClamAvTest(AbstractApplicationTestBase):
         cd = pyclamd.ClamdNetworkSocket()
 
         # when
-        result = cd.scan_stream(bytes(self.config.CLAM_EICAR_FALSE_SIGNATURE, 'utf-8'))
+        result = cd.scan_stream(bytes("TEST", 'utf-8'))
 
         # then
         self.assertIsNone(result)

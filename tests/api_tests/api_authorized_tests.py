@@ -12,7 +12,7 @@ class ApiCoursesTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiCoursesTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.insert_user(config=self.config)
+        self.insert_user()
         self.random = randint(0, 9999)
 
     @gen_test(timeout=30)

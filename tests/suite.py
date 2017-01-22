@@ -13,7 +13,6 @@ from tests.commons_tests.config_tests import ConfigTest
 from tests.commons_tests.context_tests import ContextTest
 from tests.commons_tests.onesignal_tests import OneSignalTest
 from tests.commons_tests.usos_caller_tests import UsosCallerTest
-from tests.crawler_tests.crawler_tests import CrawlerTest
 from tests.event_tests.event_tests import EventTest
 from tests.event_tests.event_utils_tests import EventUtilsTest
 from tests.scripts_tests.dbutilts_tests import DbUtilsTest
@@ -30,16 +29,13 @@ def build_suite():
     test_suite.addTest(unittest.makeSuite(ApiRestTest))
     test_suite.addTest(unittest.makeSuite(ApiTTTest))
 
-    # commons
+    # base
     test_suite.addTest(unittest.makeSuite(ClamAvTest))
     # test_suite.addTest(unittest.makeSuite(AESCipherTest))
     test_suite.addTest(unittest.makeSuite(UsosCallerTest))
     test_suite.addTest(unittest.makeSuite(ConfigTest))
     test_suite.addTest(unittest.makeSuite(ContextTest))
     test_suite.addTest(unittest.makeSuite(OneSignalTest))
-
-    # crawler
-    test_suite.addTest(unittest.makeSuite(CrawlerTest))
 
     # events
     test_suite.addTest(unittest.makeSuite(EventUtilsTest))

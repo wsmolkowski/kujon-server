@@ -7,8 +7,8 @@ from commons.constants import fields
 
 AVERAGE_GRADE_ROUND = 2
 DEFAULT_NEGATIVE_GRADE = "2.0"
-NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "NB", "BO"]
-POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "ZA", "ZAL.", "ZWOL LEK.", "ZW-LEK"]
+NEGATIVE_GRADES_DESCRIPTIONS = ["NK", "NZAL", "NB", "BO", "NIEOBECNY", "N.P."]
+POSITIVE_GRADES_DESCRIPTIONS = ["ZAL", "ZA", "ZAL.", "ZWOL LEK.", "ZW-LEK", "ZWOL", "niekwalifikowany"]
 
 
 class MathMixin(object):

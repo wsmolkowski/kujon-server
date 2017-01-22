@@ -12,7 +12,7 @@ from bson.objectid import ObjectId
 from tornado import escape
 from tornado.ioloop import IOLoop
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import fields, collections
 from commons.enumerators import UploadFileStatus

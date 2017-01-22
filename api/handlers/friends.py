@@ -1,6 +1,6 @@
 # coding=UTF-8
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators, helpers
 from commons.constants import config, collections, fields
 from commons.errors import ApiError

@@ -1,15 +1,21 @@
 # coding=UTF-8
 
 import logging
+from datetime import date, datetime
 
+from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
+from api.handlers.base.base import BaseHandler
+from api.mixins.MathMixin import MathMixin
 from commons import usoshelper
-from commons.constants import fields, collections
+from commons.constants import collections, fields
+from commons.enumerators import ExceptionTypes
 from commons.errors import ApiError
-from commons.mixins.ApiUserMixin import ApiUserMixin
-from commons.mixins.MathMixin import MathMixin
+
+TERM_LIMIT_FIELDS = {'name': 1, 'end_date': 1, 'finish_date': 1, 'start_date': 1, fields.TERM_ID: 1,
+                     fields.TERMS_ORDER_KEY: 1, fields.MONGO_ID: 0}
 
 LIMIT_FIELDS_COURSE = {'is_currently_conducted': 1, 'bibliography': 1, fields.COURSE_NAME: 1, fields.FACULTY_ID: 1,
                        'assessment_criteria': 1, fields.COURSE_ID: 1, 'homepage_url': 1, 'lang_id': 1,
@@ -20,8 +26,17 @@ LIMIT_FIELDS_FACULTY = {fields.FACULTY_ID: 1, 'logo_urls': 1, 'name': 1, 'postal
 LIMIT_FIELDS_PROGRAMMES = {'name': 1, 'mode_of_studies': 1, 'level_of_studies': 1, 'programme_id': 1, 'duration': 1,
                            'description': 1, 'faculty': 1, fields.MONGO_ID: 0}
 
+USER_INFO_SKIP_FIELDS = {'email_access': False,
+                         'employment_functions': False, fields.CREATED_TIME: False, 'email': False,
+                         'usos_id': False, fields.UPDATE_TIME: False, fields.MONGO_ID: False}
 
-class ApiMixin(ApiUserMixin, MathMixin):
+EXCLUDE_FIELDS = {fields.MONGO_ID: False, fields.CREATED_TIME: False, fields.UPDATE_TIME: False,
+                  fields.USOS_ID: False, fields.USER_ID: False}
+
+
+class ApiHandler(BaseHandler, MathMixin):
+    EXCEPTION_TYPE = ExceptionTypes.API.value
+
     @staticmethod
     def filterNone(array):
         return [i for i in array if i is not None]
@@ -38,7 +53,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_courses_editions(self):
         pipeline = {fields.USER_ID: self.getUserId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES_EDITIONS, pipeline)
 
         courses_editions_doc = await self.db[collections.COURSES_EDITIONS].find_one(
@@ -112,7 +127,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES, pipeline)
 
         course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
@@ -214,7 +229,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES, pipeline)
 
         course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
@@ -393,7 +408,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
                             if int(unit) == unit_doc[fields.UNIT_ID]:
                                 grade[fields.CLASS_TYPE] = unit_doc[fields.CLASS_TYPE_ID]
                                 if 'unit' in grade:
-                                    del(grade['unit'])
+                                    del (grade['unit'])
 
         return result
 
@@ -448,7 +463,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_programme(self, programme_id, finish=True):
         pipeline = {fields.PROGRAMME_ID: programme_id}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.PROGRAMMES, pipeline)
 
         programme_doc = await self.db[collections.PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
@@ -515,7 +530,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_faculty(self, faculty_id):
         pipeline = {fields.FACULTY_ID: faculty_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.FACULTIES, pipeline)
 
         faculty_doc = await self.db[collections.FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
@@ -574,7 +589,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_unit(self, unit_ids, finish=False):
 
         pipeline = {fields.UNIT_ID: {"$in": list(map(int, unit_ids))}, fields.USOS_ID: self.getUsosId()}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES_UNITS, pipeline)
 
         units_doc = await self.db[collections.COURSES_UNITS].find_one(pipeline)
@@ -592,13 +608,15 @@ class ApiMixin(ApiUserMixin, MathMixin):
                     for unit_doc in units_doc:
                         units_doc[unit_doc][fields.UNIT_ID] = units_doc[unit_doc].pop(fields.ID)
                         # remove unnecessary fields because method fields doesn't work - submited to usos team
-                        no_needed_fiels = ["course_name", "topics", "learning_outcomes", "teaching_methods", "assessment_criteria", "profile_url", "homepage_url", "bibliography"]
+                        no_needed_fiels = ["course_name", "topics", "learning_outcomes", "teaching_methods",
+                                           "assessment_criteria", "profile_url", "homepage_url", "bibliography"]
                         for field in no_needed_fiels:
                             if field in units_doc[unit_doc]:
                                 units_doc[unit_doc].pop(field)
                         unit_doc = await self.db_insert(collections.COURSES_UNITS, units_doc[unit_doc])
             except Exception as ex:
-                logging.warning("Błąd podczas pobierania unitu: {0} dla usos: {1}: {2}".format(unit_ids, self.getUsosId(), ex))
+                logging.warning(
+                    "Błąd podczas pobierania unitu: {0} dla usos: {1}: {2}".format(unit_ids, self.getUsosId(), ex))
                 return None
         return units_doc
 
@@ -631,7 +649,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
     async def api_group(self, group_id, finish=False):
         pipeline = {fields.GROUP_ID: group_id, fields.USOS_ID: self.getUsosId()}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.GROUPS, pipeline)
 
         group_doc = await self.db[collections.GROUPS].find_one(pipeline)
@@ -663,7 +682,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_thesis(self, refresh=False, user_info=None):
 
         pipeline = {fields.USER_ID: self.getUserId()}
-        if self.do_refresh() and refresh:
+
+        if await self.doRefresh() and refresh:
             await self.db_remove(collections.THESES, pipeline)
 
         theses_doc = await self.db[collections.THESES].find_one(pipeline)
@@ -684,3 +704,306 @@ class ApiMixin(ApiUserMixin, MathMixin):
             await self.db_insert(collections.THESES, theses_doc)
 
         return theses_doc['authored_theses']
+
+    async def api_crstests(self):
+        pipeline = {fields.USER_ID: self.get_current_user()[fields.MONGO_ID]}
+
+        if await self.doRefresh():
+            await self.db_remove(collections.CRSTESTS, pipeline)
+
+        crstests_doc = await self.db[collections.CRSTESTS].find_one(pipeline, EXCLUDE_FIELDS)
+
+        if not crstests_doc:
+            crstests_doc = await self.usosCall(path='services/crstests/participant')
+            crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
+
+            crstests_doc.pop('terms')  # no need at this point
+
+            # rewrite response to list of crstests
+            crstests = list()
+            for term_id in crstests_doc['tests']:
+                for crstest in crstests_doc['tests'][term_id]:
+                    crstest_doc = crstests_doc['tests'][term_id][crstest]
+                    crstest_doc[fields.TERM_ID] = term_id
+                    crstests.append(crstest_doc)
+
+            crstests_doc['tests'] = crstests
+
+            await self.db_insert(collections.CRSTESTS, crstests_doc)
+
+            crstests_doc = await self.db[collections.CRSTESTS].find_one(pipeline, EXCLUDE_FIELDS)
+
+        return crstests_doc
+
+    async def api_crstests_grades(self, node_id):
+        pipeline = {fields.NODE_ID: node_id, fields.USOS_ID: self.getUsosId()}
+
+        if await self.doRefresh():
+            await self.db_remove(collections.CRSTESTS_GRADES, pipeline)
+
+        crstests_doc = await self.db[collections.CRSTESTS_GRADES].find_one(pipeline)
+
+        if not crstests_doc:
+            try:
+                crstests_doc = await self.usosCall(path='services/crstests/user_grade',
+                                                   arguments={'node_id': node_id})
+            except Exception as ex:
+                await self.exc(ex, finish=False)
+                return
+            if crstests_doc:
+                crstests_doc[fields.NODE_ID] = node_id
+                crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
+                await self.db_insert(collections.CRSTESTS_GRADES, crstests_doc)
+            else:
+                return None
+        return crstests_doc
+
+    async def api_crstests_points(self, node_id):
+        pipeline = {fields.NODE_ID: node_id, fields.USOS_ID: self.getUsosId()}
+
+        if await self.doRefresh():
+            await self.db_remove(collections.CRSTESTS_POINTS, pipeline)
+
+        crstests_doc = await self.db[collections.CRSTESTS_POINTS].find_one(pipeline)
+
+        if not crstests_doc:
+            crstests_doc = await self.usosCall(path='services/crstests/user_point',
+                                               arguments={'node_id': node_id})
+            crstests_doc[fields.NODE_ID] = node_id
+            crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
+
+            await self.db_insert(collections.CRSTESTS_POINTS, crstests_doc)
+
+        return crstests_doc
+
+    async def api_photo(self, user_info_id):
+        pipeline = {fields.ID: user_info_id}
+
+        if await self.doRefresh():
+            await self.db_remove(collections.PHOTOS, pipeline)
+
+        photo_doc = await self.db[collections.PHOTOS].find_one(pipeline)
+
+        if not photo_doc:
+            try:
+                photo_doc = await self.usosCall(
+                    path='services/photos/photo',
+                    arguments={
+                        'user_id': user_info_id,
+                    })
+
+                photo_doc[fields.ID] = user_info_id
+
+                photo_id = await self.db_insert(collections.PHOTOS, photo_doc)
+                photo_doc = await self.db[collections.PHOTOS].find_one(
+                    {fields.MONGO_ID: ObjectId(photo_id)})
+            except Exception as ex:
+                logging.exception(ex)
+        return photo_doc
+
+    async def usos_user_info(self, user_id=None):
+        '''
+        :param user_id:
+        :return: parsed usos user info
+        '''
+
+        fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
+
+        if user_id:
+            result = await self.usosCall(path='services/users/user',
+                                         arguments={'fields': fields, 'user_id': user_id})
+        else:
+            result = await self.usosCall(path='services/users/user', arguments={'fields': fields})
+
+        if not result:
+            raise ApiError('Problem z pobraniem danych z USOS na temat użytkownika.')
+
+        # strip empty values
+        if 'homepage_url' in result and result['homepage_url'] == "":
+            result['homepage_url'] = None
+
+        if 'student_status' in result:
+            result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
+
+        # change staff_status to dictionary
+        result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
+
+        return result
+
+    async def user_info(self, user_id=None):
+        '''
+        build user info based on usos_info, faculties, course_editions_conducted and has_photo
+        :param user_id:
+        :return:
+        '''
+
+        user_info_doc = await self.usos_user_info(user_id)
+
+        # process faculties
+        tasks_faculties = list()
+        for position in user_info_doc['employment_positions']:
+            tasks_faculties.append(self.api_faculty(position['faculty']['id']))
+
+        await gen.multi(tasks_faculties)
+
+        # process course_editions_conducted
+
+        courses_conducted = []
+        tasks_courses = list()
+        courses = list()
+
+        courses_editions = await self.api_courses_editions()
+
+        for course_conducted in user_info_doc['course_editions_conducted']:
+            course_id, term_id = course_conducted['id'].split('|')
+            if course_id not in courses:
+                courses.append(course_id)
+                tasks_courses.append(self.api_course_term(course_id, term_id, extra_fetch=False, log_exception=False,
+                                                          courses_editions=courses_editions))
+
+        try:
+            tasks_results = await gen.multi(tasks_courses)
+            for course_doc in tasks_results:
+                if not course_doc:
+                    continue
+                courses_conducted.append({fields.COURSE_NAME: course_doc[fields.COURSE_NAME],
+                                          fields.COURSE_ID: course_doc[fields.COURSE_ID],
+                                          fields.TERM_ID: course_doc[fields.TERM_ID]})
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+
+        user_info_doc['course_editions_conducted'] = courses_conducted
+
+        # if user has photo
+        if 'has_photo' in user_info_doc and user_info_doc['has_photo']:
+            photo_doc = await self.api_photo(user_info_doc[fields.ID])
+            if photo_doc:
+                user_info_doc[fields.PHOTO_URL] = self.config.DEPLOY_API + '/users_info_photos/' + str(
+                    photo_doc[fields.MONGO_ID])
+
+        return user_info_doc
+
+    async def updated_user_doc(self):
+        '''
+        update user collection with USOS_INFO_ID and USOS_USER_ID
+        :return:
+        '''
+
+        user_info_doc = await self.user_info()
+        if user_info_doc:
+            user_doc = await self.db_find_user()
+
+            if not user_doc:
+                return user_info_doc  # TypeError: 'NoneType' object does not support item assignment
+
+            user_doc[fields.USOS_USER_ID] = user_info_doc[fields.ID]
+
+            await self.db_update_user(user_doc[fields.MONGO_ID], user_doc)
+
+        return user_info_doc
+
+    async def api_user_usos_info(self):
+        '''
+        get usos user info for current user (without usos_user_id)
+        :return:
+        '''
+
+        user_usos_id = await self.db_user_usos_id()
+        if user_usos_id:
+            return await self.api_user_info(user_usos_id)
+
+            # if user_info_doc and fields.USOS_USER_ID not in user_info_doc:
+            #     ''' update for old users '''
+            #     user_info_doc = await self.updated_user_doc()
+            #
+            # return user_info_doc
+
+        return await self.updated_user_doc()
+
+    async def api_user_info(self, user_id):
+        '''
+        get usos user info for id
+        :param user_id:
+        :return:
+        '''
+        user_id = str(user_id)
+        pipeline = {fields.ID: user_id, fields.USOS_ID: self.getUsosId()}
+
+        if await self.doRefresh() and user_id:
+            await self.db_remove(collections.USERS_INFO, pipeline)
+
+        user_info_doc = await self.db[collections.USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
+
+        if not user_info_doc:
+            try:
+                user_info_doc = await self.user_info(user_id)
+                await self.db_insert(collections.USERS_INFO, user_info_doc)
+
+                user_info_doc = await self.db[collections.USERS_INFO].find_one(pipeline, USER_INFO_SKIP_FIELDS)
+
+            except DuplicateKeyError as ex:
+                logging.debug(ex)
+
+        return user_info_doc
+
+    async def _api_term_task(self, term_id):
+        term_doc = None
+        try:
+            term_doc = await self.asyncCall(
+                path='services/terms/term', arguments={'term_id': term_id}
+            )
+            term_doc[fields.TERM_ID] = term_doc.pop(fields.ID)
+
+            await self.db_insert(collections.TERMS, term_doc)
+        except DuplicateKeyError as ex:
+            logging.debug(ex)
+        except Exception as ex:
+            await self.exc(ex, finish=False)
+        finally:
+            return term_doc
+
+    async def api_term(self, term_ids):
+
+        pipeline = {fields.TERM_ID: {"$in": term_ids}, fields.USOS_ID: self.getUsosId()}
+        if await self.doRefresh():
+            await self.db_remove(collections.TERMS, pipeline)
+
+        cursor = self.db[collections.TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort(
+            fields.TERMS_ORDER_KEY, -1)
+        terms_doc = await cursor.to_list(None)
+
+        if not terms_doc:
+            try:
+                terms_task = list()
+                for term_id in term_ids:
+                    terms_task.append(self._api_term_task(term_id))
+                await gen.multi(terms_task)
+
+                cursor = self.db[collections.TERMS].find(pipeline, TERM_LIMIT_FIELDS).sort(
+                    fields.TERMS_ORDER_KEY, -1)
+                terms_doc = await cursor.to_list(None)
+            except Exception as ex:
+                await self.exc(ex, finish=False)
+                return
+
+        today = date.today()
+        for term in terms_doc:
+            end_date = datetime.strptime(term['finish_date'], "%Y-%m-%d").date()
+            if today <= end_date:
+                term['active'] = True
+            else:
+                term['active'] = False
+
+        return terms_doc
+
+    async def api_terms(self):
+        courses_editions = await self.api_courses_editions()
+        if not courses_editions:
+            raise ApiError("Poczekaj szukamy jednostek.")
+
+        terms_ids = list()
+        for term_id in courses_editions[fields.COURSE_EDITIONS]:
+            if term_id not in terms_ids:
+                terms_ids.append(term_id)
+
+        return await self.api_term(terms_ids)

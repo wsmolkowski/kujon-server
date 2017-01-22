@@ -3,7 +3,7 @@
 import logging
 from datetime import date, timedelta, datetime
 
-from api.handlers.base import ApiHandler
+from api.handlers.base.api import ApiHandler
 from commons import decorators
 from commons.constants import fields, config, collections
 from commons.errors import ApiError, CallerError
@@ -54,7 +54,7 @@ class TTUserApi(ApiHandler):
         except Exception:
             return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})
 
         tt_doc = await self.db[collections.TT].find_one({fields.USER_ID: self.getUserId(),
@@ -156,7 +156,7 @@ class TTLecturerApi(ApiHandler):
         except Exception as ex:
             raise Exception("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.TT_LECTURERS, {fields.USOS_USER_ID: lecturer_id,
                                                             fields.USOS_ID: self.getUsosId()})
 
@@ -270,7 +270,7 @@ class TTApi(ApiHandler):
         except Exception:
             return self.error("Podana data {0} jest w niepoprawnym formacie.".format(given_date))
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.TT, {fields.USER_ID: self.getUserId()})
 
         tt_doc = await self.db[collections.TT].find_one({fields.USER_ID: self.getUserId(),

@@ -10,7 +10,7 @@ class ApiUserTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiUserTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.insert_user(config=self.config)
+        self.insert_user()
 
     @gen_test(timeout=20)
     def testUsers(self):
