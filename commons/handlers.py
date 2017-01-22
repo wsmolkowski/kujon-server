@@ -1,11 +1,17 @@
 # coding=UTF-8
 
+import traceback
+from datetime import datetime
+
 from tornado import web
+from tornado.httpclient import HTTPError
 from tornado.ioloop import IOLoop
 
 from commons import utils
-from commons.constants import config, fields, collections
+from commons.constants import collections, fields, config
 from commons.context import Context
+from commons.enumerators import ExceptionTypes
+from commons.errors import ApiError, AuthenticationError, CallerError, FilesError
 from commons.mixins.JSendMixin import JSendMixin
 
 
@@ -169,6 +175,52 @@ class AbstractHandler(web.RequestHandler, JSendMixin):
             cursor = self.db[collections.USOSINSTANCES].find()
         usoses_doc = await cursor.to_list(None)
         return await self._manipulateUsoses(usoses_doc)
+
+    async def _log_db(self, exception):
+        exc_doc = {
+            'exception': str(exception)
+        }
+
+        if isinstance(exception, HTTPError):
+            exc_doc['code'] = exception.code
+            exc_doc['message'] = exception.message
+            if hasattr(exception, 'response') and hasattr(exception.response, 'body'):
+                exc_doc['body'] = str(exception.response.body)
+                exc_doc['effective_url'] = exception.response.effective_url
+
+        if self.get_current_user():
+            exc_doc[fields.USER_ID] = self.getUserId()
+
+        exc_doc['traceback'] = traceback.format_exc()
+        stack = traceback.extract_stack()
+        filename, codeline, function_name, text = stack[-2]
+
+        exc_doc['codeline'] = codeline
+        exc_doc['function_name'] = function_name
+        exc_doc['exception_type'] = self.EXCEPTION_TYPE if hasattr(self,
+                                                                   'EXCEPTION_TYPE') else ExceptionTypes.UNKNOWN.value
+        exc_doc[fields.CREATED_TIME] = datetime.now()
+
+        if not isinstance(exception, AuthenticationError):
+            await self.db_insert(collections.EXCEPTIONS, exc_doc)
+
+    async def exc(self, exception, finish=True, log_file=True, log_db=True):
+        if log_file:
+            logging.exception(exception)
+
+        if log_db:
+            await self._log_db(exception)
+
+        if finish:
+            if isinstance(exception, ApiError) or isinstance(exception, FilesError):
+                self.error(message=str(exception), code=500)
+            elif isinstance(exception, AuthenticationError):
+                self.error(message=str(exception), code=401)
+            elif isinstance(exception, CallerError) or isinstance(exception, HTTPError):
+                self.usos()
+            else:
+                self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
+
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous
