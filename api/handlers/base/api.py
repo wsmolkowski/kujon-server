@@ -1,5 +1,5 @@
 # coding=UTF-8
-
+import locale
 import logging
 from datetime import date, datetime
 
@@ -152,7 +152,8 @@ class ApiHandler(BaseHandler, MathMixin):
             participants = list()
             if 'participants' in course_edition:
                 # sort participants
-                course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: k['last_name'])
+                locale.setlocale(locale.LC_ALL, "pl_PL.UTF-8")
+                course_doc['participants'] = sorted(course_edition['participants'], key=lambda k: locale.strxfrm(k['last_name']))
 
                 participants = course_doc['participants']
                 for participant in course_doc['participants']:
