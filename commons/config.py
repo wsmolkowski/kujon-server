@@ -105,4 +105,3 @@ class Config(object):
 
         # clamav
         self.CLAM_EICAR_SIGNATURE = self.config.get('clamav', 'CLAM_EICAR_SIGNATURE')
-        self.CLAM_EICAR_FALSE_SIGNATURE = self.config.get('clamav', 'CLAM_EICAR_FALSE_SIGNATURE')
