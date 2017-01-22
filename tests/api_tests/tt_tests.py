@@ -9,7 +9,7 @@ class ApiTTTest(AbstractApplicationTestBase):
     def setUp(self):
         super(ApiTTTest, self).setUp()
         self.prepareDatabase(self.config)
-        self.insert_user(config=self.config)
+        self.insert_user()
 
     # new TT endpoint test
 
