@@ -176,18 +176,17 @@ class EventAbstractHandler(AbstractHandler):
             logging.info('processing event_doc: {0}'.format(event_doc))
 
             for entry in event_doc['entry']:
-                for user_id in entry['related_user_ids']:
-                    if user_id == self._context.user_doc[fields.USOS_USER_ID]:
-                        await self._user_event(
-                            event_id,
-                            entry['node_id'],
-                            event_doc[fields.USOS_ID],
-                            event_doc['event_type'],
-                            entry['operation'])
+                # for user_id in entry['related_user_ids']:
+                #    if user_id == self._context.user_doc[fields.USOS_USER_ID]:
+                await self._user_event(
+                    entry['node_id'],
+                    event_doc[fields.USOS_ID],
+                    event_doc['event_type'],
+                    entry['operation'])
 
-                        await self._updateStatus(event_id, 'one signal send.')
-                    else:
-                        logging.info('not processing events for someone else: {0}'.format(event_doc))
+                await self._updateStatus(event_id, 'one signal send.')
+                #    else:
+                #        logging.info('not processing events for someone else: {0}'.format(event_doc))
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
             logging.exception(ex)
