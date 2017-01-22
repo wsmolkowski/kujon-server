@@ -8,6 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from tornado import gen
 
 from api.handlers.base.base import BaseHandler
+from api.mixins.MathMixin import MathMixin
 from commons import usoshelper
 from commons.constants import collections, fields
 from commons.enumerators import ExceptionTypes
@@ -33,7 +34,7 @@ EXCLUDE_FIELDS = {fields.MONGO_ID: False, fields.CREATED_TIME: False, fields.UPD
                   fields.USOS_ID: False, fields.USER_ID: False}
 
 
-class ApiHandler(BaseHandler):
+class ApiHandler(BaseHandler, MathMixin):
     EXCEPTION_TYPE = ExceptionTypes.API.value
 
     @staticmethod
