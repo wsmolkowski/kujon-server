@@ -17,7 +17,7 @@ class TermsApi(ApiHandler):
             if not terms_ordered:
                 self.error("Nie znaleziono cykli.")
             else:
-                self.success(terms_ordered, cache_age=config.SECONDS_1MONTH)
+                self.success(terms_ordered, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
 
@@ -33,6 +33,6 @@ class TermApi(ApiHandler):
             if not term_doc:
                 self.error("Nie znaleźliśmy danego semestru.", code=404)
             else:
-                self.success(term_doc, cache_age=config.SECONDS_2MONTHS)
+                self.success(term_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)

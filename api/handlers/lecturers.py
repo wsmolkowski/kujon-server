@@ -29,7 +29,7 @@ class LecturersApi(ApiHandler):
             if not lecturers_doc:
                 self.error("Brak informacji o Twoich wykładowcach.")
             else:
-                self.success(lecturers_doc, cache_age=config.SECONDS_1MONTH)
+                self.success(lecturers_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
 
@@ -43,6 +43,6 @@ class LecturerByIdApi(ApiHandler):
             if not user_info_doc:
                 self.error("Brak informacji o wykładowcy {0}".format(user_info_id), code=404)
             else:
-                self.success(user_info_doc, cache_age=config.SECONDS_2MONTHS)
+                self.success(user_info_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
