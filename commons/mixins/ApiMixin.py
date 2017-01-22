@@ -38,7 +38,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_courses_editions(self):
         pipeline = {fields.USER_ID: self.getUserId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES_EDITIONS, pipeline)
 
         courses_editions_doc = await self.db[collections.COURSES_EDITIONS].find_one(
@@ -112,7 +112,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES, pipeline)
 
         course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
@@ -214,7 +214,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         pipeline = {fields.COURSE_ID: course_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES, pipeline)
 
         course_doc = await self.db[collections.COURSES].find_one(pipeline, LIMIT_FIELDS_COURSE)
@@ -448,7 +448,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_programme(self, programme_id, finish=True):
         pipeline = {fields.PROGRAMME_ID: programme_id}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.PROGRAMMES, pipeline)
 
         programme_doc = await self.db[collections.PROGRAMMES].find_one(pipeline, LIMIT_FIELDS_PROGRAMMES)
@@ -515,7 +515,7 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_faculty(self, faculty_id):
         pipeline = {fields.FACULTY_ID: faculty_id, fields.USOS_ID: self.getUsosId()}
 
-        if self.do_refresh():
+        if await self.doRefresh():
             await self.db_remove(collections.FACULTIES, pipeline)
 
         faculty_doc = await self.db[collections.FACULTIES].find_one(pipeline, LIMIT_FIELDS_FACULTY)
@@ -574,7 +574,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_unit(self, unit_ids, finish=False):
 
         pipeline = {fields.UNIT_ID: {"$in": list(map(int, unit_ids))}, fields.USOS_ID: self.getUsosId()}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.COURSES_UNITS, pipeline)
 
         units_doc = await self.db[collections.COURSES_UNITS].find_one(pipeline)
@@ -631,7 +632,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
     async def api_group(self, group_id, finish=False):
         pipeline = {fields.GROUP_ID: group_id, fields.USOS_ID: self.getUsosId()}
-        if self.do_refresh():
+
+        if await self.doRefresh():
             await self.db_remove(collections.GROUPS, pipeline)
 
         group_doc = await self.db[collections.GROUPS].find_one(pipeline)
@@ -663,7 +665,8 @@ class ApiMixin(ApiUserMixin, MathMixin):
     async def api_thesis(self, refresh=False, user_info=None):
 
         pipeline = {fields.USER_ID: self.getUserId()}
-        if self.do_refresh() and refresh:
+
+        if await self.doRefresh() and refresh:
             await self.db_remove(collections.THESES, pipeline)
 
         theses_doc = await self.db[collections.THESES].find_one(pipeline)

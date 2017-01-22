@@ -17,9 +17,6 @@ from commons.errors import DaoError
 class DaoMixin(object):
     EXCEPTION_TYPE = ExceptionTypes.DAO.value
 
-    def do_refresh(self):
-        return False
-
     _db = None
 
     @property

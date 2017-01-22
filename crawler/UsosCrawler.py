@@ -39,7 +39,7 @@ class UsosCrawler(CrsTestsMixin, ApiTermMixin):
         self._context = Context(self.config, user_doc=user_doc, usos_doc=usos_doc, refresh=refresh)
         self._context.settings = await self.db_settings(self.getUserId())
 
-    def do_refresh(self):
+    def doRefresh(self):
         return self._context.refresh
 
     def get_current_user(self):
