@@ -152,9 +152,19 @@ class ApiMixin(ApiUserMixin, MathMixin):
 
         self.__translate_currently_conducted(course_doc)
 
-        course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
-        course_doc['coordinators'] = course_edition['coordinators']
-        course_doc['course_units_ids'] = course_edition['course_units_ids']
+        if 'lecturers' in course_edition and len(course_edition['lecturers']) > 0:
+            course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
+        else:
+            course_doc['lecturers'] = list()
+
+        if 'coordinators' in course_edition and len(course_edition['coordinators']) > 0:
+            course_doc['coordinators'] = course_edition['coordinators']
+        else:
+            course_doc['coordinators'] = list()
+
+        if 'course_units_ids' in course_edition and len(course_edition['course_units_ids']) > 0:
+            course_doc['course_units_ids'] = course_edition['course_units_ids']
+
         if 'grades' in course_edition:
             course_doc['grades'] = course_edition['grades']
         else:
