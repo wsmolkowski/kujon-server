@@ -25,7 +25,7 @@ USOSINSTANCES = [
      'comment': 'OK',
      },
     {'usos_id': 'UJ',
-     'name': 'Uniwersytet Jagieloński w Krakowie',
+     'name': 'Uniwersytet Jagielloński w Krakowie',
      'url': 'https://apps.usos.uj.edu.pl/',
      'logo': '/static/img/logo/logo-uj-64x64.jpg',
      'consumer_key': 'keGxFNtkPU4hBCv3nYAT',
