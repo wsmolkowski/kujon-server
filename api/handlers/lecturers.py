@@ -1,4 +1,5 @@
 # coding=UTF-8
+import locale
 
 from api.handlers.base.api import ApiHandler
 from commons import decorators
@@ -18,7 +19,8 @@ class LecturersApi(ApiHandler):
                 for lecturer in course[fields.LECTURERS]:
                     if lecturer not in result:
                         result.append(lecturer)
-        result = sorted(result, key=lambda k: k['last_name'])
+        locale.setlocale(locale.LC_ALL, "pl_PL.UTF-8")
+        result = sorted(result, key=lambda k: locale.strxfrm(k['last_name']))
         return result
 
     @decorators.authenticated
