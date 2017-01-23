@@ -2,7 +2,7 @@
 
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from tornado import web
 from tornado.httpclient import HTTPError
@@ -221,6 +221,30 @@ class AbstractHandler(web.RequestHandler, JSendMixin):
                 self.usos()
             else:
                 self.fail(message='Wystąpił błąd techniczny, pracujemy nad rozwiązaniem.')
+
+    async def db_insert(self, collection, document, update=False):
+        create_time = datetime.now()
+        if self.getUsosId():
+            document[fields.USOS_ID] = self.getUsosId()
+        document[fields.CREATED_TIME] = create_time
+
+        if update:
+            document[fields.UPDATE_TIME] = create_time
+
+        doc = await self.db[collection].insert(document)
+        logging.debug("document {0} inserted into collection: {1}".format(doc, collection))
+        return doc
+
+    async def db_remove(self, collection, pipeline, force=False):
+        pipeline_remove = pipeline.copy()
+
+        if not force:
+            pipeline_remove[fields.CREATED_TIME] = {
+                '$lt': datetime.now() - timedelta(seconds=config.SECONDS_REMOVE_ON_REFRESH)}
+
+        result = await self.db[collection].remove(pipeline_remove)
+        logging.debug("removed docs from collection {0} with {1}".format(collection, result))
+        return result
 
 
 class DefaultErrorHandler(AbstractHandler):
