@@ -12,7 +12,6 @@ from commons.AESCipher import AESCipher
 from commons.config import Config
 from commons.constants import config as constants_config
 from commons.constants import fields, collections
-from commons.enumerators import Environment
 from commons.enumerators import ExceptionTypes
 
 
@@ -115,68 +114,8 @@ class DbUtils(object):
         except Exception as ex:
             logging.exception(ex)
 
-    def remove_user_data(self, user_id, client=False):
-        if not client:
-            client = self.db
 
-        for collection in client.collection_names(include_system_collections=False):
-            if collection in (collections.USERS,):
-                continue
-
-            exists = client[collection].find_one({fields.USER_ID: {'$exists': True, '$ne': False}})
-            if exists:
-                client[collection].remove({fields.USER_ID: user_id})
-
-    def copy_user_credentials(self, email_from, email_to, environment_from, environment_to='demo'):
-
-        try:
-            if environment_to == Environment.PRODUCTION.value:
-                raise Exception('Can not copy values to {0} environment. :('.format(Environment.PRODUCTION.value))
-
-            self.config_from = Config(environment_from)
-            self.config_to = Config(environment_to)
-
-            self.client_from = pymongo.MongoClient(self.config_from.MONGODB_URI)
-            self.db_from = self.client_from[self.config_from.MONGODB_NAME]
-            self.client_to = pymongo.MongoClient(self.config_to.MONGODB_URI)
-            self.db_to = self.client_to[self.config_to.MONGODB_NAME]
-
-            user_from_doc = self.db_from[collections.USERS].find_one({
-                fields.USER_EMAIL: email_from, fields.USOS_PAIRED: True})
-            if not user_from_doc:
-                raise Exception("user from {0} not found.".format(email_from))
-
-            logging.info('user_from_doc: {0}'.format(user_from_doc))
-
-            user_to_doc = self.db_to[collections.USERS].find_one({
-                fields.USER_EMAIL: email_to, fields.USOS_PAIRED: True})
-            if not user_to_doc:
-                raise Exception("user to {0} not found.".format(email_to))
-
-            logging.info('user_to_doc: {0}'.format(user_to_doc))
-
-            self.remove_user_data(user_to_doc[fields.MONGO_ID], self.db_to)
-            logging.info('removed user to data')
-
-            user_to_doc[fields.ACCESS_TOKEN_KEY] = user_from_doc[fields.ACCESS_TOKEN_KEY]
-            user_to_doc[fields.ACCESS_TOKEN_SECRET] = user_from_doc[fields.ACCESS_TOKEN_SECRET]
-            user_to_doc[fields.USOS_ID] = user_from_doc[fields.USOS_ID]
-
-            if fields.USOS_USER_ID in user_from_doc:
-                user_to_doc[fields.USOS_USER_ID] = user_from_doc[fields.USOS_USER_ID]
-
-            updated = self.db_to[collections.USERS].update(
-                {fields.MONGO_ID: user_to_doc[fields.MONGO_ID]}, user_to_doc)
-
-            logging.info('collection: {0} updated: {1}'.format(collections.USERS, updated))
-
-        finally:
-            if self.client_from:
-                self.client_from.close()
-            if self.client_to:
-                self.client_to.close()
-
-    def refresh_failures(self):
+def refresh_failures(self):
         '''
             for each distinct user_id for exception  type - API
             cleanup exception collection for each user_id
