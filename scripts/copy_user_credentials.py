@@ -79,7 +79,7 @@ def main(arguments):
     config_from = Config(environment_from)
     config_to = Config(environment_to)
 
-    utils.initialize_logging('resubscribe_users', log_dir=config_to.LOG_DIR)
+    utils.initialize_logging('copy_user_credentials', log_dir=config_to.LOG_DIR)
 
     logging.info('copying from email: {0} (environment: {1}) to email: {2} (environment {3})'.format(
         email_from, environment_from, email_to, environment_to
