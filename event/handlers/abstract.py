@@ -3,6 +3,7 @@
 import logging
 
 from bson.objectid import ObjectId, InvalidId
+from tornado.httpclient import HTTPError
 
 from commons.constants import fields, collections, config
 from commons.context import Context
@@ -176,17 +177,14 @@ class EventAbstractHandler(AbstractHandler):
             logging.info('processing event_doc: {0}'.format(event_doc))
 
             for entry in event_doc['entry']:
-                # for user_id in entry['related_user_ids']:
-                #    if user_id == self._context.user_doc[fields.USOS_USER_ID]:
-                await self._user_event(
-                    entry['node_id'],
-                    event_doc[fields.USOS_ID],
-                    event_doc['event_type'],
-                    entry['operation'])
-
+                await self._user_event(entry['node_id'], event_doc[fields.USOS_ID], event_doc['event_type'],
+                                       entry['operation'])
                 await self._updateStatus(event_id, 'one signal send.')
-                #    else:
-                #        logging.info('not processing events for someone else: {0}'.format(event_doc))
+
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
             logging.exception(ex)
+            if isinstance(ex, HTTPError):
+                logging.error('code: {0} message: {1} body: {2} effective_url: {3}'.format(
+                    ex.code, ex.message, str(ex.response.body), ex.response.effective_url
+                ))
