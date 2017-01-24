@@ -1,5 +1,6 @@
 # coding=UTF-8
 
+import json
 import logging
 from datetime import datetime, timedelta
 
@@ -343,7 +344,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, ApiHandler):
 
         async def callUnitilSuccess(event_type, callback_url, verify_token):
 
-            try_until = datetime.now() + timedelta(seconds=60 + 2)  # 60 usos subscribe timeout
+            try_until = datetime.now() + timedelta(seconds=60 * 2)  # 60 usos subscribe timeout
 
             while True:
                 try:
@@ -365,10 +366,28 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, ApiHandler):
                         continue
                     raise ex
 
+        try:
+            current_subscriptions = await self.usosCall(path='services/events/subscriptions')
+            if current_subscriptions and isinstance(current_subscriptions, list):
+                current_subscriptions = json.dumps(current_subscriptions)
+                current_subscriptions = escape.json_decode(current_subscriptions)
+
+            logging.debug(
+                'current subscriptions user: {0} {1}'.format(self.getUserId(), current_subscriptions))
+        except Exception as ex:
+            logging.exception(ex)
+            current_subscriptions = list()
+
+        if current_subscriptions:
+            logging.debug('subscriptions exist for USOS: {0} not processing for user: {1}'.format(
+                self.getUsosId(), self.getUserId()))
+            return
+
+        # setting subscriptions for given USOS
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 callback_url = '{0}/{1}/{2}'.format(self.config.DEPLOY_EVENT,
-                                                    str(self.getUserId()),
+                                                    self.getUsosId(),
                                                     event_type.split('/')[-1])
 
                 verify_token = await self.db[collections.EVENTS_VERIFY_TOKENS].insert({

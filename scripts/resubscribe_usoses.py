@@ -27,7 +27,7 @@ def buildMessage(error):
     return str(error)
 
 
-async def subscribe_user(config, db, user_doc, http_client):
+async def subscribe_usos(config, db, usos_doc, http_client):
     async def callUnitilSuccess(context, event_type, callback_url, verify_token):
 
         try_until = datetime.now() + timedelta(seconds=USOS_SUBSCRIBE_TIMEOUT + 2)
@@ -52,10 +52,12 @@ async def subscribe_user(config, db, user_doc, http_client):
                 raise ex
 
     try:
-        logging.info('re subscribe start for user: {0}'.format(user_doc[fields.MONGO_ID]))
-        usos_doc = await db[collections.USOSINSTANCES].find_one({fields.USOS_ID: user_doc[fields.USOS_ID]})
+        logging.info('re subscribe start for usos: {0}'.format(usos_doc))
 
-        context = Context(config, user_doc=user_doc, usos_doc=usos_doc, io_loop=IOLoop.current(),
+        fake_user_doc = {fields.ACCESS_TOKEN_KEY: 'FAKE ACCESS_TOKEN_KEY',
+                         fields.ACCESS_TOKEN_SECRET: 'FAKE ACCESS_TOKEN_SECRET'}
+
+        context = Context(config, user_doc=fake_user_doc, usos_doc=usos_doc, io_loop=IOLoop.current(),
                           http_client=http_client)
         context.setUp()
 
@@ -66,7 +68,7 @@ async def subscribe_user(config, db, user_doc, http_client):
                 current_subscriptions = escape.json_decode(current_subscriptions)
 
             logging.info(
-                'current subscriptions user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
+                'current subscriptions usos: {0} {1}'.format(usos_doc[fields.USOS_ID], current_subscriptions))
         except Exception as ex:
             logging.exception(ex)
             current_subscriptions = list()
@@ -75,45 +77,44 @@ async def subscribe_user(config, db, user_doc, http_client):
             try:
                 unsubscribe_doc = await context.usosCaller.call(path='services/events/unsubscribe')
                 logging.info(
-                    'unsubscribe user: {0} result ok: {1}'.format(user_doc[fields.MONGO_ID], unsubscribe_doc))
+                    'unsubscribe usos: {0} result ok: {1}'.format(usos_doc[fields.USOS_ID], unsubscribe_doc))
             except HTTPError as ex:
                 logging.error(
-                    'unsubscribe user: {0} result error: {1}'.format(user_doc[fields.MONGO_ID], buildMessage(ex)))
+                    'unsubscribe usos: {0} result error: {1}'.format(usos_doc[fields.USOS_ID], buildMessage(ex)))
             except Exception as ex:
                 logging.exception(ex)
         else:
             logging.warning(
-                'skiping unsubscribe user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
+                'skiping unsubscribe usos: {0} {1}'.format(usos_doc[fields.USOS_ID], current_subscriptions))
 
-        await db[collections.SUBSCRIPTIONS].remove({fields.USER_ID: user_doc[fields.MONGO_ID]})
+        await db[collections.SUBSCRIPTIONS].remove({fields.USOS_ID: usos_doc[fields.MONGO_ID]})
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
             try:
                 callback_url = '{0}/{1}/{2}'.format(config.DEPLOY_EVENT,
-                                                    user_doc[fields.USOS_ID],
+                                                    usos_doc[fields.USOS_ID],
                                                     event_type.split('/')[-1])
 
                 verify_token = await db[collections.EVENTS_VERIFY_TOKENS].insert({
-                    fields.USER_ID: user_doc[fields.MONGO_ID],
+                    fields.USOS_ID: usos_doc[fields.USOS_ID],
                     fields.EVENT_TYPE: event_type,
                     fields.CREATED_TIME: datetime.now()
                 })
 
                 subscribe_doc = await callUnitilSuccess(context, event_type, callback_url, verify_token)
-                subscribe_doc[fields.USER_ID] = user_doc[fields.MONGO_ID]
+                subscribe_doc[fields.USOS_ID] = usos_doc[fields.MONGO_ID]
                 subscribe_doc[fields.CREATED_TIME] = datetime.now()
                 await db[collections.SUBSCRIPTIONS].insert(subscribe_doc)
 
-                logging.info('subscribe user: {0} result: {1}'.format(user_doc[fields.MONGO_ID], subscribe_doc))
+                logging.info('subscribe usos: {0} result: {1}'.format(usos_doc[fields.USOS_ID], subscribe_doc))
 
             except HTTPError as ex:
-                logging.error('subscribe user: {0} event_type {1} result error: {2}'.format(
-                    user_doc[fields.MONGO_ID], event_type, buildMessage(ex)))
+                logging.error('subscribe usos: {0} event_type {1} result error: {2}'.format(
+                    usos_doc[fields.USOS_ID], event_type, buildMessage(ex)))
             except Exception as ex:
                 logging.exception(ex)
 
-            logging.info('re subscribe end for user: {0}'.format(user_doc[fields.MONGO_ID]))
-
+            logging.info('re subscribe end for usos: {0}'.format(usos_doc[fields.USOS_ID]))
 
     except Exception as ex:
         logging.exception(ex)
@@ -121,28 +122,27 @@ async def subscribe_user(config, db, user_doc, http_client):
 
 async def main():
     config = Config(sys.argv[1])
-    utils.initialize_logging('resubscribe_users', log_dir=config.LOG_DIR)
+    utils.initialize_logging('resubscribe_usoses', log_dir=config.LOG_DIR)
     db = motor.motor_tornado.MotorClient(config.MONGODB_URI)[config.MONGODB_NAME]
 
     http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
     logging.info(http_client)
 
-    cursor = db[collections.USERS].find({fields.USOS_PAIRED: True})  # fields.USOS_ID: {'$ne': 'UL'}
-    users_docs = await cursor.to_list(None)
-    total = len(users_docs)
+    cursor = db[collections.USOSINSTANCES].find({'enabled': True})
+    usoses_docs = await cursor.to_list(None)
+    total = len(usoses_docs)
     processed = 0
 
-    for user_doc in users_docs:
+    for usos_doc in usoses_docs:
         processed += 1
         logging.info('{0} processing {1} out of {2}'.format('#' * 50, processed, total))
-
-        await subscribe_user(config, db, user_doc, http_client)
+        await subscribe_usos(config, db, usos_doc, http_client)
 
 
 if __name__ == '__main__':
     '''
         usage:
-            python3 resubscribe_users.py demo
+            python3 resubscribe_usoses.py demo
     '''
 
     if len(sys.argv) != 2:
