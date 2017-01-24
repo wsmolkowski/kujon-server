@@ -391,7 +391,7 @@ class UsosVerificationHandler(AuthenticationHandler, OAuth2Mixin, ApiHandler):
                                                     event_type.split('/')[-1])
 
                 verify_token = await self.db[collections.EVENTS_VERIFY_TOKENS].insert({
-                    fields.USOS_ID: self.getUsosId(),
+                    fields.USER_ID: self.getUserId(),
                     fields.EVENT_TYPE: event_type,
                     fields.CREATED_TIME: datetime.now()
                 })

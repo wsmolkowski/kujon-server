@@ -85,7 +85,6 @@ async def subscribe_user(config, db, user_doc, http_client):
             logging.warning(
                 'skiping unsubscribe user: {0} {1}'.format(user_doc[fields.MONGO_ID], current_subscriptions))
 
-        '''
         await db[collections.SUBSCRIPTIONS].remove({fields.USER_ID: user_doc[fields.MONGO_ID]})
 
         for event_type in ['crstests/user_grade', 'grades/grade', 'crstests/user_point']:
@@ -114,7 +113,7 @@ async def subscribe_user(config, db, user_doc, http_client):
                 logging.exception(ex)
 
             logging.info('re subscribe end for user: {0}'.format(user_doc[fields.MONGO_ID]))
-        '''
+
 
     except Exception as ex:
         logging.exception(ex)
