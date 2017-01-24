@@ -54,7 +54,10 @@ async def subscribe_usos(config, db, usos_doc, http_client):
     try:
         logging.info('re subscribe start for usos: {0}'.format(usos_doc))
 
-        context = Context(config, usos_doc=usos_doc, io_loop=IOLoop.current(),
+        fake_user_doc = {fields.ACCESS_TOKEN_KEY: 'FAKE ACCESS_TOKEN_KEY',
+                         fields.ACCESS_TOKEN_SECRET: 'FAKE ACCESS_TOKEN_SECRET'}
+
+        context = Context(config, user_doc=fake_user_doc, usos_doc=usos_doc, io_loop=IOLoop.current(),
                           http_client=http_client)
         context.setUp()
 

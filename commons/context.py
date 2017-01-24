@@ -39,13 +39,10 @@ class Context(ObjectDict):
                 self.access_token = dict(key=self.user_doc[fields.ACCESS_TOKEN_KEY],
                                          secret=self.user_doc[fields.ACCESS_TOKEN_SECRET])
 
-            else:
-                self.access_token = dict(key='', secret='')
-
-            self.usosCaller = UsosCaller(self.usos_doc[fields.USOS_URL], self.http_client, self.config.PROXY_HOST,
-                                         self.config.PROXY_PORT, self.remote_ip, self.consumer_token,
-                                         self.access_token,
-                                         self.prepare_curl_callback)
+                self.usosCaller = UsosCaller(self.usos_doc[fields.USOS_URL], self.http_client, self.config.PROXY_HOST,
+                                             self.config.PROXY_PORT, self.remote_ip, self.consumer_token,
+                                             self.access_token,
+                                             self.prepare_curl_callback)
 
         if self.usos_doc:
             self.asyncCaller = AsyncCaller(self.usos_doc[fields.USOS_URL], self.http_client, self.config.PROXY_HOST,
