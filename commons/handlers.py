@@ -250,4 +250,4 @@ class AbstractHandler(web.RequestHandler, JSendMixin):
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous
     def get(self):
-        self.error(message='Strona o podanym adresie nie istnieje.', code=401)
+        self.error(message='Strona o podanym adresie nie istnieje.', code=404)
