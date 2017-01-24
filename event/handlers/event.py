@@ -182,7 +182,7 @@ class EventHandler(AbstractHandler):
 
         raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
 
-    def _log(self, exception):
+    def _logException(self, exception):
         logging.exception(exception)
         if isinstance(exception, HTTPError):
             logging.error('code: {0} message: {1} body: {2} effective_url: {3}'.format(
@@ -219,11 +219,11 @@ class EventHandler(AbstractHandler):
                                                http_client)
                         await self._updateStatus(event_id, 'one signal send.')
                     except Exception as ex:
-                        self._log(ex)
+                        self._logException(ex)
 
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
-            self._log(ex)
+            self._logException(ex)
 
     @web.asynchronous
     async def post(self, usos_id, event_type):
