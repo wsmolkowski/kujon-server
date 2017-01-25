@@ -70,7 +70,7 @@ class EventHandler(AbstractHandler):
         :return:
         '''
 
-        grader_doc = await self.api_user_info(grader_id)
+        grader_doc = await self.usos_user_info(grader_id)
         return grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
     async def _one_signal(self, event_type, user_data, event_operation, email):
