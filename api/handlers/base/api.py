@@ -875,6 +875,37 @@ class ApiHandler(BaseHandler, MathMixin):
 
         return user_info_doc
 
+    async def usos_user_info(self, user_id=None, context=None):
+        '''
+        :param user_id:
+        :return: parsed usos user info
+        '''
+        if context:
+            self._context = context
+
+        fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
+
+        if user_id:
+            result = await self.usosCall(path='services/users/user',
+                                         arguments={'fields': fields, 'user_id': user_id})
+        else:
+            result = await self.usosCall(path='services/users/user', arguments={'fields': fields})
+
+        if not result:
+            raise ApiError('Problem z pobraniem danych z USOS na temat użytkownika.')
+
+        # strip empty values
+        if 'homepage_url' in result and result['homepage_url'] == "":
+            result['homepage_url'] = None
+
+        if 'student_status' in result:
+            result['student_status'] = usoshelper.dict_value_student_status(result['student_status'])
+
+        # change staff_status to dictionary
+        result['staff_status'] = usoshelper.dict_value_staff_status(result['staff_status'])
+
+        return result
+
     async def api_user_usos_info(self):
         '''
         get usos user info for current user (without usos_user_id)

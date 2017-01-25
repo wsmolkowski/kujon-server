@@ -70,8 +70,15 @@ class EventHandler(AbstractHandler):
         :return:
         '''
 
-        grader_doc = await self.usos_user_info(user_id=grader_id, context=context)
-        return grader_doc['first_name'] + ' ' + grader_doc['last_name']
+        fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
+
+        try:
+            result = await context.usosCaller.call(path='services/users/user',
+                                                   arguments={'fields': fields, 'user_id': grader_id})
+            return result['first_name'] + ' ' + result['last_name']
+        except Exception as ex:
+            logging.exception(ex)
+            return 'Nieznany'
 
     async def _one_signal(self, event_type, user_data, event_operation, email):
         '''
@@ -175,7 +182,7 @@ class EventHandler(AbstractHandler):
 
             user_grade[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
 
-            user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'])
+            user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_GRADE, user_grade, event_operation,
                                    self._context.user_doc[fields.USER_EMAIL])
