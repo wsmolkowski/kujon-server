@@ -246,11 +246,13 @@ class AbstractHandler(web.RequestHandler, JSendMixin):
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         return result
 
-    async def usos_user_info(self, user_id=None):
+    async def usos_user_info(self, user_id=None, context=None):
         '''
         :param user_id:
         :return: parsed usos user info
         '''
+        if context:
+            self._context = context
 
         fields = 'id|staff_status|first_name|last_name|student_status|sex|email|email_url|has_email|email_access|student_programmes|student_number|titles|has_photo|course_editions_conducted|office_hours|interests|room|employment_functions|employment_positions|homepage_url'
 
