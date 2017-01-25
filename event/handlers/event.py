@@ -63,14 +63,14 @@ class EventHandler(AbstractHandler):
         await self.db[collections.EVENTS_USOS].update({fields.MONGO_ID: event_id},
                                                       {'$set': {fields.EVENT_STATUS: status}})
 
-    async def _grader(self, grader_id):
+    async def _grader(self, grader_id, context):
         '''
             get grader data
         :param grader_id:
         :return:
         '''
 
-        grader_doc = await self.usos_user_info(grader_id)
+        grader_doc = await self.usos_user_info(user_id=grader_id, context=context)
         return grader_doc['first_name'] + ' ' + grader_doc['last_name']
 
     async def _one_signal(self, event_type, user_data, event_operation, email):
