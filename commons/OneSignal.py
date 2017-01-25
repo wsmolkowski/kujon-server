@@ -15,9 +15,11 @@ SIGNAL_NOTIFICATION_URL = 'https://onesignal.com/api/v1/notifications'
 
 
 class OneSignal(object):
-    def __init__(self, config):
+    def __init__(self, config, http_client=None):
         self.config = config
-        self.client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
+        if not http_client:
+            http_client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT)
+        self.client = http_client
         self.headers = HTTPHeaders({
             'Content-Type': 'application/json',
             'Authorization': 'Basic {0}'.format(self.config.AUTHORIZATION)
