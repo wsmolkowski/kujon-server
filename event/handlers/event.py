@@ -9,6 +9,7 @@ from tornado.httpclient import HTTPError
 from tornado.ioloop import IOLoop
 
 from commons import utils
+from commons.OneSignal import OneSignal
 from commons.constants import fields, collections, config
 from commons.context import Context
 from commons.enumerators import ExceptionTypes
@@ -231,6 +232,15 @@ class EventHandler(AbstractHandler):
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
             self._logException(ex)
+
+    _osm = None
+
+    @property
+    def osm(self):
+        if not self._osm:
+            self._osm = OneSignal(self.config)
+        return self._osm
+
 
     @web.asynchronous
     async def post(self, usos_id, event_type):
