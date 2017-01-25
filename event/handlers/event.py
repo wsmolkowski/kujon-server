@@ -147,7 +147,7 @@ class EventHandler(AbstractHandler):
             logging.debug('{0} course_edition_doc: {1}'.format(constants.EVENT_TYPE_USER_POINT, course_edition_doc))
 
             user_point[fields.COURSE_NAME] = course_edition_doc[fields.COURSE_EDITION][fields.COURSE_NAME]
-            user_point[constants.GRADER] = await self._grader(user_point['grader_id'])
+            user_point[constants.GRADER] = await self._grader(user_point['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_POINT, user_point, event_operation,
                                    self._context.user_doc[fields.USER_EMAIL])
