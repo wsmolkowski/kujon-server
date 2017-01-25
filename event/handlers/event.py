@@ -21,6 +21,13 @@ from event.utils import formatter
 
 class EventHandler(AbstractHandler):
     EXCEPTION_TYPE = ExceptionTypes.EVENT.value
+    _osm = None
+
+    @property
+    def osm(self):
+        if not self._osm:
+            self._osm = OneSignal(self.config)
+        return self._osm
 
     @web.asynchronous
     async def get(self, usos_id, event_type):
@@ -232,15 +239,6 @@ class EventHandler(AbstractHandler):
         except Exception as ex:
             await self._updateStatus(event_id, 'processing failed')
             self._logException(ex)
-
-    _osm = None
-
-    @property
-    def osm(self):
-        if not self._osm:
-            self._osm = OneSignal(self.config)
-        return self._osm
-
 
     @web.asynchronous
     async def post(self, usos_id, event_type):
