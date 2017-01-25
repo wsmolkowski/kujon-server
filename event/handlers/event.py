@@ -157,7 +157,7 @@ class EventHandler(AbstractHandler):
             user_point[constants.GRADER] = await self._grader(user_point['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_POINT, user_point, event_operation,
-                                   self._context.user_doc[fields.USER_EMAIL])
+                                   user_doc[fields.USER_EMAIL])
 
         elif event_type == constants.EVENT_TYPE_USER_GRADE:
 
@@ -185,7 +185,7 @@ class EventHandler(AbstractHandler):
             user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_GRADE, user_grade, event_operation,
-                                   self._context.user_doc[fields.USER_EMAIL])
+                                   user_doc[fields.USER_EMAIL])
 
         raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
 
