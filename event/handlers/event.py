@@ -21,13 +21,6 @@ from event.utils import formatter
 
 class EventHandler(AbstractHandler):
     EXCEPTION_TYPE = ExceptionTypes.EVENT.value
-    _osm = None
-
-    @property
-    def osm(self):
-        if not self._osm:
-            self._osm = OneSignal(self.config)
-        return self._osm
 
     @web.asynchronous
     async def get(self, usos_id, event_type):
@@ -104,14 +97,14 @@ class EventHandler(AbstractHandler):
 
             notification, message_title, message_body = formatter.format_user_point(user_data,
                                                                                     event_operation)
-            onesignal_result = await self._osm.signal_message(message=notification,
-                                                              email_reciepient=email)
+            onesignal_result = await OneSignal(self.config).signal_message(message=notification,
+                                                                           email_reciepient=email)
 
         elif event_type == constants.EVENT_TYPE_USER_GRADE:
             notification, message_title, message_body = formatter.format_user_grade(user_data,
                                                                                     event_operation)
-            onesignal_result = await self._osm.signal_message(message=notification,
-                                                              email_reciepient=email)
+            onesignal_result = await OneSignal(self.config).signal_message(message=notification,
+                                                                           email_reciepient=email)
 
         logging.info('onesignal_result {0}'.format(onesignal_result))
 
