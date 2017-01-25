@@ -195,7 +195,7 @@ class EventHandler(AbstractHandler):
             event_doc = await self.db[collections.EVENTS_USOS].find_one({fields.MONGO_ID: event_id})
             logging.info('processing event_doc: {0}'.format(event_doc))
 
-            http_client = utils.http_client(config.PROXY_HOST, config.PROXY_PORT, io_loop=IOLoop.current())
+            http_client = utils.http_client(self.config.PROXY_HOST, self.config.PROXY_PORT, io_loop=IOLoop.current())
 
             for entry in event_doc['entry']:
                 for usos_user_id in entry['related_user_ids']:
