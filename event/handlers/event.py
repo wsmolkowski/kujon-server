@@ -216,7 +216,7 @@ class EventHandler(AbstractHandler):
 
                         if not user_doc:
                             raise EventError(
-                                'Uzytkownik usos_user_id: {0} dla usos_id: {2} nie istnieje w Kujonie.'.format(
+                                'Uzytkownik usos_user_id: {0} dla usos_id: {1} nie istnieje w Kujonie.'.format(
                                     usos_user_id, event_doc[fields.USOS_ID]
                                 ))
 
