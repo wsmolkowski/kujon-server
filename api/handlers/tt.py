@@ -121,7 +121,7 @@ class TTUserApi(ApiHandler):
 
         try:
             tt_doc = await self.api_ttmonth(given_date, lecturers_info)
-            self.success(tt_doc, cache_age=config.SECONDS_2WEEKS)
+            self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             self.error(message=ex, code=500)
 
@@ -226,10 +226,7 @@ class TTLecturerApi(ApiHandler):
                 self.error("Niepoprawne parametry wywołania.")
                 return
             tt_doc = await self.api_tt_lecturers(lecturer_id, given_date)
-            if tt_doc:
-                return self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
-            else:
-                return self.success(list())
+            return self.success(tt_doc, cache_age=config.SECONDS_1WEEK)
         except Exception as ex:
             await self.exc(ex)
 
