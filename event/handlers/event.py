@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import datetime
 
 from bson.objectid import ObjectId
 from tornado import web
@@ -81,39 +82,38 @@ class EventHandler(AbstractHandler):
             logging.exception(ex)
             return 'Nieznany'
 
-    async def _one_signal(self, event_type, user_data, event_operation, email):
+    async def _one_signal(self, event_type, user_data, event_operation, user_doc, http_client):
         '''
             format notification and send to onesignal
         :return:
         '''
 
         logging.info('_one_signal event_type: {0} user_data: {1} event_operation: {2} email: {3}'.format(
-            event_type, user_data, event_operation, email
+            event_type, user_data, event_operation, user_doc[fields.USER_EMAIL]
         ))
 
         notification, message_title, message_body = None, None, None
 
         if event_type == constants.EVENT_TYPE_USER_POINT:
-
             notification, message_title, message_body = formatter.format_user_point(user_data,
                                                                                     event_operation)
-            onesignal_result = await OneSignal(self.config).signal_message(message=notification,
-                                                                           email_reciepient=email)
-
         elif event_type == constants.EVENT_TYPE_USER_GRADE:
             notification, message_title, message_body = formatter.format_user_grade(user_data,
                                                                                     event_operation)
-            onesignal_result = await OneSignal(self.config).signal_message(message=notification,
-                                                                           email_reciepient=email)
-
-        logging.info('onesignal_result {0}'.format(onesignal_result))
-
         if notification and message_title and message_body:
-            message_doc = await self.db_save_message(message=message_body,
-                                                     from_whom=message_title,
-                                                     message_type='powiadomienie',
-                                                     notification_text=notification,
-                                                     notification_result=onesignal_result)
+            onesignal_result = await OneSignal(self.config, http_client=http_client).signal_message(
+                message=notification, email_reciepient=user_doc[fields.USER_EMAIL])
+
+            logging.debug('onesignal_result {0}'.format(onesignal_result))
+
+            message_doc = await self.db[collections.MESSAGES].insert({
+                fields.USER_ID: user_doc[fields.MONGO_ID],
+                fields.CREATED_TIME: datetime.now(),
+                fields.FIELD_MESSAGE_FROM: message_title,
+                fields.FIELD_MESSAGE_TYPE: 'powiadomienie',
+                fields.ONESIGNAL_NOTIFICATION_TEXT: notification,
+                fields.ONESIGNAL_NOTIFICATION_RESULT: onesignal_result,
+            })
 
             logging.info('saved message_doc: {0}'.format(message_doc))
 
@@ -125,7 +125,7 @@ class EventHandler(AbstractHandler):
 
     async def _user_event(self, user_doc, node_id, event_type, event_operation, http_client):
 
-        logging.info(
+        logging.debug(
             '_user_event: {0} {1} {2} {3}'.format(user_doc[fields.MONGO_ID], node_id, event_type, event_operation))
 
         usos_doc = await self.db_get_usos(user_doc[fields.USOS_ID])
@@ -158,7 +158,7 @@ class EventHandler(AbstractHandler):
             user_point[constants.GRADER] = await self._grader(user_point['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_POINT, user_point, event_operation,
-                                   user_doc[fields.USER_EMAIL])
+                                   user_doc, http_client)
 
         elif event_type == constants.EVENT_TYPE_USER_GRADE:
 
@@ -186,9 +186,9 @@ class EventHandler(AbstractHandler):
             user_grade[constants.GRADER] = await self._grader(user_grade['grader_id'], context)
 
             await self._one_signal(constants.EVENT_TYPE_USER_GRADE, user_grade, event_operation,
-                                   user_doc[fields.USER_EMAIL])
-
-        raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
+                                   user_doc, http_client)
+        else:
+            raise EventError('nierozpoznany typ powiadomienia: {0}'.format(event_type))
 
     def _logException(self, exception):
         logging.exception(exception)
@@ -252,7 +252,7 @@ class EventHandler(AbstractHandler):
             event_data[fields.EVENT_STATUS] = 'new'
 
             event_id = await self.db_insert(collections.EVENTS_USOS, event_data)
-            logging.info('processing event_id: {0} for event_data: {1}'.format(event_id, event_data))
+            logging.debug('processing event_id: {0} for event_data: {1}'.format(event_id, event_data))
 
             IOLoop.current().spawn_callback(self.process_event, event_id)
 

@@ -246,30 +246,30 @@ class AbstractHandler(web.RequestHandler, JSendMixin):
         logging.debug("removed docs from collection {0} with {1}".format(collection, result))
         return result
 
-    async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False,
-                              notification_result=False):
-        if not message_type:
-            message_type = 'email'
-
-        if not from_whom:
-            from_whom = self.config.PROJECT_TITLE
-
-        if not user_id:
-            user_id = self.getUserId()
-
-        msg_doc = await self.db[collections.MESSAGES].insert({
-            fields.USER_ID: user_id,
-            fields.CREATED_TIME: datetime.now(),
-            fields.FIELD_MESSAGE_FROM: from_whom,
-            fields.FIELD_MESSAGE_TYPE: message_type,
-            fields.FIELD_MESSAGE_TEXT: message,
-            fields.ONESIGNAL_NOTIFICATION_TEXT: notification_text,
-            fields.ONESIGNAL_NOTIFICATION_RESULT: notification_result,
-        })
-
-        logging.debug('user message saved for message_type: {0} with id: {1}'.format(message_type, msg_doc))
-
-        return msg_doc
+        # async def db_save_message(self, message, user_id=None, message_type=None, from_whom=None, notification_text=False,
+        #                           notification_result=False):
+        #     if not message_type:
+        #         message_type = 'email'
+        #
+        #     if not from_whom:
+        #         from_whom = self.config.PROJECT_TITLE
+        #
+        #     if not user_id:
+        #         user_id = self.getUserId()
+        #
+        #     msg_doc = await self.db[collections.MESSAGES].insert({
+        #         fields.USER_ID: user_id,
+        #         fields.CREATED_TIME: datetime.now(),
+        #         fields.FIELD_MESSAGE_FROM: from_whom,
+        #         fields.FIELD_MESSAGE_TYPE: message_type,
+        #         fields.FIELD_MESSAGE_TEXT: message,
+        #         fields.ONESIGNAL_NOTIFICATION_TEXT: notification_text,
+        #         fields.ONESIGNAL_NOTIFICATION_RESULT: notification_result,
+        #     })
+        #
+        #     logging.debug('user message saved for message_type: {0} with id: {1}'.format(message_type, msg_doc))
+        #
+        #     return msg_doc
 
 class DefaultErrorHandler(AbstractHandler):
     @web.asynchronous
