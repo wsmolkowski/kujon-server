@@ -34,7 +34,7 @@ def format_user_point(user_point, event_operation):
 
     tags = {'[OPERATION]': operation,
             '[COURSE_NAME]': str(user_point[fields.COURSE_NAME]) if user_point[fields.COURSE_NAME] else 'brak',
-            '[POINTS]': str(user_point['points']) if user_point['points'] else 'brak',
+            '[POINTS]': str(user_point['points']) if 'points' in user_point else 'brak',
             '[PUBLIC_COMMENT]': str(user_point['comment']) if user_point['comment'] else '-',
             '[LECTURER]': str(user_point['grader']) if user_point['grader'] else '-'
             }

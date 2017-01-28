@@ -25,7 +25,7 @@ class EventUtilsTest(unittest.TestCase):
     def testNotificationMessageFormaterPoints(self):
         # assume -
 
-        user_points = {'grader': 'Magdalena Skolimowska-Kulig', 'points': 10.0, 'comment': '',
+        user_points = {'grader': 'Magdalena Skolimowska-Kulig', 'points': 0.0, 'comment': '',
                        'last_changed': '2017-01-03 23:10:35', 'student_id': 191953, 'grader_id': 1437,
                        'node_id': 26160, 'course_name': 'Elementy matematyki w ekonomii'}
 
@@ -33,5 +33,5 @@ class EventUtilsTest(unittest.TestCase):
         notif, title, mess = formatter.format_user_point(user_points, 'create')
 
         # then
-        self.assertEquals(notif, "Wpisano punty: 10.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
-        self.assertEquals(title, "Powiadomienie - Wpisano punkty: 10.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
+        self.assertEquals(notif, "Wpisano punty: 0.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
+        self.assertEquals(title, "Powiadomienie - Wpisano punkty: 0.0 ze sprawdzianu (Elementy matematyki w ekonomii)")
