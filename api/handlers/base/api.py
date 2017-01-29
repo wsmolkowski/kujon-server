@@ -189,7 +189,7 @@ class ApiHandler(BaseHandler, MathMixin):
 
         if extra_fetch:
             tasks_groups = list()
-            if course_doc['course_units_ids']:
+            if 'course_units_ids' in course_doc:
                 for unit in course_doc['course_units_ids']:
                     tasks_groups.append(self.api_group(int(unit)))
 
