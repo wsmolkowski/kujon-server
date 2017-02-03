@@ -29,7 +29,7 @@ FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_S
                       fields.FILE_SHARED_WITH_IDS: 1}
 
 FILE_SCAN_RESULT_OK = 'file_clean'
-FILES_SHARE_WITH_SEPARATOR = ';'
+FILES_SHARE_WITH_SEPARATOR = ','
 
 
 class AbstractFileHandler(ApiHandler):
