@@ -124,6 +124,7 @@ class AbstractFileHandler(ApiHandler):
         # change file id from _id to fields.FILE_ID
         for file in files_doc:
             file[fields.FILE_ID] = file[fields.MONGO_ID]
+            file[fields.FILE_SHARED_BY_ME] = True
             file.pop(fields.MONGO_ID)
 
         return files_doc
@@ -147,6 +148,10 @@ class AbstractFileHandler(ApiHandler):
             user_info = await self.api_user_info(file_doc[fields.USOS_USER_ID])
             file_doc['first_name'] = user_info['first_name']
             file_doc['last_name'] = user_info['last_name']
+            if file_doc[fields.USOS_USER_ID] == user_info[fields.ID]:
+                file_doc[fields.FILE_SHARED_BY_ME] = True
+            else:
+                file_doc[fields.FILE_SHARED_BY_ME] = False
 
         # change file id from _id to fields.FILE_ID
         for file in files_doc:
