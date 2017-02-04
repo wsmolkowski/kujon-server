@@ -27,7 +27,7 @@ def format_user_point(user_point, event_operation):
         operation = 'Wpisano'
     elif event_operation == 'update':
         operation = 'Zaktualizowano'
-    elif event_operation == 'update':
+    elif event_operation == 'delete':
         operation = 'Usunięto'
     else:
         operation = 'brak'
@@ -74,7 +74,7 @@ def format_user_grade(user_grade, event_operation):
         operation = 'Wpisano'
     elif event_operation == 'update':
         operation = 'Zaktualizowano'
-    elif event_operation == 'update':
+    elif event_operation == 'delete':
         operation = 'Usunięto'
     else:
         operation = 'brak'
