@@ -29,7 +29,7 @@ FILES_LIMIT_FIELDS = {fields.CREATED_TIME: 1, fields.FILE_NAME: 1, fields.FILE_S
                       fields.FILE_SHARED_WITH_IDS: 1}
 
 FILE_SCAN_RESULT_OK = 'file_clean'
-FILES_SHARE_WITH_SEPARATOR = ';'
+FILES_SHARE_WITH_SEPARATOR = ','
 
 
 class AbstractFileHandler(ApiHandler):
@@ -51,6 +51,37 @@ class AbstractFileHandler(ApiHandler):
         if not self._clamd:
             self._clamd = pyclamd.ClamdNetworkSocket()
         return self._clamd
+
+    async def check_course_editions_share(self, course_id, file_shared_with, file_shared_with_ids, term_id):
+
+        # check if user is on given course_id & term_id
+        courseedition = await self.api_course_edition(course_id, term_id)
+        if not courseedition:
+            raise FilesError('nierozpoznane parametry kursu.')
+        courseedition_participants = list()
+        for user in courseedition[fields.PARTICIPANTS]:
+            courseedition_participants.append(user[fields.USER_ID])
+
+        try:
+            if file_shared_with == 'List':
+                for index in range(len(file_shared_with_ids)):
+                    if file_shared_with_ids[index] == '':
+                        raise Exception('pusty element.')
+                    file_shared_with_ids[index] = file_shared_with_ids[index].replace(' ', '')
+                    file_shared_with_ids[index] = file_shared_with_ids[index].replace('"', '')
+        except Exception:
+            raise FilesError('Nie przekazano odpowiednich parametrów pola file_shared_with_ids.')
+
+        if file_shared_with not in ['All', 'None', 'List']:
+            raise FilesError('Nie przekazano odpowiednich parametrów sharepowania.')
+
+        # check if all users given in file_shared_with_ids are on current course
+        if file_shared_with == 'List':
+            for user_info_id in file_shared_with_ids:
+                if user_info_id not in courseedition_participants:
+                    raise FilesError(
+                        'Użytkownik {0} nie jest uczestnikiem kursu {1} w okresie {2}.'.format(user_info_id, course_id,
+                                                                                               term_id))
 
     async def _scanForViruses(self, file_id, file_content):
         try:
@@ -93,6 +124,7 @@ class AbstractFileHandler(ApiHandler):
         # change file id from _id to fields.FILE_ID
         for file in files_doc:
             file[fields.FILE_ID] = file[fields.MONGO_ID]
+            file[fields.FILE_SHARED_BY_ME] = True
             file.pop(fields.MONGO_ID)
 
         return files_doc
@@ -116,6 +148,10 @@ class AbstractFileHandler(ApiHandler):
             user_info = await self.api_user_info(file_doc[fields.USOS_USER_ID])
             file_doc['first_name'] = user_info['first_name']
             file_doc['last_name'] = user_info['last_name']
+            if file_doc[fields.USOS_USER_ID] == user_info[fields.ID]:
+                file_doc[fields.FILE_SHARED_BY_ME] = True
+            else:
+                file_doc[fields.FILE_SHARED_BY_ME] = False
 
         # change file id from _id to fields.FILE_ID
         for file in files_doc:
@@ -147,12 +183,9 @@ class AbstractFileHandler(ApiHandler):
         file_doc = dict()
         file_doc[fields.USER_ID] = self.getUserId()
 
-        # check if user is on given course_id & term_id
-        courseedition = await self.api_course_edition(course_id, term_id)
-        if not courseedition:
-            raise FilesError('nierozpoznane parametry kursu.')
-
         # check if such a file exists
+        await self.check_course_editions_share(course_id, file_shared_with, file_shared_with_ids, term_id)
+
         try:
             pipeline = {fields.USOS_ID: self.getUsosId(),
                         fields.TERM_ID: term_id,
@@ -198,6 +231,7 @@ class AbstractFileHandler(ApiHandler):
         file_id = await self.db_insert(collections.FILES, file_doc)
         IOLoop.current().spawn_callback(self._storeFile, file_id, file_content)
         return file_id
+
 
 
 class FileHandler(AbstractFileHandler):
@@ -318,25 +352,16 @@ class FilesUploadHandler(AbstractFileHandler):
             term_id = self.get_argument(fields.TERM_ID, default=None)
             file_shared_with = self.get_argument(fields.FILE_SHARED_WITH, default=None)
             file_shared_with_ids = self.get_argument(fields.FILE_SHARED_WITH_IDS, default=None)
+            file_shared_with_ids = file_shared_with_ids.split(FILES_SHARE_WITH_SEPARATOR)
             files = self.request.files
 
             if not term_id or not course_id or not files or not file_shared_with:  # or 'files' not in files
                 raise FilesError('Nie przekazano odpowiednich parametrów.')
 
-            try:
-                if file_shared_with == 'List':
-                    file_shared_with_ids = file_shared_with_ids.replace(' ', '')
-                    file_shared_with_ids = file_shared_with_ids.split(FILES_SHARE_WITH_SEPARATOR)
-                    file_shared_with_ids = [x for x in file_shared_with_ids if x != '']
-            except Exception:
-                raise FilesError('Nie przekazano odpowiednich parametrów sharepowania listy.')
-
-            if file_shared_with not in ['All', 'None', 'List']:
-                raise FilesError('Nie przekazano odpowiednich parametrów sharepowania.')
+            await self.check_course_editions_share(course_id, file_shared_with, file_shared_with_ids, term_id)
 
             if file_shared_with in ['All', 'None']:
                 file_shared_with_ids = list()
-
 
             files_doc = list()
             for key, file in files.items():
@@ -366,18 +391,12 @@ class FilesShareHandler(AbstractFileHandler):
         if file_doc[fields.USER_ID] != self.getUserId():
             raise FilesError('Nie można zmienić uprawnień dla nieswojego pliku.')
 
-        courseedition = await self.api_course_edition(file_doc[fields.COURSE_ID], file_doc[fields.TERM_ID])
-        if not courseedition:
-            raise FilesError('Błędne parametry kursu.')
+        # check course_edition and if all users that files are shared to are on given course
+        await self.check_course_editions_share(file_doc[fields.COURSE_ID], file_shared_with, file_shared_with_ids,
+                                               file_doc[fields.TERM_ID])
 
-        # check if given share_to are in this courseedition
-        participant_ids = list()
-        if file_shared_with is 'List':
-            for participant in courseedition[fields.PARTICIPANTS]:
-                participant_ids.append(participant[fields.USER_ID])
-
-            if not set(file_shared_with_ids) <= set(participant_ids):
-                raise FilesError('Nie udało się rozpoznać użytkowników.')
+        if file_shared_with in ['All', 'None']:
+            file_shared_with_ids = list()
 
         # share
         file_update_doc = await self.db[collections.FILES].update({fields.MONGO_ID: ObjectId(file_id)},
@@ -403,7 +422,8 @@ class FilesShareHandler(AbstractFileHandler):
           "data": [
             {
               "file_id": "123",
-              "file_shared_with": "All" "None" "List"
+              "file_shared_with": "All" "None" "List",
+              "file_shared_with_ids": ["123", "13123"]
             }
           ],
           "status": "success"

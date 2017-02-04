@@ -168,27 +168,28 @@ class ApiHandler(BaseHandler, MathMixin):
 
         self.__translate_currently_conducted(course_doc)
 
-        if 'lecturers' in course_edition and len(course_edition['lecturers']) > 0:
-            course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
-        else:
-            course_doc['lecturers'] = list()
+        if course_edition:
+            if 'lecturers' in course_edition and len(course_edition['lecturers']) > 0:
+                course_doc['lecturers'] = list({item["id"]: item for item in course_edition['lecturers']}.values())
+            else:
+                course_doc['lecturers'] = list()
 
-        if 'coordinators' in course_edition and len(course_edition['coordinators']) > 0:
-            course_doc['coordinators'] = course_edition['coordinators']
-        else:
-            course_doc['coordinators'] = list()
+            if 'coordinators' in course_edition and len(course_edition['coordinators']) > 0:
+                course_doc['coordinators'] = course_edition['coordinators']
+            else:
+                course_doc['coordinators'] = list()
 
-        if 'course_units_ids' in course_edition and len(course_edition['course_units_ids']) > 0:
-            course_doc['course_units_ids'] = course_edition['course_units_ids']
+            if 'course_units_ids' in course_edition and len(course_edition['course_units_ids']) > 0:
+                course_doc['course_units_ids'] = course_edition['course_units_ids']
 
-        if 'grades' in course_edition:
-            course_doc['grades'] = course_edition['grades']
-        else:
-            course_doc['grades'] = None
+            if 'grades' in course_edition:
+                course_doc['grades'] = course_edition['grades']
+            else:
+                course_doc['grades'] = None
 
         if extra_fetch:
             tasks_groups = list()
-            if course_doc['course_units_ids']:
+            if 'course_units_ids' in course_doc:
                 for unit in course_doc['course_units_ids']:
                     tasks_groups.append(self.api_group(int(unit)))
 
@@ -746,15 +747,17 @@ class ApiHandler(BaseHandler, MathMixin):
 
         if not crstests_doc:
             try:
-                crstests_doc = await self.usosCall(path='services/crstests/user_grade',
-                                                   arguments={'node_id': node_id})
+                crstests_doc = await self.usosCall(path='services/crstests/node',
+                                                   arguments={'node_id': node_id,
+                                                              'recursive': 'true',
+                                                              'fields': 'node_id|name|subnodes|course_edition|grade|points|type'})
             except Exception as ex:
                 await self.exc(ex, finish=False)
                 return
             if crstests_doc:
                 crstests_doc[fields.NODE_ID] = node_id
                 crstests_doc[fields.USER_ID] = self.get_current_user()[fields.MONGO_ID]
-                await self.db_insert(collections.CRSTESTS_GRADES, crstests_doc)
+                # await self.db_insert(collections.CRSTESTS_GRADES, crstests_doc)
             else:
                 return None
         return crstests_doc
